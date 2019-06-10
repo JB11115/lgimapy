@@ -3,7 +3,11 @@ lgimapy
 
 |python-Versions|
 
-``lgimapy``
+``lgimapy`` is a general purpose python library for LGIMA
+ with modules for modeling/building indexes, modeling treasury curves,
+ performing analysis, and misc. utility functions.
+
+Documentation: \\inv\lgima\data\Credit Strategy\lgimapy\docs\build\html\index.html
 
 TO VIEW THIS README AS INTENDED USE THE FOLLOWING COMMAND FROM TERMINAL:
 
@@ -43,7 +47,7 @@ Using Anaconda, from terminal:
    pip install -U pip
    pip install -r requirements.txt
    conda install rpy2
-   
+
 
 
 LICENSE
