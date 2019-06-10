@@ -1,0 +1,2 @@
+#!/usr/bin/env bash 
+source /C/LGIM/Conda/Scripts/activate "$@"

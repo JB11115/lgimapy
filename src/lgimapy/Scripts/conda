@@ -1,0 +1,2 @@
+#!/usr/bin/env bash 
+/C/LGIM/Conda/Scripts/conda.exe "$@"
