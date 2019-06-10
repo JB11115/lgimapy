@@ -1,0 +1,31 @@
+{
+    "cyclicals": [
+        "AUTOMOTIVE",
+        "BUILDING_MATERIALS",
+        "CONSTRUCTION_MACHINERY",
+        "GAMING",
+        "LEISURE",
+        "LODGING",
+        "MEDIA_ENTERTAINMENT",
+        "PACKAGING",
+        "PAPER",
+        "RAILROADS",
+        "RESTAURANTS",
+        "RETAILERS",
+        "TRANSPORTATION_SERVICES"
+    ],
+    "energy": [
+        "CHEMICALS",
+        "METALS_AND_MINING",
+        "INDEPENDENT",
+        "INTEGRATED",
+        "MIDSTREAM",
+        "OIL_FIELD_SERVICES",
+        "REFINING"
+    ],
+    "sovs": [
+        "OWNED_NO_GUARANTEE",
+        "SOVEREIGN",
+        "SUPRANATIONAL"
+    ]
+}

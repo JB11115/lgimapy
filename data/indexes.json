@@ -1,0 +1,52 @@
+{
+    "IG_all": {
+        "maturity_splits": ["all", 5, 10, 20, 30],
+        "OAS": [-10, 3000],
+        "rating": "IG"
+    },
+    "IG_long_credit": {
+        "OAS": [-10, 3000],
+        "rating": "IG",
+        "maturity": [10, null]
+    },
+    "IG_liquid": {
+        "OAS": [-10, 3000],
+        "rating": "IG",
+        "issue_years": [null, 2]
+    },
+    "A": {
+        "maturity_splits": ["all", 5, 10, 20, 30],
+        "OAS": [-10, 3000],
+        "rating": ["AAA", "A-"]
+    },
+    "BBB": {
+        "maturity_splits": ["all", 5, 10, 20, 30],
+        "OAS": [-10, 3000],
+        "rating": ["BBB+", "BBB-"]
+    },
+    "IG_most_trade_exposed": {
+        "OAS": [-10, 3000],
+        "rating": "IG",
+        "sector": ["TECHNOLOGY", "CONSUMER_PRODUCTS", "CHEMICALS",
+                   "RETAILERS", "DIVERSIFIED_MANUFACTURING"]
+    },
+    "IG_least_trade_exposed": {
+        "OAS": [-10, 3000],
+        "rating": "IG",
+        "sector": ["MEDIA_ENTERTAINMENT", "TOBACCO", "WIRELINES", "WIRELESS"],
+        "subsector": "Oil Comp-Explor&Prodtn",
+        "special_rules": "Sector | Subsector"
+    },
+    "IG_healthcare_less_hospitals": {
+        "OAS": [-10, 3000],
+        "rating": "IG",
+        "sector": "HEALTHCARE",
+        "subsector": ["Medical-HMO", "Medical-Hospitals"],
+        "special_rules": "~Subsector"
+    },
+    "IG_SIFI_banks": {
+        "OAS": [-10, 3000],
+        "rating": "IG",
+        "ticker": ["BAC", "BACR", "C", "GS", "MS", "WFC"]
+    }
+}
