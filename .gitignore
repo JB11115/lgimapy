@@ -70,3 +70,6 @@ __pycache__/
 *.bak
 *.out
 
+# Data Files #
+##############
+data/ixb_feathers/
