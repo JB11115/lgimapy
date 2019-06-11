@@ -802,7 +802,7 @@ class IndexBuilder:
         name="",
         start=None,
         end=None,
-        rating="IG",
+        rating=None,
         currency=None,
         cusip=None,
         issuer=None,
@@ -815,7 +815,7 @@ class IndexBuilder:
         price=(None, None),
         country_of_domicile=None,
         country_of_risk=None,
-        amount_outstanding=(300, None),
+        amount_outstanding=(None, None),
         issue_years=(None, None),
         collateral_type=None,
         OAD=(None, None),
@@ -838,7 +838,7 @@ class IndexBuilder:
             Start date for index, if None the start date from load is used.
         end: datetime, default=None
             End date for index, if None the end date from load is used.
-        rating: str , Tuple[str, str], default='IG'
+        rating: str , Tuple[str, str], default=None
             Bond rating/rating range for index.
 
             Examples:
@@ -877,7 +877,7 @@ class IndexBuilder:
         country_of_risk: str, List[str], default=None
             Country or list of countries wherer risk is centered to include
             in index, default is all.
-        amount_outstanding: Tuple[float, float], default=(300, None).
+        amount_outstanding: Tuple[float, float], default=(None, None).
             Range of amount outstanding to include in index (Millions).
         issue_years: Tuple[float, float], default=(None, None).
             Range of years since issue to include in index, default is all.
@@ -923,6 +923,8 @@ class IndexBuilder:
         end = None if end is None else pd.to_datetime(end)
 
         # Convert rating to range of inclusive ratings.
+        if rating is None:
+            ratings = (None, None)
         if isinstance(rating, str):
             if rating == "IG":
                 ratings = (1, 10)
