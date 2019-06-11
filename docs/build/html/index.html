@@ -333,7 +333,7 @@ with datetime index and numeric rating columns.</p>
 
 <dl class="method">
 <dt id="lgimapy.index.IndexBuilder.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>name=''</em>, <em>start=None</em>, <em>end=None</em>, <em>rating='IG'</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(300</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>credit_stats_only=False</em>, <em>credit_returns_only=False</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.IndexBuilder.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>name=''</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>credit_stats_only=False</em>, <em>credit_returns_only=False</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.IndexBuilder.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build index with customized rules from <a class="reference internal" href="#lgimapy.index.IndexBuilder.df" title="lgimapy.index.IndexBuilder.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">IndexBuilder.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -343,7 +343,7 @@ with datetime index and numeric rating columns.</p>
 <li><strong>name</strong> (<em>str</em><em>, </em><em>default=''</em>) – Optional name for returned index.</li>
 <li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Start date for index, if None the start date from load is used.</li>
 <li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – End date for index, if None the end date from load is used.</li>
-<li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>default='IG'</em>) – <p>Bond rating/rating range for index.</p>
+<li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – <p>Bond rating/rating range for index.</p>
 <p>Examples:</p>
 <ul>
 <li>str: ‘HY’, ‘IG’, ‘AAA’, ‘Aa1’, etc.</li>
@@ -372,7 +372,7 @@ are used:</p>
 <li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries of domicile to include, default is all.</li>
 <li><strong>country_of_risk</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries wherer risk is centered to include
 in index, default is all.</li>
-<li><strong>amount_outstanding</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>300</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of amount outstanding to include in index (Millions).</li>
+<li><strong>amount_outstanding</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of amount outstanding to include in index (Millions).</li>
 <li><strong>issue_years</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of years since issue to include in index, default is all.</li>
 <li><strong>collateral_type</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Collateral type or list of types to include, default is all.</li>
 <li><strong>OAD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted durations to include, default is all.</li>
@@ -841,6 +841,86 @@ If no price is given, the market value dirty price is used.</td>
 <div class="section" id="module-lgimapy.bloomberg">
 <span id="lgimapy-bloomberg"></span><h1>lgimapy bloomberg<a class="headerlink" href="#module-lgimapy.bloomberg" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
+<dt id="lgimapy.bloomberg.bdh">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">bdh</code><span class="sig-paren">(</span><em>security</em>, <em>yellow_key</em>, <em>field</em>, <em>start</em>, <em>end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.bdh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve Bloomberg Data History (BDH) query results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>security</strong> (<em>str</em>) – Security name or cusip.</li>
+<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>'Curncy'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
+<li><strong>field</strong> (<em>str</em>) – Bloomberg field to collect history.</li>
+<li><strong>start</strong> (<em>datetime object</em>) – Start date for scrape.</li>
+<li><strong>end</strong> (<em>datetime object</em><em>, </em><em>default=None</em>) – End date for scrape, if None most recent date is used.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df</strong> – DataFrame with datetime index and specified field as column.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.bdp">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">bdp</code><span class="sig-paren">(</span><em>securities</em>, <em>yellow_key</em>, <em>field</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.bdp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve Bloomberg Data Set (BDS) query results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>security</strong> (<em>str</em>) – Security name or cusip.</li>
+<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>'Curncy'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
+<li><strong>field</strong> (<em>str</em>) – Bloomberg field to collect history.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1 dimensional array of queried values.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">[n x 1] np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.bds">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">bds</code><span class="sig-paren">(</span><em>security</em>, <em>yellow_key</em>, <em>field</em>, <em>column=1</em>, <em>date=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.bds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve Bloomberg Data Set (BDS) query results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>security</strong> (<em>str</em>) – Security name or cusip.</li>
+<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>'Curncy'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
+<li><strong>field</strong> (<em>str</em>) – Bloomberg field to collect history.</li>
+<li><strong>column</strong> (<em>int</em><em>, </em><em>default=1</em>) – Column iloc of R DataFrame to return.</li>
+<li><strong>date</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, convert returned column into datetime
+int format int(%Y%m%d).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1 dimensional array of queried values.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">[n x 1] np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="lgimapy.bloomberg.get_bloomberg_subsector">
 <code class="descclassname">lgimapy.bloomberg.</code><code class="descname">get_bloomberg_subsector</code><span class="sig-paren">(</span><em>cusips</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.get_bloomberg_subsector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get bloomberg subsector for list of cusips. First attempts
@@ -863,7 +943,58 @@ for any cusip which is unsuccesful.</p>
 <dl class="function">
 <dt id="lgimapy.bloomberg.update_subsector_json">
 <code class="descclassname">lgimapy.bloomberg.</code><code class="descname">update_subsector_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.update_subsector_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update bloomberg subsector json file.</p>
+<dd><p>Update bloomberg subsector json file for ALL cusips.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.scrape_bloomberg_subsectors">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">scrape_bloomberg_subsectors</code><span class="sig-paren">(</span><em>cusips</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.scrape_bloomberg_subsectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scrapes specified cusips and updates
+<cite>bloomberg_subsectors.json</cite> with scraped cusips
+and their subsectors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusips</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Cusip(s) to search bloomberg for subsectors.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.get_coupon_dates">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">get_coupon_dates</code><span class="sig-paren">(</span><em>cusip</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.get_coupon_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get coupon dates for a single cusip. First attempts
+to use saved <cite>cusip_coupon_dates.json</cite> file, scraping and
+updating the file if the cusip is missing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusip</strong> (<em>str</em>) – Cusip to get coupon dates for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>coupon_dates</strong> – List of coupon dates for specified cusip.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">List[datetime]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.scrape_coupon_dates">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">scrape_coupon_dates</code><span class="sig-paren">(</span><em>cusip</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.scrape_coupon_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scrapes specified cusip’s coupon dates and updates
+<cite>cusip_coupon_dates.json</cite> with result.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusip</strong> (<em>str</em>) – Cusip to scrape coupon dates for.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
