@@ -4,8 +4,7 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
-from index_functions import IndexBuilder, spread_diff, standardize_cusips
-from utilities import nearest
+from lgimapy.index import IndexBuilder, spread_diff, standardize_cusips
 
 
 def main():
@@ -71,13 +70,12 @@ def main():
     for name in df_names:
         index_dfs[name] = {}
         for mat, mat_range, max_issue in zip([10, 30], mat_ranges, [2, 5]):
+            ixb.load(data=index_chg_dfs[name])
             df = ixb.build(
-                data=index_chg_dfs[name],
                 rating="IG",
-                amount_outstanding=(None, None),
                 municipals=True,
                 maturity=(mat_range[0], mat_range[1]),
-                issue_years=(None, max_issue),
+                issue_years=(0, max_issue),
             ).df
             df["Ticker Name Rank"] = (
                 df["Ticker"] + " " + df["Issuer"] + " " + df["CollateralType"]
