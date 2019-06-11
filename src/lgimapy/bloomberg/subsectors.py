@@ -1,14 +1,13 @@
 import json
+
 import numpy as np
 
 from lgimapy.utils import root
-
-# R specific packages are installed only if needed.
-# Import statements are located in `scrape_bloomberg_subsectors`.
+from lgimapy.bloomberg import bdp
 
 
 def update_subsector_json():
-    """Update bloomberg subsector json file."""
+    """Update bloomberg subsector json file for ALL cusips."""
     subsector_json_fid = root("data/bloomberg_subsectors.json")
     with open(subsector_json_fid, "r") as fid:
         old_json = json.load(fid)
@@ -69,33 +68,7 @@ def scrape_bloomberg_subsectors(cusips):
     if not cusips:
         return
 
-    import rpy2
-    import rpy2.robjects as robjects
-    from rpy2.robjects.packages import importr
-
-    importr("Rblpapi")  # R package
-
-    # Make cusips a unique list and append 'Corp' for search.
-    if isinstance(cusips, str):
-        cusips = [cusips]
-    cusips = list(set(cusips))
-    blp_searches = [f"{c} Corp" for c in cusips]
-    r_blp_searches = robjects.StrVector(blp_searches)  # convert list to R
-
-    # Scrape bloomberg subsectors in R.
-    r_bloom_scrape = robjects.r(
-        r"""
-        function(blp_search_list) {
-            con = blpConnect()
-            blp_subsectors = bdp(
-                securities=blp_search_list,
-                fields='INDUSTRY_SUBGROUP'
-                )
-            return(blp_subsectors$INDUSTRY_SUBGROUP)
-            }
-        """
-    )
-    bloomberg_subsectors = np.asarray(r_bloom_scrape(r_blp_searches))
+    bloomberg_subsectors = bdp(cusips, "Corp", field="INDUSTRY_SUBGROUP")
 
     # Build dict of cusip: scraped subsectors.
     scraped_subsectors = {
