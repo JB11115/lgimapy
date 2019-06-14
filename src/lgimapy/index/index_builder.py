@@ -11,7 +11,7 @@ import pyodbc
 
 from lgimapy.bloomberg import get_bloomberg_subsector
 from lgimapy.index import Index
-from lgimapy.utils import replace_multiple, root, Time
+from lgimapy.utils import dump_json, load_json, replace_multiple, root
 
 
 # %%
@@ -23,16 +23,15 @@ class IndexBuilder:
     ----------
     df: pd.DataFrame
         Full DataFrame of all cusips over loaded period.
-    trade_dates: list[datetime].
+    trade_dates: List[datetime].
         List of dates with bond data.
-    loaded_dates: list[datetime].
+    loaded_dates: List[datetime].
         List of dates currently loaded by builder.
     """
 
     def __init__(self):
         # Load mapping from standard ratings to numeric values.
-        with open(root("data/ratings.json"), "rb") as fid:
-            self._ratings = json.load(fid)
+        self._ratings = load_json("ratings")
 
     @property
     @lru_cache(maxsize=None)
@@ -126,7 +125,7 @@ class IndexBuilder:
         Parameters
         ----------
         df: pd.DataFrame
-            DataFrame of selected index cusips.
+            DataFrame with cusip index.
 
         Returns
         -------
@@ -333,6 +332,69 @@ class IndexBuilder:
                 dtype_dict[col] = dtype
         return df.astype(dtype_dict)
 
+    def _get_numeric_ratings(self, df):
+        """
+        Get numeric ratings using the `ratings.json` conversion
+        file to convert all rating agencies to numeric values,
+        then apply middle-or-lower methodology to get single
+        rating.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Raw DataFrame from SQL querry.
+
+        Notes
+        -----
+        If unknown value is encountered, user will
+        be prompted to provide the numeric value, and the
+        `ratings.json` file will be updated.
+
+        Returns
+        -------
+        MOL: [N,] ndarray
+            Middle or lower
+        """
+
+        # Make temporary matrix of numeric ratings.
+        rating_cols = ["MoodyRating", "SPRating", "FitchRating"]
+        ratings_mat = df[rating_cols].fillna("NR").values
+
+        # Fill matrix with numeric ratings for each rating agency.
+        while True:
+            try:
+                num_ratings = np.vectorize(self._ratings.__getitem__)(
+                    ratings_mat
+                ).astype(float)
+            except KeyError as e:
+                # Ask user to provide value for missing key.
+                key = e.args[0]
+                val = int(
+                    input(
+                        (
+                            f"KeyError: '{key}' is not in `ratings.json`.\n"
+                            "Please provide the appropriate numeric value:\n"
+                        )
+                    )
+                )
+                # Update `ratings.json` with user provided key:val pair.
+                self._ratings[key] = val
+                dump_json(self._ratings, "ratings")
+            else:
+                break
+
+        num_ratings[num_ratings == 0] = np.nan  # json nan value is 0
+
+        # Vectorized implementation of middle-or-lower.
+        warnings.simplefilter(action="ignore", category=RuntimeWarning)
+        nans = np.sum(np.isnan(num_ratings), axis=1)
+        MOL = np.median(num_ratings, axis=1)  # middle
+        lower = np.nanmax(num_ratings, axis=1)  # max for lower
+        lower_mask = (nans == 1) | (nans == 2)
+        MOL[lower_mask] = lower[lower_mask]
+        warnings.simplefilter(action="default", category=RuntimeWarning)
+        return MOL
+
     def _clean(self, df):
         """
         Clean DataFrame from SQL querry.
@@ -395,23 +457,8 @@ class IndexBuilder:
         ]
         df.dropna(subset=required_cols, how="any", inplace=True)
 
-        # Make temporary matrix of numeric ratings.
-        rating_cols = ["MoodyRating", "SPRating", "FitchRating"]
-        ratings_mat = df[rating_cols].fillna("NR").values
-        num_ratings = np.vectorize(self._ratings.__getitem__)(
-            ratings_mat
-        ).astype(float)
-        num_ratings[num_ratings == 0] = np.nan  # json nan value is 0
-
-        # Vectorized implementation of middle-or-lower.
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        nans = np.sum(np.isnan(num_ratings), axis=1)
-        MOL = np.median(num_ratings, axis=1)  # middle
-        lower = np.nanmax(num_ratings, axis=1)  # max for lower
-        lower_mask = (nans == 1) | (nans == 2)
-        MOL[lower_mask] = lower[lower_mask]
-        df["NumericRating"] = MOL
-        warnings.simplefilter(action="default", category=RuntimeWarning)
+        # Get middle-or-lower numeric rating for each cusip.
+        df["NumericRating"] = self._get_numeric_ratings(df)
 
         # Define maturites and issues (yrs) and drop maturites above 150 yrs.
         day = "timedelta64[D]"
@@ -732,11 +779,11 @@ class IndexBuilder:
     def _add_str_list_input(self, input_val, col_name):
         """
         Add inputs from `build()` function with type of either str or
-        list[str] to hash table to use when subsetting full DataFrame.
+        List[str] to hash table to use when subsetting full DataFrame.
 
         Parameters
         ----------
-        input_val: str, list[str].
+        input_val: str, List[str].
             Input variable from `build()`.
         col_nam: str
             Column name in full DataFrame.
@@ -843,8 +890,8 @@ class IndexBuilder:
 
             Examples:
 
-            * str: 'HY', 'IG', 'AAA', 'Aa1', etc.
-            * Tuple[str, str]: (AAA, BB) uses all bonds in
+            * str: ``'HY'``, ``'IG'``, ``'AAA'``, ``'Aa1'``, etc.
+            * Tuple[str, str]: ``('AAA', 'BB')`` uses all bonds in
               specified inclusive range.
         currency: str, List[str], default=None
             Currency or list of currencies to include.
@@ -906,12 +953,12 @@ class IndexBuilder:
             Examples:
 
             * Include specified sectors or subsectors:
-              'Sector | Subsector'
+              ``special_rules='Sector | Subsector'``
             * Include all but specified sectors:
-              '~Sector'
+              ``special_rules='~Sector'``
             * Include either (all but specified currency or specified
               sectors) xor specified maturities:
-              '(~Currnecy | Sector) ^ MaturityYears'
+              ``special_rules='(~Currnecy | Sector) ^ MaturityYears'``
 
         Returns
         -------
@@ -925,7 +972,7 @@ class IndexBuilder:
         # Convert rating to range of inclusive ratings.
         if rating is None:
             ratings = (None, None)
-        if isinstance(rating, str):
+        elif isinstance(rating, str):
             if rating == "IG":
                 ratings = (1, 10)
             elif rating == "HY":
@@ -1048,26 +1095,12 @@ class IndexBuilder:
 
 # %%
 def main():
-    subset_mask_list
-    maturity = (None, None)
-    rating = "IG"
-    sector = "AIRLINES"
-    special_rules = "~Sector"
-    with Time() as t:
-        self = IndexBuilder()
-        # start = '12/31/2003'
-        start = "5/31/2019"
-        end = None
-        # df = ixb.load(start, end, dev=True, ret_df=True)
-        self.load(start, end, dev=True)
+    # %%
+    self = IndexBuilder()
+    self.load(dev=True)
 
-    with Time() as t:
-        ix = self.build(
-            rating=("AAA", "BB"), sector="AIRLINES", special_rules="~Sector"
-        )
-
-    ix.df.head(60)
-    sorted(list(set(ix.df.Sector)))
+    print(self.df.head())
+    # %%
 
 
 if __name__ == "__main__":
