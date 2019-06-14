@@ -1,4 +1,5 @@
 import os
+import json
 import pprint
 import re
 from pathlib import Path
@@ -30,6 +31,52 @@ def root(join_path=None):
         return root_path
     else:
         return root_path.joinpath(join_path)
+
+
+def load_json(filename, empty_on_error=False):
+    """
+    Load json file from the `./data/` directory.
+
+    Parameters
+    ----------
+    filename: str
+        Filename of json in `./data/` directory.
+
+    Returns
+    -------
+    dict:
+        Loaded json file.
+    """
+    json_fid = root(f"data/{filename}.json")
+    try:
+        with open(json_fid, "r") as fid:
+            return json.load(fid)
+    except FileNotFoundError:
+        if empty_on_error:
+            return {}
+        else:
+            msg = f"{filename}.json does no exist in `./data/` directory."
+            raise FileNotFoundError(msg)
+
+
+def dump_json(d, filename, **kwargs):
+    """
+    Write json file to the `./data/` directory.
+
+    Parameters
+    ----------
+    d: dict
+        Dictionary to store as json.
+    filename: str
+        Filename of json in `./data/` directory.
+    **kwargs:
+        Keyword arguments for ``json.dump()``
+    """
+    json_fid = root(f"data/{filename}.json")
+    dump_kwargs = {"indent": 4}
+    dump_kwargs.update(**kwargs)
+    with open(json_fid, "w") as fid:
+        json.dump(d, fid, **dump_kwargs)
 
 
 def pprint(obj):
