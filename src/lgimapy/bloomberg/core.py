@@ -3,8 +3,8 @@ import warnings
 import numpy as np
 import pandas as pd
 
-# R specific packages are installed only if needed.
-# Import statements are located in .
+# R specific packages are installed only if needed
+# within each core function.
 
 
 def bdh(security, yellow_key, field, start, end=None):
@@ -15,7 +15,7 @@ def bdh(security, yellow_key, field, start, end=None):
     ----------
     security: str
         Security name or cusip.
-    yellow_key: {'Govt', 'Corp', 'Equity', 'Index', 'Curncy', etc.}.
+    yellow_key: {'Govt', 'Corp', 'Equity', 'Index', etc.}.
         Bloomberg yellow key for specified security.
     field: str
         Bloomberg field to collect history.
@@ -29,7 +29,7 @@ def bdh(security, yellow_key, field, start, end=None):
     df: pd.DataFrame
         DataFrame with datetime index and specified field as column.
     """
-
+    # R specific packages are installed when function is called.
     from rpy2.robjects import pandas2ri, r
     from rpy2.robjects.packages import importr
 
@@ -58,7 +58,7 @@ def bdh(security, yellow_key, field, start, end=None):
                 )
             df$date = as.integer(gsub("-", "", df$date))
             return(df)
-            }
+        }
         """
     )
     warnings.simplefilter(action="ignore", category=FutureWarning)
@@ -70,7 +70,7 @@ def bdh(security, yellow_key, field, start, end=None):
     return df
 
 
-def bdp(securities, yellow_key, field):
+def bdp(securities, yellow_key, field, ovrd=None, date=False):
     """
     Retrieve Bloomberg Data Set (BDS) query results.
 
@@ -78,18 +78,24 @@ def bdp(securities, yellow_key, field):
     ----------
     security: str
         Security name or cusip.
-    yellow_key: {'Govt', 'Corp', 'Equity', 'Index', 'Curncy', etc.}.
+    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
         Bloomberg yellow key for specified security.
     field: str
         Bloomberg field to collect history.
+    ovrd: dict, default=None
+        Bloomberg data overrides formated as
+        ``{ovrd_key: ovrd_val}``.
+    date: bool, default=False
+        If True, convert returned column into datetime
+        int format int(%Y%m%d).
 
     Returns
     -------
     [n x 1] np.array
         1 dimensional array of queried values.
     """
-
-    from rpy2.robjects import StrVector, pandas2ri, r
+    # R specific packages are installed when function is called.
+    from rpy2.robjects import pandas2ri, r, StrVector
     from rpy2.robjects.packages import importr
 
     importr("Rblpapi")  # R package
@@ -99,21 +105,40 @@ def bdp(securities, yellow_key, field):
         securities = [securities]  # convert to list
     r_securities = StrVector([f"{sec} {yellow_key}" for sec in securities])
     r_field = field.upper()
+    if ovrd is None:
+        r_ovrd_keys, r_ovrd_vals = "NULL", "NULL"
+    else:
+        r_ovrd_keys = StrVector(list(ovrd.keys()))
+        r_ovrd_vals = StrVector(list(ovrd.values()))
+    r_date = "TRUE" if date else "FALSE"
 
     # Scrape Bloomberg bdp in R.
     r_bdp = r(
         r"""
-        function(securities, field) {
+        function(securities, field, ovrd_keys, ovrd_vals, date) {
             con = blpConnect()
+            if (ovrd_keys == 'NULL') {
+                ovrd = NULL
+            } else {
+                ovrd = setNames(ovrd_vals, ovrd_keys)
+            }
             df = bdp(
                 securities=securities,
                 fields=field,
+                overrides=ovrd,
                 )
-            return(df[,1])
+            if (date == 'TRUE') {
+                col = as.integer(gsub("-", "", df[, 1]))
+            } else {
+                col = df[, 1]
             }
+            return(col)
+        }
         """
     )
-    return np.asarray(r_bdp(r_securities, r_field))
+    return np.asarray(
+        r_bdp(r_securities, r_field, r_ovrd_keys, r_ovrd_vals, r_date)
+    )
 
 
 def bds(security, yellow_key, field, column=1, date=False):
@@ -124,7 +149,7 @@ def bds(security, yellow_key, field, column=1, date=False):
     ----------
     security: str
         Security name or cusip.
-    yellow_key: {'Govt', 'Corp', 'Equity', 'Index', 'Curncy', etc.}.
+    yellow_key: {'Govt', 'Corp', 'Equity', 'Index', etc.}.
         Bloomberg yellow key for specified security.
     field: str
         Bloomberg field to collect history.
@@ -139,7 +164,7 @@ def bds(security, yellow_key, field, column=1, date=False):
     [n x 1] np.array
         1 dimensional array of queried values.
     """
-
+    # R specific packages are installed when function is called.
     from rpy2.robjects import pandas2ri, r
     from rpy2.robjects.packages import importr
 
@@ -148,32 +173,25 @@ def bds(security, yellow_key, field, column=1, date=False):
     # Conver inputs to R variables.
     r_security = f"{security} {yellow_key}"
     r_field = field.upper()
+    r_date = "TRUE" if date else "FALSE"
 
     # Scrape Bloomberg bds in R.
-    if date:
-        r_bds = r(
-            r"""
-            function(security, field, column) {
-                con = blpConnect()
-                df = bds(
-                    securities=security,
-                    fields=field,
-                    )
-                return(df[, column])
-                }
-            """
-        )
-    else:
-        r_bds = r(
-            r"""
-            function(security, field, column) {
-                con = blpConnect()
-                df = bds(
-                    securities=security,
-                    fields=field,
-                    )
-                return(as.integer(gsub("-", "", df[, column])))
-                }
-            """
-        )
-    return np.asarray(r_bds(r_security, r_field, column))
+    r_bds = r(
+        r"""
+        function(security, field, column, date) {
+            con = blpConnect()
+            df = bds(
+                securities=security,
+                fields=field,
+                )
+            if (date == 'TRUE') {
+                col = as.integer(gsub("-", "", df[, column]))
+            } else {
+                col = df[, column]
+            }
+            return(col)
+        }
+        """
+    )
+
+    return np.asarray(r_bds(r_security, r_field, column, r_date))

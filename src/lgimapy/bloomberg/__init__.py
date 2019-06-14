@@ -1,5 +1,6 @@
 from lgimapy.bloomberg.core import bdh, bdp, bds
 from lgimapy.bloomberg.coupon_dates import get_coupon_dates, scrape_coupon_dates
+from lgimapy.bloomberg.id_to_cusip import id_to_cusip, scrape_id_to_cusip
 from lgimapy.bloomberg.subsectors import (
     update_subsector_json,
     get_bloomberg_subsector,
@@ -15,4 +16,6 @@ __all__ = [
     "scrape_bloomberg_subsectors",
     "get_coupon_dates",
     "scrape_coupon_dates",
+    "id_to_cusip",
+    "scrape_id_to_cusip",
 ]

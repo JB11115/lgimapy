@@ -2,22 +2,21 @@ import json
 
 import numpy as np
 
-from lgimapy.utils import root
+from lgimapy.utils import load_json, dump_json
 from lgimapy.bloomberg import bdp
 
 
 def update_subsector_json():
-    """Update bloomberg subsector json file for ALL cusips."""
-    subsector_json_fid = root("data/bloomberg_subsectors.json")
-    with open(subsector_json_fid, "r") as fid:
-        old_json = json.load(fid)
-    scrape_bloomberg_subsectors(list(old_json.keys()))
+    """Update bloomberg subsector json file for all cusips."""
+    fid = "cusip_bloomberg_subsectors"
+    subsectors = load_json(fid)
+    scrape_bloomberg_subsectors(list(subsectors.keys()))
 
 
 def get_bloomberg_subsector(cusips):
     """
     Get bloomberg subsector for list of cusips. First attempts
-    to use saved `bloomberg_subsectors.json` file, updating the file
+    to use saved `cusip_bloomberg_subsectors.json` file, updating the file
     for any cusip which is unsuccesful.
 
     Parameters
@@ -27,58 +26,44 @@ def get_bloomberg_subsector(cusips):
 
     Returns
     -------
-    subsectors: List[str].
+    List[str]:
         List of bloomberg subsectors matching input cusips.
     """
     if isinstance(cusips, str):
         cusips = [cusips]  # convert to list
 
     # Find any cusips which are not in saved file.
-    subsector_json_fid = root("data/bloomberg_subsectors.json")
-    with open(subsector_json_fid, "r") as fid:
-        subsectors_json = json.load(fid)
-
+    fid = "cusip_bloomberg_subsectors"
+    subsectors = load_json(fid, empty_on_error=True)
     missing = []
-    for c in cusips:
-        if c not in subsectors_json:
+    for c in list(set(cusips)):
+        if c not in subsectors:
             missing.append(c)
 
     # Scrape missing cusips and reload file.
     if missing:
         scrape_bloomberg_subsectors(missing)
-        with open(subsector_json_fid, "r") as fid:
-            subsectors_json = json.load(fid)
+        subsectors = load_json(fid)
 
-    subsectors = [subsectors_json[c] for c in cusips]
-    return subsectors
+    return [subsectors[c] for c in cusips]
 
 
 def scrape_bloomberg_subsectors(cusips):
     """
     Scrapes specified cusips and updates
-    `bloomberg_subsectors.json` with scraped cusips
-    and their subsectors.
+    `cusip_bloomberg_subsectors.json` with scraped
+    cusips and their subsectors.
 
     Parameters
     ----------
     cusips: str, List[str].
         Cusip(s) to search bloomberg for subsectors.
     """
-    # End function if cusips is null or empty list.
-    if not cusips:
-        return
-
-    bloomberg_subsectors = bdp(cusips, "Corp", field="INDUSTRY_SUBGROUP")
-
     # Build dict of cusip: scraped subsectors.
-    scraped_subsectors = {
-        cusip: sector for (cusip, sector) in zip(cusips, bloomberg_subsectors)
-    }
+    subsectors = bdp(cusips, "Corp", field="INDUSTRY_SUBGROUP")
+    scraped_subsectors = {c: s for (c, s) in zip(cusips, subsectors)}
 
-    # Load `bloomberg_subsectors.json`, add new cusips, and save.
-    subsector_json_fid = root("data/bloomberg_subsectors.json")
-    with open(subsector_json_fid, "r") as fid:
-        subsectors_json = json.load(fid)
-    subsectors_json = {**subsectors_json, **scraped_subsectors}
-    with open(subsector_json_fid, "w") as fid:
-        json.dump(subsectors_json, fid, indent=4)
+    # Load `cusip_bloomberg_subsectors.json`, add new cusips, and save.
+    fid = "cusip_bloomberg_subsectors"
+    subsectors = load_json(fid, empty_on_error=True)
+    dump_json({**subsectors, **scraped_subsectors}, fid)
