@@ -37,11 +37,167 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Jun 11, 2019 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Jun 14, 2019 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.index">
 <span id="lgimapy-index"></span><h2>lgimapy index<a class="headerlink" href="#module-lgimapy.index" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="lgimapy.index.Bond">
+<em class="property">class </em><code class="descclassname">lgimapy.index.</code><code class="descname">Bond</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Bond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for bond math and manipulation given current
+state of the bond.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>pd.Series</em>) – Single bond row from <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="lgimapy.index.Bond.cash_flows">
+<code class="descname">cash_flows</code><a class="headerlink" href="#lgimapy.index.Bond.cash_flows" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized cash flows to be acquired on
+<a class="reference internal" href="#lgimapy.index.Bond.coupon_dates" title="lgimapy.index.Bond.coupon_dates"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Bond.coupon_dates</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.index.Bond.coupon_dates">
+<code class="descname">coupon_dates</code><a class="headerlink" href="#lgimapy.index.Bond.coupon_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized list of timestamps for all coupons.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.index.Bond.coupon_years">
+<code class="descname">coupon_years</code><a class="headerlink" href="#lgimapy.index.Bond.coupon_years" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized time in years from <code class="xref py py-attr docutils literal notranslate"><span class="pre">Bond.Date</span></code>
+for all coupons.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.index.Bond.cusip">
+<code class="descname">cusip</code><a class="headerlink" href="#lgimapy.index.Bond.cusip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cusip of <a class="reference internal" href="#lgimapy.index.Bond" title="lgimapy.index.Bond"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bond</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.index.Bond.next_coupon_date">
+<code class="descname">next_coupon_date</code><a class="headerlink" href="#lgimapy.index.Bond.next_coupon_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Date of next coupon.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">datetime</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Bond.theoretical_ytm">
+<code class="descname">theoretical_ytm</code><span class="sig-paren">(</span><em>price</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Bond.theoretical_ytm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate yield to maturity of the bond using true coupon
+values and dates and specified price.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>price</strong> (<em>float:</em>) – Price of the bond to use when calculating yield to maturity.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Yield to maturity of the bond at specified price.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.index.Bond.ytm">
+<code class="descname">ytm</code><a class="headerlink" href="#lgimapy.index.Bond.ytm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized yield to maturity of the bond at market
+dirty price using true coupon values and dates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="lgimapy.index.TBond">
+<em class="property">class </em><code class="descclassname">lgimapy.index.</code><code class="descname">TBond</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.TBond" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for treasury bond math and manipulation given current
+state of the bond.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>pd.Series</em>) – Single bond row from <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="lgimapy.index.TBond.calculate_price">
+<code class="descname">calculate_price</code><span class="sig-paren">(</span><em>rfr</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.TBond.calculate_price" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate theoreticla price of the bond with given
+risk free rate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rfr</strong> (<em>float</em>) – Continuously compouned risk free rate used to discount
+cash flows.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Theoretical price ($) of <a class="reference internal" href="#lgimapy.index.TBond" title="lgimapy.index.TBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">TBond</span></code></a>.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="lgimapy.index.Index">
 <em class="property">class </em><code class="descclassname">lgimapy.index.</code><code class="descname">Index</code><span class="sig-paren">(</span><em>index_df</em>, <em>name=''</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index" title="Permalink to this definition">¶</a></dt>
@@ -308,7 +464,7 @@ with datetime index and numeric rating columns.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">list[datetime]</td>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
 </tr>
 </tbody>
 </table>
@@ -322,7 +478,7 @@ with datetime index and numeric rating columns.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">list[datetime]</td>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
 </tr>
 </tbody>
 </table>
@@ -343,8 +499,8 @@ with datetime index and numeric rating columns.</p>
 <li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – <p>Bond rating/rating range for index.</p>
 <p>Examples:</p>
 <ul>
-<li>str: ‘HY’, ‘IG’, ‘AAA’, ‘Aa1’, etc.</li>
-<li>Tuple[str, str]: (AAA, BB) uses all bonds in
+<li>str: <code class="docutils literal notranslate"><span class="pre">'HY'</span></code>, <code class="docutils literal notranslate"><span class="pre">'IG'</span></code>, <code class="docutils literal notranslate"><span class="pre">'AAA'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Aa1'</span></code>, etc.</li>
+<li>Tuple[str, str]: <code class="docutils literal notranslate"><span class="pre">('AAA',</span> <span class="pre">'BB')</span></code> uses all bonds in
 specified inclusive range.</li>
 </ul>
 </li>
@@ -386,12 +542,12 @@ to create more complex rules.</p>
 <p>Examples:</p>
 <ul>
 <li>Include specified sectors or subsectors:
-‘Sector | Subsector’</li>
+<code class="docutils literal notranslate"><span class="pre">special_rules='Sector</span> <span class="pre">|</span> <span class="pre">Subsector'</span></code></li>
 <li>Include all but specified sectors:
-‘~Sector’</li>
+<code class="docutils literal notranslate"><span class="pre">special_rules='~Sector'</span></code></li>
 <li>Include either (all but specified currency or specified
 sectors) xor specified maturities:
-‘(~Currnecy | Sector) ^ MaturityYears’</li>
+<code class="docutils literal notranslate"><span class="pre">special_rules='(~Currnecy</span> <span class="pre">|</span> <span class="pre">Sector)</span> <span class="pre">^</span> <span class="pre">MaturityYears'</span></code></li>
 </ul>
 </li>
 </ul>
@@ -521,86 +677,12 @@ for specified dates and maturities.</p>
 <dl class="attribute">
 <dt id="lgimapy.models.TreasuryCurve.trade_dates">
 <code class="descname">trade_dates</code><a class="headerlink" href="#lgimapy.models.TreasuryCurve.trade_dates" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List of traded dates.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="descname">get_yield(date, t): Get yield for specified date and maturities.</code></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="lgimapy.models.TreasuryCurve.get_KRD_total_returns">
-<code class="descname">get_KRD_total_returns</code><span class="sig-paren">(</span><em>original_date</em>, <em>new_date</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurve.get_KRD_total_returns" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reprice hypothetical par bond used for
-KRDs with a new yield curve.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TreasuryCurve.get_KRD_yields">
-<code class="descname">get_KRD_yields</code><a class="headerlink" href="#lgimapy.models.TreasuryCurve.get_KRD_yields" title="Permalink to this definition">¶</a></dt>
-<dd><p>Memoized yields for specified date and
-maturities of [0.5, 2, 5, 10, 20, 30] years.</p>
+<dd><p>List of traded dates.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime object</em>) – Date of yield curve.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>yields</strong> – Yields for [0.5, 2, 5, 10, 20, 30] years.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">[1 x 6] Array[float]</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TreasuryCurve.get_KRDs_and_coupons">
-<code class="descname">get_KRDs_and_coupons</code><a class="headerlink" href="#lgimapy.models.TreasuryCurve.get_KRDs_and_coupons" title="Permalink to this definition">¶</a></dt>
-<dd><p>Memoized key rate durations for specified date and
-maturities of [0.5, 2, 5, 10, 20, 30] years.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime object</em>) – Date of yield curve.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>krds</strong> – KRDs for [0.5, 2, 5, 10, 20, 30] years.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">[1 x 6] Array[float]</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lgimapy.models.TreasuryCurve.get_yield">
-<code class="descname">get_yield</code><span class="sig-paren">(</span><em>date</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurve.get_yield" title="Permalink to this definition">¶</a></dt>
-<dd><p>Vectorized implementation to get yield(s) for a
-given date and maturities.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>date</strong> (<em>datetime object</em>) – Date of yield curve.</li>
-<li><strong>t</strong> (<em>float</em><em>, </em><em>nd.array</em><em>[</em><em>float</em><em>]</em><em></em>) – Maturity or maturities (yrs) to return yields for.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> – Yields for specified maturities.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float, ndarray[float]</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
 </tr>
 </tbody>
 </table>
@@ -616,21 +698,11 @@ given date and maturities.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ix</strong> (<a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><em>Index</em></a>) – Index class form IndexBuilder containing treasuries
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ix</strong> (:class`:<cite>Index</cite>) – <code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code> containing treasuries and strips
 for a single date.</td>
 </tr>
 </tbody>
 </table>
-<dl class="method">
-<dt>
-<code class="descname">fit(): Fit curve to input data.</code></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt>
-<code class="descname">plot(): Plot fitted treasury curve.</code></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="lgimapy.models.TreasuryCurveBuilder.fit">
 <code class="descname">fit</code><span class="sig-paren">(</span><em>method='price'</em>, <em>n=25</em>, <em>n_drop=10</em>, <em>threshold=12</em>, <em>solver='SLSQP'</em>, <em>verbose=0</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.fit" title="Permalink to this definition">¶</a></dt>
@@ -663,6 +735,76 @@ from fitting routine.</li>
 </dl>
 </li>
 </ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.models.TreasuryCurveBuilder.get_KRD_total_returns">
+<code class="descname">get_KRD_total_returns</code><span class="sig-paren">(</span><em>original_date</em>, <em>new_date</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_KRD_total_returns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reprice hypothetical par bond used for
+KRDs with a new yield curve.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TreasuryCurveBuilder.get_KRD_yields">
+<code class="descname">get_KRD_yields</code><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_KRD_yields" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized yields for specified date and
+maturities of [0.5, 2, 5, 10, 20, 30] years.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime</em>) – Date of yield curve.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>yields</strong> – Yields for [0.5, 2, 5, 10, 20, 30] years.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">[1 x 6] ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TreasuryCurveBuilder.get_KRDs_and_coupons">
+<code class="descname">get_KRDs_and_coupons</code><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_KRDs_and_coupons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized key rate durations for specified date and
+maturities of [0.5, 2, 5, 10, 20, 30] years.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime</em>) – Date of yield curve.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>krds</strong> – KRDs for [0.5, 2, 5, 10, 20, 30] years.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">[1x6] ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.models.TreasuryCurveBuilder.get_yield">
+<code class="descname">get_yield</code><span class="sig-paren">(</span><em>date</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_yield" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vectorized implementation to get yield(s) for a
+given date and maturities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>date</strong> (<em>datetime object</em>) – Date of yield curve.</li>
+<li><strong>t</strong> (<em>float</em><em>, </em><em>nd.array</em><em>[</em><em>float</em><em>]</em><em></em>) – Maturity or maturities (yrs) to return yields for.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> – Yields for specified maturities.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float, ndarray[float]</p>
 </td>
 </tr>
 </tbody>
@@ -706,41 +848,10 @@ state of the bond.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>series</strong> (<em>pd.Series</em>) – Single bond row from <cite>index_builder</cite> DataFrame.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<em>pd.Series</em>) – Single bond row from <code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code>.</td>
 </tr>
 </tbody>
 </table>
-<dl class="attribute">
-<dt id="lgimapy.models.TBond.coupon_dates">
-<code class="descname">coupon_dates</code><a class="headerlink" href="#lgimapy.models.TBond.coupon_dates" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">All coupon dates for given treasury.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TBond.coupon_years">
-<code class="descname">coupon_years</code><a class="headerlink" href="#lgimapy.models.TBond.coupon_years" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Time to all coupons in years.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt>
-<code class="descname">calculate_price(rfr): Calculate price of bond with given risk free rate.</code></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="lgimapy.models.TBond.calculate_price">
 <code class="descname">calculate_price</code><span class="sig-paren">(</span><em>rfr</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TBond.calculate_price" title="Permalink to this definition">¶</a></dt>
@@ -753,72 +864,7 @@ risk free rate.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rfr</strong> (<em>float</em>) – Continuously compouned risk free rate used to discount
 cash flows.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>price</strong> – Theoretical price ($) of bond.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TBond.cash_flows">
-<code class="descname">cash_flows</code><a class="headerlink" href="#lgimapy.models.TBond.cash_flows" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return np.array of cash flows to be acquired on <cite>coupon_dates</cite>.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">coupon_dates</code></dt>
-<dd><p>Return list[datetime object] of timestamps for all coupons.
-Note that all coupons are assumed to be on either the 15th or
-last day of the month, business days and holidays are ignored.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TBond.coupon_days">
-<code class="descname">coupon_days</code><a class="headerlink" href="#lgimapy.models.TBond.coupon_days" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return np.array of time in years for all coupons.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">coupon_years</code></dt>
-<dd><p>Return np.array of time in years for all coupons.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="lgimapy.models.TBond.theoretical_ytm">
-<code class="descname">theoretical_ytm</code><span class="sig-paren">(</span><em>price</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TBond.theoretical_ytm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate yield to maturity of the bond using true coupon
-values and dates and specified price.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>price</strong> (<em>float</em>) – Price of the bond to use when calculating yield to maturity.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>ytm</strong> – Yield to maturity of the bond at specified price.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TBond.ytm">
-<code class="descname">ytm</code><a class="headerlink" href="#lgimapy.models.TBond.ytm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Memoized yield to maturity of the bond using true coupon
-values, dates, and dirty price.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>price</strong> (<em>float</em><em>, </em><em>default=None</em>) – Price of the bond to use when calculating yield to maturity.
-If no price is given, the market value dirty price is used.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>ytm</strong> – Yield to maturity of the bond at specified price.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Theoretical price ($) of <a class="reference internal" href="#lgimapy.models.TBond" title="lgimapy.models.TBond"><code class="xref py py-class docutils literal notranslate"><span class="pre">TBond</span></code></a>.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
 </tr>
@@ -847,7 +893,7 @@ If no price is given, the market value dirty price is used.</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>security</strong> (<em>str</em>) – Security name or cusip.</li>
-<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>'Curncy'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
+<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
 <li><strong>field</strong> (<em>str</em>) – Bloomberg field to collect history.</li>
 <li><strong>start</strong> (<em>datetime object</em>) – Start date for scrape.</li>
 <li><strong>end</strong> (<em>datetime object</em><em>, </em><em>default=None</em>) – End date for scrape, if None most recent date is used.</li>
@@ -866,7 +912,7 @@ If no price is given, the market value dirty price is used.</td>
 
 <dl class="function">
 <dt id="lgimapy.bloomberg.bdp">
-<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">bdp</code><span class="sig-paren">(</span><em>securities</em>, <em>yellow_key</em>, <em>field</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.bdp" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">bdp</code><span class="sig-paren">(</span><em>securities</em>, <em>yellow_key</em>, <em>field</em>, <em>ovrd=None</em>, <em>date=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.bdp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve Bloomberg Data Set (BDS) query results.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -874,8 +920,12 @@ If no price is given, the market value dirty price is used.</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>security</strong> (<em>str</em>) – Security name or cusip.</li>
-<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>'Curncy'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
+<li><strong>yellow_key</strong> (<code class="docutils literal notranslate"><span class="pre">{'Govt',</span> <span class="pre">'Corp',</span> <span class="pre">'Equity',</span> <span class="pre">'Index',</span> <span class="pre">etc.}</span></code>.) – Bloomberg yellow key for specified security.</li>
 <li><strong>field</strong> (<em>str</em>) – Bloomberg field to collect history.</li>
+<li><strong>ovrd</strong> (<em>dict</em><em>, </em><em>default=None</em>) – Bloomberg data overrides formated as
+<code class="docutils literal notranslate"><span class="pre">{ovrd_key:</span> <span class="pre">ovrd_val}</span></code>.</li>
+<li><strong>date</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, convert returned column into datetime
+int format int(%Y%m%d).</li>
 </ul>
 </td>
 </tr>
@@ -899,7 +949,7 @@ If no price is given, the market value dirty price is used.</td>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>security</strong> (<em>str</em>) – Security name or cusip.</li>
-<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>'Curncy'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
+<li><strong>yellow_key</strong> (<em>{'Govt'</em><em>, </em><em>'Corp'</em><em>, </em><em>'Equity'</em><em>, </em><em>'Index'</em><em>, </em><em>etc.}.</em>) – Bloomberg yellow key for specified security.</li>
 <li><strong>field</strong> (<em>str</em>) – Bloomberg field to collect history.</li>
 <li><strong>column</strong> (<em>int</em><em>, </em><em>default=1</em>) – Column iloc of R DataFrame to return.</li>
 <li><strong>date</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, convert returned column into datetime
@@ -921,7 +971,7 @@ int format int(%Y%m%d).</li>
 <dt id="lgimapy.bloomberg.get_bloomberg_subsector">
 <code class="descclassname">lgimapy.bloomberg.</code><code class="descname">get_bloomberg_subsector</code><span class="sig-paren">(</span><em>cusips</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.get_bloomberg_subsector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get bloomberg subsector for list of cusips. First attempts
-to use saved <cite>bloomberg_subsectors.json</cite> file, updating the file
+to use saved <cite>cusip_bloomberg_subsectors.json</cite> file, updating the file
 for any cusip which is unsuccesful.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -929,7 +979,7 @@ for any cusip which is unsuccesful.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusips</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Cusip(s) to search bloomberg for subsectors.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>subsectors</strong> – List of bloomberg subsectors matching input cusips.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of bloomberg subsectors matching input cusips.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">List[str]</td>
 </tr>
@@ -940,15 +990,15 @@ for any cusip which is unsuccesful.</p>
 <dl class="function">
 <dt id="lgimapy.bloomberg.update_subsector_json">
 <code class="descclassname">lgimapy.bloomberg.</code><code class="descname">update_subsector_json</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.update_subsector_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update bloomberg subsector json file for ALL cusips.</p>
+<dd><p>Update bloomberg subsector json file for all cusips.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="lgimapy.bloomberg.scrape_bloomberg_subsectors">
 <code class="descclassname">lgimapy.bloomberg.</code><code class="descname">scrape_bloomberg_subsectors</code><span class="sig-paren">(</span><em>cusips</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.scrape_bloomberg_subsectors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scrapes specified cusips and updates
-<cite>bloomberg_subsectors.json</cite> with scraped cusips
-and their subsectors.</p>
+<cite>cusip_bloomberg_subsectors.json</cite> with scraped
+cusips and their subsectors.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -971,7 +1021,7 @@ updating the file if the cusip is missing.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusip</strong> (<em>str</em>) – Cusip to get coupon dates for.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>coupon_dates</strong> – List of coupon dates for specified cusip.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of coupon dates for specified cusip.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">List[datetime]</td>
 </tr>
@@ -989,6 +1039,42 @@ updating the file if the cusip is missing.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusip</strong> (<em>str</em>) – Cusip to scrape coupon dates for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.id_to_cusip">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">id_to_cusip</code><span class="sig-paren">(</span><em>ids</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.id_to_cusip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get bloomberg cusip for list of member IDs. First attempts
+to use saved <cite>id_to_cusip.json</cite> file, updating the file
+for any id which is unsuccesful.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ids</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Member ID(s) to scrape Bloomberg for cusips.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">List of Bloomberg cusips matching input member IDs.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">List[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.scrape_id_to_cusip">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">scrape_id_to_cusip</code><span class="sig-paren">(</span><em>ids</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.scrape_id_to_cusip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scrapes specified cusips and updates
+<cite>id_to_cusip.json</cite> with scraped ids
+and their cusips.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ids</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Member ID(s) to search Bloomberg for cuisps.</td>
 </tr>
 </tbody>
 </table>
@@ -1064,6 +1150,25 @@ updating the file if the cusip is missing.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="lgimapy.utils.dump_json">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">dump_json</code><span class="sig-paren">(</span><em>d</em>, <em>filename</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.dump_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write json file to the <cite>./data/</cite> directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>d</strong> (<em>dict</em>) – Dictionary to store as json.</li>
+<li><strong>filename</strong> (<em>str</em>) – Filename of json in <cite>./data/</cite> directory.</li>
+<li><strong>**kwargs</strong> – Keyword arguments for <code class="docutils literal notranslate"><span class="pre">json.dump()</span></code></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="lgimapy.utils.find_max_locs">
 <code class="descclassname">lgimapy.utils.</code><code class="descname">find_max_locs</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.find_max_locs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find iloc locations of maximum values in pd.DataFrame.</p>
@@ -1094,6 +1199,24 @@ updating the file if the cusip is missing.</p>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.utils.load_json">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">load_json</code><span class="sig-paren">(</span><em>filename</em>, <em>empty_on_error=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.load_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load json file from the <cite>./data/</cite> directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – Filename of json in <cite>./data/</cite> directory.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Loaded json file.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
 </tr>
 </tbody>
 </table>
