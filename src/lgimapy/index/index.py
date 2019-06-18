@@ -5,9 +5,9 @@ from functools import lru_cache
 import numpy as np
 import pandas as pd
 
-from lgimapy.utils import check_all_equal, mkdir, root, Time
+from lgimapy.utils import check_all_equal, mkdir, root
 
-
+# %%
 class Index:
     """
     Class for indexes built by :class:`IndexBuilder`.
@@ -25,7 +25,7 @@ class Index:
         Full index DataFrame.
     cuisps: List[str].
         List of all unique cusips in index.
-    dates: List[datetime object].
+    dates: List[datetime].
         Sorted list of all dates in index.
     """
 
@@ -184,26 +184,27 @@ class Index:
             ]
         )
 
-    def market_value_weight(self, col, df=None):
+    def market_value_weight(self, col):
         """
-        Market value weight a specified column vs entire index market value.
+        Market value weight a specified column vs entire
+        index market value.
 
         Parameters
         ----------
         col: str
             Column name to weight, (e.g., 'OAS').
-        df: pd.DataFrame, default=None
-            DataFrame to use for analysis, use full Index.df if None.
 
         Returns
         -------
-        mvw: float
-            Market value weighting of specified column.
+        pd.Series:
+            Series of market value weighting for specified column.
         """
-        df = df if df is not None else self.df.copy()
-        mvw = np.sum(df["AmountOutstanding"] * df["DirtyPrice"] * df[col])
-        mvw /= np.sum(df["AmountOutstanding"] * df["DirtyPrice"])
-        return mvw
+        a = np.zeros(len(self.dates))
+        for i, date in enumerate(self.dates):
+            df = self.day(date)
+            a[i] = np.sum(df["AmountOutstanding"] * df["DirtyPrice"] * df[col])
+            a[i] /= np.sum(df["AmountOutstanding"] * df["DirtyPrice"])
+        return pd.Series(a, index=self.dates, name=col)
 
     def find_rating_changes(self, rating_agency):
         """
@@ -350,3 +351,83 @@ class Index:
             new_df = old_df.append(subset_df)
             new_df.sort_index(inplace=True)
             new_df.to_csv(fid)
+
+    @property
+    @lru_cache(maxsize=None)
+    def _hypothetical_treasuries(self):
+        """pd.DataFrame: historical treasury curve DataFrame."""
+        fid = root("data/treasury_curve_params.csv")
+        return pd.read_csv(
+            fid, index_col=0, parse_dates=True, infer_datetime_format=True
+        )
+
+    def excess_returns(cusips=None):
+        """
+        Calculate excess returns for cusips.
+
+        Parameters
+        ----------
+        cusips: str, List[str], default=None
+            Specified cusip(s) to compute excess returns for,
+            by default all cusips are selected.
+
+        Returns
+        -------
+        pd.DataFrame:
+            DatFrame with datetime index, cusips columns,
+            and excess return values.
+        """
+        # Load treasury DataFrame and get KRDs and total returns.
+        t_fid = root("data/treasury_curve_params.csv")
+        t_df = pd.read_csv(
+            t_fid, index_col=0, parse_dates=True, infer_datetime_format=True
+        )
+        t_df = t_df[
+            (t_df.index >= self.dates[0]) & (t_df.index <= self.dates[-1])
+        ]
+        t_krd_cols = [col for col in list(t_df) if "KRD" in col]
+        t_tret_cols = [col for col in list(t_df) if "tret" in col]
+        self._t_krds = t_df[t_krd_cols].values
+        self._t_trets = t_df[t_tret_cols].values
+
+        # Store list of KRD columns for :attr:`Index.df`.
+        self._krd_cols = [col for col in list(self.df) if "KRD" in col]
+
+    # def _excess_return(self, cusip):
+    #     """
+    #     Calculate excess returns for a single cusip.
+    #
+    #     Parameters
+    #     ----------
+    #     cusip: str
+    #         Specified cusip to compute excess returns for.
+    #
+    #     Returns
+    #     -------
+    #     """
+    #
+    #     df = self.df[self.df.index == cusip]
+    #     cusip_krds = df[self._krd_cols].values
+    #
+    #     weights = cusip_krds / self._t_krds
+    #     weights
+
+
+# %%
+def main():
+    from lgimapy.index import IndexBuilder
+    from lgimapy.utils import Time
+    import matplotlib.pyplot as plt
+
+    ixb = IndexBuilder()
+    ixb.load(dev=True, start="4/1/2019", end="5/1/2019")
+    self = ixb.build(
+        rating="IG", amount_outstanding=(300, None), OAS=(-10, 3000)
+    )
+
+    self._treasury_df = self._hypothetical_treasuries.copy()
+    cusip = self.df.index[1]
+    cusip
+
+    self.df[self._krd_cols]
+    list(df)
