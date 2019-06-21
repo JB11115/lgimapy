@@ -14,8 +14,8 @@ def main():
     `X:/Jason/Projects/Index Analysis/` repository.
     """
 
-    tights_date = "10/3/2018"
-    month_date = "5/1/2019"
+    tights_date = "4/16/2019"
+    month_date = "6/3/2019"
     fid = "X:/Jason/Projects/Index Analysis/data_test{}.csv"
 
     # Make dict of dates to analyze, ensuring they are on dates with data.
@@ -117,10 +117,9 @@ def aggregate_issuers(df):
 
     def weighted_average(x, col):
         """Weighted average calcultion for a given column."""
-        val = np.sum(
+        return np.sum(
             x[col] * x["AmountOutstanding"] * x["DirtyPrice"]
         ) / np.sum(x["AmountOutstanding"] * x["DirtyPrice"])
-        return val
 
     def my_agg(x):
         """Weighed average aggregation of same ticker/issuer/rank."""
