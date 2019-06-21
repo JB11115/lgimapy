@@ -536,6 +536,12 @@ class IndexBuilder:
         compressed format for increased performance or feed a DataFrame
         directly.
 
+        Notes
+        -----
+        If unknown value is encountered in ratings, user will
+        be prompted to provide the numeric value, and the
+        `ratings.json` file will be updated.
+
         Parameters
         ----------
         start: str, datetime, default=None
@@ -778,13 +784,14 @@ class IndexBuilder:
 
     def _add_str_list_input(self, input_val, col_name):
         """
-        Add inputs from `build()` function with type of either str or
-        List[str] to hash table to use when subsetting full DataFrame.
+        Add inputs from :meth:`IndexBuilder.build` function
+        with type of either str or List[str] to hash table to
+        use when subsetting full DataFrame.
 
         Parameters
         ----------
         input_val: str, List[str].
-            Input variable from `build()`.
+            Input variable from :meth:`IndexBuilder.build`.
         col_nam: str
             Column name in full DataFrame.
         """
@@ -797,46 +804,42 @@ class IndexBuilder:
 
     def _add_range_input(self, input_val, col_name):
         """
-        Add inputs from `build()` function with type tuple of ranged float
-        values to hash table to use when subsetting full DataFrame.
-        `-np.infty` and `np.infty` can be used to drop rows with NaNs.
+        Add inputs from:meth:`IndexBuilder.build` function with
+        type tuple of ranged float values to hash table to use
+        when subsetting full DataFrame. `-np.infty` and `np.infty`
+        can be used to drop rows with NaNs.
 
         Parameters
         ----------
-        input_val: Tuple[float, float].
-            Input variable from `build()`.
+        input_val: Tuple(float, float).
+            Input variable from :meth:`IndexBuilder.build`.
         col_nam: str
             Column name in full DataFrame.
         """
-        if col_name == "MaturityYears" and isinstance(input_val, int):
-            low = {5: 4, 10: 6, 20: 11, 30: 25}
-            high = {5: 6, 10: 11, 20: 25, 30: 31}
-            self._range_vals[col_name] = (low[input_val], high[input_val])
+        i0, i1 = input_val[0], input_val[1]
+        if i0 is not None or i1 is not None:
             self._all_rules.append(col_name)
-        else:
-            i0, i1 = input_val[0], input_val[1]
-            if i0 is not None and i1 is not None:
-                self._all_rules.append(col_name)
-                if col_name == "Date":
-                    self._range_vals[col_name] = (
-                        self.df["Date"].iloc[0] if i0 is None else i0,
-                        self.df["Date"].iloc[-1] if i1 is None else i1,
-                    )
-                else:
-                    self._range_vals[col_name] = (
-                        -np.infty if i0 is None else i0,
-                        np.infty if i1 is None else i1,
-                    )
+            if col_name == "Date":
+                self._range_vals[col_name] = (
+                    self.df["Date"].iloc[0] if i0 is None else i0,
+                    self.df["Date"].iloc[-1] if i1 is None else i1,
+                )
+            else:
+                self._range_vals[col_name] = (
+                    -np.infty if i0 is None else i0,
+                    np.infty if i1 is None else i1,
+                )
 
     def _add_flag_input(self, input_val, col_name):
         """
-        Add inputs from `build()` function with flag type to
-        hash table to use when subsetting full DataFrame.
+        Add inputs from :meth:`IndexBuilder.build` function
+        with bool type to hash table to use when subsetting
+        full DataFrame.
 
         Parameters
         ----------
         input_val: bool.
-            Input variable from `build()`.
+            Input variable from :meth:`IndexBuilder.build`.
         col_nam: str
             Column name in full DataFrame.
         """
@@ -965,7 +968,7 @@ class IndexBuilder:
         :class:`Index`:
             :class:`Index` with specified rules.
         """
-        # convert start and end dates to datetime.
+        # Convert start and end dates to datetime.
         start = None if start is None else pd.to_datetime(start)
         end = None if end is None else pd.to_datetime(end)
 
@@ -1038,34 +1041,25 @@ class IndexBuilder:
         # :attr:`IndexBuilder.df` simulatenously in order to
         # avoid re-writing the DataFrame into memory after
         # each individual mask.
-        range_val_repl = {
+        range_repl = {
             key: (
                 f'(self.df["{key}"] >= self._range_vals["{key}"][0]) & '
                 f'(self.df["{key}"] <= self._range_vals["{key}"][1])'
             )
             for key in self._range_vals.keys()
         }
-        str_val_repl = {
+        str_repl = {
             key: f'(self.df["{key}"].isin(self._str_list_vals["{key}"]))'
             for key in self._str_list_vals.keys()
         }
-        flag_val_repl = {key: f'(self.df["{key}"] == 1)' for key in self._flags}
+        flag_repl = {key: f'(self.df["{key}"] == 1)' for key in self._flags}
+        repl_dict = {**range_repl, **str_repl, **flag_repl, "~(": "(~"}
 
         # Format special rules.
         subset_mask_list = []
         if special_rules:
             for rule in special_rules:
-                subset_mask_list.append(
-                    replace_multiple(
-                        rule,
-                        {
-                            **range_val_repl,
-                            **str_val_repl,
-                            **flag_val_repl,
-                            "~(": "(~",
-                        },
-                    )
-                )
+                subset_mask_list.append(replace_multiple(rule, repl_dict))
         # Add treasury and muncipal rules.
         if treasuries:
             subset_mask_list.append('(self.df["Sector"]=="TREASURIES")')
@@ -1077,18 +1071,9 @@ class IndexBuilder:
         for rule in self._all_rules:
             if rule in rule_cols:
                 continue  # already added to subset mask
-            subset_mask_list.append(
-                replace_multiple(
-                    rule,
-                    {
-                        **range_val_repl,
-                        **str_val_repl,
-                        **flag_val_repl,
-                        "~(": "(~",
-                    },
-                )
-            )
-        # Combin formatting rules into single mask and subset DataFrame.
+            subset_mask_list.append(replace_multiple(rule, repl_dict))
+
+        # Combine formatting rules into single mask and subset DataFrame.
         subset_mask = " & ".join(subset_mask_list)
         return Index(eval(f"self.df.loc[{subset_mask}]"), name)
 
@@ -1096,12 +1081,5 @@ class IndexBuilder:
 # %%
 def main():
     # %%
-    self = IndexBuilder()
-    self.load(dev=True)
-
-    print(self.df.head())
+    pass
     # %%
-
-
-if __name__ == "__main__":
-    main()
