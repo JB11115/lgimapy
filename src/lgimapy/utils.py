@@ -278,8 +278,8 @@ def custom_sort(str_list, alphabet):
     """
     Sort a list of strings by a specified alphabetical order.
 
-    Params
-    ------
+    Parameters
+    ----------
     str_list: List[str].
         List of strings to be sorted.
     alphabet: str
