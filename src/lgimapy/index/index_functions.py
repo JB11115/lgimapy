@@ -120,7 +120,7 @@ def concat_index_dfs(dfs, join="outer"):
         if isinstance(dtype, CategoricalDtype):
             uc = union_categoricals([df[col] for df in dfs])
             for df in dfs:
-                df[col] = Categorical(df[col], categories=uc.categories)
+                df[col] = pd.Categorical(df[col], categories=uc.categories)
 
     # Combine all DataFrames.
     df = pd.concat(dfs, join=join, ignore_index=True, sort=False)
