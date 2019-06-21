@@ -1,3 +1,5 @@
+import datetime as dt
+from dateutil.relativedelta import relativedelta
 from functools import lru_cache
 
 import numpy as np
@@ -39,6 +41,7 @@ class Bond:
         List[datetime]:
             Memoized list of timestamps for all coupons.
         """
+        # TODO: use scraped dates when apporiate.
         # coupon_dates = get_coupon_dates(self.CUSIP)
         # return coupon_dates[coupon_dates > self.Date]
         return self._theoretical_coupon_dates()
