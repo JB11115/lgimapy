@@ -1,3 +1,7 @@
+import pandas as pd
+from pandas.api.types import CategoricalDtype, union_categoricals
+
+
 def standardize_cusips(df):
     """
     Standardize CUSIPs, converting cusips which changed name
@@ -66,22 +70,23 @@ def standardize_cusips(df):
 
 def spread_diff(df1, df2):
     """
-    Calculate spread difference of index values from df1 to df2.
+    Calculate spread difference for cusips from single
+    date :attr:`Index.df`s df1 to df2.
 
     Parameters
     ----------
-    df1: pd.DataFrame
-        Older index DataFrame.
-    df2: pd.DataFrame
-        Newer index DataFrame.
+    df1: :att:`Index.df`
+        Older :att:`Index.df`.
+    df2: :att:`Index.df`
+        Newer :att:`Index.df`.
 
     Returns
     -------
     df: pd.DataFrame
-
+        DataFrame with OAS difference computed.
     """
     # Standardize cusips.
-    combined_df = standardize_cusips(df1.append(df2))
+    combined_df = standardize_cusips(append_index_dfs(df1, df2))
     df1 = combined_df[combined_df["Date"] == df1["Date"].iloc[0]].copy()
     df2 = combined_df[combined_df["Date"] == df2["Date"].iloc[0]].copy()
     df1.set_index("CUSIP", inplace=True)
@@ -94,23 +99,32 @@ def spread_diff(df1, df2):
     return df
 
 
-# class Bond:
-#     """
-#     Class for bond math manipulation given
-#     current state of the bond.
-#
-#     Parameters
-#     ----------
-#     series: pd.Series
-#         Single bond row from `index_builder` DataFrame.
-#
-#
-#     Attributes
-#     ----------
-#     coupon_dates: All coupon dates for given treasury.
-#     coupon_years: Time to all coupons in years.
-#
-#     Methods
-#     -------
-#     calculate_price(rfr): Calculate price of bond with given risk free rate.
-#     """
+def append_index_dfs(dfs, join="outer"):
+    """
+    Append two :att:`Index.df`s.
+
+    Parameters
+    ----------
+    dfs: List[:att:`Index.df`].
+        List of DataFrames to append together.
+    join: {'inner', 'outer'}, default='outer'
+        How to handle indexes on other axis(es).
+
+    Returns
+    -------
+    df: pd.DataFrame
+        Combined DataFrame of all specified dfs.
+    """
+    # Unionize categorical indexes.
+    for col, dtype in dfs[0].dtypes.iteritems():
+        if isinstance(dtype, CategoricalDtype):
+            uc = union_categoricals([df[col] for df in dfs])
+            for df in dfs:
+                df[col] = Categorical(df[col], categories=uc.categories)
+
+    # Combine all DataFrames.
+    df = pd.concat(dfs, join=join, ignore_index=True, sort=False)
+    if isinstance(dfs[0].index.dtype, CategoricalDtype):
+        # Reset index to cusips if previous index was cusips.
+        df.set_index("CUSIP", inplace=True, drop=False)
+    return df
