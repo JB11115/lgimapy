@@ -86,7 +86,7 @@ def spread_diff(df1, df2):
         DataFrame with OAS difference computed.
     """
     # Standardize cusips.
-    combined_df = standardize_cusips(append_index_dfs(df1, df2))
+    combined_df = standardize_cusips(concat_index_dfs([df1, df2]))
     df1 = combined_df[combined_df["Date"] == df1["Date"].iloc[0]].copy()
     df2 = combined_df[combined_df["Date"] == df2["Date"].iloc[0]].copy()
     df1.set_index("CUSIP", inplace=True)
@@ -99,7 +99,7 @@ def spread_diff(df1, df2):
     return df
 
 
-def append_index_dfs(dfs, join="outer"):
+def concat_index_dfs(dfs, join="outer"):
     """
     Append two :att:`Index.df`s.
 
