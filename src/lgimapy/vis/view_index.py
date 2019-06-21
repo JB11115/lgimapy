@@ -17,7 +17,7 @@ def main():
 
     # Subset data to last year.
     start = pd.to_datetime(dt.date.today() - dt.timedelta(days=365))
-    df = bdh("LUACOAS", yellow_button="Index", field="PX_BID", start=start)
+    df = bdh("LUACOAS", yellow_key="Index", field="PX_BID", start=start)
     y = df["PX_BID"].values
 
     # Plot index data.
@@ -25,7 +25,7 @@ def main():
     ax.plot(df.index, y, c="steelblue")
 
     # Plot local minimums with labels to identify tights.
-    valleys, _ = find_peaks(-y, distance=60, prominence=args.prominence)
+    valleys, _ = find_peaks(-y, distance=40, prominence=args.prominence)
     for date in df.index.values[valleys]:
         ax.axvline(date, color="firebrick", ls="--", lw=1)
         label = pd.to_datetime(date).strftime("%m/%d/%Y")
