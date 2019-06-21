@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import fsolve, minimize
 
+from lgimapy.index import TBond, IndexBuilder
 from lgimapy.utils import nearest, mkdir, root
 
 plt.style.use("fivethirtyeight")
@@ -23,22 +24,44 @@ class TreasuryCurveBuilder:
 
     Parameters
     ----------
-    ix: Index
-        Index class form IndexBuilder containing treasuries
+    ix: :class`:`Index`
+        :class:`Index` containing treasuries and strips
         for a single date.
-
-    Methods
-    -------
-    fit(): Fit curve to input data.
-    plot(): Plot fitted treasury curve.
+    date: datetime
+        Date to build treasury curve.
     """
 
-    def __init__(self, ix):
-        self._strips_df = ix.df[ix.df["Ticker"] == "SP"]
-        ix.clean_treasuries()
-        self.df = ix.df
-        self.date = ix.dates[0]
-        self.bonds = [TBond(bond) for _, bond in self.df.iterrows()]
+    def __init__(self, ix=None, date=None):
+        self._historical_df = self._load()
+        self._trade_dates = list(self._historical_df.index)
+        self._t_mats = np.array([0.5, 2, 5, 10, 20, 30])
+        self._B_cols = ["B_0", "B_1", "B_2", "B_3", "Tau_1", "Tau_2"]
+        self._KRD_cols = [
+            "KRD_0.5",
+            "KRD_2",
+            "KRD_5",
+            "KRD_10",
+            "KRD_20",
+            "KRD_30",
+        ]
+        self._coupon_cols = ["c_0.5", "c_2", "c_5", "c_10", "c_20", "c_30"]
+        if ix is not None:
+            # Load all index features.
+            self._strips_df = ix.df[ix.df["Ticker"] == "SP"]
+            ix.clean_treasuries()
+            self.df = ix.df
+            self.date = ix.dates[0]
+            self.bonds = [TBond(bond) for _, bond in self.df.iterrows()]
+        else:
+            # Load parameters from csv file.
+            self.date = pd.to_datetime(date)
+            self._B = self._historical_df.loc[self.date, self._B_cols]
+
+        # Find iloc of yesterday in historical data.
+        if self.date > self._trade_dates[-1]:
+            self._yesterday_iloc = len(self._trade_dates) - 1
+        else:
+            self._yesterday_iloc = self._trade_dates.index(self.date) - 1
 
     def fit(
         self,
@@ -73,10 +96,11 @@ class TreasuryCurveBuilder:
             Scipy solver to use when minimizing errors.
         verbose: int, default=0
             Verbosity level for optimization.
-                - 0: No results.
-                - 1: Updated each time bonds are dropped.
-                - 2: Update each completed optimization simulation.
-                - 3: Update each optimization iteration.
+
+                * 0: No results.
+                * 1: Updated each time bonds are dropped.
+                * 2: Update each completed optimization simulation.
+                * 3: Update each optimization iteration.
         """
         self._method = method
         self._n_iters = n
@@ -241,24 +265,40 @@ class TreasuryCurveBuilder:
             )
 
     def save(self):
-        """Save beta values to `../data/treasury_curve_params.csv`."""
-        fid = root("data/treasury_curve_params.csv")
-        cols = ["B_0", "B_1", "B_2", "B_3", "Tau_1", "Tau_2"]
-        new_row = pd.DataFrame(self._B, index=cols, columns=[self.date]).T
-
-        try:
-            df = pd.read_csv(
-                fid, index_col=0, parse_dates=True, infer_datetime_format=True
-            )
-        except FileNotFoundError:
-            # File does not exist, create a new one.
-            new_row.to_csv(fid)
+        """Save treasury curve values to `./data/treasury_curve_params.csv`."""
+        # Get treasury curve parameters.
+        krds, coupons = self._get_KRDs_and_coupons()
+        if self._yesterday_iloc >= 0:
+            # Have data for yesterday, calculate total returns.
+            trets = self._get_KRD_total_returns()
         else:
+            # No data for yesterday, fill total returns with NaNs.
+            trets = np.array([np.nan] * 7)
+
+        # Create single row to append to historical DataFrame.
+        row_vals = np.concatenate([self._B, krds, coupons, trets])
+        tret_cols = [
+            "tret_0.5",
+            "tret_2",
+            "tret_5",
+            "tret_10",
+            "tret_20",
+            "tret_30",
+            "tret_cash",
+        ]
+        cols = [*self._B_cols, *self._KRD_cols, *self._coupon_cols, *tret_cols]
+        new_row = pd.DataFrame(row_vals, index=cols, columns=[self.date]).T
+        fid = root("data/treasury_curve_params.csv")
+        if len(self._historical_df):
             # File exists, append to it and sort.
+            df = self._historical_df.copy()
             df = df[df.index != self.date].copy()  # drop date if it exists.
             df = df.append(new_row)
             df.sort_index(inplace=True)
             df.to_csv(fid)
+        else:
+            # Create csv with first row.
+            new_row.to_csv(fid)
 
     def _yield_30_100(self, t):
         """
@@ -269,11 +309,11 @@ class TreasuryCurveBuilder:
         Parameters
         ----------
         t: float
-            Time (yrs) to calcualt zero yield.
+            Time (yrs) to calculate zero yield.
 
         Returns
         -------
-        y_t: float
+        float
             Yield at time t.
         """
         y_30 = self._svensson(30, self._B)
@@ -359,158 +399,159 @@ class TreasuryCurveBuilder:
         ax.set_xlabel("Time (yrs)")
         ax.set_ylabel("Yield")
 
-
-# %%
-class TBond:
-    """
-    Class for treasury bond math and manipulation given current
-    state of the bond.
-
-    Parameters
-    ----------
-    series: pd.Series
-        Single bond row from `index_builder` DataFrame.
-
-
-    Attributes
-    ----------
-    coupon_dates: All coupon dates for given treasury.
-    coupon_years: Time to all coupons in years.
-
-    Methods
-    -------
-    calculate_price(rfr): Calculate price of bond with given risk free rate.
-    """
-
-    def __init__(self, s):
-        self.s = s
-        self.__dict__.update({k: v for k, v in zip(s.index, s.values)})
-        self.MaturityDays = (self.MaturityDate - self.Date).days
-
-    @property
-    @lru_cache(maxsize=None)
-    def coupon_dates(self):
+    def _get_yield(self, t):
         """
-        Return list[datetime object] of timestamps for all coupons.
-        Note that all coupons are assumed to be on either the 15th or
-        last day of the month, business days and holidays are ignored.
-        """
-        i_date = self.IssueDate
-        dates = []
-        if 14 <= i_date.day <= 19:
-            # Mid month issue and coupons.
-            # Make first first coupon 6 months out.
-            temp = i_date.replace(day=15) + relativedelta(months=6)
-            while temp <= self.MaturityDate + dt.timedelta(5):
-                if temp > self.Date:
-                    dates.append(temp)
-                temp += relativedelta(months=6)
-        else:
-            # End of the month issue and coupons.
-            # Make first coupon the first of the next month 6 months out.
-            temp = (i_date + relativedelta(months=6, days=5)).replace(day=1)
-            while temp <= self.MaturityDate + dt.timedelta(5):
-                if temp > self.Date - dt.timedelta(1):
-                    # Use last day of prev month.
-                    dates.append(temp - dt.timedelta(1))
-                temp += relativedelta(months=6)
-
-        dates[-1] = self.MaturityDate  # use actual final maturity date
-        return dates
-
-    @property
-    @lru_cache(maxsize=None)
-    def coupon_years(self):
-        """Return np.array of time in years for all coupons."""
-        return np.array(
-            [(cd - self.Date).days / 365 for cd in self.coupon_dates]
-        )
-
-    @property
-    @lru_cache(maxsize=None)
-    def coupon_days(self):
-        """Return np.array of time in years for all coupons."""
-        return np.array([(cd - self.Date).days for cd in self.coupon_dates])
-
-    @property
-    @lru_cache(maxsize=None)
-    def cash_flows(self):
-        """Return np.array of cash flows to be acquired on `coupon_dates`."""
-        cash_flows = self.CouponRate / 2 + np.zeros(len(self.coupon_dates))
-        cash_flows[-1] += 100
-        return cash_flows
-
-    def calculate_price(self, rfr):
-        """
-        Calculate theoreticla price of the bond with given
-        risk free rate.
+        Vectorized implementation to get yield(s) for a
+        given date and maturities.
 
         Parameters
         ----------
-        rfr: float
-            Continuously compouned risk free rate used to discount
-            cash flows.
+        t: float, nd.array[float].
+            Maturity or maturities (yrs) to return yields for.
 
         Returns
         -------
-        price: float
-            Theoretical price ($) of bond.
+        y: float, ndarray[float].
+            Yields for specified maturities.
         """
+        if isinstance(t, float) or isinstance(t, int):
+            # Single time.
+            if t <= 30:
+                return self._svensson(t, self._B)
+            else:
+                return self._yield_30_100(t)
+        elif isinstance(t, np.ndarray):
+            t_low, t_high = t[t <= 30], t[t > 30]
+            y_low = self._svensson(t_low, self._B)
+            y_high = self._yield_30_100(t_high)
+            return np.concatenate([y_low, y_high])
 
-        return sum(
-            cf * np.exp(-rfr * t)
-            for cf, t in zip(self.cash_flows, self.coupon_years)
+    def _get_KRD_yields(self):
+        """
+        Yields for specified date and
+        maturities of [0.5, 2, 5, 10, 20, 30] years.
+
+        Returns
+        -------
+        yields: [1 x 6] ndarray
+            Yields for [0.5, 2, 5, 10, 20, 30] years.
+        """
+        return self._get_yield(self._t_mats)
+
+    def _get_KRDs_and_coupons(self):
+        """
+        Memoized key rate durations for specified date and
+        maturities of [0.5, 2, 5, 10, 20, 30] years.
+
+        -------
+        krds: [1x6] ndarray
+            KRDs for [0.5, 2, 5, 10, 20, 30] years.
+        """
+        krds = np.zeros(len(self._t_mats))
+        coupons = np.zeros(len(self._t_mats))
+        for i, t in enumerate(self._t_mats):
+            krds[i], coupons[i] = self._solve_krd_coupon(t)
+        return krds, coupons
+
+    def _solve_krd_coupon(self, t):
+        """
+        Solve key rate duration for specified maturity.
+
+        Parameters
+        ----------
+        t: float
+            Maturity in years.
+
+        Returns
+        -------
+        oad: float
+            Key rate duration for specified maturity.
+        coupon: float
+            Coupon which makes treasury a par bond.
+        """
+        # Solve for coupon required to create par bond
+        # and create cash flows.
+        self._c_yrs = np.arange(0.5, t + 0.5, 0.5)
+        self._yields = self._get_yield(self._c_yrs)
+        coupon = fsolve(self._coupon_func, 0)[0]
+        cash_flows = np.zeros(len(self._c_yrs)) + coupon
+        cash_flows[-1] += 100  # par bond
+        oad = (
+            sum(
+                t * cf * np.exp(-y * t)
+                for cf, y, t in zip(cash_flows, self._yields, self._c_yrs)
+            )
+            / 100
         )
+        # Note that using continuously compounding yields
+        # DMAC = DMOD which = OAD for optionless treasuries.
+        return oad, coupon
 
-    def _ytm_func(self, y, price=None):
-        """Yield to maturity error function for solver, see `ytm`."""
+    def _get_KRD_total_returns(self):
+        """
+        Reprice hypothetical par bond used for
+        KRDs with a new yield curve.
+
+        Returns
+        -------
+        tot_rets: [1 x 7] ndarray
+            Total returns for KRD times and cash.
+        """
+        yesterday = self._historical_df.index[self._yesterday_iloc]
+        yesterday_coupons = self._historical_df.loc[
+            yesterday, self._coupon_cols
+        ].values
+        tot_rets = np.zeros(len(self._t_mats) + 1)
+        n_yrs = (self.date - yesterday).days / 365
+
+        # Solve price of all bonds given yesterdays coupons.
+        for i, (y_c, tmat) in enumerate(zip(yesterday_coupons, self._t_mats)):
+            c_yrs = np.arange(0.5, tmat + 0.5, 0.5) - n_yrs
+            cash_flows = np.zeros(len(c_yrs)) + y_c
+            cash_flows[-1] += 100  # par bond terminal payment
+            tot_rets[i] = sum(
+                cf * np.exp(-y * t)
+                for cf, y, t in zip(cash_flows, self._get_yield(c_yrs), c_yrs)
+            )
+        # Solve next day cash price based on yesterday's yield.
+        yesterday_B = self._historical_df.loc[yesterday, self._B_cols].values
+        tot_rets[i + 1] = 100 * np.exp(
+            self._svensson(n_yrs, yesterday_B) * n_yrs
+        )
+        # Convert prices to total returns.
+        tot_rets -= 100
+        tot_rets /= 100
+        return tot_rets
+
+    def _coupon_func(self, coupon):
+        """
+        Return error in price of a par bond, with maturity
+        from :meth:`TreasuryCurveBuilder._solve_krd`
+        and specified coupon.
+        """
+        # Create cash flow and yield vectors.
+        cash_flows = np.zeros(len(self._c_yrs)) + coupon
+        cash_flows[-1] += 100  # par bond terminal payment
+
+        # Find error in price difference.
         error = (
             sum(
                 cf * np.exp(-y * t)
-                for cf, t in zip(self.cash_flows, self.coupon_years)
+                for cf, y, t in zip(cash_flows, self._yields, self._c_yrs)
             )
-            - price
+            - 100
         )
         return error
 
-    @property
-    @lru_cache(maxsize=None)
-    def ytm(self):
-        """
-        Memoized yield to maturity of the bond using true coupon
-        values, dates, and dirty price.
-
-        Parameters
-        ----------
-        price: float, default=None
-            Price of the bond to use when calculating yield to maturity.
-            If no price is given, the market value dirty price is used.
-
-        Returns
-        -------
-        ytm: float
-            Yield to maturity of the bond at specified price.
-        """
-        x0 = 0.02  # initial guess
-        return fsolve(self._ytm_func, x0, args=(self.DirtyPrice))[0]
-
-    def theoretical_ytm(self, price):
-        """
-        Calculate yield to maturity of the bond using true coupon
-        values and dates and specified price.
-
-        Parameters
-        ----------
-        price: float
-            Price of the bond to use when calculating yield to maturity.
-
-        Returns
-        -------
-        ytm: float
-            Yield to maturity of the bond at specified price.
-        """
-        x0 = 0.02  # initial guess
-        return fsolve(self._ytm_func, x0, args=(price))[0]
+    def _load(self):
+        """Load data as DataFrame."""
+        fid = root("data/treasury_curve_params.csv")
+        try:
+            return pd.read_csv(
+                fid, index_col=0, parse_dates=True, infer_datetime_format=True
+            )
+        except FileNotFoundError:
+            return pd.DataFrame()
 
 
 # %%
@@ -518,20 +559,17 @@ class TreasuryCurve:
     """
     Class for loading treasury yield curve and calculating yields
     for specified dates and maturities.
-
-    Attributes
-    ----------
-    trade_dates: List of traded dates.
-
-    Methods
-    -------
-    get_yield(date, t): Get yield for specified date and maturities.
     """
 
     def __init__(self):
         self._df = self._load()
         self._t_mats = np.array([0.5, 2, 5, 10, 20, 30])
         self.trade_dates = list(self._df.index)
+
+    @property
+    def trade_dates(self):
+        """List[datetime] : List of traded dates."""
+        return self._df.index
 
     def _load(self):
         """Load data as DataFrame."""
@@ -577,207 +615,34 @@ class TreasuryCurve:
         y_100 = y_30 - 1e-3  # 10 bp
         return y_30 + (y_100 - y_30) * (t - 30) / (100 - 30)
 
-    def get_yield(self, date, t):
-        """
-        Vectorized implementation to get yield(s) for a
-        given date and maturities.
-
-        Parameters
-        ----------
-        date: datetime object
-            Date of yield curve.
-        t: float, nd.array[float].
-            Maturity or maturities (yrs) to return yields for.
-
-        Returns
-        -------
-        y: float, ndarray[float].
-            Yields for specified maturities.
-        """
-        date = pd.to_datetime(date)
-        try:
-            B_params = self._df.loc[date, :].values
-        except KeyError:
-            msg = f'{date.strftime("%m/%d/%Y")} is not a traded date.'
-            raise ValueError(msg)
-
-        if isinstance(t, float) or isinstance(t, int):
-            # Single time.
-            if t <= 30:
-                return self._svensson(t, B_params)
-            else:
-                return self._yield_30_100(t, B_params)
-        elif isinstance(t, np.ndarray):
-            t_low, t_high = t[t <= 30], t[t > 30]
-            y_low = self._svensson(t_low, B_params)
-            y_high = self._yield_30_100(t_high, B_params)
-            return np.concatenate([y_low, y_high])
-
-    @lru_cache(maxsize=None)
-    def get_KRD_yields(self, date):
-        """
-        Memoized yields for specified date and
-        maturities of [0.5, 2, 5, 10, 20, 30] years.
-
-        Parameters
-        ----------
-        date: datetime object
-            Date of yield curve.
-
-        Returns
-        -------
-        yields: [1 x 6] Array[float].
-            Yields for [0.5, 2, 5, 10, 20, 30] years.
-        """
-        return get_yield(date, self._t_mats)
-
-    @lru_cache(maxsize=None)
-    def get_KRDs_and_coupons(self, date):
-        """
-        Memoized key rate durations for specified date and
-        maturities of [0.5, 2, 5, 10, 20, 30] years.
-
-        Parameters
-        ----------
-        date: datetime object
-            Date of yield curve.
-
-        Returns
-        -------
-        krds: [1 x 6] Array[float].
-            KRDs for [0.5, 2, 5, 10, 20, 30] years.
-        """
-        self._krd_date = pd.to_datetime(date)
-        krds = np.zeros(len(self._t_mats))
-        coupons = np.zeros(len(self._t_mats))
-        for i, t in enumerate(self._t_mats):
-            krds[i], coupons[i] = self._solve_krd_coupon(t)
-        return krds, coupons
-
-    def _solve_krd_coupon(self, t):
-        """
-        Solve key rate duration for specified maturity.
-
-        Parameters
-        ----------
-        t: float
-            Maturity in years.
-
-        Returns
-        -------
-        oad: float
-            Key rate duration for specified maturity.
-        coupon: float
-            Coupon which makes treasury a par bond.
-        """
-        # Solve for coupon required to create par bond
-        # and create cash flows.
-        self._c_yrs = np.arange(0.5, t + 0.5, 0.5)
-        self._yields = self.get_yield(self._krd_date, self._c_yrs)
-        coupon = fsolve(self._coupon_func, 0)[0]
-        cash_flows = np.zeros(len(self._c_yrs)) + coupon
-        cash_flows[-1] += 100  # par bond
-        oad = (
-            sum(
-                t * cf * np.exp(-y * t)
-                for cf, y, t in zip(cash_flows, self._yields, self._c_yrs)
-            )
-            / 100
-        )
-        # Note that using continuously compounding yields
-        # DMAC = DMOD which = OAD for optionless treasuries.
-        return oad, coupon
-
-    def get_KRD_total_returns(self, original_date, new_date, t):
-        """
-        Reprice hypothetical par bond used for
-        KRDs with a new yield curve.
-
-
-        """
-        c_yrs = np.arange(0.5, t + 0.5, 0.5) - 1 / 365
-        # coupon =
-
-    def _coupon_func(self, coupon):
-        """
-        Return error in price of a par bond, with maturity
-        from `self._solve_krd` and specified coupon.
-        """
-        # Create cash flow and yield vectors.
-        cash_flows = np.zeros(len(self._c_yrs)) + coupon
-        cash_flows[-1] += 100  # par bond
-
-        # Find error in price difference.
-        error = (
-            sum(
-                cf * np.exp(-y * t)
-                for cf, y, t in zip(cash_flows, self._yields, self._c_yrs)
-            )
-            - 100
-        )
-        return error
-
 
 # %%
+def update_treasury_curves():
+    """
+    Update `.data/treasury_curve_params.csv` file
+    with most recent data.
+    """
+    # Get list of dates with treasury curves
+    temp_tcb = TreasuryCurveBuilder(date="1/5/2004")
+    last_saved_date = temp_tcb._trade_dates[-1]
+
+    ixb = IndexBuilder()
+    ixb.load(dev=True, start=last_saved_date)
+    ix = ixb.build(treasuries=True)
+
+    for date in ix.dates[1:]:
+        print(f"\nFitting Treasury Curve for {date.strftime('%m/%d/%Y')}")
+        tcb = TreasuryCurveBuilder(ix.day(date, as_index=True))
+        tcb.fit(verbose=1)
+        tcb.save()
 
 
 def main():
-    from lgimapy.index import IndexBuilder
-
-    # for year in [2010, 2009, 2007, 2006, 2005, 2004]:
-    # start = f'1/1/{year}'
-    # start = f'5/20/2019'
-    # # end = f'1/1/{year+1}'
-    # end = None
-    # ixb = IndexBuilder()
-    # ixb.load(start=start, end=end, dev=True)
-    # t.split('load')
-    # ix = ixb.build(treasuries=True)
-    # t.split('build')
-    # for ld in ix.dates:
-    #     tc = TreasuryCurveBuilder(ix.day(ld, as_index=True))
-    #     print(f'\n{ld.strftime("%m/%d/%Y")}')
-    #     tc.fit(n=50, verbose=1)
-    #     t.split()
-    #     tc.save()
-
-    tc = TreasuryCurve()
-    day = tc._df.index[0]
-
-    df_vals = tc._df.values
-    a = np.zeros([df_vals.shape[0], df_vals.shape[1] * 3])
-    a[:, :6] = df_vals
-    a
-    for i, day in enumerate(tc._df.index):
-        a[i, 6:12], a[i, 12:18] = tc.get_KRDs_and_coupons(day)
-
-    cols = list(tc._df)
-    cols
-    times = [0.5, 2, 5, 10, 20, 30]
-    c1 = [f"KRD_{t}" for t in times]
-    c2 = [f"c_{t}" for t in times]
-    cols.extend(c1)
-    cols.extend(c2)
-
-    df = pd.DataFrame(a, columns=cols, index=tc._df.index)
-
-    df.to_csv(root("data/treasury_curve_params_.csv"))
+    # %%
+    update_treasury_curves()
 
     # %%
 
 
 if __name__ == "__main__":
     main()
-
-# date = '5/1/2019'
-# self = TreasuryCurve()
-# self.get_KRDs(date)
-# tc.get_yield('5/1/2019', 5)
-
-# %%
-
-# from index_functions import IndexBuilder
-#
-
-
-# %%
