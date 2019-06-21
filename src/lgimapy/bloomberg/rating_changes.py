@@ -49,7 +49,7 @@ def scrape_rating_changes(cusip):
             ovrd = {"RATING_AS_OF_DATE_OVERRIDE": new_date}
 
     # Load `ratings_changes.json`, add new cusips, and save.
-    fid = "ratings_changes.json"
+    fid = "ratings_changes_js.json"
     ratings = load_json(fid, empty_on_error=True)
     ratings[cusip] = rating_changes
     dump_json(ratings, fid)
@@ -60,15 +60,22 @@ def main():
 
     ixb = IndexBuilder()
     ixb.load(local=True)
+    print('loaded')
     ix = ixb.build(rating="IG", start="1/1/2018")
-    cusips = list(ix.cusips)
-    del ixb
+    cusips0 = list(ix.cusips)
     del ix
+    print('Becker IG loaded')
+    
+    ixfull = ixb.build(start="1/1/2007")
+    cusipsfull = list(ixfull.cusips)
+    del ixfull
+    del ixb
+    print('Full IG loaded')
 
-    rating_changes_json = root("data/ratings_changes.json")
-    with open(rating_changes_json, "r") as fid:
-        rating_changes_dict = json.load(fid)
+    cusips = set(cusips0).symmetric_difference(set(cusipsfull))
+    print('unique cusips found')
 
+    rating_changes_dict = load_json("data/ratings_changes_js", empty_on_error=True)
     cusips_to_scrape = []
     for cusip in cusips:
         if cusip not in rating_changes_dict:

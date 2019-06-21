@@ -195,3 +195,14 @@ def bds(security, yellow_key, field, column=1, date=False):
     )
 
     return np.asarray(r_bds(r_security, r_field, column, r_date))
+
+
+def main():
+    # %%
+
+    print(bdp("C","Equity","PX_LAST"))
+    # %%
+
+
+if __name__ == "__main__":
+    main()
