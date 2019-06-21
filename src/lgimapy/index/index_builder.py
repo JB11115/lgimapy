@@ -1081,26 +1081,6 @@ class IndexBuilder:
 # %%
 def main():
     # %%
-<<<<<<< Updated upstream
+
     pass
-=======
-    import matplotlib.pyplot as plt
-    
-    self = IndexBuilder()
-    self.load(start='01/01/2019', dev=True)
-   
-    lc_index = self.build(rating='IG',amount_outstanding=(300,None),OAS=(-10,3000),maturity=(10,np.infty))
-    tech = self.build(rating='IG',sector='TECHNOLOGY',amount_outstanding=(300,None),OAS=(-10,3000),maturity=(10,np.infty))
-
-    lc_index_OAS = lc_index.market_value_weight('OAS')
-    tech_OAS = tech.market_value_weight('OAS')
-
-    lc_index_OAS.plot()
-    tech_OAS.plot()
-    plt.show()
-
-        
-
-    print(self.df.head())
->>>>>>> Stashed changes
     # %%
