@@ -77,9 +77,12 @@ def main():
                 maturity=(mat_range[0], mat_range[1]),
                 issue_years=(0, max_issue),
             ).df
-            df["Ticker Name Rank"] = (
-                df["Ticker"] + " " + df["Issuer"] + " " + df["CollateralType"]
-            )
+            df["Ticker Name Rank"] = [
+                f"{t} {i} {ct}"
+                for t, i, ct in zip(
+                    df["Ticker"], df["Issuer"], df["CollateralType"]
+                )
+            ]
             df["IsFinancial"] = (df["FinancialFlag"] == "financial").astype(int)
             df["IsNonFinancial"] = (
                 df["FinancialFlag"] == "non-financial"
