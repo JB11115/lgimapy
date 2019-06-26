@@ -1,11 +1,13 @@
 import json
+import warnings
 from collections import defaultdict
 from functools import lru_cache
 
 import numpy as np
 import pandas as pd
 
-from lgimapy.utils import check_all_equal, mkdir, root
+from lgimapy.utils import check_all_equal, mkdir, replace_multiple, root
+from lgimapy.index import concat_index_dfs
 
 # %%
 class Index:
@@ -32,7 +34,7 @@ class Index:
     def __init__(self, index_df, name=""):
         self.df = index_df.set_index("CUSIP", drop=False)
         self.name = name
-        self._column_cache = []
+        self._column_cache = list(self.df)
         self._day_cache = {}
         self._day_key_cache = defaultdict(str)
 
@@ -43,6 +45,21 @@ class Index:
             return f"{self.name} Index {start}"
         else:
             return f"{self.name} Index {start} - {end}"
+
+    def __add__(self, other):
+        """Combine mutltiple instances of :class:`Index` together."""
+        if isinstance(other, Index):
+            return Index(concat_index_dfs([self.df, other.df]))
+        else:
+            raise TypeError(f"Right operand must be an {type(ix).__name__}.")
+
+    def __iadd__(self, other):
+        """Combine mutltiple instances of :class:`Index` together."""
+        if isinstance(other, Index):
+            self.df = concat_index_dfs([self.df, other.df])
+            return self
+        else:
+            raise TypeError(f"Right operand must be an {type(ix).__name__}.")
 
     @property
     @lru_cache(maxsize=None)
@@ -55,6 +72,18 @@ class Index:
     def cusips(self):
         """Memoized unique cusips in Index."""
         return list(set(self.df.index))
+
+    @property
+    @lru_cache(maxsize=None)
+    def sectors(self):
+        """Memoized unique sorted sectors in Index."""
+        return sorted(list(set(self.df["Sector"])))
+
+    @property
+    @lru_cache(maxsize=None)
+    def subsectors(self):
+        """Memoized unique sorted subsectors in Index."""
+        return sorted(list(set(self.df["Subsector"])))
 
     def day(self, date, as_index=False):
         """
@@ -99,7 +128,7 @@ class Index:
         else:
             return df
 
-    def day_persistent_constituents(self, date, as_index=False):
+    def synthetic_day(self, date, as_index=False):
         """
         Creates :class:`Index` or DataFrames containing only the intersection
         of constituents which existed in the index both the day before
@@ -128,6 +157,305 @@ class Index:
             return Index(df, self.name)
         else:
             return df
+
+    def subset(
+        self,
+        name=None,
+        start=None,
+        end=None,
+        rating=None,
+        currency=None,
+        cusip=None,
+        issuer=None,
+        ticker=None,
+        sector=None,
+        subsector=None,
+        treasuries=False,
+        municipals=True,
+        maturity=(None, None),
+        price=(None, None),
+        country_of_domicile=None,
+        country_of_risk=None,
+        amount_outstanding=(None, None),
+        issue_years=(None, None),
+        collateral_type=None,
+        OAD=(None, None),
+        OAS=(None, None),
+        OASD=(None, None),
+        liquidity_score=(None, None),
+        credit_stats_only=False,
+        credit_returns_only=False,
+        financial_flag=None,
+        special_rules=None,
+    ):
+        """
+        Subset :class:`Index` with customized rules from
+        :attr:`Index.df`.
+
+        Parameters
+        ----------
+        name: str, default=''
+            Optional name for returned index.
+        start: datetime, default=None
+            Start date for index, if None the start date from load is used.
+        end: datetime, default=None
+            End date for index, if None the end date from load is used.
+        rating: str , Tuple[str, str], default=None
+            Bond rating/rating range for index.
+
+            Examples:
+
+            * str: ``'HY'``, ``'IG'``, ``'AAA'``, ``'Aa1'``, etc.
+            * Tuple[str, str]: ``('AAA', 'BB')`` uses all bonds in
+              specified inclusive range.
+        currency: str, List[str], default=None
+            Currency or list of currencies to include.
+        cusip: str, List[str]: default=None,
+            Cusip or list of cusips to include.
+        issuer: str, List[str], default=None
+            Issuer, or list of issuers to include.
+        ticker: str, List[str], default=None
+            Ticker or list of tickers to include in index, default is all.
+        sector: str, List[str], default=None
+            Sector or list of sectors to include in index.
+        subsector: str, List[str], default=None
+            Subsector or list of subsectors to include in index.
+        treasuries: bool, default=False
+            If true return only treasures in index, else exclude.
+        municipals: bool, default=True
+            If False, remove municipal bonds from index.
+        maturity: Tuple[float, float], {5, 10, 20, 30}, default=None
+            Maturities to include, if int is specified the following ranges
+            are used:
+
+            * 5: 4-6
+            * 10: 6-11
+            * 20: 11-25
+            * 30: 25 - 31
+        price: Tuple[float, float]), default=(None, None).
+            Price range of bonds to include, default is all.
+        country_of_domicile: str, List[str], default=None
+            Country or list of countries of domicile to
+            include, default is all.
+        country_of_risk: str, List[str], default=None
+            Country or list of countries wherer risk is centered to
+            include in index, default is all.
+        amount_outstanding: Tuple[float, float], default=(None, None).
+            Range of amount outstanding to include in index (Millions).
+        issue_years: Tuple[float, float], default=(None, None).
+            Range of years since issue to include in index, default is all.
+        collateral_type: str, List[str], default=None
+            Collateral type or list of types to include, default is all.
+        OAD: Tuple[float, float], default=(None, None).
+            Range of option adjusted durations to include, default is all.
+        OAS: Tuple[float, float], default=(None, None).
+            Range of option adjusted spreads to include, default is all.
+        OASD:  Tuple[float, float], default=(None, None).
+            Range of option adjusted spread durations, default is all.
+        liquidity_score: Tuple[float, float], default=(None, None).
+            Range of liquidty scores to use, default is all.
+        credit_stats_only: bool, default=False
+            If True, only include bonds with credit stats in index.
+        credit_returns_only: bool, default=False
+            If True, only include bonds with credit returns in index.
+        financial_flag: {'financial', 'non-financial', 'other'}, default=None
+            Financial flag setting to identify fin and non-fin credits.
+        special_rules: str, List[str] default=None
+            Special rule(s) for subsetting index using bitwise operators.
+            If None, all specified inputs are applied independtently
+            of eachother as bitwise &. All rules can be stacked using
+            paranthesis to create more complex rules.
+
+            Examples:
+
+            * Include specified sectors or subsectors:
+              ``special_rules='Sector | Subsector'``
+            * Include all but specified sectors:
+              ``special_rules='~Sector'``
+            * Include either (all but specified currency or specified
+              sectors) xor specified maturities:
+              ``special_rules='(~Currnecy | Sector) ^ MaturityYears'``
+
+        Returns
+        -------
+        :class:`Index`:
+            :class:`Index` with specified rules.
+        """
+        name = f"{self.name} subset" if name is None else name
+
+        # Convert start and end dates to datetime.
+        start = None if start is None else pd.to_datetime(start)
+        end = None if end is None else pd.to_datetime(end)
+
+        # Convert rating to range of inclusive ratings.
+        if rating is None:
+            ratings = (None, None)
+        elif isinstance(rating, str):
+            if rating == "IG":
+                ratings = (1, 10)
+            elif rating == "HY":
+                ratings = (11, 21)
+            else:
+                # Single rating value.
+                ratings = (self._ratings[rating], self._ratings[rating])
+        else:
+            ratings = (self._ratings[rating[0]], self._ratings[rating[1]])
+
+        # TODO: Modify price/amount outstading s.t. they account for currency.
+        # Make dict of values for all str inputs.
+        self._all_rules = []
+        self._str_list_vals = {}
+        self._add_str_list_input(currency, "Currency")
+        self._add_str_list_input(ticker, "Ticker")
+        self._add_str_list_input(cusip, "CUSIP")
+        self._add_str_list_input(issuer, "Issuer")
+        self._add_str_list_input(country_of_domicile, "CountryOfDomicile")
+        self._add_str_list_input(country_of_risk, "CountryOfRisk")
+        self._add_str_list_input(collateral_type, "CollateralType")
+        self._add_str_list_input(financial_flag, "FinancialFlag")
+        self._add_str_list_input(subsector, "Subsector")
+
+        if sector in ["financial", "non-financial", "other"]:
+            self._add_str_list_input(sector, "FinancialFlag")
+        else:
+            self._add_str_list_input(sector, "Sector")
+
+        # Make dict of values for all tuple float range inputs.
+        self._range_vals = {}
+        self._add_range_input((start, end), "Date")
+        self._add_range_input(ratings, "NumericRating")
+        self._add_range_input(maturity, "MaturityYears")
+        self._add_range_input(price, "DirtyPrice")
+        self._add_range_input(amount_outstanding, "AmountOutstanding")
+        self._add_range_input(issue_years, "IssueYears")
+        self._add_range_input(liquidity_score, "LiquidityCostScore")
+        self._add_range_input(OAD, "OAD")
+        self._add_range_input(OAS, "OAS")
+        self._add_range_input(OASD, "OASD")
+
+        # Set values for including bonds based on credit flags.
+        self._flags = []
+        self._add_flag_input(credit_returns_only, "USCreditReturnsFlag")
+        self._add_flag_input(credit_stats_only, "USCreditStatisticsFlag")
+
+        # Identify columns with special rules.
+        rule_cols = []
+        if special_rules:
+            if isinstance(special_rules, str):
+                special_rules = [special_rules]  # make list
+            # Add space around operators.
+            repl = {op: f" {op} " for op in "()~&|"}
+            for rule in special_rules:
+                rule_str = replace_multiple(rule, repl)
+                rule_cols.extend(rule_str.split())
+            rule_cols = [rc for rc in rule_cols if rc not in "()~&|"]
+
+        # Build evaluation replacement strings.
+        # All binary masks are created individually as strings
+        # and joined together using bitwise & to be applied to
+        # :attr:`IndexBuilder.df` simulatenously in order to
+        # avoid re-writing the DataFrame into memory after
+        # each individual mask.
+        range_repl = {
+            key: (
+                f'(self.df["{key}"] >= self._range_vals["{key}"][0]) & '
+                f'(self.df["{key}"] <= self._range_vals["{key}"][1])'
+            )
+            for key in self._range_vals.keys()
+        }
+        str_repl = {
+            key: f'(self.df["{key}"].isin(self._str_list_vals["{key}"]))'
+            for key in self._str_list_vals.keys()
+        }
+        flag_repl = {key: f'(self.df["{key}"] == 1)' for key in self._flags}
+        repl_dict = {**range_repl, **str_repl, **flag_repl, "~(": "(~"}
+
+        # Format special rules.
+        subset_mask_list = []
+        if special_rules:
+            for rule in special_rules:
+                subset_mask_list.append(replace_multiple(rule, repl_dict))
+        # Add treasury and muncipal rules.
+        if treasuries:
+            subset_mask_list.append('(self.df["Sector"]=="TREASURIES")')
+        else:
+            subset_mask_list.append('(self.df["Sector"]!="TREASURIES")')
+        if not municipals:
+            subset_mask_list.append('(self.df["Sector"]!="LOCAL_AUTHORITIES")')
+        # Format all other rules.
+        for rule in self._all_rules:
+            if rule in rule_cols:
+                continue  # already added to subset mask
+            subset_mask_list.append(replace_multiple(rule, repl_dict))
+
+        # Combine formatting rules into single mask and subset DataFrame.
+        subset_mask = " & ".join(subset_mask_list)
+        return Index(eval(f"self.df.loc[{subset_mask}]"), name)
+
+    def _add_str_list_input(self, input_val, col_name):
+        """
+        Add inputs from :meth:`IndexBuilder.build` function
+        with type of either str or List[str] to hash table to
+        use when subsetting full DataFrame.
+
+        Parameters
+        ----------
+        input_val: str, List[str].
+            Input variable from :meth:`IndexBuilder.build`.
+        col_nam: str
+            Column name in full DataFrame.
+        """
+        if input_val is not None:
+            self._all_rules.append(col_name)
+            if isinstance(input_val, str):
+                self._str_list_vals[col_name] = [input_val]
+            else:
+                self._str_list_vals[col_name] = input_val
+
+    def _add_range_input(self, input_val, col_name):
+        """
+        Add inputs from:meth:`IndexBuilder.build` function with
+        type tuple of ranged float values to hash table to use
+        when subsetting full DataFrame. `-np.infty` and `np.infty`
+        can be used to drop rows with NaNs.
+
+        Parameters
+        ----------
+        input_val: Tuple(float, float).
+            Input variable from :meth:`IndexBuilder.build`.
+        col_nam: str
+            Column name in full DataFrame.
+        """
+        i0, i1 = input_val[0], input_val[1]
+        if i0 is not None or i1 is not None:
+            self._all_rules.append(col_name)
+            if col_name == "Date":
+                self._range_vals[col_name] = (
+                    self.df["Date"].iloc[0] if i0 is None else i0,
+                    self.df["Date"].iloc[-1] if i1 is None else i1,
+                )
+            else:
+                self._range_vals[col_name] = (
+                    -np.infty if i0 is None else i0,
+                    np.infty if i1 is None else i1,
+                )
+
+    def _add_flag_input(self, input_val, col_name):
+        """
+        Add inputs from :meth:`IndexBuilder.build` function
+        with bool type to hash table to use when subsetting
+        full DataFrame.
+
+        Parameters
+        ----------
+        input_val: bool.
+            Input variable from :meth:`IndexBuilder.build`.
+        col_nam: str
+            Column name in full DataFrame.
+        """
+        if input_val:
+            self._all_rules.append(col_name)
+            self._flags.append(col_name)
 
     def clean_treasuries(self):
         """Clean treasury index for building model curve."""
@@ -456,27 +784,48 @@ class Index:
 
     def compute_total_returns(self):
         """
-        Compute total returns for all cusips in index,
-        appending result to :attr:`Index.df`.
+        Vectorized implementation for computing total returns
+        for all cusips in index, adjusting for coupon delivery
+        and reinvestment.
+
+        Appends results as new column in :attr:`Index.df`.
         """
         # Stop computating if already performed.
-        if "total_returns" in self._column_cache:
+        if "total_return" in self._column_cache:
             return
 
-        # Compute total returns without accounting for coupons.
+        # Compute total returns without adjusting for coupons.
         price_df = self.get_value_history("DirtyPrice")
-        tret = price_df.values[1:] / price_df.values[:-1] - 1
-        # Compute total returns accounting for coupons.
         cols = list(price_df)
+        price = price_df.values
+        tret = price[1:] / price[:-1] - 1
+
+        # Find dates when coupons were paid. For first day in
+        # dataset find points where accrued interest is 0. For all
+        # others use 0 value or any decrease in accrued interest.
         accrued = self.get_value_history("AccruedInterest")[cols].values
         accrued_mask = np.where(accrued == 0, 1, 0)
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        accrued_diff = np.where(np.diff(accrued, axis=0) < 0, 1, 0)
+        warnings.simplefilter("default", category=RuntimeWarning)
+        accrued_mask[1:] = np.maximum(accrued_mask[1:], accrued_diff)
+
+        # Find coupon rate, add coupon back into prices and assume
+        # coupon is reinvested at same rate.
         coupon_rate = self.get_value_history("CouponRate")[cols].values / 2
-        coupon_price = price_df.values + accrued_mask * coupon_rate
-        coupon_tret = coupon_price[1:] / coupon_price[:-1] - 1
+        coupon_adj_price = price + accrued_mask * coupon_rate
+        reinvesting_multiplier = accrued_mask * (1 + coupon_rate / price)
+        reinvesting_multiplier[reinvesting_multiplier == 0] = 1
+        reinvesting_multiplier[np.isnan(reinvesting_multiplier)] = 1
+        reinvesting_multiplier = np.cumprod(reinvesting_multiplier, axis=0)
+        coupon_adj_tret = (
+            coupon_adj_price[1:] / coupon_adj_price[:-1] - 1
+        ) * reinvesting_multiplier[1:]
+
         # Combine both methods taking element-wise maximum to
         # account for day when coupon is paid.
         tret_df = pd.DataFrame(
-            np.maximum(tret, coupon_tret),
+            np.maximum(tret, coupon_adj_tret),
             index=price_df.index[1:],
             columns=cols,
         )
@@ -488,7 +837,7 @@ class Index:
             self.df.loc[self.df["Date"] == date, "total_return"] = tret_df.loc[
                 date, cusips
             ].values
-        self._column_cache.append("total_returns")  # update cache
+        self._column_cache.append("total_return")  # update cache
 
     def compute_excess_returns(self):
         """
@@ -496,7 +845,7 @@ class Index:
         appending result to :attr:`Index.df`.
         """
         # Stop computating if already performed.
-        if "excess_returns" in self._column_cache:
+        if "excess_return" in self._column_cache:
             return
 
         # Compute total returns.
@@ -525,7 +874,7 @@ class Index:
             )
             ex_rets = df["total_return"].values - tsy_trets
             self.df.loc[self.df["Date"] == date, "excess_return"] = ex_rets
-        self._column_cache.append("excess_returns")  # update cache
+        self._column_cache.append("excess_return")  # update cache
 
     def aggregate_excess_returns(self, start_date, index=True):
         """
