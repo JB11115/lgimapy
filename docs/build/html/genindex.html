@@ -40,7 +40,8 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#B"><strong>B</strong></a>
+ <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
@@ -57,6 +58,14 @@
  | <a href="#Y"><strong>Y</strong></a>
  
 </div>
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#lgimapy.index.Index.aggregate_excess_returns">aggregate_excess_returns() (lgimapy.index.Index method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -90,8 +99,14 @@
 </li>
       <li><a href="index.html#lgimapy.index.Index.clean_treasuries">clean_treasuries() (lgimapy.index.Index method)</a>
 </li>
+      <li><a href="index.html#lgimapy.index.Index.compute_excess_returns">compute_excess_returns() (lgimapy.index.Index method)</a>
+</li>
+      <li><a href="index.html#lgimapy.index.Index.compute_total_returns">compute_total_returns() (lgimapy.index.Index method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="index.html#lgimapy.index.concat_index_dfs">concat_index_dfs() (in module lgimapy.index)</a>
+</li>
       <li><a href="index.html#lgimapy.index.Bond.coupon_dates">coupon_dates (lgimapy.index.Bond attribute)</a>
 </li>
       <li><a href="index.html#lgimapy.index.Bond.coupon_years">coupon_years (lgimapy.index.Bond attribute)</a>
@@ -99,6 +114,8 @@
       <li><a href="index.html#lgimapy.index.Index.cuisps">cuisps (lgimapy.index.Index attribute)</a>
 </li>
       <li><a href="index.html#lgimapy.index.Bond.cusip">cusip (lgimapy.index.Bond attribute)</a>
+</li>
+      <li><a href="index.html#lgimapy.index.Index.cusip_excess_returns">cusip_excess_returns() (lgimapy.index.Index method)</a>
 </li>
       <li><a href="index.html#lgimapy.index.Index.cusips">cusips (lgimapy.index.Index attribute)</a>
 </li>
@@ -113,8 +130,6 @@
       <li><a href="index.html#lgimapy.index.Index.dates">dates (lgimapy.index.Index attribute)</a>, <a href="index.html#lgimapy.index.Index.dates">[1]</a>
 </li>
       <li><a href="index.html#lgimapy.index.Index.day">day() (lgimapy.index.Index method)</a>
-</li>
-      <li><a href="index.html#lgimapy.index.Index.day_persistent_constituents">day_persistent_constituents() (lgimapy.index.Index method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -154,19 +169,11 @@
 </li>
       <li><a href="index.html#lgimapy.bloomberg.get_coupon_dates">get_coupon_dates() (in module lgimapy.bloomberg)</a>
 </li>
-      <li><a href="index.html#lgimapy.index.Index.get_cusip_history">get_cusip_history() (lgimapy.index.Index method)</a>
-</li>
-      <li><a href="index.html#lgimapy.models.TreasuryCurveBuilder.get_KRD_total_returns">get_KRD_total_returns() (lgimapy.models.TreasuryCurveBuilder method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="index.html#lgimapy.models.TreasuryCurveBuilder.get_KRD_yields">get_KRD_yields (lgimapy.models.TreasuryCurveBuilder attribute)</a>
-</li>
-      <li><a href="index.html#lgimapy.models.TreasuryCurveBuilder.get_KRDs_and_coupons">get_KRDs_and_coupons (lgimapy.models.TreasuryCurveBuilder attribute)</a>
+      <li><a href="index.html#lgimapy.index.Index.get_cusip_history">get_cusip_history() (lgimapy.index.Index method)</a>
 </li>
       <li><a href="index.html#lgimapy.index.Index.get_value_history">get_value_history() (lgimapy.index.Index method)</a>
-</li>
-      <li><a href="index.html#lgimapy.models.TreasuryCurveBuilder.get_yield">get_yield() (lgimapy.models.TreasuryCurveBuilder method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -278,15 +285,23 @@
 </li>
       <li><a href="index.html#lgimapy.bloomberg.scrape_coupon_dates">scrape_coupon_dates() (in module lgimapy.bloomberg)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#lgimapy.bloomberg.scrape_id_to_cusip">scrape_id_to_cusip() (in module lgimapy.bloomberg)</a>
 </li>
+      <li><a href="index.html#lgimapy.index.Index.sectors">sectors (lgimapy.index.Index attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="index.html#lgimapy.index.spread_diff">spread_diff() (in module lgimapy.index)</a>
 </li>
       <li><a href="index.html#lgimapy.index.standardize_cusips">standardize_cusips() (in module lgimapy.index)</a>
 </li>
+      <li><a href="index.html#lgimapy.index.Index.subsectors">subsectors (lgimapy.index.Index attribute)</a>
+</li>
+      <li><a href="index.html#lgimapy.index.Index.subset">subset() (lgimapy.index.Index method)</a>
+</li>
       <li><a href="index.html#lgimapy.index.Index.subset_value_by_rating">subset_value_by_rating() (lgimapy.index.Index method)</a>
+</li>
+      <li><a href="index.html#lgimapy.index.Index.synthetic_day">synthetic_day() (lgimapy.index.Index method)</a>
 </li>
   </ul></td>
 </tr></table>

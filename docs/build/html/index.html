@@ -37,7 +37,7 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Jun 14, 2019 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Jun 26, 2019 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.index">
@@ -198,6 +198,74 @@ cash flows.</td>
 
 </dd></dl>
 
+<dl class="function">
+<dt id="lgimapy.index.concat_index_dfs">
+<code class="descclassname">lgimapy.index.</code><code class="descname">concat_index_dfs</code><span class="sig-paren">(</span><em>dfs</em>, <em>join='outer'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.concat_index_dfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append two :att:<a href="#id1"><span class="problematic" id="id2">`</span></a>Index.df`s.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dfs</strong> (List[<a href="#id3"><span class="problematic" id="id4">:att:`Index.df`</span></a>].) – List of DataFrames to append together.</li>
+<li><strong>join</strong> (<em>{'inner'</em><em>, </em><em>'outer'}</em><em>, </em><em>default='outer'</em>) – How to handle indexes on other axis(es).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df</strong> – Combined DataFrame of all specified dfs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.index.spread_diff">
+<code class="descclassname">lgimapy.index.</code><code class="descname">spread_diff</code><span class="sig-paren">(</span><em>df1</em>, <em>df2</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.spread_diff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate spread difference for cusips from single
+date :attr:<a href="#id5"><span class="problematic" id="id6">`</span></a>Index.df`s df1 to df2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>df1</strong> (<a href="#id9"><span class="problematic" id="id10">:att:`Index.df`</span></a>) – Older <a href="#id7"><span class="problematic" id="id8">:att:`Index.df`</span></a>.</li>
+<li><strong>df2</strong> (<a href="#id13"><span class="problematic" id="id14">:att:`Index.df`</span></a>) – Newer <a href="#id11"><span class="problematic" id="id12">:att:`Index.df`</span></a>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df</strong> – DataFrame with OAS difference computed.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.index.standardize_cusips">
+<code class="descclassname">lgimapy.index.</code><code class="descname">standardize_cusips</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.standardize_cusips" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standardize CUSIPs, converting cusips which changed name
+to most recent cusip value for full history.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>df</strong> (<em>pd.DataFrame</em>) – DataFrame of selected index cusips.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>df</strong> – DataFrame with all CUSIPs updated to current values.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="class">
 <dt id="lgimapy.index.Index">
 <em class="property">class </em><code class="descclassname">lgimapy.index.</code><code class="descname">Index</code><span class="sig-paren">(</span><em>index_df</em>, <em>name=''</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index" title="Permalink to this definition">¶</a></dt>
@@ -250,7 +318,34 @@ cash flows.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime object]</td>
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Index.aggregate_excess_returns">
+<code class="descname">aggregate_excess_returns</code><span class="sig-paren">(</span><em>start_date</em>, <em>index=True</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.aggregate_excess_returns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Aggregate excess returns since start date.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start_date</strong> (<em>datetime</em>) – Date to start aggregating returns.</li>
+<li><strong>index</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, return aggregated excess returns
+for full, index, else return excess returns
+for individual cusips.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Aggregated excess returns for either full index
+or individual cusips.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float or pd.Seires</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -260,6 +355,41 @@ cash flows.</td>
 <dt id="lgimapy.index.Index.clean_treasuries">
 <code class="descname">clean_treasuries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.clean_treasuries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clean treasury index for building model curve.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Index.compute_excess_returns">
+<code class="descname">compute_excess_returns</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.compute_excess_returns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute excess returns for all cusips in index,
+appending result to <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Index.compute_total_returns">
+<code class="descname">compute_total_returns</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.compute_total_returns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vectorized implementation for computing total returns
+for all cusips in index, adjusting for coupon delivery
+and reinvestment.</p>
+<p>Appends results as new column in <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Index.cusip_excess_returns">
+<code class="descname">cusip_excess_returns</code><span class="sig-paren">(</span><em>cusips</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.cusip_excess_returns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate excess returns for specified cusips.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusips</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Specified cusip(s) to compute excess returns for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">DatFrame with datetime index, cusips columns,
+and excess return values.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
@@ -278,7 +408,9 @@ cash flows.</td>
 <dt id="lgimapy.index.Index.day">
 <code class="descname">day</code><span class="sig-paren">(</span><em>date</em>, <em>as_index=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.day" title="Permalink to this definition">¶</a></dt>
 <dd><p>Memoized call to a dict of single day DataFrame
-with date as key.</p>
+with date and all computed columns as key. If new
+columns are added to <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>, an updated
+single day DataFrame is loaded and saved to cache.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -290,34 +422,7 @@ of a DataFrame.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df or Index</strong> – DataFrame or Index for specified date.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame or <a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lgimapy.index.Index.day_persistent_constituents">
-<code class="descname">day_persistent_constituents</code><span class="sig-paren">(</span><em>date</em>, <em>as_index=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.day_persistent_constituents" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates <a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> or DataFrames containing only the intersection
-of constituents which existed in the index both the day before
-and the specified day.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>date</strong> (<em>datetime object</em>) – Date of daily DataFrame to return.</li>
-<li><strong>as_index</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If true, return an Index for specified day instead
-of a DataFrame.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df or Index</strong> – DataFrame or Index for specified date.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df or Index</strong> – DataFrame or Index for single specified date.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame or <a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a></p>
@@ -386,22 +491,110 @@ columns for specified cusip.</td>
 
 <dl class="method">
 <dt id="lgimapy.index.Index.market_value_weight">
-<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em>, <em>df=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
-<dd><p>Market value weight a specified column vs entire index market value.</p>
+<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Market value weight a specified column vs entire
+index market value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>col</strong> (<em>str</em>) – Column name to weight, (e.g., ‘OAS’).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Series of market value weighting for specified column.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.Series</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.index.Index.sectors">
+<code class="descname">sectors</code><a class="headerlink" href="#lgimapy.index.Index.sectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized unique sorted sectors in Index.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.index.Index.subsectors">
+<code class="descname">subsectors</code><a class="headerlink" href="#lgimapy.index.Index.subsectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Memoized unique sorted subsectors in Index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Index.subset">
+<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>credit_stats_only=False</em>, <em>credit_returns_only=False</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.subset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subset <a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> with customized rules from
+<a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>col</strong> (<em>str</em>) – Column name to weight, (e.g., ‘OAS’).</li>
-<li><strong>df</strong> (<em>pd.DataFrame</em><em>, </em><em>default=None</em>) – DataFrame to use for analysis, use full Index.df if None.</li>
+<li><strong>name</strong> (<em>str</em><em>, </em><em>default=''</em>) – Optional name for returned index.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Start date for index, if None the start date from load is used.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – End date for index, if None the end date from load is used.</li>
+<li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – <p>Bond rating/rating range for index.</p>
+<p>Examples:</p>
+<ul>
+<li>str: <code class="docutils literal notranslate"><span class="pre">'HY'</span></code>, <code class="docutils literal notranslate"><span class="pre">'IG'</span></code>, <code class="docutils literal notranslate"><span class="pre">'AAA'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Aa1'</span></code>, etc.</li>
+<li>Tuple[str, str]: <code class="docutils literal notranslate"><span class="pre">('AAA',</span> <span class="pre">'BB')</span></code> uses all bonds in
+specified inclusive range.</li>
+</ul>
+</li>
+<li><strong>currency</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Currency or list of currencies to include.</li>
+<li><strong>cusip</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>: default=None</em><em>,</em>) – Cusip or list of cusips to include.</li>
+<li><strong>issuer</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Issuer, or list of issuers to include.</li>
+<li><strong>ticker</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Ticker or list of tickers to include in index, default is all.</li>
+<li><strong>sector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Sector or list of sectors to include in index.</li>
+<li><strong>subsector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Subsector or list of subsectors to include in index.</li>
+<li><strong>treasuries</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If true return only treasures in index, else exclude.</li>
+<li><strong>municipals</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If False, remove municipal bonds from index.</li>
+<li><strong>maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>{5</em><em>, </em><em>10</em><em>, </em><em>20</em><em>, </em><em>30}</em><em>, </em><em>default=None</em>) – <p>Maturities to include, if int is specified the following ranges
+are used:</p>
+<ul>
+<li>5: 4-6</li>
+<li>10: 6-11</li>
+<li>20: 11-25</li>
+<li>30: 25 - 31</li>
+</ul>
+</li>
+<li><strong>price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Price range of bonds to include, default is all.</li>
+<li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries of domicile to
+include, default is all.</li>
+<li><strong>country_of_risk</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries wherer risk is centered to
+include in index, default is all.</li>
+<li><strong>amount_outstanding</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of amount outstanding to include in index (Millions).</li>
+<li><strong>issue_years</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of years since issue to include in index, default is all.</li>
+<li><strong>collateral_type</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Collateral type or list of types to include, default is all.</li>
+<li><strong>OAD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted durations to include, default is all.</li>
+<li><strong>OAS</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spreads to include, default is all.</li>
+<li><strong>OASD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spread durations, default is all.</li>
+<li><strong>liquidity_score</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of liquidty scores to use, default is all.</li>
+<li><strong>credit_stats_only</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, only include bonds with credit stats in index.</li>
+<li><strong>credit_returns_only</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, only include bonds with credit returns in index.</li>
+<li><strong>financial_flag</strong> (<em>{'financial'</em><em>, </em><em>'non-financial'</em><em>, </em><em>'other'}</em><em>, </em><em>default=None</em>) – Financial flag setting to identify fin and non-fin credits.</li>
+<li><strong>special_rules</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>] </em><em>default=None</em>) – <p>Special rule(s) for subsetting index using bitwise operators.
+If None, all specified inputs are applied independtently
+of eachother as bitwise &amp;. All rules can be stacked using
+paranthesis to create more complex rules.</p>
+<p>Examples:</p>
+<ul>
+<li>Include specified sectors or subsectors:
+<code class="docutils literal notranslate"><span class="pre">special_rules='Sector</span> <span class="pre">|</span> <span class="pre">Subsector'</span></code></li>
+<li>Include all but specified sectors:
+<code class="docutils literal notranslate"><span class="pre">special_rules='~Sector'</span></code></li>
+<li>Include either (all but specified currency or specified
+sectors) xor specified maturities:
+<code class="docutils literal notranslate"><span class="pre">special_rules='(~Currnecy</span> <span class="pre">|</span> <span class="pre">Sector)</span> <span class="pre">^</span> <span class="pre">MaturityYears'</span></code></li>
+</ul>
+</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mvw</strong> – Market value weighting of specified column.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> with specified rules.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a></p>
 </td>
 </tr>
 </tbody>
@@ -430,6 +623,33 @@ with datetime index and numeric rating columns.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Index.synthetic_day">
+<code class="descname">synthetic_day</code><span class="sig-paren">(</span><em>date</em>, <em>as_index=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.synthetic_day" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates <a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> or DataFrames containing only the intersection
+of constituents which existed in the index both the day before
+and the specified day.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>date</strong> (<em>datetime object</em>) – Date of daily DataFrame to return.</li>
+<li><strong>as_index</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If true, return an Index for specified day instead
+of a DataFrame.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df or Index</strong> – DataFrame or Index for specified date.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame or <a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a></p>
 </td>
 </tr>
 </tbody>
@@ -571,6 +791,10 @@ through previous day. If neither start nor end are given only the
 data from previous day is scraped. Optionally load from local
 compressed format for increased performance or feed a DataFrame
 directly.</p>
+<p class="rubric">Notes</p>
+<p>If unknown value is encountered in ratings, user will
+be prompted to provide the numeric value, and the
+<cite>ratings.json</cite> file will be updated.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -623,49 +847,6 @@ directly.</p>
 
 </dd></dl>
 
-<dl class="function">
-<dt id="lgimapy.index.spread_diff">
-<code class="descclassname">lgimapy.index.</code><code class="descname">spread_diff</code><span class="sig-paren">(</span><em>df1</em>, <em>df2</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.spread_diff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate spread difference of index values from df1 to df2.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>df1</strong> (<em>pd.DataFrame</em>) – Older index DataFrame.</li>
-<li><strong>df2</strong> (<em>pd.DataFrame</em>) – Newer index DataFrame.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="lgimapy.index.standardize_cusips">
-<code class="descclassname">lgimapy.index.</code><code class="descname">standardize_cusips</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.standardize_cusips" title="Permalink to this definition">¶</a></dt>
-<dd><p>Standardize CUSIPs, converting cusips which changed name
-to most recent cusip value for full history.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>df</strong> (<em>pd.DataFrame</em>) – DataFrame of selected index cusips.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>df</strong> – DataFrame with all CUSIPs updated to current values.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 <div class="section" id="module-lgimapy.models">
 <span id="lgimapy-models"></span><h2>lgimapy models<a class="headerlink" href="#module-lgimapy.models" title="Permalink to this headline">¶</a></h2>
@@ -692,14 +873,18 @@ for specified dates and maturities.</p>
 
 <dl class="class">
 <dt id="lgimapy.models.TreasuryCurveBuilder">
-<em class="property">class </em><code class="descclassname">lgimapy.models.</code><code class="descname">TreasuryCurveBuilder</code><span class="sig-paren">(</span><em>ix</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lgimapy.models.</code><code class="descname">TreasuryCurveBuilder</code><span class="sig-paren">(</span><em>ix=None</em>, <em>date=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for fitting treasury curve and visualizing curve.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ix</strong> (:class`:<cite>Index</cite>) – <code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code> containing treasuries and strips
-for a single date.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ix</strong> (:class`:<cite>Index</cite>) – <code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code> containing treasuries and strips
+for a single date.</li>
+<li><strong>date</strong> (<em>datetime</em>) – Date to build treasury curve.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -723,88 +908,17 @@ with large errors.</li>
 <li><strong>theshold</strong> (<em>float</em><em>, </em><em>default=12</em>) – Threshold (bp) that ytm errors must be within to not drop bonds
 from fitting routine.</li>
 <li><strong>solver</strong> (<em>str</em><em>, </em><em>default='SLSQP'</em>) – Scipy solver to use when minimizing errors.</li>
-<li><strong>verbose</strong> (<em>int</em><em>, </em><em>default=0</em>) – <dl class="docutils">
-<dt>Verbosity level for optimization.</dt>
-<dd><ul class="first last">
+<li><strong>verbose</strong> (<em>int</em><em>, </em><em>default=0</em>) – <p>Verbosity level for optimization.</p>
+<blockquote>
+<div><ul>
 <li>0: No results.</li>
 <li>1: Updated each time bonds are dropped.</li>
 <li>2: Update each completed optimization simulation.</li>
 <li>3: Update each optimization iteration.</li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 </li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lgimapy.models.TreasuryCurveBuilder.get_KRD_total_returns">
-<code class="descname">get_KRD_total_returns</code><span class="sig-paren">(</span><em>original_date</em>, <em>new_date</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_KRD_total_returns" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reprice hypothetical par bond used for
-KRDs with a new yield curve.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TreasuryCurveBuilder.get_KRD_yields">
-<code class="descname">get_KRD_yields</code><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_KRD_yields" title="Permalink to this definition">¶</a></dt>
-<dd><p>Memoized yields for specified date and
-maturities of [0.5, 2, 5, 10, 20, 30] years.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime</em>) – Date of yield curve.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>yields</strong> – Yields for [0.5, 2, 5, 10, 20, 30] years.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">[1 x 6] ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.models.TreasuryCurveBuilder.get_KRDs_and_coupons">
-<code class="descname">get_KRDs_and_coupons</code><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_KRDs_and_coupons" title="Permalink to this definition">¶</a></dt>
-<dd><p>Memoized key rate durations for specified date and
-maturities of [0.5, 2, 5, 10, 20, 30] years.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime</em>) – Date of yield curve.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>krds</strong> – KRDs for [0.5, 2, 5, 10, 20, 30] years.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">[1x6] ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="lgimapy.models.TreasuryCurveBuilder.get_yield">
-<code class="descname">get_yield</code><span class="sig-paren">(</span><em>date</em>, <em>t</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.get_yield" title="Permalink to this definition">¶</a></dt>
-<dd><p>Vectorized implementation to get yield(s) for a
-given date and maturities.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>date</strong> (<em>datetime object</em>) – Date of yield curve.</li>
-<li><strong>t</strong> (<em>float</em><em>, </em><em>nd.array</em><em>[</em><em>float</em><em>]</em><em></em>) – Maturity or maturities (yrs) to return yields for.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>y</strong> – Yields for specified maturities.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float, ndarray[float]</p>
 </td>
 </tr>
 </tbody>
@@ -834,7 +948,7 @@ given date and maturities.</p>
 <dl class="method">
 <dt id="lgimapy.models.TreasuryCurveBuilder.save">
 <code class="descname">save</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TreasuryCurveBuilder.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save beta values to <cite>../data/treasury_curve_params.csv</cite>.</p>
+<dd><p>Save treasury curve values to <cite>./data/treasury_curve_params.csv</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1128,19 +1242,21 @@ and their cusips.</p>
 <dt id="lgimapy.utils.custom_sort">
 <code class="descclassname">lgimapy.utils.</code><code class="descname">custom_sort</code><span class="sig-paren">(</span><em>str_list</em>, <em>alphabet</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.custom_sort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sort a list of strings by a specified alphabetical order.</p>
-<dl class="docutils">
-<dt>str_list: List[str].</dt>
-<dd>List of strings to be sorted.</dd>
-<dt>alphabet: str</dt>
-<dd>Case sensitive alphabetical order for sort.</dd>
-</dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>str_list</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – List of strings to be sorted.</li>
+<li><strong>alphabet</strong> (<em>str</em>) – Case sensitive alphabetical order for sort.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">Sorted List[str] according to specified alphabet.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">Sorted List[str] according to specified alphabet.</p>
+</td>
 </tr>
 </tbody>
 </table>
