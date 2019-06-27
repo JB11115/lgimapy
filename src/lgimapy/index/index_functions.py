@@ -127,4 +127,4 @@ def concat_index_dfs(dfs, join="outer"):
     if isinstance(dfs[0].index.dtype, CategoricalDtype):
         # Reset index to cusips if previous index was cusips.
         df.set_index("CUSIP", inplace=True, drop=False)
-    return df.drop_duplicates()
+    return df.drop_duplicates(subset=["CUSIP", "Date"])
