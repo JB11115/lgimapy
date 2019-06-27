@@ -37,7 +37,7 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Jun 26, 2019 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Jun 27, 2019 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.index">
@@ -296,34 +296,6 @@ to most recent cusip value for full history.</p>
 </table>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="lgimapy.index.Index.cuisps">
-<code class="descname">cuisps</code><a class="headerlink" href="#lgimapy.index.Index.cuisps" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of all unique cusips in index.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[str]</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="lgimapy.index.Index.dates">
-<code class="descname">dates</code><a class="headerlink" href="#lgimapy.index.Index.dates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sorted list of all dates in index.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="method">
 <dt id="lgimapy.index.Index.aggregate_excess_returns">
 <code class="descname">aggregate_excess_returns</code><span class="sig-paren">(</span><em>start_date</em>, <em>index=True</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.aggregate_excess_returns" title="Permalink to this definition">¶</a></dt>
@@ -396,12 +368,28 @@ and excess return values.</td>
 <dt id="lgimapy.index.Index.cusips">
 <code class="descname">cusips</code><a class="headerlink" href="#lgimapy.index.Index.cusips" title="Permalink to this definition">¶</a></dt>
 <dd><p>Memoized unique cusips in Index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
-<dt>
-<code class="descname">dates</code></dt>
+<dt id="lgimapy.index.Index.dates">
+<code class="descname">dates</code><a class="headerlink" href="#lgimapy.index.Index.dates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Memoized unique sorted dates in Index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -512,12 +500,28 @@ index market value.</p>
 <dt id="lgimapy.index.Index.sectors">
 <code class="descname">sectors</code><a class="headerlink" href="#lgimapy.index.Index.sectors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Memoized unique sorted sectors in Index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="lgimapy.index.Index.subsectors">
 <code class="descname">subsectors</code><a class="headerlink" href="#lgimapy.index.Index.subsectors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Memoized unique sorted subsectors in Index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[str]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
