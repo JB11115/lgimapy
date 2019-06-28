@@ -195,7 +195,7 @@ def floatftime(time_horizon, unit="d"):
     }
     # Append leading 1 if needed.
     if len(time_horizon) == 1:
-        time_horizon = f"1{time_horizon}"
+        time_horizon = f"1{time_horizon.lower()}"
 
     # Split numeric from input unit.
     num, in_unit = float(time_horizon[:-1]), time_horizon[-1].lower()
@@ -352,3 +352,58 @@ def replace_multiple(text, repl_dict):
     for key, val in repl_dict.items():
         text = text.replace(key, val)
     return text
+
+
+def find_threshold_crossings(a, threshold):
+    """
+    Find ilocs where an array crosses a specified threshold.
+
+    a: array-like
+        Array of values.
+    threshold: float
+        Value of threshold to find crossovers.
+
+    Returns
+    -------
+    locs: [1 x N] ndarray
+        List of ilocs where threshold crossovers occur.
+    """
+    a = np.array(a)
+    a_thresh = a - threshold
+    locs = np.where(np.diff(np.sign(a_thresh)))[0]
+    return locs
+
+
+def event_distance(s, event_date, start, end):
+    """
+    Convert timeseries of values to array indexed by
+    days before or after event.
+
+    Parameters
+    ----------
+    s: pd.Series
+        Series of values with datetime index.
+    event_date: datetime
+        Date of event.
+    lookback: str
+        String representation of start relative to
+        event date. Input to :function:`floatftime`.
+    lookforward: str
+        String representation of end relative to
+        event date. Input to :function:`floatftime`.
+
+    Returns
+    -------
+    a: nd.array
+        Array of values
+    """
+    start_date = event_date + timedelta(floatftime(start))
+    end_date = event_date + timedelta(floatftime(end))
+    s = s[(start_date <= s.index) & (s.index <= end_date)]
+    # Find index positions where values exist.
+    ix_mask = np.array([(date - event_date).days for date in s.index])
+    ix_mask -= ix_mask[0]  # start index at 0
+    n = int(floatftime(end) - floatftime(start) + 1)
+    a = np.full(n, np.NaN)
+    a[ix_mask] = s.values
+    return a
