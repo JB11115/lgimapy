@@ -14,23 +14,32 @@ def main():
     `X:/Jason/Projects/Index Analysis/` repository.
     """
 
-    tights_date = "4/16/2019"
-    month_date = "6/3/2019"
     fid = "X:/Jason/Projects/Index Analysis/data_test{}.csv"
+    tights_date = "4/16/2019"
 
-    # Make dict of dates to analyze, ensuring they are on dates with data.
+    # Find date for month to date.
+    today = dt.date.today()
+    if today.day < 10:
+        month_date = pd.to_datetime(
+            f"{today.month-1}/{1}/{today.year}"
+        ) - dt.timedelta(1)
+    else:
+        month_date = pd.to_datetime(
+            f"{today.month}/{1}/{today.year}"
+        ) - dt.timedelta(1)
+
+    # Make dict of dates to analyze and then choose nearest traded dates.
     ixb = IndexBuilder()
-    dates = {
+    raw_dates = {
         "yesterday": pd.to_datetime(dt.date.today() - dt.timedelta(days=1)),
         "week": pd.to_datetime(dt.date.today() - dt.timedelta(days=7)),
         # 'month': pd.to_datetime(dt.date.today() - dt.timedelta(days=30)),
         "month": pd.to_datetime(month_date),
         "tights": pd.to_datetime(tights_date),
     }
-
-    dates = {k: ixb.nearest_date(v) for k, v in dates.items()}
-    # for k, v in dates.items():
-    #     print(k, v)
+    dates = {k: ixb.nearest_date(v) for k, v in raw_dates.items()}
+    date_df = pd.DataFrame(dates, index=["date"])[["week", "month", "tights"]]
+    date_df.to_csv(fid.format(9))
 
     # Load index on dates from SQL database, then find changes.
     df_names = ["week", "month", "tights"]
