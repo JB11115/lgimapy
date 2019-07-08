@@ -2,9 +2,12 @@ import os
 import json
 import pprint
 import re
+from collections import OrderedDict
 from datetime import timedelta
+from functools import lru_cache
 from pathlib import Path
 from time import perf_counter
+from types import GeneratorType
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -375,17 +378,18 @@ def find_threshold_crossings(a, threshold):
     return locs
 
 
-def event_distance(s, event_date, start, end):
+class EventDistance:
     """
-    Convert timeseries of values to array indexed by
-    days before or after event.
+    Convert timeseries of values to indexed array of bins
+    of days before or after the event.
 
     Parameters
     ----------
-    s: pd.Series
-        Series of values with datetime index.
-    event_date: datetime
-        Date of event.
+    s: pd.Series or Iterable
+        Series of values with datetime index or Iterable of
+        Series with datetime indexes.
+    event_dates: datetime or List[datetime].
+        Date(s) of event(s).
     lookback: str
         String representation of start relative to
         event date. Input to :function:`floatftime`.
@@ -393,18 +397,171 @@ def event_distance(s, event_date, start, end):
         String representation of end relative to
         event date. Input to :function:`floatftime`.
 
-    Returns
-    -------
-    a: nd.array
-        Array of values
+    Attributes
+    ----------
+    values: ndarray
+        2D array with raw values for each event in every row.
+    index: ndarray
+        Array of days or bins before/after event.
     """
-    start_date = event_date + timedelta(floatftime(start))
-    end_date = event_date + timedelta(floatftime(end))
-    s = s[(start_date <= s.index) & (s.index <= end_date)]
-    # Find index positions where values exist.
-    ix_mask = np.array([(date - event_date).days for date in s.index])
-    ix_mask -= ix_mask[0]  # start index at 0
-    n = int(floatftime(end) - floatftime(start) + 1)
-    a = np.full(n, np.NaN)
-    a[ix_mask] = s.values
-    return a
+
+    def __init__(self, s, event_dates, lookback, lookforward):
+        self._start = floatftime(lookback)
+        self._end = floatftime(lookforward)
+
+        # Convert event dates to list of datetime objects.
+        if isinstance(event_dates, list):
+            pass
+        elif isinstance(event_dates, pd.Timestamp):
+            event_dates = [event_dates]  # convert to list
+        else:
+            msg = (
+                f"Expected type of `event_dates` is datetime or "
+                f"List[datetime], not {type(event_dates)}."
+            )
+            raise TypeError(msg)
+
+        # Get timeseries values as either generator or Series.
+        if isinstance(s, pd.Series):
+            generator_flag = False
+        elif isinstance(s, GeneratorType):
+            generator_flag = True
+            s_generator = s
+        else:
+            msg = (
+                f"Expected type of `s` is Series or "
+                f"Generator[Series], not {type(s)}."
+            )
+            raise TypeError(msg)
+
+        # Solve raw values for each event date.
+        self._n = int(self._end - self._start + 1)
+        self.values = np.zeros([len(event_dates), self._n])
+        for i, d in enumerate(event_dates):
+            if generator_flag:
+                s = next(s_generator)
+            self.values[i, :] = self._single_event(s, d)
+
+        # Store index and zero-index value.
+        self.index = np.arange(self._n) + self._start
+
+    @property
+    def max(self):
+        """ndarray: Maximum values for each bin before/after event."""
+        return np.nanmax(self.values, axis=0)
+
+    @property
+    def min(self):
+        """ndarray: Minimum values for each bin before/after event."""
+        return np.nanmin(self.values, axis=0)
+
+    @property
+    def mean(self):
+        """ndarray: Mean values for each bin before/after event."""
+        return np.nanmean(self.values, axis=0)
+
+    @property
+    def std(self):
+        """
+        ndarray:
+            Standard deviation of values for each bin before/after event.
+        """
+        return np.nanstd(self.values, axis=0)
+
+    def bin(self, binsize=7, pad="drop"):
+        """
+        Bin :attr:`values` into bins of a specifed number of days
+        on either side of the event date. Updates all attributes.
+
+        Parameters
+        ----------
+        binsize: int, default=7
+            Number of days to include in each bin.
+        pad: {'drop', None}, default='drop'
+            How to pad bins which are not full. By default bins are
+            dropped.
+        """
+        w = binsize
+        n = self.values.shape[0]
+        arrays = OrderedDict()
+
+        # Find event date index.
+        try:
+            zero_ix = list(self.index).index(0)
+        except ValueError:
+            # 0 (event date) not in index.
+            zero_ix = -1
+
+        # Bin and store values before event date.
+        if self._start < 0:
+            neg_array = np.flip(self.values[:, :zero_ix], axis=1)
+            m_mod = neg_array.shape[1] % w
+            if pad == "drop" and m_mod != 0:
+                neg_array = neg_array[:, :-m_mod]
+            else:
+                nan_array = np.full([n, w - m_mod], np.NaN)
+                neg_array = np.concatenate([neg_array, nan_array], axis=1)
+            dims = neg_array.shape[1] // w, int(neg_array.shape[0] * w)
+            neg_array_binned = np.reshape(neg_array.T, (dims)).T
+            arrays[-1] = np.flip(neg_array_binned, axis=1)
+
+        # Store values on event date.
+        if zero_ix != -1:
+            # Add event date padded with NaNs to arrays dict.
+            nan_array = np.full([int(n * w - n)], np.NaN)
+            zero_array = np.concatenate([self.values[:, zero_ix], nan_array])
+            arrays[0] = np.reshape(zero_array, (n * w, 1))
+
+        # Bin and store values after event date.
+        if self._end > 0:
+            pos_array = self.values[:, zero_ix + 1 :]
+            m_mod = pos_array.shape[1] % w
+            if pad == "drop" and m_mod != 0:
+                pos_array = pos_array[:, :-m_mod]
+            else:
+                nan_array = np.full([n, w - m_mod], np.NaN)
+                pos_array = np.concatenate([pos_array, nan_array], axis=1)
+            dims = pos_array.shape[1] // w, int(pos_array.shape[0] * w)
+            pos_array_binned = np.reshape(pos_array.T, (dims)).T
+            arrays[1] = pos_array_binned
+
+        # Combine all binned arrays back to one array.
+        self.values = np.concatenate([v for v in arrays.values()], axis=1)
+
+        # Find new binned index.
+        binned_ix = []
+        for k, v in arrays.items():
+            if k == -1:
+                binned_ix.extend(list(-np.arange(v.shape[1] + 1)[1:][::-1]))
+            elif k == 0:
+                binned_ix.append(0)
+            else:
+                binned_ix.extend(list(np.arange(v.shape[1] + 1)[1:]))
+        self.index = np.array(binned_ix) * w
+
+    def _single_event(self, s, event_date):
+        """
+        Convert single event to array.
+
+        Parameters
+        ----------
+        s: pd.Series
+            Series of values with datetime index.
+        event_date: datetime
+            Date of event.
+
+        Returns
+        -------
+        a: nd.array
+            Array of values
+        """
+        start_date = event_date + timedelta(self._start)
+        end_date = event_date + timedelta(self._end)
+        s = s[(start_date <= s.index) & (s.index <= end_date)]
+        # Find index positions where values exist.
+        ix_mask = np.array(
+            [(date - event_date).days for date in s.index]
+        ) - int(self._start)
+        a = np.full(self._n, np.NaN)
+        a[ix_mask] = s.values
+        return a
