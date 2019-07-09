@@ -195,8 +195,9 @@ class Index:
         OAS=(None, None),
         OASD=(None, None),
         liquidity_score=(None, None),
-        credit_stats_only=False,
-        credit_returns_only=False,
+        in_stats_index=None,
+        in_returns_index=None,
+        is_144A=None,
         financial_flag=None,
         special_rules=None,
     ):
@@ -266,10 +267,18 @@ class Index:
             Range of option adjusted spread durations, default is all.
         liquidity_score: Tuple[float, float], default=(None, None).
             Range of liquidty scores to use, default is all.
-        credit_stats_only: bool, default=False
-            If True, only include bonds with credit stats in index.
-        credit_returns_only: bool, default=False
-            If True, only include bonds with credit returns in index.
+        in_stats_index: bool, default=None
+            If True, only include bonds in stats index.
+            If False, only include bonds out of stats index.
+            By defualt include both.
+        in_returns_index: bool, default=None
+            If True, only include bonds in returns index.
+            If False, only include bonds out of returns index.
+            By defualt include both.
+        is_144A: bool, default=None
+            If True, only include 144A bonds.
+            If False, only include non 144A bonds.
+            By defualt include both.
         financial_flag: {'financial', 'non-financial', 'other'}, default=None
             Financial flag setting to identify fin and non-fin credits.
         special_rules: str, List[str] default=None
@@ -346,9 +355,10 @@ class Index:
         self._add_range_input(OASD, "OASD")
 
         # Set values for including bonds based on credit flags.
-        self._flags = []
-        self._add_flag_input(credit_returns_only, "USCreditReturnsFlag")
-        self._add_flag_input(credit_stats_only, "USCreditStatisticsFlag")
+        self._flags = {}
+        self._add_flag_input(in_returns_index, "USCreditReturnsFlag")
+        self._add_flag_input(in_stats_index, "USCreditStatisticsFlag")
+        self._add_flag_input(is_144A, "Eligibility144AFlag")
 
         # Identify columns with special rules.
         rule_cols = []
@@ -379,7 +389,10 @@ class Index:
             key: f'(self.df["{key}"].isin(self._str_list_vals["{key}"]))'
             for key in self._str_list_vals.keys()
         }
-        flag_repl = {key: f'(self.df["{key}"] == 1)' for key in self._flags}
+        flag_repl = {
+            key: f'(self.df["{key}"] == self._flags["{key}"])'
+            for key in self._flags
+        }
         repl_dict = {**range_repl, **str_repl, **flag_repl, "~(": "(~"}
 
         # Format special rules.
@@ -465,9 +478,9 @@ class Index:
         col_nam: str
             Column name in full DataFrame.
         """
-        if input_val:
+        if input_val is not None:
             self._all_rules.append(col_name)
-            self._flags.append(col_name)
+            self._flags[col_name] = input_val
 
     def clean_treasuries(self):
         """Clean treasury index for building model curve."""
@@ -946,27 +959,3 @@ class Index:
         else:
             ## TODO: implement cusip level aggregate excess returns
             pass
-
-
-# %%
-def main():
-    from lgimapy.index import IndexBuilder
-    from lgimapy.utils import floatftime
-    from datetime import timedelta
-
-    ixb = IndexBuilder()
-    date = "6/2/2019"
-    ixb.load(dev=True, start=date)
-
-    ix = ixb.build(rating="IG", OAS=(-10, 3000), currency="USD")
-    ix = Index(ix.df)
-    ix.synthetic_day(ix.dates[0])
-
-    ix.df[["USCreditReturnsFlag", "USCreditStatisticsFlag"]]
-
-    oas = ix.get_value_history("OAS")
-    sum(len(oas) - oas.count())
-    oas_syn = ix.get_value_history("OAS", synthetic=True)
-    ix.dates[ix.dates > None]
-
-    ix.df.iloc[0, :].T
