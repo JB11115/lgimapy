@@ -293,11 +293,6 @@ class IndexBuilder:
                 "KRD10yr",
                 "KRD20yr",
                 "KRD30yr",
-                "Vega",
-                "Delta",
-                "Gamma",
-                "Theta",
-                "Rho",
                 "OAC",
             ],
             "int8": [
@@ -627,7 +622,7 @@ class IndexBuilder:
                       OAS_12M = IA.OAS12MChange,\
                       ISNULL(IA.LiquidityCostScore,IAP.LiquidityScore) \
                         as LiquidityCostScore,\
-                      I.Eligibility144AFlag,\
+                      Eligibility144AFlag = ISNULL(I.Eligibility144AFlag, -1),\
                       Currency = I.ISOCurrency,\
                       I.CountryOfRisk,\
                       I.CountryOfDomicile,\
@@ -668,11 +663,6 @@ class IndexBuilder:
                       IA.KRD10yr,\
                       IA.KRD20yr,\
                       IA.KRD30yr,\
-                      IA.Vega,\
-                      IA.Delta,\
-                      IA.Gamma,\
-                      IA.Theta,\
-                      IA.Rho,\
                       IA.OAC\
                 FROM DimDate AS D WITH (NOLOCK)\
                 INNER JOIN InstrumentAnalytics AS IA WITH (NOLOCK)\
@@ -843,9 +833,9 @@ class IndexBuilder:
         col_nam: str
             Column name in full DataFrame.
         """
-        if input_val:
+        if input_val is not None:
             self._all_rules.append(col_name)
-            self._flags.append(col_name)
+            self._flags[col_name] = input_val
 
     def build(
         self,
@@ -872,8 +862,9 @@ class IndexBuilder:
         OAS=(None, None),
         OASD=(None, None),
         liquidity_score=(None, None),
-        credit_stats_only=False,
-        credit_returns_only=False,
+        in_stats_index=None,
+        in_returns_index=None,
+        is_144A=None,
         financial_flag=None,
         special_rules=None,
     ):
@@ -941,10 +932,19 @@ class IndexBuilder:
             Range of option adjusted spread durations, default is all.
         liquidity_score: Tuple[float, float], default=(None, None).
             Range of liquidty scores to use, default is all.
-        credit_stats_only: bool, default=False
-            If True, only include bonds with credit stats in index.
-        credit_returns_only: bool, default=False
-            If True, only include bonds with credit returns in index.
+
+        in_stats_index: bool, default=None
+            If True, only include bonds in stats index.
+            If False, only include bonds out of stats index.
+            By defualt include both.
+        in_returns_index: bool, default=None
+            If True, only include bonds in returns index.
+            If False, only include bonds out of returns index.
+            By defualt include both.
+        is_144A: bool, default=None
+            If True, only include 144A bonds.
+            If False, only include non 144A bonds.
+            By defualt include both.
         financial_flag: {'financial', 'non-financial', 'other'}, default=None
             Financial flag setting to identify fin and non-fin credits.
         special_rules: str, List[str] default=None
@@ -1019,9 +1019,10 @@ class IndexBuilder:
         self._add_range_input(OASD, "OASD")
 
         # Set values for including bonds based on credit flags.
-        self._flags = []
-        self._add_flag_input(credit_returns_only, "USCreditReturnsFlag")
-        self._add_flag_input(credit_stats_only, "USCreditStatisticsFlag")
+        self._flags = {}
+        self._add_flag_input(in_returns_index, "USCreditReturnsFlag")
+        self._add_flag_input(in_stats_index, "USCreditStatisticsFlag")
+        self._add_flag_input(is_144A, "Eligibility144AFlag")
 
         # Identify columns with special rules.
         rule_cols = []
@@ -1052,7 +1053,10 @@ class IndexBuilder:
             key: f'(self.df["{key}"].isin(self._str_list_vals["{key}"]))'
             for key in self._str_list_vals.keys()
         }
-        flag_repl = {key: f'(self.df["{key}"] == 1)' for key in self._flags}
+        flag_repl = {
+            key: f'(self.df["{key}"] == self._flags["{key}"])'
+            for key in self._flags
+        }
         repl_dict = {**range_repl, **str_repl, **flag_repl, "~(": "(~"}
 
         # Format special rules.
@@ -1081,6 +1085,12 @@ class IndexBuilder:
 # %%
 def main():
     # %%
+    ixb = IndexBuilder()
 
-    pass
+    ixb.load(dev=True)
+
+    ix = ixb.build()
+    len(ix.df)
+    list(set(ix.df["Eligibility144AFlag"]))
+
     # %%
