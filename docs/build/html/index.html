@@ -37,7 +37,7 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Jun 27, 2019 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Jul 09, 2019 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.index">
@@ -285,7 +285,7 @@ to most recent cusip value for full history.</p>
 <dl class="attribute">
 <dt id="lgimapy.index.Index.df">
 <code class="descname">df</code><a class="headerlink" href="#lgimapy.index.Index.df" title="Permalink to this definition">¶</a></dt>
-<dd><p>Full index DataFrame.</p>
+<dd><p>Full Index DataFrame.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -327,6 +327,12 @@ or individual cusips.</p>
 <dt id="lgimapy.index.Index.clean_treasuries">
 <code class="descname">clean_treasuries</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.clean_treasuries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clean treasury index for building model curve.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.index.Index.clear_day_cache">
+<code class="descname">clear_day_cache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.clear_day_cache" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear cache of stored days.</p>
 </dd></dl>
 
 <dl class="method">
@@ -461,17 +467,27 @@ columns for specified cusip.</td>
 
 <dl class="method">
 <dt id="lgimapy.index.Index.get_value_history">
-<code class="descname">get_value_history</code><span class="sig-paren">(</span><em>col</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.get_value_history" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_value_history</code><span class="sig-paren">(</span><em>col</em>, <em>start=None</em>, <em>end=None</em>, <em>inclusive_end_date=True</em>, <em>synthetic=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.get_value_history" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get history of any column for all cusips in Index.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>col</strong> (<em>str</em>) – Column from <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a> to build history for (e.g., ‘OAS’).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>col</strong> (<em>str</em>) – Column from <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a> to build history for (e.g., ‘OAS’).</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Start date for value history.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – End date for value history.</li>
+<li><strong>inclusive_end_date</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True include end date in returned DataFrame.
+If False do not include end date.</li>
+<li><strong>synthethic</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, use synthethic day data.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>hist_df</strong> – DataFrame with datetime index, CUSIP columns, and price values.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>hist_df</strong> – DataFrame with datetime index, CUSIP columns, and price values.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.DataFrame</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -479,18 +495,24 @@ columns for specified cusip.</td>
 
 <dl class="method">
 <dt id="lgimapy.index.Index.market_value_weight">
-<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
+<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em>, <em>synthetic=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
 <dd><p>Market value weight a specified column vs entire
 index market value.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>col</strong> (<em>str</em>) – Column name to weight, (e.g., ‘OAS’).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>col</strong> (<em>str</em>) – Column name to weight, (e.g., ‘OAS’).</li>
+<li><strong>synthethic</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, use synthethic day data.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Series of market value weighting for specified column.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Series of market value weighting for specified column.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.Series</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.Series</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -526,7 +548,7 @@ index market value.</p>
 
 <dl class="method">
 <dt id="lgimapy.index.Index.subset">
-<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>credit_stats_only=False</em>, <em>credit_returns_only=False</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.subset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>is_144A=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.subset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subset <a class="reference internal" href="#lgimapy.index.Index" title="lgimapy.index.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> with customized rules from
 <a class="reference internal" href="#lgimapy.index.Index.df" title="lgimapy.index.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -574,8 +596,15 @@ include in index, default is all.</li>
 <li><strong>OAS</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spreads to include, default is all.</li>
 <li><strong>OASD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spread durations, default is all.</li>
 <li><strong>liquidity_score</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of liquidty scores to use, default is all.</li>
-<li><strong>credit_stats_only</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, only include bonds with credit stats in index.</li>
-<li><strong>credit_returns_only</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, only include bonds with credit returns in index.</li>
+<li><strong>in_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in stats index.
+If False, only include bonds out of stats index.
+By defualt include both.</li>
+<li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in returns index.
+If False, only include bonds out of returns index.
+By defualt include both.</li>
+<li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include 144A bonds.
+If False, only include non 144A bonds.
+By defualt include both.</li>
 <li><strong>financial_flag</strong> (<em>{'financial'</em><em>, </em><em>'non-financial'</em><em>, </em><em>'other'}</em><em>, </em><em>default=None</em>) – Financial flag setting to identify fin and non-fin credits.</li>
 <li><strong>special_rules</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>] </em><em>default=None</em>) – <p>Special rule(s) for subsetting index using bitwise operators.
 If None, all specified inputs are applied independtently
@@ -660,6 +689,12 @@ of a DataFrame.</li>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="lgimapy.index.Index.total_value">
+<code class="descname">total_value</code><span class="sig-paren">(</span><em>synthetic=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.Index.total_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>float: Total value of index in $M.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -710,7 +745,7 @@ of a DataFrame.</li>
 
 <dl class="method">
 <dt id="lgimapy.index.IndexBuilder.build">
-<code class="descname">build</code><span class="sig-paren">(</span><em>name=''</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>credit_stats_only=False</em>, <em>credit_returns_only=False</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.IndexBuilder.build" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build</code><span class="sig-paren">(</span><em>name=''</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>is_144A=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.index.IndexBuilder.build" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build index with customized rules from <a class="reference internal" href="#lgimapy.index.IndexBuilder.df" title="lgimapy.index.IndexBuilder.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">IndexBuilder.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -756,8 +791,15 @@ in index, default is all.</li>
 <li><strong>OAS</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spreads to include, default is all.</li>
 <li><strong>OASD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spread durations, default is all.</li>
 <li><strong>liquidity_score</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of liquidty scores to use, default is all.</li>
-<li><strong>credit_stats_only</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, only include bonds with credit stats in index.</li>
-<li><strong>credit_returns_only</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, only include bonds with credit returns in index.</li>
+<li><strong>in_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in stats index.
+If False, only include bonds out of stats index.
+By defualt include both.</li>
+<li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in returns index.
+If False, only include bonds out of returns index.
+By defualt include both.</li>
+<li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include 144A bonds.
+If False, only include non 144A bonds.
+By defualt include both.</li>
 <li><strong>financial_flag</strong> (<em>{'financial'</em><em>, </em><em>'non-financial'</em><em>, </em><em>'other'}</em><em>, </em><em>default=None</em>) – Financial flag setting to identify fin and non-fin credits.</li>
 <li><strong>special_rules</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>] </em><em>default=None</em>) – <p>Special rule(s) for subsetting index using bitwise operators.
 If None, all specified inputs are applied independtently of
@@ -1204,6 +1246,134 @@ and their cusips.</p>
 <div class="section" id="module-lgimapy.utils">
 <span id="lgimapy-utils"></span><h3>lgimapy utils<a class="headerlink" href="#module-lgimapy.utils" title="Permalink to this headline">¶</a></h3>
 <dl class="class">
+<dt id="lgimapy.utils.EventDistance">
+<em class="property">class </em><code class="descclassname">lgimapy.utils.</code><code class="descname">EventDistance</code><span class="sig-paren">(</span><em>s</em>, <em>event_dates</em>, <em>lookback</em>, <em>lookforward</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.EventDistance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert timeseries of values to indexed array of bins
+of days before or after the event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>s</strong> (<em>pd.Series</em><em> or </em><em>Iterable</em>) – Series of values with datetime index or Iterable of
+Series with datetime indexes.</li>
+<li><strong>event_dates</strong> (<em>datetime</em><em> or </em><em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – Date(s) of event(s).</li>
+<li><strong>lookback</strong> (<em>str</em>) – String representation of start relative to
+event date. Input to <a href="#id15"><span class="problematic" id="id16">:function:`floatftime`</span></a>.</li>
+<li><strong>lookforward</strong> (<em>str</em>) – String representation of end relative to
+event date. Input to <a href="#id17"><span class="problematic" id="id18">:function:`floatftime`</span></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="lgimapy.utils.EventDistance.values">
+<code class="descname">values</code><a class="headerlink" href="#lgimapy.utils.EventDistance.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array with raw values for each event in every row.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.utils.EventDistance.index">
+<code class="descname">index</code><a class="headerlink" href="#lgimapy.utils.EventDistance.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>Array of days or bins before/after event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.utils.EventDistance.bin">
+<code class="descname">bin</code><span class="sig-paren">(</span><em>binsize=7</em>, <em>pad='drop'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.EventDistance.bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bin <a class="reference internal" href="#lgimapy.utils.EventDistance.values" title="lgimapy.utils.EventDistance.values"><code class="xref py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> into bins of a specifed number of days
+on either side of the event date. Updates all attributes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>binsize</strong> (<em>int</em><em>, </em><em>default=7</em>) – Number of days to include in each bin.</li>
+<li><strong>pad</strong> (<em>{'drop'</em><em>, </em><em>None}</em><em>, </em><em>default='drop'</em>) – How to pad bins which are not full. By default bins are
+dropped.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.utils.EventDistance.max">
+<code class="descname">max</code><a class="headerlink" href="#lgimapy.utils.EventDistance.max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum values for each bin before/after event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.utils.EventDistance.mean">
+<code class="descname">mean</code><a class="headerlink" href="#lgimapy.utils.EventDistance.mean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mean values for each bin before/after event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.utils.EventDistance.min">
+<code class="descname">min</code><a class="headerlink" href="#lgimapy.utils.EventDistance.min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Minimum values for each bin before/after event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.utils.EventDistance.std">
+<code class="descname">std</code><a class="headerlink" href="#lgimapy.utils.EventDistance.std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Standard deviation of values for each bin before/after event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="lgimapy.utils.Time">
 <em class="property">class </em><code class="descclassname">lgimapy.utils.</code><code class="descname">Time</code><span class="sig-paren">(</span><em>unit='s'</em>, <em>name=''</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.Time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple class for time profiling.</p>
@@ -1298,6 +1468,28 @@ and their cusips.</p>
 <dt id="lgimapy.utils.find_min_locs">
 <code class="descclassname">lgimapy.utils.</code><code class="descname">find_min_locs</code><span class="sig-paren">(</span><em>df</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.find_min_locs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find iloc locations of minimum values in pd.DataFrame.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.utils.find_threshold_crossings">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">find_threshold_crossings</code><span class="sig-paren">(</span><em>a</em>, <em>threshold</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.find_threshold_crossings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find ilocs where an array crosses a specified threshold.</p>
+<dl class="docutils">
+<dt>a: array-like</dt>
+<dd>Array of values.</dd>
+<dt>threshold: float</dt>
+<dd>Value of threshold to find crossovers.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>locs</strong> – List of ilocs where threshold crossovers occur.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">[1 x N] ndarray</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
