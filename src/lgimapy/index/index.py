@@ -24,11 +24,7 @@ class Index:
     Attributes
     ----------
     df: pd.DataFrame
-        Full index DataFrame.
-    cuisps: List[str].
-        List of all unique cusips in index.
-    dates: List[datetime].
-        Sorted list of all dates in index.
+        Full Index DataFrame.
     """
 
     def __init__(self, index_df, name=""):
@@ -64,26 +60,35 @@ class Index:
     @property
     @lru_cache(maxsize=None)
     def dates(self):
-        """Memoized unique sorted dates in Index."""
+        """List[datetime]: Memoized unique sorted dates in Index."""
         return sorted(list(set(self.df["Date"])))
 
     @property
     @lru_cache(maxsize=None)
     def cusips(self):
-        """Memoized unique cusips in Index."""
+        """List[str]: Memoized unique cusips in Index."""
         return list(set(self.df.index))
 
     @property
     @lru_cache(maxsize=None)
     def sectors(self):
-        """Memoized unique sorted sectors in Index."""
+        """List[str]: Memoized unique sorted sectors in Index."""
         return sorted(list(set(self.df["Sector"])))
 
     @property
     @lru_cache(maxsize=None)
     def subsectors(self):
-        """Memoized unique sorted subsectors in Index."""
+        """List[str]: Memoized unique sorted subsectors in Index."""
         return sorted(list(set(self.df["Subsector"])))
+
+    def total_value(self, synthetic=False):
+        """float: Total value of index in $M."""
+        dates = self.dates[1:] if synthetic else self.dates
+        a = np.zeros(len(dates))
+        for i, date in enumerate(dates):
+            df = self.synthetic_day(date) if synthetic else self.day(date)
+            a[i] = np.sum(df["AmountOutstanding"] * df["DirtyPrice"])
+        return pd.Series(a, index=dates, name="total_value")
 
     def day(self, date, as_index=False):
         """
@@ -114,7 +119,7 @@ class Index:
             try:
                 df = self._day_cache[date]
             except KeyError:
-                df = self.df[self.df["Date"] == date]
+                df = self.df[self.df["Date"] == date].drop_duplicates("CUSIP")
                 self._day_cache[date] = df
         else:
             # New columns added since last accessed,
@@ -147,16 +152,23 @@ class Index:
         df or Index: pd.DataFrame or :class:`Index`
             DataFrame or Index for specified date.
         """
-        today_date = pd.to_datetime(date)
-        prev_date = self.dates[list(self.dates).index(today_date) - 1]
-        today_df = self.day(today_date)
+        current_date = pd.to_datetime(date)
+        prev_date = self.dates[list(self.dates).index(current_date) - 1]
+        if prev_date == self.dates[-1]:
+            msg = "First day in index history, synthetic day not possible."
+            raise IndexError(msg)
+        current_df = self.day(current_date)
         prev_df = self.day(prev_date)
-        intersection_ix = set(today_df.index).intersection(prev_df.index)
-        df = today_df[today_df.index.isin(intersection_ix)]
+        intersection_ix = set(current_df.index).intersection(prev_df.index)
+        df = current_df[current_df.index.isin(intersection_ix)]
         if as_index:
             return Index(df, self.name)
         else:
             return df
+
+    def clear_day_cache(self):
+        """Clear cache of stored days."""
+        self._day_cache = {}
 
     def subset(
         self,
@@ -472,7 +484,14 @@ class Index:
         df = df[mask].copy()
         self.df = df.copy()
 
-    def get_value_history(self, col):
+    def get_value_history(
+        self,
+        col,
+        start=None,
+        end=None,
+        inclusive_end_date=True,
+        synthetic=False,
+    ):
         """
         Get history of any column for all cusips in Index.
 
@@ -480,23 +499,36 @@ class Index:
         ----------
         col: str
             Column from :attr:`Index.df` to build history for (e.g., 'OAS').
+        start: datetime, default=None
+            Start date for value history.
+        end: datetime, default=None
+            End date for value history.
+        inclusive_end_date: bool, default=True
+            If True include end date in returned DataFrame.
+            If False do not include end date.
+        synthethic: bool, default=False
+            If True, use synthethic day data.
 
         Returns
         -------
         hist_df: pd.DataFrame
             DataFrame with datetime index, CUSIP columns, and price values.
         """
-
-        df = self.df.copy()
-        temp_df = df[["CUSIP", "Date", col]].drop_duplicates()
-        cusips = set(temp_df["CUSIP"])
+        cusips = set(self.cusips)
+        dates = self.dates[1:] if synthetic else self.dates
+        if start is not None:
+            dates = dates[dates >= pd.to_datetime(start)]
+        if end is not None:
+            if inclusive_end_date:
+                dates = dates[dates <= pd.to_datetime(end)]
+            else:
+                dates = dates[dates < pd.to_datetime(end)]
 
         # Build dict of historical values for each CUSIP and
         # convert to DataFrame.
         hist_d = defaultdict(list)
-        for d in self.dates:
-            day_df = temp_df[temp_df["Date"] == d].copy()
-            day_df.drop_duplicates("CUSIP", inplace=True)
+        for d in dates:
+            day_df = self.synthetic_day(d) if synthetic else self.day(d)
             # Add prices for CUSIPs with column data.
             for c, v in zip(day_df["CUSIP"].values, day_df[col].values):
                 hist_d[c].append(v)
@@ -505,7 +537,7 @@ class Index:
             for c in missing_cusips:
                 hist_d[c].append(np.NaN)
 
-        hist_df = pd.DataFrame(hist_d, index=self.dates)
+        hist_df = pd.DataFrame(hist_d, index=dates)
         return hist_df
 
     def get_cusip_history(self, cusip):
@@ -530,7 +562,7 @@ class Index:
             ]
         )
 
-    def market_value_weight(self, col):
+    def market_value_weight(self, col, synthetic=False):
         """
         Market value weight a specified column vs entire
         index market value.
@@ -539,18 +571,21 @@ class Index:
         ----------
         col: str
             Column name to weight, (e.g., 'OAS').
+        synthethic: bool, default=False
+            If True, use synthethic day data.
 
         Returns
         -------
         pd.Series:
             Series of market value weighting for specified column.
         """
-        a = np.zeros(len(self.dates))
-        for i, date in enumerate(self.dates):
-            df = self.day(date)
+        dates = self.dates[1:] if synthetic else self.dates
+        a = np.zeros(len(dates))
+        for i, date in enumerate(dates):
+            df = self.synthetic_day(date) if synthetic else self.day(date)
             a[i] = np.sum(df["AmountOutstanding"] * df["DirtyPrice"] * df[col])
             a[i] /= np.sum(df["AmountOutstanding"] * df["DirtyPrice"])
-        return pd.Series(a, index=self.dates, name=col)
+        return pd.Series(a, index=dates, name=col)
 
     def find_rating_changes(self, rating_agency):
         """
@@ -911,3 +946,27 @@ class Index:
         else:
             ## TODO: implement cusip level aggregate excess returns
             pass
+
+
+# %%
+def main():
+    from lgimapy.index import IndexBuilder
+    from lgimapy.utils import floatftime
+    from datetime import timedelta
+
+    ixb = IndexBuilder()
+    date = "6/2/2019"
+    ixb.load(dev=True, start=date)
+
+    ix = ixb.build(rating="IG", OAS=(-10, 3000), currency="USD")
+    ix = Index(ix.df)
+    ix.synthetic_day(ix.dates[0])
+
+    ix.df[["USCreditReturnsFlag", "USCreditStatisticsFlag"]]
+
+    oas = ix.get_value_history("OAS")
+    sum(len(oas) - oas.count())
+    oas_syn = ix.get_value_history("OAS", synthetic=True)
+    ix.dates[ix.dates > None]
+
+    ix.df.iloc[0, :].T
