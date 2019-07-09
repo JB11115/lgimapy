@@ -485,7 +485,7 @@ class EventDistance:
         n = self.values.shape[0]
         arrays = OrderedDict()
 
-        # Find event date index.
+        # Find event date.
         try:
             zero_ix = list(self.index).index(0)
         except ValueError:
