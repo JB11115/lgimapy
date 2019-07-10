@@ -594,10 +594,13 @@ class Index:
         """
         dates = self.dates[1:] if synthetic else self.dates
         a = np.zeros(len(dates))
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         for i, date in enumerate(dates):
             df = self.synthetic_day(date) if synthetic else self.day(date)
+            df = df.dropna(subset=["AmountOutstanding", "DirtyPrice", col])
             a[i] = np.sum(df["AmountOutstanding"] * df["DirtyPrice"] * df[col])
             a[i] /= np.sum(df["AmountOutstanding"] * df["DirtyPrice"])
+        warnings.simplefilter("default", category=RuntimeWarning)
         return pd.Series(a, index=dates, name=col)
 
     def find_rating_changes(self, rating_agency):
