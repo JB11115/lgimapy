@@ -30,7 +30,6 @@ class Index:
     def __init__(self, index_df, name=""):
         self.df = index_df.set_index("CUSIP", drop=False)
         self.name = name
-        self._column_cache = list(self.df)
         self._day_cache = {}
         self._day_key_cache = defaultdict(str)
 
@@ -112,7 +111,7 @@ class Index:
         """
         date = pd.to_datetime(date)
         # Create cache key of all columns added to :attr:`Index.df`.
-        cache_key = "_".join(self._column_cache)
+        cache_key = "_".join(list(self.df))
         if cache_key == self._day_key_cache[date]:
             # No new column changes since last accessed,
             # treat like normal cache.
@@ -124,7 +123,7 @@ class Index:
         else:
             # New columns added since last accessed,
             # update cache and cache key.
-            df = self.df[self.df["Date"] == date]
+            df = self.df[self.df["Date"] == date].drop_duplicates("CUSIP")
             self._day_cache[date] = df
             self._day_key_cache[date] = cache_key
 
@@ -842,7 +841,7 @@ class Index:
         Appends results as new column in :attr:`Index.df`.
         """
         # Stop computating if already performed.
-        if "total_return" in self._column_cache:
+        if "total_return" in list(self.df):
             return
 
         # Compute total returns without adjusting for coupons.
@@ -888,7 +887,6 @@ class Index:
             self.df.loc[self.df["Date"] == date, "total_return"] = tret_df.loc[
                 date, cusips
             ].values
-        self._column_cache.append("total_return")  # update cache
 
     def compute_excess_returns(self):
         """
@@ -896,7 +894,7 @@ class Index:
         appending result to :attr:`Index.df`.
         """
         # Stop computating if already performed.
-        if "excess_return" in self._column_cache:
+        if "excess_return" in list(self.df):
             return
 
         # Compute total returns.
@@ -925,7 +923,6 @@ class Index:
             )
             ex_rets = df["total_return"].values - tsy_trets
             self.df.loc[self.df["Date"] == date, "excess_return"] = ex_rets
-        self._column_cache.append("excess_return")  # update cache
 
     def aggregate_excess_returns(self, start_date, index=True):
         """
@@ -960,5 +957,5 @@ class Index:
             tsy_total_ret = np.prod(1 + tsy_t_rets) - 1
             return total_ret - tsy_total_ret
         else:
-            ## TODO: implement cusip level aggregate excess returns
+            # TODO: implement cusip level aggregate excess returns
             pass
