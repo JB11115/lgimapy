@@ -15,7 +15,7 @@ def bdh(security, yellow_key, field, start, end=None):
     ----------
     security: str
         Security name or cusip.
-    yellow_key: {'Govt', 'Corp', 'Equity', 'Index', etc.}.
+    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
         Bloomberg yellow key for specified security.
     field: str
         Bloomberg field to collect history.
@@ -149,7 +149,7 @@ def bds(security, yellow_key, field, column=1, date=False):
     ----------
     security: str
         Security name or cusip.
-    yellow_key: {'Govt', 'Corp', 'Equity', 'Index', etc.}.
+    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
         Bloomberg yellow key for specified security.
     field: str
         Bloomberg field to collect history.
