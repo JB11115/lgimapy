@@ -6,7 +6,13 @@ from functools import lru_cache
 import numpy as np
 import pandas as pd
 
-from lgimapy.utils import check_all_equal, mkdir, replace_multiple, root
+from lgimapy.utils import (
+    check_all_equal,
+    load_json,
+    mkdir,
+    replace_multiple,
+    root,
+)
 from lgimapy.index import concat_index_dfs
 
 # %%
@@ -317,9 +323,11 @@ class Index:
                 ratings = (11, 21)
             else:
                 # Single rating value.
-                ratings = (self._ratings[rating], self._ratings[rating])
+                ratings_map = load_json("ratings")
+                ratings = (ratings_map[rating], ratings_map[rating])
         else:
-            ratings = (self._ratings[rating[0]], self._ratings[rating[1]])
+            ratings_map = load_json("ratings")
+            ratings = (ratings_map[rating[0]], ratings_map[rating[1]])
 
         # TODO: Modify price/amount outstading s.t. they account for currency.
         # Make dict of values for all str inputs.

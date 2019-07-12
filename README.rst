@@ -47,7 +47,7 @@ Using Anaconda, from terminal:
    pip install -U pip
    pip install -r requirements.txt
    conda install rpy2
-
+   pip install -e .
 
 
 LICENSE
