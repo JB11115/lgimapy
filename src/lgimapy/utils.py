@@ -161,6 +161,40 @@ def savefig(fid, fdir=None, dpi=300):
     plt.savefig(full_fid, dpi=dpi, bbox_inches="tight")
 
 
+def tolist(obj, dtype=None):
+    """
+    Convert single object to list if it is not already
+    a list-like object.
+
+    Parameters
+    ----------
+    obj:
+        Object to convert to list if required.
+    dtype: type
+        Data type of object to check against/ data type
+        of object in output list. If None the dtype is checked
+        against ```list``` and ```tuple``` and converted to
+        ```list``` if it is neither.
+
+    Returns
+    -------
+    list-like:
+        List-like version of input object.
+    """
+    if dtype is not None:
+        # Compare to specific dtype.
+        if isinstance(obj, dtype):
+            return list(obj)
+        else:
+            return obj
+    else:
+        # Compare to list and tuple only.
+        if type(obj) in [list, tuple]:
+            return obj
+        else:
+            return list(obj)
+
+
 def nearest(items, pivot):
     """Return nearest nearest item in list to pivot."""
     return min(items, key=lambda x: abs(x - pivot))
