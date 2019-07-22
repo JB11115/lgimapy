@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pyodbc
 
-from lgimapy.bloomberg import get_bloomberg_subsector
+from lgimapy.bloomberg import get_bloomberg_subsector, get_amount_outstanding
 from lgimapy.index import concat_index_dfs, Index
 from lgimapy.utils import dump_json, load_json, replace_multiple, root
 
@@ -503,6 +503,7 @@ class IndexBuilder:
         ][keep_cols].copy()
 
         # Convert outstading from $ to $M.
+        df["AmountOutstanding"] = get_amount_outstanding(df["CUSIP"].values)
         df["AmountOutstanding"] /= 1e6
 
         # Replace matuirities on bonds with variable coupon type and
