@@ -49,26 +49,47 @@ def scrape_rating_changes(cusip):
             ovrd = {"RATING_AS_OF_DATE_OVERRIDE": new_date}
 
     # Load `ratings_changes.json`, add new cusips, and save.
-    fid = "ratings_changes.json"
+    fid = "ratings_changes"
     ratings = load_json(fid, empty_on_error=True)
     ratings[cusip] = rating_changes
     dump_json(ratings, fid)
 
 
 def main():
-    from lgimapy.index import IndexBuilder
+    import pandas as pd
+    from lgimapy.index import IndexBuilder, Index, concat_index_dfs
 
     ixb = IndexBuilder()
-    ixb.load(local=True)
-    ix = ixb.build(start="1/1/2007")
-    cusips = list(ix.cusips)
-    del ixb
-    del ix
+    # ixb.load(local=True)
+    df_list = []
+    for y in tqdm(range(2004, 2020)):
+        for m in range(1, 13):
+            d = 1
+            while True:
+                date = f"{m}/{d}/{y}"
+                print(date)
+                try:
+                    df = ixb.load(
+                        start=date, end=date, clean=False, ret_df=True
+                    )
+                except ValueError:
+                    d += 1
+                else:
+                    break
+                if d > 8:
+                    break
+            df_list.append(df)
 
-    ratings = load_json("ratings_changes.json")
+    df = pd.concat(df_list, join="outer", sort=False)
+    cusips = list(set(df["CUSIP"]))
+
+    del ixb
+    # del ix
+
+    ratings = load_json("ratings_changes")
     cusips_to_scrape = []
     for cusip in cusips:
-        if cusip not in rating_changes_dict:
+        if cusip not in ratings:
             cusips_to_scrape.append(cusip)
 
     for cusip in tqdm(cusips_to_scrape):

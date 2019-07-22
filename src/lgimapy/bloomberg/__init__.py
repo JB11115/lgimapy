@@ -6,11 +6,13 @@ from lgimapy.bloomberg.subsectors import (
     get_bloomberg_subsector,
     scrape_bloomberg_subsectors,
 )
+from lgimapy.bloomberg.cusip_ticker import get_bloomberg_ticker
 
 __all__ = [
     "bdh",
     "bdp",
     "bds",
+    "get_bloomberg_ticker",
     "get_bloomberg_subsector",
     "update_subsector_json",
     "scrape_bloomberg_subsectors",
