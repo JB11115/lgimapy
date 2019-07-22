@@ -38,14 +38,14 @@ def main():
         "tights": pd.to_datetime(tights_date),
     }
     dates = {k: ixb.nearest_date(v) for k, v in raw_dates.items()}
+    print(dates["yesterday"].strftime("%m/%d/%Y"))
     date_df = pd.DataFrame(dates, index=["date"])[["week", "month", "tights"]]
     date_df.to_csv(fid.format(9))
 
     # Load index on dates from SQL database, then find changes.
     df_names = ["week", "month", "tights"]
     raw_dfs = {
-        k: ixb.load(start=v, end=v, dev=True, ret_df=True)
-        for k, v in dates.items()
+        k: ixb.load(start=v, end=v, ret_df=True) for k, v in dates.items()
     }
     index_chg_dfs = {
         n: spread_diff(raw_dfs[n], raw_dfs["yesterday"]) for n in df_names
@@ -64,7 +64,7 @@ def main():
         "FitchRating",
         "AmountOutstanding",
         "OAS",
-        "LiquidityCostScore",
+        "LQA",
         "NumericRating",
         "OAS_old",
         "OAS_change",
@@ -137,13 +137,13 @@ def aggregate_issuers(df):
         """Weighed average aggregation of same ticker/issuer/rank."""
         agg = {col: x[col].iloc[0] for col in list(x)}  # first value
         agg["NumericRating"] = weighted_average(x, "NumericRating")
-        agg["LiquidityCostScore"] = weighted_average(x, "LiquidityCostScore")
+        agg["LQA"] = weighted_average(x, "LQA")
         agg["OAS"] = weighted_average(x, "OAS")
         agg["OAS_old"] = weighted_average(x, "OAS_old")
         return pd.Series(agg, index=agg.keys())
 
     agg_df = df.groupby(["Ticker Name Rank"]).apply(my_agg)
-    agg_df["LiquidityCostScore"].replace(0.0, np.NaN, inplace=True)
+    agg_df["LQA"].replace(0.0, np.NaN, inplace=True)
     agg_df["OAS_change"] = agg_df["OAS"] - agg_df["OAS_old"]
     agg_df["OAS_pct_change"] = agg_df["OAS"] / agg_df["OAS_old"] - 1
     agg_df = agg_df.sort_index().reset_index(drop=True)
