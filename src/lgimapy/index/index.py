@@ -6,6 +6,7 @@ from functools import lru_cache
 import numpy as np
 import pandas as pd
 
+from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.utils import (
     check_all_equal,
     load_json,
@@ -54,11 +55,19 @@ class Index:
         else:
             raise TypeError(f"Right operand must be an {type(ix).__name__}.")
 
+    def __radd__(self, other):
+        """Combine mutltiple instances of :class:`Index` together."""
+        if isinstance(other, Index):
+            return Index(concat_index_dfs([self.df, other.df]))
+        elif other == 0:
+            return self
+        else:
+            raise TypeError(f"Left operand must be an {type(ix).__name__}.")
+
     def __iadd__(self, other):
         """Combine mutltiple instances of :class:`Index` together."""
         if isinstance(other, Index):
-            self.df = concat_index_dfs([self.df, other.df])
-            return self
+            return Index(concat_index_dfs([self.df, other.df]))
         else:
             raise TypeError(f"Right operand must be an {type(ix).__name__}.")
 
@@ -85,6 +94,16 @@ class Index:
     def subsectors(self):
         """List[str]: Memoized unique sorted subsectors in Index."""
         return sorted(list(set(self.df["Subsector"])))
+
+    @property
+    @lru_cache(maxsize=None)
+    def _ratings(self):
+        """Dict[str: int]: Ratings map from letters to numeric."""
+        return load_json("ratings")
+
+    def copy(self):
+        """Create copy of current :class:`Index`."""
+        return Index(self.df.copy())
 
     def total_value(self, synthetic=False):
         """float: Total value of index in $M."""
@@ -178,6 +197,7 @@ class Index:
     def subset(
         self,
         name=None,
+        date=None,
         start=None,
         end=None,
         rating=None,
@@ -214,10 +234,12 @@ class Index:
         ----------
         name: str, default=''
             Optional name for returned index.
+        date: datetime, default=None
+            Single date to subset new index.
         start: datetime, default=None
-            Start date for index, if None the start date from load is used.
+            Start date for index.
         end: datetime, default=None
-            End date for index, if None the end date from load is used.
+            End date for index.
         rating: str , Tuple[str, str], default=None
             Bond rating/rating range for index.
 
@@ -309,7 +331,9 @@ class Index:
         """
         name = f"{self.name} subset" if name is None else name
 
-        # Convert start and end dates to datetime.
+        # Convert dates to datetime.
+        if date is not None:
+            start = end = date
         start = None if start is None else pd.to_datetime(start)
         end = None if end is None else pd.to_datetime(end)
 
@@ -323,11 +347,9 @@ class Index:
                 ratings = (11, 21)
             else:
                 # Single rating value.
-                ratings_map = load_json("ratings")
-                ratings = (ratings_map[rating], ratings_map[rating])
+                ratings = (self._ratings[rating], self._ratings[rating])
         else:
-            ratings_map = load_json("ratings")
-            ratings = (ratings_map[rating[0]], ratings_map[rating[1]])
+            ratings = (self._ratings[rating[0]], self._ratings[rating[1]])
 
         # TODO: Modify price/amount outstading s.t. they account for currency.
         # Make dict of values for all str inputs.
@@ -490,15 +512,26 @@ class Index:
             self._flags[col_name] = input_val
 
     def clean_treasuries(self):
-        """Clean treasury index for building model curve."""
-        df = self.df[self.df["Ticker"] == "T"].copy()
+        """
+        Clean treasury index for building model curve.
 
-        # Remove bonds that have current maturities less than the
-        # original maturity of another tenor (e.g., remove 30 year bonds
-        # once their matuirty is less than 10 years, 10 and 7,7 and 5, etc.).
-        mat_map = {2: 0, 3: 2, 5: 3, 7: 5, 10: 7, 30: 10}
+        Keep only non-callable treasuries. Additionally,
+        remove bonds that have current maturities less than
+        the original maturity of another tenor (e.g., remove
+        30 year bonds once their matuirty is less than 10 years,
+        10 and 7,7 and 5, etc.).
+        """
+        # Add Bloomberg ticker.
+        self.df["BTicker"] = get_bloomberg_ticker(self.df["CUSIP"].values)
+
+        maturity_map = {2: 0, 3: 2, 5: 3, 7: 5, 10: 7, 30: 10}
+        df = self.df[
+            ((self.df["BTicker"] == "T") | (self.df["BTicker"] == "US/T"))
+            & (self.df["CallType"] == "NONCALL")
+            & (self.df["OriginalMaturity"].isin(set(maturity_map.keys())))
+        ].copy()
         mask = [
-            my > mat_map[om]
+            my > maturity_map[om]
             for my, om in zip(df["MaturityYears"], df["OriginalMaturity"])
         ]
         df = df[mask].copy()
