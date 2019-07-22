@@ -6,7 +6,11 @@ from lgimapy.bloomberg.subsectors import (
     get_bloomberg_subsector,
     scrape_bloomberg_subsectors,
 )
+from lgimapy.bloomberg.cusip_amount_outstanding import get_amount_outstanding
+from lgimapy.bloomberg.cusip_issue_price import get_issue_price
 from lgimapy.bloomberg.cusip_ticker import get_bloomberg_ticker
+
+
 
 __all__ = [
     "bdh",
