@@ -2,19 +2,83 @@ import json
 import pickle
 import warnings
 from functools import lru_cache
+from glob import glob
 
 import datetime as dt
-import feather
 import numpy as np
 import pandas as pd
 import pyodbc
 
 from lgimapy.bloomberg import get_bloomberg_subsector
-from lgimapy.index import Index
+from lgimapy.index import concat_index_dfs, Index
 from lgimapy.utils import dump_json, load_json, replace_multiple, root
 
 
 # %%
+def clean_dtypes(df):
+    reverse_dtype_dict = {
+        "float32": [
+            "CouponRate",
+            "CleanPrice",
+            "OAD",
+            "OAS",
+            "OASD",
+            "OAS_1W",
+            "OAS_1M",
+            "OAS_3M",
+            "OAS_6M",
+            "OAS_12M",
+            "LiquidityCostScore",
+            "AccruedInterest",
+            "LQA",
+            "KRD06mo",
+            "KRD02yr",
+            "KRD05yr",
+            "KRD10yr",
+            "KRD20yr",
+            "KRD30yr",
+            "OAC",
+        ],
+        "int8": [
+            "Eligibility144AFlag",
+            "USCreditReturnsFlag",
+            "USCreditStatisticsFlag",
+            "AnyIndexFlag",
+            "USAggReturnsFlag",
+            "USAggStatisticsFlag",
+        ],
+        "category": [
+            "CUSIP",
+            "ISIN",
+            "Ticker",
+            "Issuer",
+            "Sector",
+            "Subsector",
+            "MoodyRating",
+            "SPRating",
+            "FitchRating",
+            "CollateralType",
+            "CouponType",
+            "CallType",
+            "Currency",
+            "CountryOfRisk",
+            "CountryOfDomicile",
+            "MarketOfIssue",
+            "FinancialFlag",
+        ],
+    }
+    # Build col:dtype dict and apply to input DataFrame.
+    df_columns = set(df.columns)
+    dtype_dict = {}
+    for dtype, col_names in reverse_dtype_dict.items():
+        for col in col_names:
+            if col in df_columns:
+                dtype_dict[col] = dtype
+            else:
+                continue
+    return df.astype(dtype_dict)
+
+
 class IndexBuilder:
     """
     Class to pull and clean index data from SQL database.
@@ -36,7 +100,7 @@ class IndexBuilder:
     @property
     @lru_cache(maxsize=None)
     def trade_dates(self):
-        """Datetime index array of dates with credit data."""
+        """List[datetime]: Dates with credit data."""
         dates_sql = "select distinct effectivedatekey from \
             dbo.InstrumentAnalytics order by effectivedatekey"
         conn = pyodbc.connect(
@@ -62,7 +126,7 @@ class IndexBuilder:
 
         Returns
         -------
-        t_date: datetime object
+        datetime:
             Trade date nearest to input date.
         """
         return min(self.trade_dates, key=lambda x: abs(x - date))
@@ -183,7 +247,7 @@ class IndexBuilder:
         return df
 
     @staticmethod
-    def _convert_dtypes(df):
+    def _preprocess(df):
         """
         Convert dtypes for columns in sql_df to save memory.
         Column names are corrected and values in categorical
@@ -271,61 +335,7 @@ class IndexBuilder:
 
         # Fill NaNs for rating categories.
         df[rating_cols] = df[rating_cols].fillna("NR")
-
-        reverse_dtype_dict = {
-            "float32": [
-                "CouponRate",
-                "CleanPrice",
-                "OAD",
-                "OAS",
-                "OASD",
-                "OAS_1W",
-                "OAS_1M",
-                "OAS_3M",
-                "OAS_6M",
-                "OAS_12M",
-                "LiquidityCostScore",
-                "AccruedInterest",
-                "LQA",
-                "KRD06mo",
-                "KRD02yr",
-                "KRD05yr",
-                "KRD10yr",
-                "KRD20yr",
-                "KRD30yr",
-                "OAC",
-            ],
-            "int8": [
-                "Eligibility144AFlag",
-                "USCreditReturnsFlag",
-                "USCreditStatisticsFlag",
-                "AnyIndexFlag",
-                "USAggReturnsFlag",
-                "USAggStatisticsFlag",
-            ],
-            "category": [
-                "CUSIP",
-                "Ticker",
-                "Issuer",
-                "Sector",
-                "MoodyRating",
-                "SPRating",
-                "FitchRating",
-                "CollateralType",
-                "CouponType",
-                "CallType",
-                "Currency",
-                "CountryOfRisk",
-                "CountryOfDomicile",
-                "MarketOfIssue",
-            ],
-        }
-        # Build col:dtype dict and apply to input DataFrame.
-        dtype_dict = {}
-        for dtype, col_names in reverse_dtype_dict.items():
-            for col in col_names:
-                dtype_dict[col] = dtype
-        return df.astype(dtype_dict)
+        return clean_dtypes(df)
 
     def _get_numeric_ratings(self, df):
         """
@@ -404,9 +414,8 @@ class IndexBuilder:
         df: pd.DataFrame
             Cleaned DataFrame.
         """
-
         # List rules for bonds to keep and drop.
-        coupontypes = [
+        coupontypes = {
             "FIXED",
             "VARIABLE",
             "STEP CPN",
@@ -414,9 +423,9 @@ class IndexBuilder:
             "ADJUSTABLE",
             "HYBRID VARIABLE",
             "DEFAULTED",
-        ]
-        calltypes = ["NONCALL", "MKWHOLE", "CALL/NR", "CALL/RF", "EUROCAL"]
-        bad_sectors = [
+        }
+        calltypes = {"NONCALL", "MKWHOLE", "CALL/NR", "CALL/RF", "EUROCAL"}
+        bad_sectors = {
             "STRANDED_UTILITY",
             "GOVERNMENT_SPONSORED",
             "CAR_LOAN",
@@ -435,9 +444,9 @@ class IndexBuilder:
             "GNMA_15_YR",
             "GNMA_30_YR",
             "NA",
-        ]
-        bad_tickers = ["TVA", "FNMA", "FHLMC"]
-        bad_pay_ranks = ["CERT OF DEPOSIT", "GOVT LIQUID GTD", "INSURED"]
+        }
+        bad_tickers = {"TVA", "FNMA", "FHLMC"}
+        bad_pay_ranks = {"CERT OF DEPOSIT", "GOVT LIQUID GTD", "INSURED"}
 
         # Drop rows with the required columns.
         # TODO: add 'Issuer' back in
@@ -462,6 +471,22 @@ class IndexBuilder:
         ) / 365
         df["IssueYears"] = (df["Date"] - df["IssueDate"]).astype(day) / 365
 
+        # Find columns to be kept.
+        drop_cols = {
+            "Delta",
+            "Gamma",
+            "Rho",
+            "Theta",
+            "Vega",
+            "OAS_1W",
+            "OAS_1M",
+            "OAS_3M",
+            "OAS_6M",
+            "OAS_12M",
+            "LiquidityCostScore",
+        }
+        keep_cols = [c for c in df.columns if c not in drop_cols]
+
         # Subset DataFrame by specified rules.
         df = df[
             (df["CouponType"].isin(coupontypes))
@@ -475,7 +500,7 @@ class IndexBuilder:
                 (df["CouponType"] != "VARIABLE")
                 | ((df["MaturityDate"] - df["NextCallDate"]).astype(day) < 370)
             )
-        ].copy()
+        ][keep_cols].copy()
 
         # Convert outstading from $ to $M.
         df["AmountOutstanding"] /= 1e6
@@ -515,6 +540,7 @@ class IndexBuilder:
 
     def load(
         self,
+        date=None,
         start=None,
         end=None,
         cusips=None,
@@ -539,6 +565,8 @@ class IndexBuilder:
 
         Parameters
         ----------
+        date: datetime, default=None
+            Single date to scrape.
         start: str, datetime, default=None
             Starting date for scrape.
         end: str, datetime, default=None
@@ -553,13 +581,17 @@ class IndexBuilder:
         ret_df: bool, default=False
             If True, return loaded DataFrame.
         local: bool, default=False
-            Load index from local binary file.
+            Load index from local feather file.
 
         Returns
         -------
         df: pd.DataFrame
             DataFrame for specified date's index data if `ret_df` is true.
         """
+        # Process dates.
+        if date is not None:
+            start = end = date
+
         # Store data if provided.
         if data is not None:
             self.df = data
@@ -570,8 +602,20 @@ class IndexBuilder:
 
         # Load local feather if
         if local:
-            fid = str(root("data/ixb_feathers/full.feather"))
-            self.df = feather.read_dataframe(fid)
+            # Find correct feather files to load.
+            fmt = "%Y_%m.feather"
+            s = pd.to_datetime(start)
+            start_month = pd.to_datetime(f"{s.month}/1/{s.year}")
+            feathers = pd.date_range(start_month, end, freq="MS").strftime(fmt)
+            fids = [root(f"data/feathers/{f}") for f in feathers]
+
+            # Load feather files as DataFrames and subset to correct dates.
+            self.df = concat_index_dfs([pd.read_feather(f) for f in fids])
+            self.df = self.df[
+                (self.df["Date"] >= pd.to_datetime(start))
+                & (self.df["Date"] <= pd.to_datetime(end))
+            ]
+
             if ret_df:
                 return self.df
             else:
@@ -750,15 +794,20 @@ class IndexBuilder:
         chunk_list = []
         for chunk in df_chunk:
             # Preprocess chunk.
-            chunk = self._convert_dtypes(chunk)
+            chunk = self._preprocess(chunk)
             if clean:
                 chunk = self._clean(chunk)
             chunk_list.append(chunk)
-        sql_df = pd.concat(chunk_list, ignore_index=True)
-
-        # Verify data was scraped.
-        if len(sql_df) == 0:
-            print("Warning: Scraped Index DataFrame is Empty.")
+        if clean:
+            try:
+                sql_df = concat_index_dfs(chunk_list)
+            except (IndexError, ValueError):
+                raise ValueError("Empty Index, try selecting different dates.")
+        else:
+            try:
+                sql_df = pd.concat(chunk_list, join="outer", sort=False)
+            except (IndexError, ValueError):
+                raise ValueError("Empty Index, try selecting different dates.")
 
         # Save unique loaded dates to memory.
         self.loaded_dates = sorted(list(set(sql_df["Date"])))
@@ -840,6 +889,7 @@ class IndexBuilder:
     def build(
         self,
         name="",
+        date=None,
         start=None,
         end=None,
         rating=None,
@@ -875,6 +925,8 @@ class IndexBuilder:
         ----------
         name: str, default=''
             Optional name for returned index.
+        date: datetime, default=None
+            Single date to build index.
         start: datetime, default=None
             Start date for index, if None the start date from load is used.
         end: datetime, default=None
@@ -968,7 +1020,9 @@ class IndexBuilder:
         :class:`Index`:
             :class:`Index` with specified rules.
         """
-        # Convert start and end dates to datetime.
+        # Convert dates to datetime.
+        if date is not None:
+            start = end = date
         start = None if start is None else pd.to_datetime(start)
         end = None if end is None else pd.to_datetime(end)
 
@@ -1080,17 +1134,3 @@ class IndexBuilder:
         # Combine formatting rules into single mask and subset DataFrame.
         subset_mask = " & ".join(subset_mask_list)
         return Index(eval(f"self.df.loc[{subset_mask}]"), name)
-
-
-# %%
-def main():
-    # %%
-    ixb = IndexBuilder()
-
-    ixb.load(dev=True)
-
-    ix = ixb.build()
-    len(ix.df)
-    list(set(ix.df["Eligibility144AFlag"]))
-
-    # %%
