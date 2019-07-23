@@ -128,3 +128,27 @@ def concat_index_dfs(dfs, join="outer"):
         # Reset index to cusips if previous index was cusips.
         df.set_index("CUSIP", inplace=True, drop=False)
     return df.drop_duplicates(subset=["CUSIP", "Date"])
+
+
+def new_issue_mask(df):
+    """
+    Create mask for input DataFrame which returns
+    a boolean mask indicating which bonds are
+    currently in the month they were originally issued.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        DataFrame from either :attr:`IndexBuilder.df` or
+        :attr:`Index.df`.
+
+    Returns
+    -------
+    List[bool].
+        Boolean mask for whether current date is in
+        orinal issue month.
+    """
+    return [
+        (idt.month, idt.year) == (dt.month, dt.year)
+        for idt, dt in zip(df["IssueDate"], df["Date"])
+    ]

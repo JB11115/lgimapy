@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 
 from lgimapy.bloomberg import get_bloomberg_ticker
+from lgimapy.index import concat_index_dfs, new_issue_mask
 from lgimapy.utils import (
     check_all_equal,
     load_json,
@@ -14,7 +15,6 @@ from lgimapy.utils import (
     replace_multiple,
     root,
 )
-from lgimapy.index import concat_index_dfs
 
 # %%
 class Index:
@@ -223,6 +223,7 @@ class Index:
         in_stats_index=None,
         in_returns_index=None,
         is_144A=None,
+        is_new_issue=None,
         financial_flag=None,
         special_rules=None,
     ):
@@ -306,6 +307,10 @@ class Index:
             If True, only include 144A bonds.
             If False, only include non 144A bonds.
             By defualt include both.
+        is_new_issue: bool, default=None
+            If True, only include bonds in the month they were issued.
+            If False, include all bonds.
+            By default include all bonds.
         financial_flag: {'financial', 'non-financial', 'other'}, default=None
             Financial flag setting to identify fin and non-fin credits.
         special_rules: str, List[str] default=None
@@ -351,6 +356,10 @@ class Index:
         else:
             ratings = (self._ratings[rating[0]], self._ratings[rating[1]])
 
+        # Add new issue mask if required.
+        if is_new_issue:
+            self.df["NewIssueMask"] = new_issue_mask(self.df)
+
         # TODO: Modify price/amount outstading s.t. they account for currency.
         # Make dict of values for all str inputs.
         self._all_rules = []
@@ -388,6 +397,7 @@ class Index:
         self._add_flag_input(in_returns_index, "USCreditReturnsFlag")
         self._add_flag_input(in_stats_index, "USCreditStatisticsFlag")
         self._add_flag_input(is_144A, "Eligibility144AFlag")
+        self._add_flag_input(is_new_issue, "NewIssueMask")
 
         # Identify columns with special rules.
         rule_cols = []
@@ -442,9 +452,14 @@ class Index:
                 continue  # already added to subset mask
             subset_mask_list.append(replace_multiple(rule, repl_dict))
 
-        # Combine formatting rules into single mask and subset DataFrame.
+        # Combine formatting rules into single mask and subset DataFrame,
+        # and drop temporary columns.
         subset_mask = " & ".join(subset_mask_list)
-        return Index(eval(f"self.df.loc[{subset_mask}]"), name)
+        temp_cols = ["NewIssueMask"]
+        df = eval(f"self.df.loc[{subset_mask}]").drop(
+            temp_cols, axis=1, errors="ignore"
+        )
+        return Index(df, name)
 
     def _add_str_list_input(self, input_val, col_name):
         """
