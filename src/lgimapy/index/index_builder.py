@@ -504,7 +504,7 @@ class IndexBuilder:
         ][keep_cols].copy()
 
         # Convert outstading from $ to $M.
-        df["AmountOutstanding"] = get_amount_outstanding(df["CUSIP"].values)
+        # df["AmountOutstanding"] = get_amount_outstanding(df["CUSIP"].values)
         df["AmountOutstanding"] /= 1e6
 
         # Replace matuirities on bonds with variable coupon type and
@@ -813,7 +813,7 @@ class IndexBuilder:
                 raise ValueError("Empty Index, try selecting different dates.")
 
         # Save unique loaded dates to memory.
-        self.loaded_dates = sorted(list(set(sql_df["Date"])))
+        self.loaded_dates = list(sql_df["Date"].unique())
 
         # Standardize cusips over full period.
         if clean:
