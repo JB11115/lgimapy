@@ -75,25 +75,25 @@ class Index:
     @lru_cache(maxsize=None)
     def dates(self):
         """List[datetime]: Memoized unique sorted dates in Index."""
-        return sorted(list(set(self.df["Date"])))
+        return list(self.df["Date"].unique())
 
     @property
     @lru_cache(maxsize=None)
     def cusips(self):
         """List[str]: Memoized unique cusips in Index."""
-        return list(set(self.df.index))
+        return list(self.df.index.unique())
 
     @property
     @lru_cache(maxsize=None)
     def sectors(self):
         """List[str]: Memoized unique sorted sectors in Index."""
-        return sorted(list(set(self.df["Sector"])))
+        return sorted(list(self.df["Sector"].unique()))
 
     @property
     @lru_cache(maxsize=None)
     def subsectors(self):
         """List[str]: Memoized unique sorted subsectors in Index."""
-        return sorted(list(set(self.df["Subsector"])))
+        return sorted(list(self.df["Subsector"].unique()))
 
     @property
     @lru_cache(maxsize=None)
