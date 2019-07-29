@@ -75,7 +75,7 @@ class Index:
     @lru_cache(maxsize=None)
     def dates(self):
         """List[datetime]: Memoized unique sorted dates in Index."""
-        return list(self.df["Date"].unique())
+        return list(pd.to_datetime(self.df["Date"].unique()))
 
     @property
     @lru_cache(maxsize=None)
