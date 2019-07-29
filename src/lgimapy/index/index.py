@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from lgimapy.bloomberg import get_bloomberg_ticker
-from lgimapy.index import concat_index_dfs, new_issue_mask
+from lgimapy.index import Bond, concat_index_dfs, new_issue_mask
 from lgimapy.utils import (
     check_all_equal,
     load_json,
@@ -74,26 +74,43 @@ class Index:
     @property
     @lru_cache(maxsize=None)
     def dates(self):
-        """List[datetime]: Memoized unique sorted dates in Index."""
+        """List[datetime]: Memoized unique sorted dates in index."""
         return list(pd.to_datetime(self.df["Date"].unique()))
 
     @property
     @lru_cache(maxsize=None)
     def cusips(self):
-        """List[str]: Memoized unique cusips in Index."""
+        """List[str]: Memoized unique cusips in index."""
         return list(self.df.index.unique())
 
     @property
     @lru_cache(maxsize=None)
     def sectors(self):
-        """List[str]: Memoized unique sorted sectors in Index."""
+        """List[str]: Memoized unique sorted sectors in index."""
         return sorted(list(self.df["Sector"].unique()))
 
     @property
     @lru_cache(maxsize=None)
     def subsectors(self):
-        """List[str]: Memoized unique sorted subsectors in Index."""
+        """List[str]: Memoized unique sorted subsectors in index."""
         return sorted(list(self.df["Subsector"].unique()))
+
+    @property
+    @lru_cache(maxsize=None)
+    def issuers(self):
+        """List[str]: Memoized unique sorted issuers in index."""
+        return sorted(list(self.df["Issuer"].unique()))
+
+    @property
+    @lru_cache(maxsize=None)
+    def tickers(self):
+        """List[str]: Memoized unique sorted tickers in index."""
+        return sorted(list(self.df["Ticker"].unique()))
+
+    @property
+    def bonds(self):
+        """List[:class:`Bond`]: List of individual bonds in index."""
+        return [Bond(bond) for _, bond in self.df.iterrows()]
 
     @property
     @lru_cache(maxsize=None)
