@@ -30,12 +30,11 @@ def main():
     ixb = IndexBuilder()
     ixb.load(date=date)
     ix = ixb.build(ticker=ticker)
-    bonds = [Bond(bond) for _, bond in ix.df.iterrows()]
     d = defaultdict(list)
-    for b in bonds:
-        d["mats"].append(b.MaturityYears)
-        d["ytm"].append(b.ytm)
-        d["oas"].append(b.OAS)
+    for bond in ix.bonds:
+        d["mats"].append(bond.MaturityYears)
+        d["ytm"].append(bond.ytm)
+        d["oas"].append(bond.OAS)
 
     # %%
     plot_yields_oas(ticker, date, d, spread_df, yield_df)
