@@ -813,7 +813,7 @@ class IndexBuilder:
                 raise ValueError("Empty Index, try selecting different dates.")
 
         # Save unique loaded dates to memory.
-        self.loaded_dates = list(sql_df["Date"].unique())
+        self.loaded_dates = list(pd.to_datetime(sql_df["Date"].unique()))
 
         # Standardize cusips over full period.
         if clean:
