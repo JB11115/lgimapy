@@ -27,6 +27,7 @@ def main():
         spread_df.columns, swap_df.columns, swap_df.loc[date, :]
     )
 
+    ixb = IndexBuilder()
     ixb.load(date=date)
     ix = ixb.build(ticker=ticker)
     bonds = [Bond(bond) for _, bond in ix.df.iterrows()]
@@ -87,7 +88,7 @@ def plot_yields_oas(ticker, date, d, spread_df, yield_df):
     axes[0].legend()
     axes[1].plot(
         list(spread_df),
-        spread_df.loc[date, :]
+        spread_df.loc[date, :],
         "--o",
         c="k",
         label="Axioma Issuer Spread Curve",
