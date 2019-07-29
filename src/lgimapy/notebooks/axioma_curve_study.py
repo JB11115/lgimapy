@@ -67,7 +67,7 @@ def clean_col(col):
 
 
 def plot_yields_oas(ticker, date, d, spread_df, yield_df):
-    fig, axes = plt.subplots(2, 1, figsize=[14, 10])
+    fig, axes = plt.subplots(2, 1, figsize=[14, 10], sharex=True)
     tick = mtick.StrMethodFormatter("{x:.2%}")
 
     axes[0].plot(
@@ -82,7 +82,6 @@ def plot_yields_oas(ticker, date, d, spread_df, yield_df):
         lw=1,
         ms=4,
     )
-    axes[0].set_xlabel("Maturity")
     axes[0].set_ylabel("Yield")
     axes[0].yaxis.set_major_formatter(tick)
     axes[0].legend()
