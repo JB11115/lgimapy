@@ -80,7 +80,13 @@ class Bond:
                     dates.append(temp - dt.timedelta(1))
                 temp += relativedelta(months=6)
 
-        dates[-1] = self.MaturityDate  # use actual final maturity date
+        # Use actual maturity date as final date.
+        try:
+            dates[-1] = self.MaturityDate
+        except IndexError:
+            # No coupon dates, only maturity date remaining.
+            dates = [self.MaturityDate]
+
         return dates
 
     @property
@@ -169,7 +175,7 @@ class TBond(Bond):
 
     def calculate_price(self, rfr):
         """
-        Calculate theoreticla price of the bond with given
+        Calculate theoretical price of the bond with given
         risk free rate.
 
         Parameters
@@ -183,10 +189,30 @@ class TBond(Bond):
         float:
             Theoretical price ($) of :class:`TBond`.
         """
-
         return sum(
             cf * np.exp(-rfr * t)
             for cf, t in zip(self.cash_flows, self.coupon_years)
+        )
+
+    def calculate_price_with_curve(self, curve):
+        """
+        Calculate thoretical price of bond with given
+        zero curve.
+
+        Parameters
+        ----------
+        curve: pd.Series
+            Yield curve values with maturity index.
+
+        Returns
+        -------
+        float:
+            Theoretical price ($) of :class:`TBond`.
+        """
+        yields = np.interp(self.coupon_years, curve.index, curve.values)
+        return sum(
+            cf * np.exp(-y * t)
+            for cf, t, y in zip(self.cash_flows, self.coupon_years, yields)
         )
 
 
