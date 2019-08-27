@@ -1,7 +1,3 @@
-import json
-
-import numpy as np
-
 from lgimapy.utils import load_json, dump_json
 from lgimapy.bloomberg import bdp
 
@@ -53,8 +49,9 @@ def scrape_bloomberg_tickers(cusips):
         Cusip(s) to search bloomberg for tickers.
     """
     # Build dict of cusip: scraped tickers.
-    tickers = bdp(cusips, "Corp", field="TICKER")
-    scraped_tickers = {c: s for (c, s) in zip(cusips, tickers)}
+    field = "TICKER"
+    df = bdp(cusips, "Corp", fields=field)
+    scraped_tickers = {c: s for (c, s) in zip(cusips, df[field])}
 
     # Load `cusip_bloomberg_tickers.json`, add new cusips, and save.
     fid = "cusip_bloomberg_tickers"
