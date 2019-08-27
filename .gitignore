@@ -72,5 +72,7 @@ __pycache__/
 
 # Data Files #
 ##############
-data/ixb_feathers/
+data/coupons/
+data/feathers/
+
 src/lgimapy.egg-info/
