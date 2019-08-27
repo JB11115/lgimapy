@@ -1,0 +1,433 @@
+{
+    "US Credit ex Subordinated 5+": [
+        "2024BNM",
+        "2529BNM",
+        "3034BNM",
+        "3539BNM",
+        "4054BNM",
+        "AIBBNM",
+        "ALSBNM",
+        "AVYBNM",
+        "BABBNM",
+        "BNM",
+        "BUPABNM",
+        "CBNM",
+        "COOPBNM",
+        "DBRBNM",
+        "DHSBNM",
+        "DRDBNM",
+        "ECBNM",
+        "EDSPBNM",
+        "EDSRBNM",
+        "GSK1BNM",
+        "GSK2BNM",
+        "GSK3BNM",
+        "HJBNM",
+        "HPBNM",
+        "HPDBNM",
+        "HSHHBNM",
+        "HSHSBNM",
+        "IMBBNM",
+        "IUHBNM",
+        "KELBNM",
+        "LEEDBNM",
+        "LEGSBNM",
+        "LL1BNM",
+        "LL2BNM",
+        "MFBNM",
+        "MONBNM",
+        "NESBNM",
+        "NG1BNM",
+        "NG2BNM",
+        "NG3BNM",
+        "NGSBNM",
+        "NSKBNM",
+        "PACEBNM",
+        "PCBNM",
+        "PRLBNM",
+        "PWCBNM",
+        "ROLBNM",
+        "ROLLSBNM",
+        "RRHBNM",
+        "RRSBNM",
+        "SALBNM",
+        "SAULBNM",
+        "SCIBNM",
+        "SIEBNM",
+        "SNYBNM",
+        "SOMBNM",
+        "SONBNM",
+        "SSEBNM",
+        "SUPBNM",
+        "SWBNM",
+        "SYNBNM",
+        "TIBNM",
+        "TRIBNM",
+        "UUBNM",
+        "UUEBNM"
+    ],
+    "LDI No Benchmark": [
+        "AEEFUT",
+        "AGRBNM",
+        "MIBNM",
+        "PBIHA",
+        "PIEDHA",
+        "PMCHA",
+        "PMCHALD",
+        "TECOHA",
+        "TRUSTHA",
+        "TRWT"
+    ],
+    "Liability Aware Long Duration Credit": [
+        "AEELA",
+        "CITLA",
+        "EHGRLA",
+        "EHLA",
+        "EHOPLA",
+        "JOYLA",
+        "LDITRA13",
+        "NFLLA",
+        "P-LALD",
+        "TPLA"
+    ],
+    "US Government: Long": [
+        "AEELG",
+        "ARNCLG"
+    ],
+    "US Long Credit": [
+        "AETLD",
+        "AHLD",
+        "AHSLD",
+        "AIGLD",
+        "ATILD",
+        "AXPLD",
+        "BCBSLD",
+        "BINGLD",
+        "BPLD",
+        "CBSLD",
+        "CELD",
+        "CHCLD",
+        "CHCLD",
+        "CHEVLD",
+        "CHLD",
+        "CITLD",
+        "CLECLD",
+        "CLECOLD",
+        "CNPLD",
+        "DELD",
+        "DTELD",
+        "EFHLD",
+        "ERICLD",
+        "FEDLD",
+        "FELD",
+        "FHNLD",
+        "FLD",
+        "GABCLD",
+        "GENMLD",
+        "HBANLD",
+        "HEKLD",
+        "KELLD1",
+        "KELLD2",
+        "KHCLD",
+        "LDITRAN8",
+        "LDITRAN9",
+        "LSCLD",
+        "LSCLDT",
+        "MDRLD",
+        "MICHLD",
+        "MMMLD",
+        "MMMLD2",
+        "OBWCLD",
+        "ONCRLD",
+        "P-LD",
+        "PAHLD",
+        "PFELD",
+        "PGELD",
+        "PGELDV",
+        "PHLD",
+        "PIELD",
+        "PMCLD",
+        "PMCLD2",
+        "PNWLD",
+        "PREMLD",
+        "RAILD",
+        "REDLD",
+        "REXAMLD",
+        "REXAMLD",
+        "RIOLD2",
+        "SALD",
+        "SALD2",
+        "SALDT",
+        "SALDT1",
+        "SEMLD",
+        "SRELD",
+        "TOTLD",
+        "TRWLD",
+        "USGLD",
+        "VEBALD",
+        "VZLD",
+        "WRKLD",
+        "WTWLD",
+        "XRXLD"
+    ],
+    "US Government": [
+        "AHGOVI"
+    ],
+    "US Credit": [
+        "AHMC",
+        "AHSMC",
+        "AXPMC",
+        "BASH",
+        "BASS",
+        "CBSMC",
+        "CITMC",
+        "CSMC",
+        "ERICMC",
+        "GTMC",
+        "GTSMC",
+        "MYMC",
+        "NFLMC",
+        "P-MC",
+        "P-MCT",
+        "PMCALL",
+        "REXAMMC",
+        "REXAMMC",
+        "USSMC"
+    ],
+    "US Agg Securitized Passive": [
+        "AHSEC"
+    ],
+    "US Strips 20+ Yr": [
+        "AIGSTRP",
+        "CNPSTRP",
+        "GENMSTRP"
+    ],
+    "US Long GC 70/30": [
+        "AILGC",
+        "SEIGC"
+    ],
+    "US Long Government/Credit": [
+        "ATILD",
+        "BACLGC",
+        "BEULGC",
+        "CMAGC",
+        "HRLGC",
+        "KOLGC",
+        "KOLRGC",
+        "KOLSGC",
+        "LHNGC",
+        "P-LGC",
+        "RFAGC",
+        "RFCGC",
+        "USBGC"
+    ],
+    "US Long GC 75/25": [
+        "BAGC"
+    ],
+    "US Intermediate Credit A or better": [
+        "BCBSIC",
+        "JOYIC",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "US Long Corporate": [
+        "BGGLC",
+        "BMSLC",
+        "GSKLC",
+        "MDLZLC",
+        "MERLC"
+    ],
+    "Custom Management No Benchmark": [
+        "BL-ESCR",
+        "BL-WHELD",
+        "BLFWA",
+        "BLWHLDTL",
+        "BLWP-RGA",
+        "FBBR3SP",
+        "FBBR3TA",
+        "FBBR3TL",
+        "FBV3ESCR",
+        "FBVR3SP",
+        "FBVR3TA",
+        "FBVR3TL",
+        "LGA-BLTL",
+        "LGA-FHLB",
+        "LGA-PENS",
+        "LGA-UH",
+        "LGA-WP",
+        "LGA-WPTL",
+        "LGADSA1",
+        "LGADSA2",
+        "LGAR-AD",
+        "LGAR-ARE",
+        "LGARADSP",
+        "LGARFHLB",
+        "LGARSPB",
+        "LGARSPFH",
+        "LGFXUS1",
+        "LGFXUS6",
+        "LGFXUS7",
+        "LGIMACAP",
+        "LGPLWH10",
+        "LGPLWH6",
+        "LGPLWH7",
+        "LGPLWH8",
+        "LGPLWH9",
+        "LIABLC",
+        "MBRFT",
+        "ULSTRP",
+        "WNT-DR1A",
+        "WNT-PU1B",
+        "WPFWA",
+        "WPTRUST"
+    ],
+    "US Government: Intermediate": [
+        "BLUEGOV",
+        "KORIG",
+        "RLATIG",
+        "RLDRIG",
+        "RLGEIG",
+        "RLIG",
+        "RLUKIG"
+    ],
+    "US Long Corp 2% Cap": [
+        "BLUELC",
+        "EXCLC",
+        "JNJLC"
+    ],
+    "US Treasury TIPS 15+": [
+        "BLUETIP"
+    ],
+    "US Strips 15+ Yr": [
+        "BSSTRP",
+        "CITSTRP",
+        "FEDSTRP",
+        "KORSTRP",
+        "P-STRP",
+        "PCASTRP",
+        "PREMSTRP",
+        "RLATSTRP",
+        "RLDRSTRP",
+        "RLGESTRP",
+        "RLSTRP",
+        "RLUKSTRP",
+        "SNYSTRP"
+    ],
+    "US Long Credit Ex Emerging Market": [
+        "CALLC"
+    ],
+    "US Long Corporate A or better": [
+        "CARGLC",
+        "SRPLC"
+    ],
+    "US Treasury: Intermediate": [
+        "CMSBNMT"
+    ],
+    "US Intermediate Credit": [
+        "CNPIC",
+        "GENMIC",
+        "SIC"
+    ],
+    "BNM - US Long A+ Credit": [
+        "COOPBBNM",
+        "COOPSBNM",
+        "ELUXBNM",
+        "FWFHBNM",
+        "FWFNBNM",
+        "GENBNM",
+        "GMANBNM",
+        "HARMBNM",
+        "HBDBNM",
+        "NVSBNM",
+        "SESLBNM",
+        "SEULBNM",
+        "TRNBNM",
+        "TRNBNM"
+    ],
+    "Barclays-Russell LDI Custom - DE": [
+        "DUKE-RS",
+        "DUKE-RS"
+    ],
+    "80% US Credit/20% 7-10 yr Treasury": [
+        "FBB-CA",
+        "FBB-CA2"
+    ],
+    "Absolute Return LIB350": [
+        "GABCOPP",
+        "LIB350"
+    ],
+    "US Treasury 9+ Yr Custom Weighted": [
+        "GMCT"
+    ],
+    "GM_Blend": [
+        "GMGC"
+    ],
+    "US Treasury Long": [
+        "GMLT",
+        "MERLT"
+    ],
+    "Global Agg USD Corp": [
+        "HIC"
+    ],
+    "INKA": [
+        "INKALC"
+    ],
+    "80% US A or Better LC/20% US BBB LC": [
+        "LEGSCC"
+    ],
+    "Global Agg USD Securitized Passive": [
+        "LGA-BL",
+        "LGA-BLHY",
+        "LGA-WPHY",
+        "MYAMSC"
+    ],
+    "US Corporate IG": [
+        "LGAS-CB"
+    ],
+    "Absolute Return - LIB150": [
+        "LIB150"
+    ],
+    "US Corporate 10+ Yr >500MM Ex Insur": [
+        "MBRF",
+        "RBUBNM"
+    ],
+    "Custom Management No Benchmark - MDLZSTRP": [
+        "MDLZSTRP"
+    ],
+    "US Corporate 1% Issuer Cap": [
+        "NATG",
+        "OGCBF"
+    ],
+    "Intermediate TIPS": [
+        "OLNITIP"
+    ],
+    "OLIN CUSTOM STRIPS - OPEB": [
+        "OLNSTRP1"
+    ],
+    "OLIN CUSTOM STRIPS - Pension": [
+        "OLNSTRP2"
+    ],
+    "US Long GC 80/20": [
+        "PPG"
+    ],
+    "RBS BNMs": [
+        "RBSBNM",
+        "UL1BNM",
+        "UL2BNM"
+    ],
+    "Custom RBS": [
+        "RDTNLD1"
+    ],
+    "US Credit A or better": [
+        "SEIAC"
+    ],
+    "US Long A+ Credit": [
+        "SEIC"
+    ],
+    "US Corporate 7+ Years": [
+        "UBSCC"
+    ],
+    "BofA ML 10+ Year AAA-A US Corp Const": [
+        "UTCBNM"
+    ]
+}
