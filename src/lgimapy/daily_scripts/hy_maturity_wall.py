@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import numpy as np
 
-from lgimapy.index import IndexBuilder
+from lgimapy.data import Database
 from lgimapy.utils import custom_sort, savefig
 
 plt.style.use("fivethirtyeight")
@@ -13,11 +13,11 @@ plt.style.use("fivethirtyeight")
 
 def main():
     # %%
-    ixb = IndexBuilder()
-    ixb.load(dev=True)
+    db = Database()
+    db.load_market_data(dev=True)
 
     # Get total HY market value.
-    total_ix = ixb.build(rating="HY")
+    total_ix = db.build_market_index(rating="HY")
     total_mv = market_value(total_ix.df)
 
     # Store rating and maturity classifiers.
@@ -37,7 +37,9 @@ def main():
     pcts = defaultdict(list)
     for r in ratings:
         for mat in mats:
-            ix = ixb.build(rating=ratings_d[r], maturity=mats_d[mat])
+            ix = db.build_market_index(
+                rating=ratings_d[r], maturity=mats_d[mat]
+            )
             pcts[r].append(market_value(ix.df) / total_mv)
 
     # %%

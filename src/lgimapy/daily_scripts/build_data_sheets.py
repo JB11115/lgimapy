@@ -4,18 +4,20 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
-from lgimapy.index import IndexBuilder, spread_diff, standardize_cusips
+from lgimapy.data import Database, spread_diff, standardize_cusips
 
 
-def main():
+def build_movers_sheets():
     """
     Make 8 data.csv files to show OAS evolution over past week, month,
     and since tights, for 10 year and 30 year bonds. Data is saved to
     `X:/Jason/Projects/Index Analysis/` repository.
     """
+    import warnings
 
+    warnings.filterwarnings("error")
     fid = "X:/Jason/Projects/Index Analysis/data_test{}.csv"
-    tights_date = "4/16/2019"
+    tights_date = "7/26/2019"
 
     # Find date for month to date.
     today = dt.date.today()
@@ -29,7 +31,7 @@ def main():
         ) - dt.timedelta(1)
 
     # Make dict of dates to analyze and then choose nearest traded dates.
-    ixb = IndexBuilder()
+    db = Database()
     raw_dates = {
         "yesterday": pd.to_datetime(dt.date.today() - dt.timedelta(days=1)),
         "week": pd.to_datetime(dt.date.today() - dt.timedelta(days=7)),
@@ -37,7 +39,7 @@ def main():
         "month": pd.to_datetime(month_date),
         "tights": pd.to_datetime(tights_date),
     }
-    dates = {k: ixb.nearest_date(v) for k, v in raw_dates.items()}
+    dates = {k: db.nearest_date(v) for k, v in raw_dates.items()}
     print(dates["yesterday"].strftime("%m/%d/%Y"))
     date_df = pd.DataFrame(dates, index=["date"])[["week", "month", "tights"]]
     date_df.to_csv(fid.format(9))
@@ -45,8 +47,9 @@ def main():
     # Load index on dates from SQL database, then find changes.
     df_names = ["week", "month", "tights"]
     raw_dfs = {
-        k: ixb.load(start=v, end=v, ret_df=True) for k, v in dates.items()
+        k: db.load_market_data(date=v, ret_df=True) for k, v in dates.items()
     }
+    print(f"n bonds: {len(raw_dfs['yesterday']):,}")
     index_chg_dfs = {
         n: spread_diff(raw_dfs[n], raw_dfs["yesterday"]) for n in df_names
     }
@@ -79,12 +82,13 @@ def main():
     for name in df_names:
         index_dfs[name] = {}
         for mat, mat_range, max_issue in zip([10, 30], mat_ranges, [2, 5]):
-            ixb.load(data=index_chg_dfs[name])
-            df = ixb.build(
+            db.load_market_data(data=index_chg_dfs[name])
+            df = db.build_market_index(
                 rating="IG",
                 municipals=True,
                 maturity=(mat_range[0], mat_range[1]),
                 issue_years=(0, max_issue),
+                currency="USD",
             ).df
             df["Ticker Name Rank"] = [
                 f"{t} {i} {ct}"
@@ -189,4 +193,4 @@ def build_weighted_average_table(maturity, df_dict):
 
 
 if __name__ == "__main__":
-    main()
+    build_movers_sheets()
