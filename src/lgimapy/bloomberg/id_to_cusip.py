@@ -1,7 +1,3 @@
-import json
-
-import numpy as np
-
 from lgimapy.utils import root
 from lgimapy.bloomberg import bdp
 
@@ -53,8 +49,9 @@ def scrape_id_to_cusip(ids):
         Member ID(s) to search Bloomberg for cuisps.
     """
     # Build dict of id: scraped cusips.
-    scraped_cusips = bdp(ids, "Corp", field="ID_CUSIP")
-    scraped_cusips = {i: c for (i, c) in zip(ids, scraped_cusips)}
+    field = "ID_CUSIP"
+    df = bdp(ids, "Corp", fields=field)
+    scraped_cusips = {i: c for (i, c) in zip(ids, df[field])}
 
     # Load `id_to_cusip.json`, add new ids, and save.
     fid = "id_to_cusip"
