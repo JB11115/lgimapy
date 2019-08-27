@@ -1,8 +1,8 @@
 import os
 import json
-import pprint
+import pprint as pp
 import re
-from collections import OrderedDict
+from collections import defaultdict, OrderedDict
 from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
@@ -87,9 +87,9 @@ def pprint(obj):
     """Print object to screen in nice formatting"""
     if isinstance(obj, pd.DataFrame):
         print(tabulate(obj, headers="keys", tablefmt="psql"))
-    elif isinstance(obj, dict):
-        pp = pprint.PrettyPrinter(indent=4)
-        pp.pprint(obj)
+    elif type(obj) in [dict, defaultdict, OrderedDict]:
+        printer = pp.PrettyPrinter(indent=4)
+        printer.pprint(obj)
     else:
         raise ValueError(f"Error: {type(obj)} not yet supported")
 
@@ -140,7 +140,7 @@ class Time:
         split = (perf_counter() - self._last) / self._unit_div
         self._last = perf_counter()
         print(
-            f"{self._name} {name} split: {elapsed:.3f} {self._unit_str}, "
+            f"{self._name} {name} split: {split:.3f} {self._unit_str}, "
             f"run time: {elapsed:.3f} {self._unit_str}."
         )
 
@@ -184,7 +184,10 @@ def tolist(obj, dtype=None):
     if dtype is not None:
         # Compare to specific dtype.
         if isinstance(obj, dtype):
-            return list(obj)
+            if dtype == str:
+                return [obj]
+            else:
+                return list(obj)
         else:
             return obj
     else:
@@ -203,6 +206,12 @@ def nearest(items, pivot):
 def check_all_equal(lst):
     """Efficiently check if all items in list are equal."""
     return not lst or lst.count(lst[0]) == len(lst)
+
+
+def smooth_weight(x, B):
+    """Weight functcion for smoothing two overlapping curves."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return 1 / (1 + (x / (1 - x)) ** (-B))
 
 
 def floatftime(time_horizon, unit="d"):
