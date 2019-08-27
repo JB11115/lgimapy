@@ -5,7 +5,7 @@ import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
 
-from lgimapy.index import IndexBuilder, Bond
+from lgimapy.data import Database, Bond
 from lgimapy.utils import root
 
 plt.style.use("fivethirtyeight")
@@ -13,11 +13,14 @@ plt.style.use("fivethirtyeight")
 
 # %%
 def main():
+    list(spread_df.index[-12:])
     # %%
+
     # ------------------------------------------------------------------ #
     ticker = "VZ"  # ABIBB C F KMT VZ
     spread_df = read_csv(f"USD-{ticker}-SEN_2019")
-    date = spread_df.index[-1]  # pick any date
+    # date = spread_df.index[-1]  # pick any date
+    date = pd.to_datetime("7/17/2019")
     # ------------------------------------------------------------------ #
 
     # Compute yield by adding swap curve to spread curve using
@@ -27,15 +30,19 @@ def main():
         spread_df.columns, swap_df.columns, swap_df.loc[date, :]
     )
 
-    ixb = IndexBuilder()
-    ixb.load(date=date)
-    ix = ixb.build(ticker=ticker)
+    db = Database()
+    db.load_market_data(start=spread_df.index[0], local=True)
+    ix = db.build_market_index(ticker=ticker, date=date)
     d = defaultdict(list)
     for bond in ix.bonds:
         d["mats"].append(bond.MaturityYears)
         d["ytm"].append(bond.ytm)
         d["oas"].append(bond.OAS)
+        d["cusip"].append(bond.cusip)
 
+    bond_df = pd.DataFrame(d)
+    bond_df.sort_values("ytm", inplace=True)
+    # bond_df
     # %%
     plot_yields_oas(ticker, date, d, spread_df, yield_df)
     plt.show()
@@ -66,15 +73,14 @@ def clean_col(col):
 
 
 def plot_yields_oas(ticker, date, d, spread_df, yield_df):
+    # %%
     fig, axes = plt.subplots(2, 1, figsize=[14, 10], sharex=True)
     tick = mtick.StrMethodFormatter("{x:.2%}")
-
     axes[0].plot(
         d["mats"], d["ytm"], "o", c="darkgreen", label="Market Value YTM", ms=4
     )
     axes[0].plot(
-        yield_df.index,
-        yield_df.values,
+        yield_df,
         "--o",
         c="k",
         label="Axioma Issuer Yield Curve (Swap + Spread)",
@@ -103,6 +109,8 @@ def plot_yields_oas(ticker, date, d, spread_df, yield_df):
     axes[1].legend()
 
     fig.suptitle(f'{ticker} - {date.strftime("%m/%d/%Y")}', fontsize=20)
+
+    # %%
 
 
 if __name__ == "__main__":
