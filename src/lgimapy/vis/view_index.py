@@ -17,15 +17,15 @@ def main():
 
     # Subset data to last year.
     start = pd.to_datetime(dt.date.today() - dt.timedelta(days=365))
-    df = bdh("LUACOAS", yellow_key="Index", field="PX_BID", start=start)
-    y = df["PX_BID"].values
+    df = bdh(args.index, yellow_key="Index", fields="PX_BID", start=start)
+    y = 100 * df["PX_BID"].values
 
     # Plot index data.
-    fig, ax = plt.subplots(1, 1, figsize=(12, 12))
+    fig, ax = plt.subplots(1, 1, figsize=(12, 6))
     ax.plot(df.index, y, c="steelblue")
 
     # Plot local minimums with labels to identify tights.
-    valleys, _ = find_peaks(-y, distance=40, prominence=args.prominence)
+    valleys, _ = find_peaks(-y, distance=50, prominence=args.prominence)
     for date in df.index.values[valleys]:
         ax.axvline(date, color="firebrick", ls="--", lw=1)
         label = pd.to_datetime(date).strftime("%m/%d/%Y")
@@ -38,7 +38,7 @@ def main():
             horizontalalignment="right",
         )
     ax.set_xlabel("Date")
-    ax.set_ylabel("PX_BID")
+    ax.set_ylabel(f"{args.index} (bp)")
     fig.autofmt_xdate()
     plt.show()
 
@@ -46,8 +46,9 @@ def main():
 def parse_args():
     """Collect settings from command line and set defaults."""
     parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--index", help="Credit Index")
     parser.add_argument("-p", "--prominence", help="Valley Prominence Level")
-    parser.set_defaults(prominence=None)
+    parser.set_defaults(index="LULCOAS", prominence=None)
     return parser.parse_args()
 
 
