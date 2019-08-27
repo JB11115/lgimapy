@@ -1,15 +1,15 @@
 from lgimapy.bloomberg.core import bdh, bdp, bds
-from lgimapy.bloomberg.coupon_dates import get_coupon_dates, scrape_coupon_dates
 from lgimapy.bloomberg.id_to_cusip import id_to_cusip, scrape_id_to_cusip
 from lgimapy.bloomberg.subsectors import (
     update_subsector_json,
     get_bloomberg_subsector,
     scrape_bloomberg_subsectors,
 )
-from lgimapy.bloomberg.cusip_amount_outstanding import get_amount_outstanding
+from lgimapy.bloomberg.cashflows import get_cashflows
 from lgimapy.bloomberg.cusip_issue_price import get_issue_price
 from lgimapy.bloomberg.cusip_ticker import get_bloomberg_ticker
-
+from lgimapy.bloomberg.settlements import get_settlement_date
+from lgimapy.bloomberg.interest_accrual_date import get_accrual_date
 
 
 __all__ = [
@@ -20,8 +20,11 @@ __all__ = [
     "get_bloomberg_subsector",
     "update_subsector_json",
     "scrape_bloomberg_subsectors",
-    "get_coupon_dates",
+    "get_cashflows",
     "scrape_coupon_dates",
     "id_to_cusip",
     "scrape_id_to_cusip",
+    "get_settlement_date",
+    "get_issue_price",
+    "get_accrual_date",
 ]
