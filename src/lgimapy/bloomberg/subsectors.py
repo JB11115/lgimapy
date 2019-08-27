@@ -60,10 +60,15 @@ def scrape_bloomberg_subsectors(cusips):
         Cusip(s) to search bloomberg for subsectors.
     """
     # Build dict of cusip: scraped subsectors.
-    subsectors = bdp(cusips, "Corp", field="INDUSTRY_SUBGROUP")
-    scraped_subsectors = {c: s for (c, s) in zip(cusips, subsectors)}
+    field = "INDUSTRY_SUBGROUP"
+    df = bdp(cusips, "Corp", fields=field)
+    scraped_subsectors = {c: s for (c, s) in zip(cusips, df[field])}
 
     # Load `cusip_bloomberg_subsectors.json`, add new cusips, and save.
     fid = "cusip_bloomberg_subsectors"
     subsectors = load_json(fid, empty_on_error=True)
     dump_json({**subsectors, **scraped_subsectors}, fid)
+
+
+if __name__ == "__main__":
+    update_subsector_json()

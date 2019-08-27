@@ -1,5 +1,4 @@
 import datetime as dt
-import json
 from collections import defaultdict
 
 from lgimapy.bloomberg import bdp
@@ -22,30 +21,27 @@ def scrape_rating_changes(cusip):
     agencies = ["SP", "Moody", "Fitch"]
     rating_changes = {a: defaultdict(list) for a in agencies}
 
-    # Format Bloomberg field calls.
-    date_field = {a: f"{a.upper()}_EFF_DT" for a in agencies}
-    rating_field = {a: f"RTG_{a.upper()}" for a in agencies}
-
     for a in agencies:
-        rating = "TEMP"
         ovrd = None
+        fields = [f"{a.upper()}_EFF_DT", f"RTG_{a.upper()}"]
         while True:
             # Find current rating and its effective date.
-            rating = bdp(cusip, "Corp", rating_field[a], ovrd=ovrd)[0]
-            # Clean rating (remove Bloomberg Watch tag).
-            rating = rating.split(" *")[0].strip("u")
-            if rating == "":
-                break  # All ratings have been scraped.
+            df = bdp(cusip, "Corp", fields, ovrd=ovrd)
 
-            eff_date = bdp(cusip, "Corp", date_field[a], ovrd, date=True)[0]
-            eff_date = dt.datetime.strptime(str(eff_date), "%Y%m%d")
+            # Clean date and rating (remove Bloomberg Watch tag).
+            try:
+                date = df[fields[0]][0]
+                rating = df[fields[1]][0].split(" *")[0].strip("u")
+            except AttributeError:
+                # NaN encountered, scrape finished.
+                break
 
             # Append results to cusip dict.
-            rating_changes[a]["date"].append(eff_date.strftime("%m/%d/%Y"))
+            rating_changes[a]["date"].append(date.strftime("%m/%d/%Y"))
             rating_changes[a]["rating"].append(rating)
 
             # Find new date and repeat.
-            new_date = (eff_date - dt.timedelta(1)).strftime("%m/%d/%Y")
+            new_date = (date - dt.timedelta(1)).strftime("%Y%m%d")
             ovrd = {"RATING_AS_OF_DATE_OVERRIDE": new_date}
 
     # Load `ratings_changes.json`, add new cusips, and save.
@@ -57,19 +53,19 @@ def scrape_rating_changes(cusip):
 
 def main():
     import pandas as pd
-    from lgimapy.index import IndexBuilder, Index, concat_index_dfs
+    from lgimapy.data import Database, Index, concat_index_dfs
 
-    ixb = IndexBuilder()
-    # ixb.load(local=True)
+    db = Database()
+    # db.load_market_data(local=True)
     df_list = []
     for y in tqdm(range(2004, 2020)):
-        for m in range(1, 13):
+        for m in [1, 4, 8]:
             d = 1
             while True:
                 date = f"{m}/{d}/{y}"
                 print(date)
                 try:
-                    df = ixb.load(
+                    df = db.load_market_data(
                         start=date, end=date, clean=False, ret_df=True
                     )
                 except ValueError:
@@ -83,7 +79,7 @@ def main():
     df = pd.concat(df_list, join="outer", sort=False)
     cusips = list(set(df["CUSIP"]))
 
-    del ixb
+    del db
     # del ix
 
     ratings = load_json("ratings_changes")
