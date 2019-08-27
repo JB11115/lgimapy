@@ -1,197 +1,145 @@
+import datetime as dt
 import warnings
 
-import numpy as np
 import pandas as pd
-
-# R specific packages are installed only if needed
-# within each core function.
+import pybbg
 
 
-def bdh(security, yellow_key, field, start, end=None):
+def bdh(securities, yellow_key, fields, start, end=None, ovrd=None):
     """
     Retrieve Bloomberg Data History (BDH) query results.
 
     Parameters
     ----------
-    security: str
-        Security name or cusip.
+    securities: str or List[str].
+        Security name(s) or cusip(s).
     yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
-        Bloomberg yellow key for specified security.
-    field: str
-        Bloomberg field to collect history.
+        Bloomberg yellow key for securities. Case insensitive.
+    fields: str or List[str].
+        Bloomberg field(s) to collect history.
     start: datetime object
         Start date for scrape.
     end: datetime object, default=None
         End date for scrape, if None most recent date is used.
+    ovrd: dict, default=None
+        Bloomberg overrides {field: value}.
 
     Returns
     -------
     df: pd.DataFrame
-        DataFrame with datetime index and specified field as column.
+        DataFrame with datetime index.
+
+        * If single security and field is provided, column
+            is field name.
+        * If multiple securities are provided, columns are
+            security names.
+        * If mulitple fields are provided, columns are field names.
+        * If both multiple fields and securities are provided,
+            a multi-index header column is used.
     """
-    # R specific packages are installed when function is called.
-    from rpy2.robjects import pandas2ri, r
-    from rpy2.robjects.packages import importr
+    # Convert inputs for pybbg.
+    if isinstance(securities, str):
+        securities = [securities]
+    if isinstance(fields, str):
+        fields = [fields]
+    tickers = [f"{security} {yellow_key}" for security in securities]
+    start = pd.to_datetime(start).strftime("%Y%m%d")
+    end = dt.date.today() if end is None else pd.to_datetime(end)
+    end = end.strftime("%Y%m%d")
 
-    importr("Rblpapi")  # R package
+    # Scrape from Bloomberg.
+    warnings.simplefilter(action="ignore", category=UserWarning)
+    bbg = pybbg.Pybbg()
+    df = bbg.bdh(tickers, fields, start, end, overrides=ovrd)
+    bbg.session.stop()
+    warnings.simplefilter(action="default", category=UserWarning)
 
-    # Conver inputs to R variables.
-    r_security = f"{security} {yellow_key}"
-    r_field = field.upper()
-    r_start = pd.to_datetime(start).strftime("%Y-%m-%d")
-    r_end = "NULL" if end is None else pd.to_datetime(end).strftime("%Y-%m-%d")
-
-    # Scrape Bloomberg bdh in R.
-    # Note that datetime dtypes don't convert between R and Python,
-    # so dates are formated to integers in R and reformatted
-    # to dates in Python.
-    r_bdh = r(
-        r"""
-        function(security, field, start, end) {
-            con = blpConnect()
-            end = if(end == 'NULL') NULL else as.Date(end)
-            df = bdh(
-                securities=security,
-                fields=field,
-                start.date=as.Date(start),
-                end.date=end,
-                )
-            df$date = as.integer(gsub("-", "", df$date))
-            return(df)
-        }
-        """
-    )
-    warnings.simplefilter(action="ignore", category=FutureWarning)
-    pandas2ri.activate()
-    df = pandas2ri.ri2py(r_bdh(r_security, r_field, r_start, r_end))
-    warnings.simplefilter(action="default", category=FutureWarning)
-    df["date"] = pd.to_datetime(df["date"], format="%Y%m%d")
-    df.set_index("date", inplace=True)
+    # Format DataFrame.
+    if len(securities) == 1:
+        df.columns = fields
+    elif len(fields) == 1:
+        df.columns = securities
     return df
 
 
-def bdp(securities, yellow_key, field, ovrd=None, date=False):
+def bdp(securities, yellow_key, fields, ovrd=None):
+    """
+    Retrieve Bloomberg Data Point (BDP) query results.
+
+    Parameters
+    ----------
+    securities: str or List[str].
+        Security name(s) or cusip(s).
+    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
+        Bloomberg yellow key for securities. Case insensitive.
+    fields: str or List[str].
+        Bloomberg field(s) to collect history.
+    ovrd: dict, default=None
+        Bloomberg overrides {field: value}.
+
+    Returns
+    -------
+    df: pd.DataFrame
+        DataFrame with security index and field columns.
+    """
+    # Convert inputs for pybbg.
+    if isinstance(securities, str):
+        securities = [securities]
+    if isinstance(fields, str):
+        fields = [fields]
+    tickers = [f"{security} {yellow_key}" for security in securities]
+
+    # Scrape from Bloomberg.
+    warnings.simplefilter(action="ignore", category=UserWarning)
+    bbg = pybbg.Pybbg()
+    df = bbg.bdp(tickers, fields, overrides=ovrd).T
+    bbg.session.stop()
+    warnings.simplefilter(action="default", category=UserWarning)
+
+    # Format DataFrame.
+    df.index = [ix.strip(f" {yellow_key}") for ix in df.index]
+    return df.reindex(securities)
+
+
+def bds(security, yellow_key, field, ovrd=None):
     """
     Retrieve Bloomberg Data Set (BDS) query results.
-
+    Convert date columns to datetime
     Parameters
     ----------
     security: str
         Security name or cusip.
     yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
-        Bloomberg yellow key for specified security.
+        Bloomberg yellow key for securities. Case insensitive.
     field: str
         Bloomberg field to collect history.
     ovrd: dict, default=None
-        Bloomberg data overrides formated as
-        ``{ovrd_key: ovrd_val}``.
-    date: bool, default=False
-        If True, convert returned column into datetime
-        int format int(%Y%m%d).
+        Bloomberg overrides {field: value}.
 
     Returns
     -------
-    [n x 1] np.array
-        1 dimensional array of queried values.
+    df: pd.DataFrame
+        DataFrame with numeric index and columns determined
+        by choice of Bloomberg field.
     """
-    # R specific packages are installed when function is called.
-    from rpy2.robjects import pandas2ri, r, StrVector
-    from rpy2.robjects.packages import importr
+    # Scrape from Bloomberg.
+    warnings.simplefilter(action="ignore", category=UserWarning)
+    bbg = pybbg.Pybbg()
+    df = bbg.bds(f"{security} {yellow_key}", field, overrides=ovrd)
+    bbg.session.stop()
+    warnings.simplefilter(action="default", category=UserWarning)
 
-    importr("Rblpapi")  # R package
+    # Format DataFrame.
+    date_cols = []
+    for col in df.columns:
+        if "Date" in col:
+            date_cols.append(col)
+            df[col] = pd.to_datetime(df[col])
 
-    # Conver inputs to R variables.
-    if isinstance(securities, str):
-        securities = [securities]  # convert to list
-    r_securities = StrVector([f"{sec} {yellow_key}" for sec in securities])
-    r_field = field.upper()
-    if ovrd is None:
-        r_ovrd_keys, r_ovrd_vals = "NULL", "NULL"
-    else:
-        r_ovrd_keys = StrVector(list(ovrd.keys()))
-        r_ovrd_vals = StrVector(list(ovrd.values()))
-    r_date = "TRUE" if date else "FALSE"
-
-    # Scrape Bloomberg bdp in R.
-    r_bdp = r(
-        r"""
-        function(securities, field, ovrd_keys, ovrd_vals, date) {
-            con = blpConnect()
-            if (ovrd_keys == 'NULL') {
-                ovrd = NULL
-            } else {
-                ovrd = setNames(ovrd_vals, ovrd_keys)
-            }
-            df = bdp(
-                securities=securities,
-                fields=field,
-                overrides=ovrd,
-                )
-            if (date == 'TRUE') {
-                col = as.integer(gsub("-", "", df[, 1]))
-            } else {
-                col = df[, 1]
-            }
-            return(col)
-        }
-        """
-    )
-    return np.asarray(
-        r_bdp(r_securities, r_field, r_ovrd_keys, r_ovrd_vals, r_date)
-    )
+    # Make date column the index if there is only one date column.
+    if len(date_cols) == 1:
+        df.set_index(date_cols[0], inplace=True)
+    return df
 
 
-def bds(security, yellow_key, field, column=1, date=False):
-    """
-    Retrieve Bloomberg Data Set (BDS) query results.
-
-    Parameters
-    ----------
-    security: str
-        Security name or cusip.
-    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
-        Bloomberg yellow key for specified security.
-    field: str
-        Bloomberg field to collect history.
-    column: int, default=1
-        Column iloc of R DataFrame to return.
-    date: bool, default=False
-        If True, convert returned column into datetime
-        int format int(%Y%m%d).
-
-    Returns
-    -------
-    [n x 1] np.array
-        1 dimensional array of queried values.
-    """
-    # R specific packages are installed when function is called.
-    from rpy2.robjects import pandas2ri, r
-    from rpy2.robjects.packages import importr
-
-    importr("Rblpapi")  # R package
-
-    # Conver inputs to R variables.
-    r_security = f"{security} {yellow_key}"
-    r_field = field.upper()
-    r_date = "TRUE" if date else "FALSE"
-
-    # Scrape Bloomberg bds in R.
-    r_bds = r(
-        r"""
-        function(security, field, column, date) {
-            con = blpConnect()
-            df = bds(
-                securities=security,
-                fields=field,
-                )
-            if (date == 'TRUE') {
-                col = as.integer(gsub("-", "", df[, column]))
-            } else {
-                col = df[, column]
-            }
-            return(col)
-        }
-        """
-    )
-
-    return np.asarray(r_bds(r_security, r_field, column, r_date))
+# bdh('AN920287@trace', 'Corp', 'TRACE_NUMBER_OF_TRADES', start='8/1/2019')
