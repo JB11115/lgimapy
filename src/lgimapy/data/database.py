@@ -453,7 +453,7 @@ class Database:
         warnings.simplefilter(action="default", category=RuntimeWarning)
         return MOL
 
-    def _clean(self, df):
+    def _clean_market_data(self, df):
         """
         Clean DataFrame from SQL querry.
 
@@ -847,7 +847,7 @@ class Database:
             # Preprocess chunk.
             chunk = self._preprocess_market_data(chunk)
             if clean:
-                chunk = self._clean(chunk)
+                chunk = self._clean_market_data(chunk)
             chunk_list.append(chunk)
         if clean:
             try:
@@ -1180,8 +1180,12 @@ class Database:
         # Format special rules.
         subset_mask_list = []
         if special_rules:
+            if isinstance(special_rules, str):
+                special_rules = [special_rules]  # make list
             for rule in special_rules:
-                subset_mask_list.append(replace_multiple(rule, repl_dict))
+                subset_mask_list.append(
+                    f"({replace_multiple(rule, repl_dict)})"
+                )
         # Add treasury and muncipal rules.
         if treasuries:
             subset_mask_list.append('(self.df["Sector"]=="TREASURIES")')
@@ -1303,60 +1307,3 @@ class Database:
             for strat in df["strategy"].unique()
         }
         dump_json(strategy_accounts, "strategy_accounts")
-
-
-def main():
-    from lgimapy.utils import Time, pprint
-
-    self = Database()
-
-    date = "8/26/2019"
-    accounts = "P-LD"
-    manager = None
-    strategy = None
-    universe = "returns"
-
-    list(both_df)
-
-    df = both_df.copy()
-
-    df_BBB = df[(8 <= df["NumericRating"]) & (df["NumericRating"] <= 10)].copy()
-
-    def aggregate_issuers(df):
-        """
-        Aggregate bonds of same issuer, ticker, and collateral type using
-        a weighted average of their OAS, LiquidityCostScore, NumericRating,
-        and OAS_old, then recalculate OAS change and pct change.
-
-        Parameters
-        ----------
-        df: pd.DataFrame
-            DataFrame of bonds to aggregate.
-
-        Returns
-        -------
-        agg_df: pd.DataFrame
-            Aggregated DataFrame.
-        """
-
-        def weighted_average(x, col):
-            """Weighted average calcultion for a given column."""
-            return np.sum(
-                x[col] * x["AmountOutstanding"] * x["DirtyPrice"]
-            ) / np.sum(x["AmountOutstanding"] * x["DirtyPrice"])
-
-        def my_agg(x):
-            """Weighed average aggregation of same ticker/issuer/rank."""
-            agg = {col: x[col].iloc[0] for col in list(x)}  # first value
-            agg["NumericRating"] = weighted_average(x, "NumericRating")
-            agg["LQA"] = weighted_average(x, "LQA")
-            agg["OAS"] = weighted_average(x, "OAS")
-            agg["OAS_old"] = weighted_average(x, "OAS_old")
-            return pd.Series(agg, index=agg.keys())
-
-        agg_df = df.groupby(["Ticker Name Rank"]).apply(my_agg)
-        agg_df["LQA"].replace(0.0, np.NaN, inplace=True)
-        agg_df["OAS_change"] = agg_df["OAS"] - agg_df["OAS_old"]
-        agg_df["OAS_pct_change"] = agg_df["OAS"] / agg_df["OAS_old"] - 1
-        agg_df = agg_df.sort_index().reset_index(drop=True)
-        return agg_df
