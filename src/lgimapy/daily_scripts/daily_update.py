@@ -6,11 +6,11 @@ def main():
     """
     Run all daily scripts for updating database and creating reports.
     """
+    update_feathers()
+    print()
     update_trade_dates()
     print()
     build_movers_sheets()
-    print()
-    update_feathers()
     print()
     update_fed_funds()
     print("Updated Fed Funds\n")
