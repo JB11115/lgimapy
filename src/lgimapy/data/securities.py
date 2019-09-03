@@ -418,7 +418,8 @@ class Index:
     @lru_cache(maxsize=None)
     def dates(self):
         """List[datetime]: Memoized unique sorted dates in index."""
-        return list(pd.to_datetime(self.df["Date"].unique()))
+        dates = list(pd.to_datetime(self.df["Date"].unique()))
+        return [d for d in dates if d not in self._holiday_dates]
 
     @property
     @lru_cache(maxsize=None)
@@ -964,7 +965,6 @@ class Index:
         end=None,
         inclusive_end_date=True,
         synthetic=False,
-        ignore_holidays=True,
     ):
         """
         Get history of any column for all cusips in Index.
@@ -982,18 +982,14 @@ class Index:
             If False do not include end date.
         synthethic: bool, default=False
             If True, use synthethic day data.
-        ignore_holidays: bool, default=True
-            If True, ignore holidays.
 
         Returns
         -------
-        hist_df: pd.DataFrame
+        pd.DataFrame
             DataFrame with datetime index, CUSIP columns, and price values.
         """
         cusips = set(self.cusips)
         dates = self.dates[1:] if synthetic else self.dates
-        if ignore_holidays:
-            dates = [d for d in dates if d not in self._holiday_dates]
         if start is not None:
             dates = dates[dates >= pd.to_datetime(start)]
         if end is not None:
@@ -1015,10 +1011,61 @@ class Index:
             for c in missing_cusips:
                 hist_d[c].append(np.NaN)
 
-        hist_df = pd.DataFrame(hist_d, index=dates)
-        return hist_df
+        return pd.DataFrame(hist_d, index=dates)
 
-    def get_cusip_history(self, cusip, ignore_holidays=True):
+    def get_synthetic_differenced_history(self, col):
+        """
+        Save the difference history of a column.
+
+        Parameters
+        ----------
+        col: str
+            Column from :attr:`Index.df` to build synthetic
+            differenced history for (e.g., 'OAS').
+
+        Returns
+        -------
+        pd.Series
+            Series of sythetically differenced market value
+            weighting for specified column.
+        """
+
+        dates = self.dates[1:]
+        a = np.zeros(len(dates))
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        for i, date in enumerate(dates):
+            df = self.synthetic_day(date)
+            df = df.dropna(subset=["AmountOutstanding", "DirtyPrice", col])
+            prev_df = self.day(self.dates[i]).dropna(
+                subset=["AmountOutstanding", "DirtyPrice", col]
+            )
+            prev_df = prev_df[prev_df.index.isin(df.index)]
+            a[i] = (
+                np.sum(df["AmountOutstanding"] * df["DirtyPrice"] * df[col])
+                / np.sum(df["AmountOutstanding"] * df["DirtyPrice"])
+            ) - (
+                np.sum(
+                    prev_df["AmountOutstanding"]
+                    * prev_df["DirtyPrice"]
+                    * prev_df[col]
+                )
+                / np.sum(prev_df["AmountOutstanding"] * prev_df["DirtyPrice"])
+            )
+        warnings.simplefilter("default", category=RuntimeWarning)
+
+        # Add the the cumulative synthetic differences to the current
+        # value backwards in time to yield the synthetic history
+        # of the specified column.
+        current_val = np.sum(
+            df["AmountOutstanding"] * df["DirtyPrice"] * df[col]
+        ) / np.sum(df["AmountOutstanding"] * df["DirtyPrice"])
+        offset = np.cumsum(a[::-1])
+        synthetic_history = np.concatenate(
+            [(current_val - offset)[::-1], [current_val]]
+        )
+        return pd.Series(synthetic_history, index=self.dates, name=col)
+
+    def get_cusip_history(self, cusip):
         """
         Get full history for specified cusip.
 
@@ -1026,28 +1073,20 @@ class Index:
         ----------
         cusip: str
             Specified cusip.
-        ignore_holidays: bool, default=True
-            If True, ignore holidays.
-
         Returns
         -------
-        hist_df: pd.DataFrame
+        pd.DataFrame
             DataFrame with datetime index and :attr:`Index.df`
             columns for specified cusip.
         """
-        if ignore_holidays:
-            dates = [d for d in self.dates if d not in self._holiday_dates]
-        else:
-            dates = self.dates
-
         return pd.concat(
             [
                 pd.DataFrame(self.day(d).loc[cusip, :]).T.set_index("Date")
-                for d in dates
+                for d in self.dates
             ]
         )
 
-    def market_value_weight(self, col, synthetic=False, ignore_holidays=True):
+    def market_value_weight(self, col, synthetic=False):
         """
         Market value weight a specified column vs entire
         index market value.
@@ -1058,8 +1097,6 @@ class Index:
             Column name to weight, (e.g., 'OAS').
         synthethic: bool, default=False
             If True, use synthethic day data.
-        ignore_holidays: bool, default=True
-            If True, ignore holidays.
 
         Returns
         -------
@@ -1067,8 +1104,6 @@ class Index:
             Series of market value weighting for specified column.
         """
         dates = self.dates[1:] if synthetic else self.dates
-        if ignore_holidays:
-            dates = [d for d in dates if d not in self._holiday_dates]
 
         a = np.zeros(len(dates))
         warnings.simplefilter("ignore", category=RuntimeWarning)
