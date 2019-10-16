@@ -1,3 +1,3 @@
-from lgimapy.daily_scripts.build_data_sheets import build_movers_sheets
+from lgimapy.daily_scripts.issuer_mover_sheet import build_movers_sheets
 
 __all__ = ["build_movers_sheets"]
