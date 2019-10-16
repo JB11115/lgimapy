@@ -1,4 +1,5 @@
 from datetime import datetime as dt
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -29,13 +30,13 @@ def create_feather(fid):
             dates >= pd.to_datetime(f"{next_month}/1/{next_year}")
         ][0]
     except IndexError:
-        end_date = dates[-1]
+        end_date = db.load_trade_dates()[-1]
     start_date = dates[dates < pd.to_datetime(f"{month}/1/{year}")][-1]
 
     # Load index, compute MTD excess returns, and save feather.
     db.load_market_data(start=start_date, end=end_date)
     ix = db.build_market_index()
-    # ix.compute_excess_returns()
+    ix.compute_excess_returns()
     df = ix.subset(start=f"{month}/1/{year}").df.reset_index(drop=True)
     df.to_feather(root(f"data/feathers/{fid}.feather"))
 
@@ -62,7 +63,20 @@ def find_missing_feathers():
     all_feathers = pd.date_range(
         "1/1/2004", Database().trade_dates[-1], freq="MS"
     ).strftime("%Y_%m")
-    return [f for f in all_feathers if f not in saved_feathers]
+    missing_feathers = [f for f in all_feathers if f not in saved_feathers]
+
+    # Check that all trade dates for past couple months are
+    # in saved feather files.
+    # db = Database()
+    # start = dt.today() - timedelta(45)
+    # db.load_market_data(start=start, local=True)
+    # ix = db.build_market_index()
+    # saved_dates = ix.all_trade_dates
+    #
+    # trade_dates = db.load_trade_dates()[-30:]
+    # missing_dates = [date for date in trade_dates if date not in saved_dates]
+    # missing_dates
+    return missing_feathers
 
 
 def update_feathers():
