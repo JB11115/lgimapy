@@ -1,7 +1,6 @@
 from lgimapy.models.treasury_curve import (
-    svensson,
-    TreasuryCurve,
     TreasuryCurveBuilder,
+    update_treasury_curve_dates,
 )
 
-__all__ = ["svensson", "TreasuryCurve", "TreasuryCurveBuilder"]
+__all__ = ["TreasuryCurveBuilder", "update_treasury_curve_dates"]
