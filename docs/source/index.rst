@@ -13,40 +13,40 @@ lgimapy: LGIMA's powerful Python analysis package
    :maxdepth: 2
    :caption: Contents:
 
-lgimapy index
-=============================
-.. automodule:: lgimapy.index
-   :members:
+lgimapy data
+============================
+.. automodule:: lgimapy.data
+  :members:
 
 lgimapy models
 ==============================
 .. automodule:: lgimapy.models
    :members:
 
-lgimapy data
-============================
-.. automodule:: lgimapy.data
-   :members:
+lgimapy bloomberg
+=================================
+.. automodule:: lgimapy.bloomberg
+ :members:
 
 lgimapy vis
 ===========================
 .. automodule:: lgimapy.vis
    :members:
 
-lgimapy bloomberg
-=================================
-.. automodule:: lgimapy.bloomberg
-  :members:
+lgimapy latex
+=====================================
+.. automodule:: lgimapy.latex
+   :members:
 
 lgimapy daily_scripts
 =====================================
 .. automodule:: lgimapy.daily_scripts
- :members:
+   :members:
 
- lgimapy utils
- =====================================
- .. automodule:: lgimapy.utils
-  :members:
+lgimapy utils
+=====================================
+.. automodule:: lgimapy.utils
+   :members:
 
 Indices and tables
 ==================
