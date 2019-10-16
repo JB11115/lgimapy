@@ -1,52 +1,1082 @@
 {
     "IG_all": {
-        "maturity_splits": ["all", 5, 10, 20, 30],
-        "OAS": [-10, 3000],
+        "maturity_splits": [
+            "all",
+            5,
+            10,
+            20,
+            30
+        ],
+        "OAS": [
+            -10,
+            3000
+        ],
         "rating": "IG"
     },
     "IG_long_credit": {
-        "OAS": [-10, 3000],
+        "OAS": [
+            -10,
+            3000
+        ],
         "rating": "IG",
-        "maturity": [10, null]
+        "maturity": [
+            10,
+            null
+        ]
     },
     "IG_liquid": {
-        "OAS": [-10, 3000],
+        "OAS": [
+            -10,
+            3000
+        ],
         "rating": "IG",
-        "issue_years": [null, 2]
+        "issue_years": [
+            null,
+            2
+        ]
+    },
+    "A_all": {
+        "name": "A",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "AAA",
+            "A-"
+        ],
+        "in_stats_index": true
+    },
+    "AAA": {
+        "name": "AAA",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": "AAA",
+        "in_stats_index": true
+    },
+    "AA": {
+        "name": "AA",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "AA+",
+            "AA-"
+        ],
+        "in_stats_index": true
     },
     "A": {
-        "maturity_splits": ["all", 5, 10, 20, 30],
-        "OAS": [-10, 3000],
-        "rating": ["AAA", "A-"]
+        "name": "A",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "in_stats_index": true
     },
     "BBB": {
-        "maturity_splits": ["all", 5, 10, 20, 30],
-        "OAS": [-10, 3000],
-        "rating": ["BBB+", "BBB-"]
+        "name": "BBB",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "in_stats_index": true
     },
     "IG_most_trade_exposed": {
-        "OAS": [-10, 3000],
+        "OAS": [
+            -10,
+            3000
+        ],
         "rating": "IG",
-        "sector": ["TECHNOLOGY", "CONSUMER_PRODUCTS", "CHEMICALS",
-                   "RETAILERS", "DIVERSIFIED_MANUFACTURING"]
+        "sector": [
+            "TECHNOLOGY",
+            "CONSUMER_PRODUCTS",
+            "CHEMICALS",
+            "RETAILERS",
+            "DIVERSIFIED_MANUFACTURING"
+        ]
     },
     "IG_least_trade_exposed": {
-        "OAS": [-10, 3000],
+        "OAS": [
+            -10,
+            3000
+        ],
         "rating": "IG",
-        "sector": ["MEDIA_ENTERTAINMENT", "TOBACCO", "WIRELINES", "WIRELESS"],
+        "sector": [
+            "MEDIA_ENTERTAINMENT",
+            "TOBACCO",
+            "WIRELINES",
+            "WIRELESS"
+        ],
         "subsector": "Oil Comp-Explor&Prodtn",
         "special_rules": "Sector | Subsector"
     },
-    "IG_healthcare_less_hospitals": {
-        "OAS": [-10, 3000],
-        "rating": "IG",
-        "sector": "HEALTHCARE",
-        "subsector": ["Medical-HMO", "Medical-Hospitals"],
+    "SIFI_BANKS": {
+        "name": "US SIFI Banks",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "BACR",
+            "C",
+            "GS",
+            "MS",
+            "WFC"
+        ],
+        "collateral_type": [
+            "LIMITD GUARANTEE"
+        ],
+        "special_rules": "(~CollateralType)"
+    },
+    "SIFI_BANKS_SR": {
+        "name": "US SIFI Banks (Sr)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "BACR",
+            "C",
+            "GS",
+            "MS",
+            "WFC"
+        ],
+        "collateral_type": [
+            "UNSECURED"
+        ]
+    },
+    "SIFI_BANKS_SUB": {
+        "name": "US SIFI Banks (Sub)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "BACR",
+            "C",
+            "GS",
+            "MS",
+            "WFC"
+        ],
+        "collateral_type": [
+            "SUBORDINATED"
+        ]
+    },
+    "STATS_all": {
+        "name": "US Stats Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_stats_index": true
+    },
+    "RETURNS_all": {
+        "name": "US Returns Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_returns_index": true
+    },
+    "FINANCIALS": {
+        "name": "Financials",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C",
+            "LIFE",
+            "APARTMENT_REITS",
+            "BANKING",
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "RETAIL_REITS",
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "FINANCIAL_OTHER",
+            "FINANCE_COMPANIES",
+            "OFFICE_REITS"
+        ],
+        "in_stats_index": true
+    },
+    "INDUSTRIALS": {
+        "name": "Industrials",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C",
+            "LIFE",
+            "APARTMENT_REITS",
+            "BANKING",
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "RETAIL_REITS",
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "FINANCIAL_OTHER",
+            "FINANCE_COMPANIES",
+            "OFFICE_REITS",
+            "TREASURIES",
+            "SOVEREIGN",
+            "SUPRANATIONAL",
+            "INDUSTRIAL_OTHER",
+            "GOVERNMENT_GUARANTEE",
+            "OWNED_NO_GUARANTEE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Sector"
+    },
+    "INDUSTRIALS_EX_ENERGY_MM": {
+        "name": "ex Energy & M/M",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C",
+            "LIFE",
+            "APARTMENT_REITS",
+            "BANKING",
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "RETAIL_REITS",
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "FINANCIAL_OTHER",
+            "FINANCE_COMPANIES",
+            "OFFICE_REITS",
+            "TREASURIES",
+            "SOVEREIGN",
+            "SUPRANATIONAL",
+            "INDUSTRIAL_OTHER",
+            "GOVERNMENT_GUARANTEE",
+            "OWNED_NO_GUARANTEE",
+            "INDEPENDENT",
+            "REFINING",
+            "OIL_FIELD_SERVICES",
+            "INTEGRATED",
+            "MIDSTREAM",
+            "METALS_AND_MINING"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Sector"
+    },
+    "BASICS": {
+        "name": "Basics",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "METALS_AND_MINING",
+            "CHEMICALS",
+            "PACKAGING",
+            "PAPER"
+        ],
+        "in_stats_index": true
+    },
+    "CHEMICALS": {
+        "name": "Chemicals",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CHEMICALS"
+        ],
+        "in_stats_index": true
+    },
+    "METALS_AND_MINING": {
+        "name": "Metals & Mining",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "METALS_AND_MINING"
+        ],
+        "in_stats_index": true
+    },
+    "CONSTRUCTION": {
+        "name": "Construction",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HOME_CONSTRUCTION",
+            "CONSTRUCTION_MACHINERY",
+            "BUILDING_MATERIALS"
+        ],
+        "in_stats_index": true
+    },
+    "CAPITAL_GOODS": {
+        "name": "Capital Goods",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "DIVERSIFIED_MANUFACTURING",
+            "BUILDING_MATERIALS",
+            "AEROSPACE/DEFENSE",
+            "CONSTRUCTION_MACHINERY"
+        ],
+        "ticker": [
+            "GE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
+    "DIVERSIFIED_MANUFACTURING": {
+        "name": "Div Manufacturing",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "DIVERSIFIED_MANUFACTURING"
+        ],
+        "ticker": [
+            "GE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
+    "ENERGY": {
+        "name": "Energy",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDEPENDENT",
+            "REFINING",
+            "OIL_FIELD_SERVICES",
+            "INTEGRATED",
+            "MIDSTREAM"
+        ],
+        "in_stats_index": true
+    },
+    "INDEPENDENT": {
+        "name": "Independent",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDEPENDENT"
+        ],
+        "in_stats_index": true
+    },
+    "REFINING": {
+        "name": "Refining",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "REFINING"
+        ],
+        "in_stats_index": true
+    },
+    "OIL_FIELD_SERVICES": {
+        "name": "Oil Field Services",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "OIL_FIELD_SERVICES"
+        ],
+        "in_stats_index": true
+    },
+    "INTEGRATED": {
+        "name": "Integrated",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INTEGRATED"
+        ],
+        "in_stats_index": true
+    },
+    "LEISURE": {
+        "name": "Leisure",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LEISURE",
+            "GAMING",
+            "LODGING"
+        ],
+        "in_stats_index": true
+    },
+    "REITS": {
+        "name": "REITs",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "APARTMENT_REITS",
+            "RETAIL_REITS",
+            "OFFICE_REITS"
+        ],
+        "in_stats_index": true
+    },
+    "TECHNOLOGY": {
+        "name": "Technology",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "TECHNOLOGY"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
+    "CONSUMER_CYCLICAL": {
+        "name": "Consumer Cyclical",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONSUMER_CYCLICAL_SERVICES",
+            "RETAILERS",
+            "AUTOMOTIVE",
+            "LEISURE",
+            "GAMING",
+            "LODGING",
+            "HOME_CONSTRUCTION",
+            "RESTAURANTS"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
+    },
+    "CONSUMER_CYCLICAL_SERVICES": {
+        "name": "Consumer Cylical Services",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONSUMER_CYCLICAL_SERVICES"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
+    },
+    "CONSUMER_NON_CYCLICAL": {
+        "name": "Consumer Non-Cyclical",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE",
+            "PHARMACEUTICALS",
+            "SUPERMARKETS",
+            "TOBACCO",
+            "FOOD_AND_BEVERAGE",
+            "CONSUMER_PRODUCTS"
+        ],
+        "in_stats_index": true
+    },
+    "WIRELINES_WIRELESS": {
+        "name": "Wirelines/Wireless",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "WIRELESS",
+            "WIRELINES"
+        ],
+        "in_stats_index": true
+    },
+    "TELECOM": {
+        "name": "Telcom",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "WIRELESS",
+            "WIRELINES",
+            "CABLE_SATELLITE"
+        ],
+        "in_stats_index": true
+    },
+    "CABLE_SATELLITE": {
+        "name": "Cable Satellite",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CABLE_SATELLITE"
+        ],
+        "in_stats_index": true
+    },
+    "UNIVERSITY": {
+        "name": "Universities",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDUSTRIAL_OTHER"
+        ],
+        "subsector": "Schools",
+        "in_stats_index": true
+    },
+    "INDUSTRIAL_OTHER": {
+        "name": "Industrial Other",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDUSTRIAL_OTHER",
+            "ENVIRONMENTAL"
+        ],
+        "subsector": "Schools",
+        "in_stats_index": true,
         "special_rules": "~Subsector"
     },
-    "IG_SIFI_banks": {
-        "OAS": [-10, 3000],
-        "rating": "IG",
-        "ticker": ["BAC", "BACR", "C", "GS", "MS", "WFC"]
+    "UTILITY": {
+        "name": "Utilities",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "in_stats_index": true
+    },
+    "NATURAL_GAS": {
+        "name": "Natural Gas",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NATURAL_GAS"
+        ],
+        "in_stats_index": true
+    },
+    "ELECTRIC": {
+        "name": "Electric",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "ELECTRIC"
+        ],
+        "in_stats_index": true
+    },
+    "UTILITY_OTHER": {
+        "name": "Other Utilities",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "UTILITY_OTHER"
+        ],
+        "in_stats_index": true
+    },
+    "AERO/DEFENSE": {
+        "name": "Aero/Defense",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AEROSPACE/DEFENSE"
+        ],
+        "in_stats_index": true
+    },
+    "AIRLINES": {
+        "name": "Airlines",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AIRLINES"
+        ],
+        "in_stats_index": true
+    },
+    "AUTOMOTIVE": {
+        "name": "Autos",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AUTOMOTIVE"
+        ],
+        "in_stats_index": true
+    },
+    "US_BANKS": {
+        "name": "US Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "in_stats_index": true
+    },
+    "BANKS": {
+        "name": "Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "in_stats_index": true
+    },
+    "US_REGIONAL_BANKS": {
+        "name": "US Regional Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "C",
+            "GS",
+            "JPM",
+            "BAC",
+            "MS"
+        ],
+        "special_rules": "~Ticker",
+        "in_stats_index": true
+    },
+    "NON-US_BANKS": {
+        "name": "Non-US Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "special_rules": "~CountryOfRisk",
+        "in_stats_index": true
+    },
+    "BROKERAGE_ASSETMANAGERS_EXCHANGES": {
+        "name": "Brokers/AssetMngr",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES"
+        ],
+        "in_stats_index": true
+    },
+    "CONSUMER_PRODUCTS": {
+        "name": "Consumer Products",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONSUMER_PRODUCTS"
+        ],
+        "in_stats_index": true
+    },
+    "FINANCE_COMPANIES": {
+        "name": "Fin. Companies",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "FINANCE_COMPANIES"
+        ],
+        "in_stats_index": true
+    },
+    "FINANCIAL_OTHER": {
+        "name": "Financial Other",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "FINACIAL_OTHER"
+        ],
+        "in_stats_index": true
+    },
+    "FOOD_AND_BEVERAGE": {
+        "name": "Food & Bev",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "FOOD_AND_BEVERAGE"
+        ],
+        "in_stats_index": true
+    },
+    "HEALTH_INSURANCE": {
+        "name": "Health Insurance",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTH_INSURANCE"
+        ],
+        "in_stats_index": true
+    },
+    "HEALTHCARE": {
+        "name": "Healthcare",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE"
+        ],
+        "in_stats_index": true
+    },
+    "HEALTHCARE_EX_HOSPITALS": {
+        "name": "Healthcare ex Hospitals",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE"
+        ],
+        "subsector": [
+            "Medical-HMO",
+            "Medical-Hospitals"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector"
+    },
+    "HOSPITALS": {
+        "name": "Hospitals",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "subsector": [
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Subsector | Ticker)"
+    },
+    "MANAGED_CARE": {
+        "name": "Managed Care",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "ticker": [
+            "AET",
+            "CI",
+            "CVS",
+            "ANTM",
+            "HUM",
+            "UNH"
+        ],
+        "in_stats_index": true
+    },
+    "LIFE": {
+        "name": "Life",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE"
+        ],
+        "in_stats_index": true
+    },
+    "FAANG": {
+        "name": "FAANG",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "ticker": [
+            "AAPL",
+            "AMAZON",
+            "NFLX",
+            "GOOGL"
+        ],
+        "in_stats_index": true
+    },
+    "COMMUNICATIONS": {
+        "name": "Communications",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "WIRELESS",
+            "WIRELINES",
+            "CABLE_SATELLITE",
+            "MEDIA_ENTERTAINMENT"
+        ],
+        "in_stats_index": true
+    },
+    "MEDIA_ENTERTAINMENT": {
+        "name": "Media",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "MEDIA_ENTERTAINMENT"
+        ],
+        "in_stats_index": true
+    },
+    "MIDSTREAM": {
+        "name": "Midstream",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "MIDSTREAM"
+        ],
+        "in_stats_index": true
+    },
+    "MUNIS": {
+        "name": "Munis",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LOCAL_AUTHORITIES"
+        ],
+        "in_stats_index": true
+    },
+    "OWNED_NO_GUARANTEE": {
+        "name": "Gov Owned, No Guar",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "OWNED_NO_GUARANTEE"
+        ],
+        "in_stats_index": true
+    },
+    "PHARMACEUTICALS": {
+        "name": "Pharma",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "PHARMACEUTICALS"
+        ],
+        "in_stats_index": true
+    },
+    "INSURANCE": {
+        "name": "Insurance",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE",
+            "P&C",
+            "HEALTH_INSURANCE"
+        ],
+        "in_stats_index": true
+    },
+    "P&C": {
+        "name": "P&C",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C"
+        ],
+        "in_stats_index": true
+    },
+    "RAILROADS": {
+        "name": "Railroads",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "RAILROADS"
+        ],
+        "in_stats_index": true
+    },
+    "RETAILERS": {
+        "name": "Retailers",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "RETAILERS"
+        ],
+        "in_stats_index": true
+    },
+    "RESTAURANTS": {
+        "name": "Restaurants",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "RESTAURANTS"
+        ],
+        "in_stats_index": true
+    },
+    "SOVEREIGN": {
+        "name": "Sovereigns",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SOVEREIGN"
+        ],
+        "in_stats_index": true
+    },
+    "TOBACCO": {
+        "name": "Tobacco",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "TOBACCO"
+        ],
+        "in_stats_index": true
+    },
+    "TRANSPORTATION": {
+        "name": "Transportation",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AIRLINES",
+            "RAILROADS",
+            "TRANSPORTATION_SERVICES"
+        ],
+        "in_stats_index": true
+    },
+    "TRANSPORTATION_SERVICES": {
+        "name": "Transport Services",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "TRANSPORTATION_SERVICES"
+        ],
+        "in_stats_index": true
+    },
+    "SUPRANATIONAL": {
+        "name": "Supranational",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SUPRANATIONAL"
+        ],
+        "in_stats_index": true
+    },
+    "GOVERNMENT_GUARANTEE": {
+        "name": "Gov Guarantee",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GOVERNMENT_GUARANTEE"
+        ],
+        "in_stats_index": true
     }
 }
