@@ -75,10 +75,10 @@ def spread_diff(df1, df2):
 
     Parameters
     ----------
-    df1: :att:`Index.df`
-        Older :att:`Index.df`.
-    df2: :att:`Index.df`
-        Newer :att:`Index.df`.
+    df1: :attr:`Index.df`
+        Older :attr:`Index.df`.
+    df2: :attr:`Index.df`
+        Newer :attr:`Index.df`.
 
     Returns
     -------
@@ -101,11 +101,11 @@ def spread_diff(df1, df2):
 
 def concat_index_dfs(dfs, join="outer"):
     """
-    Append two :att:`Index.df`s.
+    Append two :attr:`Index.df`s.
 
     Parameters
     ----------
-    dfs: List[:att:`Index.df`].
+    dfs: List[:attr:`Index.df`].
         List of DataFrames to append together.
     join: {'inner', 'outer'}, default='outer'
         How to handle indexes on other axis(es).
