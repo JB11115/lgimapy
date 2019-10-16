@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 def update_fed_funds():
     """Update fed funds data to current date in database."""
     # Scrape fed funds data.
-    dates = Database().trade_dates
+    dates = Database().load_trade_dates()
     df = bdh("FDTRMID", "Index", fields="PX_MID", start=dates[0])
 
     # Include all possible dates, filling scraped dates forward.
