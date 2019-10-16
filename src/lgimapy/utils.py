@@ -153,11 +153,13 @@ def mkdir(directory):
         pass
 
 
-def savefig(fid, fdir=None, dpi=300):
+def savefig(fid, path=None, dpi=300):
     """Save figure to specified location."""
-    if fdir is not None:
-        mkdir(fdir)
-    full_fid = f"{fid}.png" if fdir is None else f"{fdir}/{fid}.png"
+    if path is not None:
+        mkdir(path)
+        full_fid = f"{str(path)}/{fid}.png"
+    else:
+        full_fid = f"{fid}.png"
     plt.savefig(full_fid, dpi=dpi, bbox_inches="tight")
 
 
