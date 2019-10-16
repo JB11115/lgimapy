@@ -16,6 +16,7 @@ from lgimapy.utils import dump_json, load_json, replace_multiple, root, tolist
 
 # %%
 def clean_dtypes(df):
+    """pd.DataFrame: Convert dtypes columns to proper dtype."""
     reverse_dtype_dict = {
         "float32": [
             "CouponRate",
@@ -30,6 +31,8 @@ def clean_dtypes(df):
             "OAS_12M",
             "LiquidityCostScore",
             "AccruedInterest",
+            "AmountOutstanding",
+            "MarketValue",
             "LQA",
             "KRD06mo",
             "KRD02yr",
@@ -37,7 +40,12 @@ def clean_dtypes(df):
             "KRD10yr",
             "KRD20yr",
             "KRD30yr",
-            "OAC",
+            "YieldToWorst",
+            "NumericRating",
+            "MaturityYears",
+            "IssueYears",
+            "DirtyPrice",
+            "MarketValue",
             "Quantity",
             "AccountWeight",
             "BenchmarkWeight",
@@ -118,7 +126,7 @@ class Database:
     def trade_dates(self):
         """List[datetime]: Memoized list of trade dates."""
         trade_dates = self._trade_date_df[self._trade_date_df["holiday"] == 0]
-        return list(self._trade_date_df.index)
+        return list(trade_dates.index)
 
     @property
     @lru_cache(maxsize=None)
@@ -182,7 +190,9 @@ class Database:
         datetime:
             Trade date nearest to input date.
         """
-        return min(self.trade_dates, key=lambda x: abs(x - date))
+        return min(
+            self.trade_dates, key=lambda x: abs(x - pd.to_datetime(date))
+        )
 
     def _convert_sectors_to_fin_flags(self, sectors):
         """
@@ -582,16 +592,15 @@ class Database:
         df["Subsector"] = get_bloomberg_subsector(df["CUSIP"].values)
 
         # Calculate dirty price.
-        df["DirtyPrice"] = df["CleanPrice"] + df["AccruedInterest"]
+        df.eval("DirtyPrice = CleanPrice + AccruedInterest", inplace=True)
 
-        # Make new fields categories.
-        df = df.astype(
-            {c: "category" for c in ["FinancialFlag", "Subsector", "CUSIP"]}
+        # Use dirty price to calculate market value.
+        df.eval(
+            "MarketValue = AmountOutstanding * DirtyPrice / 100", inplace=True
         )
 
-        # Drop duplicates.
-        df.drop_duplicates(subset=["CUSIP", "Date"], inplace=True)
-        return df
+        # Make new fields categories and drop duplicates.
+        return clean_dtypes(df).drop_duplicates(subset=["CUSIP", "Date"])
 
     def load_market_data(
         self,
@@ -1224,13 +1233,18 @@ class Database:
             DataFrame with correct column dtypes and names.
         """
         # Fix bad column names.
-        col_map = {"PMV": "AccountWeight", "PMV INDEX": "BenchmarkWeight"}
+        col_map = {"PMV": "PortfolioWeight", "PMV INDEX": "BenchmarkWeight"}
         df.columns = [col_map.get(col, col) for col in df.columns]
         df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d")
         return clean_dtypes(df)
 
     def load_portfolio(
-        date, accounts=None, strategy=None, manager=None, universe="returns"
+        self,
+        date=None,
+        accounts=None,
+        strategy=None,
+        manager=None,
+        universe="returns",
     ):
         """
         Load market data from SQL server. If end is not specified
@@ -1239,8 +1253,8 @@ class Database:
         Optionally load from local compressed format for increased
         performance or feed a DataFrame directly.
         """
-        if date is not None:
-            start = end = date
+        if date is None:
+            date = self.trade_dates[-1]
 
         # Convert inputs for SQL call.
         date = pd.to_datetime(date).strftime("%Y%m%d")
@@ -1266,6 +1280,8 @@ class Database:
         # p_df = pd.read_sql(sql_base + sql_portfolio, self._conn)
         both_df = pd.read_sql(sql_base + sql_both, self._conn)
         both_df = self._preprocess_portfolio_data(both_df)
+        if not len(both_df):
+            raise ValueError("No data for specified date.")
         rating_cols = ["Moody", "S&P", "Fitch"]
         both_df["NumericRating"] = self._get_numeric_ratings(
             both_df, rating_cols
