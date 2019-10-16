@@ -1,4 +1,5 @@
 import datetime as dt
+import gc
 import warnings
 from calendar import monthrange
 from collections import defaultdict, namedtuple
@@ -15,10 +16,9 @@ from scipy.interpolate import interp1d
 from scipy.optimize import fsolve, minimize
 from tqdm import tqdm
 
-
 from lgimapy.bloomberg import get_bloomberg_ticker
-from lgimapy.data import TBond, Database
-from lgimapy.utils import nearest, mkdir, root, tolist, smooth_weight
+from lgimapy.data import Database, TBond, SyntheticTBill, TreasuryCurve
+from lgimapy.utils import nearest, mkdir, root, tolist, smooth_weight, savefig
 
 plt.style.use("fivethirtyeight")
 warnings.simplefilter("default", RuntimeWarning)
@@ -110,7 +110,6 @@ class TreasuryCurveBuilder:
             Bonds to pass to fitting routine.
         """
         # Convert DataFrames to treasury bonds.
-
         bonds = [TBond(bond) for _, bond in self._treasuries_df.iterrows()]
         strips = [TBond(strip) for _, strip in self._strips_df.iterrows()]
         bills = [TBond(bill) for _, bill in self._bills_df.iterrows()]
@@ -123,7 +122,7 @@ class TreasuryCurveBuilder:
 
         # Remove bonds with default ytm of 0.02.
         warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        bonds = [b for b in bonds if b.ytm != 0.02]
+        bonds = [b for b in bonds if b.ytm != 0.02 and b.ytm > 0]
         warnings.simplefilter(action="default", category=RuntimeWarning)
         return bonds
 
@@ -178,8 +177,9 @@ class TreasuryCurveBuilder:
 
         Parameters
         ----------
-        maturity_range
-        init_params: {'price', 'yield'}, default='price'
+        model: {'NSS', 'NS'}, default='NSS'
+
+        method: {'price', 'yield'}, default='price'
             Minimize error in inversion duration weighted price or yield.
         n: int, default=50
             Number of minimizations to run for final yield curve.
@@ -255,7 +255,6 @@ class TreasuryCurveBuilder:
         df = pd.DataFrame(index=(np.arange(0, 100 + step / 2, step).round(5)))
         for mats, cr in zip(maturities, curve_ranges):
             mat_lbl = "{}-{}".format(*mats)
-            # t = (1e5 * np.arange(cr[0], cr[1], step).round(5)).astype(int)
             t = np.arange(cr[0], cr[1], step).round(5)
             if mats == (0, 0):
                 df.loc[t, mat_lbl] = np.zeros(len(t)) + self._fed_funds_rate
@@ -305,6 +304,7 @@ class TreasuryCurveBuilder:
         maturity_range: Tuple[int].
             Start and end maturity for fitting routine.
         """
+        self._maturity_range = maturity_range
         if self._verbose >= 1:
             print("  Fitting {} - {} Year Maturites".format(*maturity_range))
 
@@ -320,6 +320,16 @@ class TreasuryCurveBuilder:
             if bond.BTicker in bonds_to_fit
             and maturity_range[0] <= bond.MaturityYears <= maturity_range[1]
         ]
+        # Add synthetic TBills to fit front end of the curve.
+        if maturity_range == (0, 3):
+            synthetic_maturities = range(8, 26, 2)
+            synthetic_bonds = [
+                SyntheticTBill(self.date, self._fed_funds_rate, day)
+                for day in synthetic_maturities
+            ]
+        else:
+            synthetic_bonds = []
+        self._bonds = self._bonds + synthetic_bonds
 
         # Repeatedly fit treasury curve until there are no
         # outlier bonds remaining.
@@ -327,18 +337,37 @@ class TreasuryCurveBuilder:
         n_outlier_bonds = 100
         while n_outlier_bonds > 0:
             self._fit(self._n_drop)
-            resids = self._resid
-            # Drop up to 5 bonds with error greater than threshold.
-            n_max_drop = 3
+
+            # Get actuall TBonds, ignoring synthetic TBills.
+            bonds, resids = [], []
+            for bond, resid in zip(self._bonds, self._resid):
+                if isinstance(bond, TBond):
+                    bonds.append(bond)
+                    resids.append(resid)
+            resids = np.array(resids)
+            # Drop up to 3 bonds with error greater than threshold
+            # unless fitting the 0-3 year curve, then only drop
+            # 1 at a time.
+            n_max_drop = {(0, 3): 1}.get(maturity_range, 3)
             r_max_drop = np.argpartition(resids, -n_max_drop)[-n_max_drop:]
             n_outlier_bonds = min(
                 n_max_drop, len(resids[resids > self._threshold])
             )
-            self._bonds = [
-                bond
-                for j, (bond, resid) in enumerate(zip(self._bonds, resids))
-                if not (j in r_max_drop and resid > self._threshold)
-            ]
+            keep_bonds, dropped_bonds = [], []
+            for j, (bond, resid) in enumerate(zip(bonds, resids)):
+                if not (j in r_max_drop and resid > self._threshold):
+                    keep_bonds.append(bond)
+                else:
+                    dropped_bonds.append(bond)
+            self._bonds = keep_bonds + synthetic_bonds  # update bond
+            # Remove dropped bonds from 0-3 range for rest of fittings.
+            if maturity_range == (0, 3):
+                self._all_bonds = [
+                    bond
+                    for bond in self._all_bonds
+                    if bond not in dropped_bonds
+                ]
+
             if self._verbose >= 1:
                 print(f"    Fit iter {i} | Bonds Dropped: {n_outlier_bonds}")
                 i += 1
@@ -391,10 +420,10 @@ class TreasuryCurveBuilder:
 
         # Set up inits for optimizatios.
         warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        if self.model == "NSS":
-            bnds = [(0, 15), (-15, 30), (-30, 30), (-30, 30), (0, 5), (5, 10)]
-        elif self.model == "NS":
+        if self.model == "NS" or self._maturity_range == (0, 3):
             bnds = [(0, 15), (-15, 30), (-30, 30), (0, 0), (0, 5), (0, 0)]
+        elif self.model == "NSS":
+            bnds = [(0, 15), (-15, 30), (-30, 30), (-30, 30), (0, 5), (5, 10)]
         else:
             raise ValueError("Model must be either NSS or NS.")
 
@@ -529,6 +558,14 @@ class TreasuryCurveBuilder:
         else:
             # Create csv with first row.
             new_row.to_csv(fid)
+
+        # Save figure.
+        fig_dir = root("data/treasury_curves")
+        mkdir(fig_dir)
+        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+        self.plot(ax=ax)
+        savefig(fig_dir / self.date.strftime("%Y_%m_%d"))
+        plt.close(fig)
 
     def _get_yield(self, t):
         """
@@ -760,199 +797,12 @@ class TreasuryCurveBuilder:
             )
 
         ax.legend()
-        ax.set_xlim(trange)
+        ax.set_xlim(trange[0] - 0.2, trange[1] + 0.2)
         tick = mtick.StrMethodFormatter("{x:.2%}")
         ax.yaxis.set_major_formatter(tick)
         ax.set_xlabel("Time (yrs)")
         ax.set_ylabel("Yield")
-
-
-class TreasuryCurve:
-    """
-    Class for loading treasury yield curve and calculating yields
-    for specified dates and maturities.
-
-    Parameters
-    ----------
-    date: datetime, default=None
-        Default date to use for curves and KRD parameters.
-    """
-
-    def __init__(self, date=None):
-        if date is not None:
-            self.set_date(date)
-        t_mats = [0.5, 2, 5, 10, 20, 30]
-        self._t_mats = np.array(t_mats)
-        self._KRD_cols = [f"KRD_{t}" for t in t_mats]
-        self._coupon_cols = [f"c_{t}" for t in t_mats]
-        self._tret_cols = [f"tret_{t}" for t in t_mats] + ["tret_cash"]
-
-    @property
-    @lru_cache(maxsize=None)
-    def trade_dates(self):
-        """List[datetime]: List of traded dates."""
-        return self._curves_df.index
-
-    @property
-    @lru_cache(maxsize=None)
-    def _curves_df(self):
-        return self._load("treasury_curves")
-
-    @property
-    @lru_cache(maxsize=None)
-    def _params_df(self):
-        return self._load("treasury_curve_krd_params")
-
-    def _load(self, fid):
-        """Load data as DataFrame."""
-        return pd.read_csv(
-            root(f"data/{fid}.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )
-
-    def set_date(self, date):
-        """Set default date."""
-        self._date = pd.to_datetime(date)
-
-    def yields(self, t=None, date=None):
-        """
-        Get yields for given date and maturity values.
-
-        Parameters
-        ----------
-        t: float or ndarray[float], default=None
-            Maturites to interpolate points on the curve for.
-            If none, the entire curve is returned.
-        date: datetime, default=None
-            Date to return curve for. If None, the default
-            date is used.
-
-        Returns
-        -------
-        pd.Series:
-            Yield curve values with maturity (yrs) index.
-        """
-        date = pd.to_datetime(date) if date is not None else self._date
-        if date is None:
-            raise ValueError("A date must be specified.")
-        try:
-            curve = self._curves_df.loc[date, :]
-        except KeyError:
-            raise ValueError("The specified date is not a traded date.")
-
-        if t is None:
-            return curve
-        else:
-            if type(t) in [int, float]:
-                t = np.array([t])
-            return pd.Series(np.interp(t, curve.index, curve.values), index=t)
-
-    def KRDs(self, date=None):
-        """
-        Get yields for given date and maturity values.
-
-        Parameters
-        ----------
-        date: datetime, default=None
-            Date to return curve for. If None, the default
-            date is used.
-
-        Returns
-        -------
-        ndarray:
-            Key rate durations for specified date.
-        """
-        date = pd.to_datetime(date) if date is not None else self._date
-        if date is None:
-            raise ValueError("A date must be specified.")
-        try:
-            return self._params_df.loc[date, self._KRD_cols].values
-        except KeyError:
-            raise ValueError("The specified date is not a traded date.")
-
-    def trets(self, date=None):
-        """
-        Get yields for given date and maturity values.
-
-        Parameters
-        ----------
-        date: datetime, default=None
-            Date to return curve for. If None, the default
-            date is used.
-
-        Returns
-        -------
-        ndarray:
-            Total returns for treasury portfolio at key
-            rate duration maturities for specified date.
-        """
-        date = pd.to_datetime(date) if date is not None else self._date
-        if date is None:
-            raise ValueError("A date must be specified.")
-        try:
-            return self._params_df.loc[date, self._tret_cols].values
-        except KeyError:
-            raise ValueError("The specified date is not a traded date.")
-
-    def coupons(self, date=None):
-        """
-        Get yields for given date and maturity values.
-
-        Parameters
-        ----------
-        date: datetime, default=None
-            Date to return curve for. If None, the default
-            date is used.
-
-        Returns
-        -------
-        ndarray:
-            Coupons for each treasury in treasury portfolio at
-            key rate duration maturities for specified date.
-        """
-        date = pd.to_datetime(date) if date is not None else self._date
-        if date is None:
-            raise ValueError("A date must be specified.")
-        try:
-            return self._params_df.loc[date, self._coupon_cols].values
-        except KeyError:
-            raise ValueError("The specified date is not a traded date.")
-
-    def plot(
-        self, date=None, trange=(0, 30), ax=None, figsize=(8, 6), **kwargs
-    ):
-        """
-        Plot yield curve.
-
-        Parameters
-        ----------
-        date: datetime
-            Date at which to plot yield curve.
-        trange: Tuple(float, float), default=(0.1, 30).
-            Range (min, max) in years to show.
-        ax: matplotlib axis, default=None
-            Matplotlib axis to plot figure, if None one is created.
-        figsize: list or tuple, default=(6, 6).
-            Figure size.
-        **kwargs: dict
-            Kwargs for matplotlib plotting.
-        """
-        t = np.linspace(trange[0], trange[1], 200)
-        curve = self.yields(t, date=date)
-        if ax is None:
-            fig, ax = plt.subplots(1, 1, figsize=figsize)
-
-        # Plot yield curve.
-        plot_kwargs = {"color": "k", "alpha": 0.8, "lw": 2}
-        plot_kwargs.update(**kwargs)
-        ax.plot(curve, **plot_kwargs)
-        tick = mtick.StrMethodFormatter("{x:.2%}")
-        ax.yaxis.set_major_formatter(tick)
-        ax.set_xlabel("Time (yrs)")
-        ax.set_ylabel("Yield")
-        ax.set_xlim(trange)
+        ax.set_title(self.date.strftime("%m/%d/%Y"))
 
 
 def update_treasury_curve_dates(verbose=True):
@@ -966,9 +816,12 @@ def update_treasury_curve_dates(verbose=True):
         If True print progress on each fitting to screen.
     """
     # Get list of dates with treasury curves
-    start = "12/31/2003"
-    end = "6/1/2018"
+    db = Database()
+    trade_dates = db.load_trade_dates()
+    start = pd.to_datetime("12/31/2003")
+    end = None
 
+    verbose = True
     # Get list of previously scraped dates if it exists.
     try:
         scraped_dates = TreasuryCurve().trade_dates
@@ -978,20 +831,27 @@ def update_treasury_curve_dates(verbose=True):
     # Scrape all dates if they have not been scraped
     # or if the day immediately preceding has not been
     # scraped, saving the curve and KRD parameters.
-    db = Database()
-    trade_dates = db.trade_dates
     i = 0
     for date in trade_dates:
+        if date in db.holiday_dates:
+            continue
         if date < pd.to_datetime(start):
             continue
         if date in scraped_dates and i == 0:
             continue
-        if date > pd.to_datetime(end):
+        if end is not None and date > end:
             continue
+
         db.load_market_data(date=date)
-        tcb = TreasuryCurveBuilder(db.build_market_index(treasuries=True))
-        tcb.fit(verbose=int(verbose))
+        treasury_ix = db.build_market_index(treasuries=True)
+        tcb = TreasuryCurveBuilder(treasury_ix)
+        tcb.fit(verbose=int(verbose), threshold=12)
+        tcb.plot()
+
         tcb.save()
+        del tcb
+        gc.collect()
+
         if date in scraped_dates:
             i -= 1
         else:
@@ -1013,6 +873,7 @@ def update_specific_date(specified_date, plot=True, **kwargs):
     kwargs: dict
         Kwargs for :meth:`TreasuryCurveBuilder.fit`.
     """
+
     db = Database()
     tc = TreasuryCurve()
 
@@ -1023,12 +884,12 @@ def update_specific_date(specified_date, plot=True, **kwargs):
 
     # Fit curve for both days.
     db.load_market_data(date=specified_date)
-    tcb = TreasuryCurveBuilder(db.build_market_index(treasury=True))
+    tcb = TreasuryCurveBuilder(db.build_market_index(treasuries=True))
     tcb.fit(verbose=1)
     tcb.save()
 
     db.load_market_data(date=next_date)
-    tcb = TreasuryCurveBuilder(db.build_market_index(treasury=True))
+    tcb = TreasuryCurveBuilder(db.build_market_index(treasuries=True))
     tcb.fit(verbose=1)
     tcb.save()
 
@@ -1079,35 +940,43 @@ def update_specific_date(specified_date, plot=True, **kwargs):
 # %%
 def main():
     # %%
+
     update_treasury_curve_dates()
 
     bad_dates = [
-        "1/2/2004",
-        "1/28/2004",
-        "2/23/2004",
-        "3/26/2004",
-        "10/29/2004",
-        "12/29/2004",
+        "10/31/2005",
+        "11/10/2005",
+        "11/17/2005",
+        "11/21/2005",
+        "11/23/2005",
+        "11/28/2005",
+        "11/29/2005",
+        "11/30/2005",
+        "12/24/2007",
+        "1/18/2008",
+        "3/11/2008",
+        "3/14/2008",
+        "3/27/2008",
+        "3/28/2008",
+        "4/2/2008",
+        "4/3/2008",
+        "4/4/2008",
+        "4/8/2008",
+        "4/25/2008",
+        "7/15/2008",
+        "9/29/2008",
+        "12/5/2008",
+        "12/8/2008",
+        "12/12/2008",
+        "12/15/2008",
+        "3/2/2009",
+        "3/3/2009",
+        "3/13/2009",
+        "3/16/2009",
+        "12/3/2009",
     ]
-
-    # # %%
-    # date = "1/2/2004"
-    # db = Database()
-    # db.load_market_data(date=date)
-    # ix = db.build_market_index(treasuries=True)
-    # self = TreasuryCurveBuilder(ix)
-    # self.fit(verbose=1)
-    # self.save()
-    #
-    # # %%
-    # mats = [b.MaturityYears for b in tcb._all_bonds]
-    # ytms = [b.ytm for b in tcb._all_bonds]
-    # fig, ax = plt.subplots(1, 1, figsize=(12, 8))
-    # ax.plot(mats, ytms, "o", c="magenta", ms=2)
-    # tcb.plot(ax=ax)
-    # plt.show()
-
-    # # %%
+    # for date in bad_dates:
+    #     update_specific_date(date)
 
 
 if __name__ == "__main__":
