@@ -48,7 +48,7 @@ conda install -c conda-forge blpapi  # Bloomberg API
 pip install -e .
 ```
 \* Note that `pip install` may fail if behind proxy or firewall. Set up
-`bashrc` shell alias as shown below and replace with `pipinstall` to get
+`.bashrc` shell aliases as shown below and replace with `pipinstall` to get
 around this issue.
 
 #### Other Requirements
@@ -74,7 +74,7 @@ touch .bash_profile
 touch .bashrc
 ```
 
-Structure your `bash_profile` as below replacing `USERNAME` and `PASSWORD` with
+Structure your `.bash_profile` as below replacing `USERNAME` and `PASSWORD` with
 your login username and password:
 ```bash
 source ~/.bashrc;
@@ -89,7 +89,8 @@ export rsync_proxy=$http_proxy
 export no_proxy="localhost,127.0.0.1,localaddress,.yourcompany.com,.local"
 ```
 
-Structure your `bashrc` as below:
+Structure your `.bashrc` as below
+(verify install locations and versions where necessary):
 ```bash
 # Path variables
 export PATH=$PATH:"/C/blp/DAPI"
@@ -108,12 +109,11 @@ alias pipinstall='pip install --trusted-host files.pythonhosted.org --trusted-ho
 
 The main developer(s):
 
-- Jason R Becker: [jrbecker]
+- Jason R Becker: jason.becker@lgima.com
 
 [Bloomberg API]: https://www.bloomberg.com/professional/support/api-library/
 [Visual Studio C++ Build Tools]: https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=2ahUKEwiniM2o26HlAhVQRKwKHS_8DrAQFjAAegQIABAB&url=https%3A%2F%2Fgo.microsoft.com%2Ffwlink%2F%3FLinkId%3D691126&usg=AOvVaw0geDw_h-TSCfzTMvYE2ZOw
 [Microsoft Build Tools]: https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16
-[jrbecker]: https://github.com/jason-r-becker
 
 [python-versions]: https://img.shields.io/badge/python-3.6-blue.svg
 [license]: https://img.shields.io/badge/license-TBD-green
