@@ -1,0 +1,430 @@
+{
+    "ITRAXX_MAIN": [
+        "ITRXEBE CBBT",
+        "Curncy"
+    ],
+    "ITRAXX_XOVER": [
+        "ITRXEXE CBBT",
+        "Curncy"
+    ],
+    "UST_10Y": [
+        "USGG10YR",
+        "Index"
+    ],
+    "UST_30Y": [
+        "USGG30YR",
+        "Index"
+    ],
+    "BUND_10Y": [
+        "GDBR10",
+        "Index"
+    ],
+    "BUND_30Y": [
+        "GDBR30",
+        "Index"
+    ],
+    "JGB_10Y": [
+        "I03000JP",
+        "Index"
+    ],
+    "JGB_30Y": [
+        "I29068JP",
+        "Index"
+    ],
+    "ITALY_10Y": [
+        "GBTPGR10",
+        "Index"
+    ],
+    "ITALY_30Y": [
+        "GBTPGR30",
+        "Index"
+    ],
+    "SPAIN_10Y": [
+        "GSPG10YR",
+        "Index"
+    ],
+    "SPAIN_30Y": [
+        "GSPG30YR",
+        "Index"
+    ],
+    "VIX": [
+        "UX1",
+        "Index"
+    ],
+    "VIX_3M": [
+        "UX3",
+        "Index"
+    ],
+    "VIX_6M": [
+        "UX6",
+        "Index"
+    ],
+    "VVIX": [
+        "VVIX",
+        "Index"
+    ],
+    "MOVE": [
+        "MOVE",
+        "Index"
+    ],
+    "OIL_VOL": [
+        "OVX",
+        "Index"
+    ],
+    "JPYAUD": [
+        "JPYAUD",
+        "Curncy"
+    ],
+    "USD_TW": [
+        "USTWBROA",
+        "Index"
+    ],
+    "EURUSD": [
+        "EURUSD",
+        "Curncy"
+    ],
+    "CHFGBP": [
+        "CHFGBP",
+        "Curncy"
+    ],
+    "GOLD": [
+        "XAU",
+        "Curncy"
+    ],
+    "US_PC_RATIO": [
+        "PCUSEQTR",
+        "Index"
+    ],
+    "US_SKEW": [
+        "SKEW",
+        "Index"
+    ],
+    "EUR_PC_RATIO": [
+        "SX5EPT",
+        "Index"
+    ],
+    "S&P500": [
+        "SPX",
+        "Index"
+    ],
+    "S&P500_FINS": [
+        "S5FINL",
+        "Index"
+    ],
+    "S&P500_STAP": [
+        "S5CONS",
+        "Index"
+    ],
+    "S&P500_INFO": [
+        "S5INFT",
+        "Index"
+    ],
+    "S&P500_ENER": [
+        "S5ENRS",
+        "Index"
+    ],
+    "S&P500_HEAL": [
+        "S5HLTH",
+        "Index"
+    ],
+    "S&P500_UTIL": [
+        "S5HLTH",
+        "Index"
+    ],
+    "S&P500_INDU": [
+        "S5INDU",
+        "Index"
+    ],
+    "S&P500_DISC": [
+        "S5COND",
+        "Index"
+    ],
+    "S&P500_TELE": [
+        "S5TELS",
+        "Index"
+    ],
+    "S&P500_MATS": [
+        "S5MATR",
+        "Index"
+    ],
+    "S&P500_REAL": [
+        "S5RLST",
+        "Index"
+    ],
+    "S&P500_LOWV": [
+        "SP5LVI",
+        "Index"
+    ],
+    "S&P500_GROW": [
+        "SGX",
+        "Index"
+    ],
+    "S&P500_VALU": [
+        "SVX",
+        "Index"
+    ],
+    "RUSSELL_1000": [
+        "RIY",
+        "Index"
+    ],
+    "RUSSELL_2000": [
+        "RTY",
+        "Index"
+    ],
+    "MSCI_EM": [
+        "MXEF",
+        "Index"
+    ],
+    "STAN_RISK_APP": [
+        "SCGRRAI",
+        "Index"
+    ],
+    "GS_RISK_APP": [
+        "GSRAII",
+        "Index"
+    ],
+    "US_IG": [
+        "LUCR",
+        "Index"
+    ],
+    "US_IG_1-5": [
+        "LD18",
+        "Index"
+    ],
+    "US_IG_5-10": [
+        "LD26",
+        "Index"
+    ],
+    "US_IG_10+": [
+        "LULC",
+        "Index"
+    ],
+    "US_HY": [
+        "LF98",
+        "Index"
+    ],
+    "US_CORP": [
+        "LUAC",
+        "Index"
+    ],
+    "US_CORP_1-5": [
+        "LDC5",
+        "Index"
+    ],
+    "US_CORP_5-10": [
+        "BCR5",
+        "Index"
+    ],
+    "US_CORP_10+": [
+        "LD07",
+        "Index"
+    ],
+    "US_AAA": [
+        "LDA3",
+        "Index"
+    ],
+    "US_AA": [
+        "LDA2",
+        "Index"
+    ],
+    "US_A": [
+        "LDA1",
+        "Index"
+    ],
+    "US_BBB": [
+        "LDB1",
+        "Index"
+    ],
+    "US_BB": [
+        "BCBA",
+        "Index"
+    ],
+    "US_B": [
+        "BCBH",
+        "Index"
+    ],
+    "US_CCC": [
+        "BCAU",
+        "Index"
+    ],
+    "CDX_IG": [
+        "LX01",
+        "Index"
+    ],
+    "CDX_HY": [
+        "LX07",
+        "Index"
+    ],
+    "CDX_EM": [
+        "LX10",
+        "Index"
+    ],
+    "EU_IG": [
+        "LECR",
+        "Index"
+    ],
+    "EU_IG_1-3": [
+        "LECE",
+        "Index"
+    ],
+    "EU_IG_3-5": [
+        "LEC3",
+        "Index"
+    ],
+    "EU_IG_5-7": [
+        "LEC5",
+        "Index"
+    ],
+    "EU_IG_7-10": [
+        "LEC7",
+        "Index"
+    ],
+    "EU_IG_10+": [
+        "LEC0",
+        "Index"
+    ],
+    "EU_HY": [
+        "LP01",
+        "Index"
+    ],
+    "EU_CORP": [
+        "LECP",
+        "Index"
+    ],
+    "EU_AA": [
+        "LEC8",
+        "Index"
+    ],
+    "EU_A": [
+        "LEC9",
+        "Index"
+    ],
+    "EU_BBB": [
+        "LECB",
+        "Index"
+    ],
+    "EU_BB": [
+        "LP07",
+        "Index"
+    ],
+    "EU_B": [
+        "LHYB",
+        "Index"
+    ],
+    "EU_CCC": [
+        "BEYH",
+        "Index"
+    ],
+    "GBP_IG": [
+        "LC84",
+        "Index"
+    ],
+    "GBP_IG_1-3": [
+        "LF62",
+        "Index"
+    ],
+    "GBP_IG_3-5": [
+        "LF63",
+        "Index"
+    ],
+    "GBP_IG_5-7": [
+        "LF64",
+        "Index"
+    ],
+    "GBP_IG_7-10": [
+        "LF65",
+        "Index"
+    ],
+    "GBP_IG_10-15": [
+        "LF66",
+        "Index"
+    ],
+    "GBP_IG_15+": [
+        "LF67",
+        "Index"
+    ],
+    "GBP_CORP": [
+        "LC61",
+        "Index"
+    ],
+    "GBP_AAA": [
+        "LF79",
+        "Index"
+    ],
+    "GBP_AA": [
+        "LF80",
+        "Index"
+    ],
+    "GBP_A": [
+        "LF81",
+        "Index"
+    ],
+    "GBP_BBB": [
+        "LF82",
+        "Index"
+    ],
+    "EM_IG": [
+        "BEHG",
+        "Index"
+    ],
+    "EM_HY": [
+        "BEBG",
+        "Index"
+    ],
+    "EM_CORP": [
+        "CEMBTO",
+        "Index"
+    ],
+    "EM_SOV": [
+        "BSSU",
+        "Index"
+    ],
+    "EM_QUASISOV": [
+        "BESQ",
+        "Index"
+    ],
+    "EM_IG_QUASISOV": [
+        "BQHY",
+        "Index"
+    ],
+    "EM_HY_QUASISOV": [
+        "BQHY",
+        "Index"
+    ],
+    "EM_LATAM": [
+        "BSSS",
+        "Index"
+    ],
+    "EM_LATAM_QUASISOV": [
+        "BQAM",
+        "Index"
+    ],
+    "EM_LATAM_CORP": [
+        "BUCR",
+        "Index"
+    ],
+    "EM_ASIA_SOV": [
+        "BSSA",
+        "Index"
+    ],
+    "EM_ASIA_QUASISOV": [
+        "BQAS",
+        "Index"
+    ],
+    "EM_ASIA_CORP": [
+        "BUCS",
+        "Index"
+    ],
+    "EM_EMEA_SOV": [
+        "BSSE",
+        "Index"
+    ],
+    "EM_EMEA_QUASISOV": [
+        "BQEM",
+        "Index"
+    ],
+    "EM_EMEA_CORP": [
+        "BUCM",
+        "Index"
+    ]
+}
