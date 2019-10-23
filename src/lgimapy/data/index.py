@@ -85,25 +85,25 @@ class Index:
     @lru_cache(maxsize=None)
     def sectors(self):
         """List[str]: Memoized unique sorted sectors in index."""
-        return sorted(list(self.df["Sector"].unique()))
+        return sorted(list(self.df["Sector"].unique().dropna()))
 
     @property
     @lru_cache(maxsize=None)
     def subsectors(self):
         """List[str]: Memoized unique sorted subsectors in index."""
-        return sorted(list(self.df["Subsector"].unique()))
+        return sorted(list(self.df["Subsector"].unique().dropna()))
 
     @property
     @lru_cache(maxsize=None)
     def issuers(self):
         """List[str]: Memoized unique sorted issuers in index."""
-        return sorted(list(self.df["Issuer"].unique()))
+        return sorted(list(self.df["Issuer"].unique().dropna()))
 
     @property
     @lru_cache(maxsize=None)
     def tickers(self):
         """List[str]: Memoized unique sorted tickers in index."""
-        return sorted(list(self.df["Ticker"].unique()))
+        return sorted(list(self.df["Ticker"].unique().dropna()))
 
     @property
     def bonds(self):
@@ -243,7 +243,7 @@ class Index:
 
     def clear_day_cache(self):
         """Clear cache of stored days."""
-        self._day_cache = {}
+        self._day_cache = ""
 
     def subset(
         self,
@@ -880,6 +880,11 @@ class Index:
 
         # Find coupon rate, add coupon back into prices and assume
         # coupon is reinvested at same rate.
+        # In Bloomberg this is done as two separate calculations.
+        # For individual bonds, the coupon is not assumed to be
+        # reinvested. However, when aggregating bonds for an
+        # index, the `quantity` of bonds reflects the return
+        # from the coupon and is included in excess returns.
         coupon_rate = self.get_value_history("CouponRate")[cols].values / 2
         coupon_adj_price = price + accrued_mask * coupon_rate
         reinvesting_multiplier = accrued_mask * (1 + coupon_rate / price)
@@ -974,23 +979,3 @@ class Index:
         total_ret = np.prod(1 + t_rets) - 1
         tsy_total_ret = np.prod(1 + tsy_t_rets) - 1
         return total_ret - tsy_total_ret
-
-
-# %%
-def main():
-    from lgimapy.data import Database
-    from lgimapy.utils import Time, load_json
-
-    db = Database()
-    # db.load_market_data(start="7/1/2019", end="8/15/2019", local=True)
-
-    db.load_market_data(start="10/6/2019")
-    db.load_market_data(start="1/6/2015", end="8/1/2015", local=True)
-
-    self = Index(db.build_market_index(in_stats_index=True).df)
-    ix = Index(db.build_market_index(cusip="000361AQ8").df)
-    self.compute_total_returns()
-
-    kwargs = load_json("indexes")
-
-    list(self.day("10/9/2019").index)
