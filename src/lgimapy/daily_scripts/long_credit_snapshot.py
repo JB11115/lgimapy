@@ -23,21 +23,11 @@ def build_long_credit_snapshot():
     mkdir(csv_path)
 
     # Define sectors for each table.
-    market_sectors = [
-        "STATS_all",
-        "~AAA",
-        "~AA",
-        "~A",
-        "~BBB",
-        "FINANCIALS",
-        "INDUSTRIALS",
-        "~INDUSTRIALS_EX_ENERGY_MM",
-        "UTILITY",
-        "~ELECTRIC",
-        "~NATURAL_GAS",
-        "~UTILITY_OTHER",
-    ]
-    corp_secotrs = [
+    # Subsectors are indicated with a leading `~`.
+    # Major sectors are indicated with a leading `^`
+    market_sectors = ["STATS_all", "~AAA", "~AA", "~A", "~BBB"]
+    ig_sectors = [
+        "INDUSTRIALS",  # Industrials
         "BASICS",
         "~METALS_AND_MINING",
         "CAPITAL_GOODS",
@@ -50,7 +40,7 @@ def build_long_credit_snapshot():
         "~RETAILERS",
         "CONSUMER_NON_CYCLICAL",
         "~FOOD_AND_BEVERAGE",
-        "~HEALTHCARE",
+        "~HEALTHCARE_EX_MANAGED_CARE",
         "~MANAGED_CARE",
         "~PHARMACEUTICALS",
         "~TOBACCO",
@@ -60,30 +50,33 @@ def build_long_credit_snapshot():
         "~OIL_FIELD_SERVICES",
         "~REFINING",
         "~MIDSTREAM",
-        "INDUSTRIAL_OTHER",
-        "~UNIVERSITY",
+        "ENVIRONMENTAL_IND_OTHER",
         "TECHNOLOGY",
         "TRANSPORTATION",
-    ]
-    non_corp_sectors = [
-        "OWNED_NO_GUARANTEE",
-        "GOVERNMENT_GUARANTEE",
-        "MUNIS",
-        "SOVEREIGN",
-        "SUPRANATIONAL",
-    ]
-    fin_sectors = [
+        "~RAILROADS",
+        "FINANCIALS",  # Financials
         "BANKS",
         "~SIFI_BANKS_SR",
         "~SIFI_BANKS_SUB",
         "~US_REGIONAL_BANKS",
+        "~YANKEE_BANKS",
         "BROKERAGE_ASSETMANAGERS_EXCHANGES",
         "FINANCE_COMPANIES",
         "LIFE",
         "P&C",
         "REITS",
+        "UTILITY",  # Utilities
+        "NON_CORP",  # Non-Corp
+        "OWNED_NO_GUARANTEE",
+        "GOVERNMENT_GUARANTEE",
+        "HOSPITALS",
+        "MUNIS",
+        "SOVEREIGN",
+        "SUPRANATIONAL",
+        "UNIVERSITY",
     ]
-    all_sectors = market_sectors + corp_secotrs + non_corp_sectors + fin_sectors
+
+    all_sectors = market_sectors + ig_sectors
 
     # Find dates for daily, week, month, and year to date calculations.
     # Store dates not to be used in table with a `~` before them.
@@ -107,7 +100,7 @@ def build_long_credit_snapshot():
     db.load_market_data(start=dates_dict["~start"], local=True)
     ix_dict = {
         sector: db.build_market_index(
-            **kwargs[sector.strip("~")], maturity=(10, None)
+            **kwargs[sector.strip("^~")], maturity=(10, None)
         )
         for sector in all_sectors
     }
@@ -115,6 +108,8 @@ def build_long_credit_snapshot():
     # Get current market value of the entrie long credit index.
     full_ix_today = ix_dict["STATS_all"].subset(date=today)
     ix_mv = full_ix_today.total_value()[0]
+    ix_xsrets = ix_dict["STATS_all"].market_value_weight("XSRet")
+    ix_xsrets_6m = ix_xsrets[ix_xsrets.index > dates_dict["~6m"]]
 
     # Create DataFrame of snapshot values with each sector as a row.
     # Use multiprocessing to speed up computation.
@@ -122,47 +117,47 @@ def build_long_credit_snapshot():
     pool = mp.Pool(processes=7)
     results = [
         pool.apply_async(
-            get_snapshot_values, args=(ix_dict[sector], dates_dict, ix_mv)
+            get_snapshot_values,
+            args=(ix_dict[sector], dates_dict, ix_mv, ix_xsrets),
         )
         for sector in all_sectors
     ]
     rows = [p.get() for p in results]
-    df = pd.concat(rows)
-    df.to_csv(csv_path / f"{fid}.csv")
-    df = pd.read_csv(csv_path / f"{fid}.csv", index_col=0)
+    table_df = pd.concat(rows)
+    table_df.to_csv(csv_path / f"{fid}.csv")
+    table_df = pd.read_csv(csv_path / f"{fid}.csv", index_col=0)
 
     # Make table captions.
-    close_key = f"Close: {dates_dict['~today'].strftime('%m/%d/%Y')}"
-    dates_key = ", \hspace{0.2cm} ".join(
+    dates_fmt = [f"Close: {dates_dict['~today'].strftime('%m/%d/%Y')}"]
+    dates_fmt += [
         f"{k}: $\Delta${dates_dict[k].strftime('%m/%d')}"
         for k in "Daily WTD MTD".split()
+    ]
+
+    dates_key = ", \hspace{0.2cm} ".join(dates_fmt)
+    colors_key = (
+        "Color Key: 2-Z move \color{blue}tighter \color{black} ("
+        "\color{red}wider\color{black}) relative to the Index"
     )
-    colors_key = " \hspace{0.3cm} ".join(
-        f"\color{{{c}}}{{2-Z move {tw}}}"
-        for c, tw in zip(["blue", "red"], ["tighter", "wider"])
-    )
+
     captions = [
-        make_caption("Market Sectors", 11.9, close_key),
-        make_caption("IG Corp Sectors", 6.7, dates_key),
-        "IG Non-Corp Sectors",
-        make_caption("IG Fin Sectors", 9.3, colors_key),
+        f"Market Sectors \hspace{{6.2cm}} \\normalfont{{{dates_key}}}",
+        f"IG Sectors  \hspace{{9.2cm}} \\normalfont{{{colors_key}}}",
     ]
 
     # Create daily snapshot tables and save to pdf.
     doc = Document(fid, path=pdf_path)
     doc.add_preamble(
-        margin={"left": 0.75, "right": 0.75, "top": 0.2, "bottom": 0.2},
+        margin={"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2},
         page_numbers=False,
     )
-    sector_list = [market_sectors, corp_secotrs, non_corp_sectors, fin_sectors]
+    doc.add_background_image(
+        "plain_umbrella", scale=2.2, vshift=1.3, alpha=0.04
+    )
+    sector_list = [market_sectors, ig_sectors]
     for sector_subset, cap in zip(sector_list, captions):
-        doc.add_table(make_table(df, sector_subset, cap, kwargs))
+        doc.add_table(make_table(table_df, sector_subset, cap, kwargs))
     doc.save()
-
-
-def make_caption(title, distance_cm, key):
-    """Make table caption with key spaced from title."""
-    return f"{title} \hspace{{{distance_cm}cm}} \\normalfont{{{key}}}"
 
 
 def make_table(full_df, sectors, caption, ix_kwargs):
@@ -171,7 +166,7 @@ def make_table(full_df, sectors, caption, ix_kwargs):
     LaTeX formatted table.
     """
     # Sort Index to desired order.
-    sorted_ix = [ix_kwargs[s.strip("~")]["name"] for s in sectors]
+    sorted_ix = [ix_kwargs[s.strip("^~")]["name"] for s in sectors]
     df = full_df[full_df.index.isin(sorted_ix)].copy()
     df = df.reindex(sorted_ix)
 
@@ -183,6 +178,7 @@ def make_table(full_df, sectors, caption, ix_kwargs):
         for sector, color in zip(df_colors.index, df_colors["color"])
     }
     df.drop("color", axis=1, inplace=True)
+    df.drop("z", axis=1, inplace=True)
 
     # Add indent to index column for subsectors.
     final_ix = []
@@ -203,10 +199,36 @@ def make_table(full_df, sectors, caption, ix_kwargs):
             final_ix.append(ix)
     df.index = final_ix
 
-    # Find location for midrule bars.
-    midrule_locs = [ix for ix in df.index if not ix.startswith("\\hspace{")]
-    if caption == "IG Non-Corp Sectors":
-        midrule_locs = None
+    # Find location for major sector formatting and sector bars.
+    major_sectors = [
+        "US Long Credit Index",
+        "Industrials",
+        "Financials",
+        "Utilities",
+        "Non-Corp",
+    ]
+
+    midrule_locs = [
+        "Basics",
+        "Capital Goods",
+        "Communications",
+        "Consumer Cyclical",
+        "Consumer Non-Cyclical",
+        "Energy",
+        "Env/Ind. Other",
+        "Technology",
+        "Transportation",
+        "Banks",
+        "Brokers/Asset Mngr",
+        "Fin. Companies",
+        "Life",
+        "REITs",
+        "Gov Owned, No Guar",
+        "Hospitals",
+        "Munis",
+        "Sovereigns",
+        "Universities",
+    ]
 
     # Format market cap by precision by value for 2 sig figs.
     df["Mkt*Cap"] = [
@@ -238,6 +260,9 @@ def make_table(full_df, sectors, caption, ix_kwargs):
         col_fmt="l|cc|cc|cc|cc|cc|c|c|c|ccl",
         prec=prec,
         midrule_locs=midrule_locs,
+        specialrule_locs=major_sectors,
+        row_color={"header": "darkgray", tuple(major_sectors): "lightgray"},
+        row_font={"header": "\color{white}\\bfseries"},
         col_style={"6m*%tile": "\mybar"},
         loc_style=color_locs,
         multi_row_header=True,
@@ -247,7 +272,7 @@ def make_table(full_df, sectors, caption, ix_kwargs):
     return table
 
 
-def get_snapshot_values(ix, dates, index_mv):
+def get_snapshot_values(ix, dates, index_mv, index_xsrets):
     """
     Get single row from IG snapshot table for
     specified sector.
@@ -270,12 +295,15 @@ def get_snapshot_values(ix, dates, index_mv):
     oas = ix.get_synthetic_differenced_history("OAS")
     price = ix.get_synthetic_differenced_history("DirtyPrice")
 
-    # Get current state of the index and 6 month OAS history.
+    # Get current state of the index and 6 month OAS/XSRet history.
     ix_today = ix.subset(date=dates["~today"])
     oas_6m = oas[oas.index > dates["~6m"]]
-    oas_change = np.diff(oas_6m)
-    oas_z_scores = (oas_change - np.mean(oas_change)) / np.std(oas_change)
-    z = oas_z_scores[-1]
+    sector_xsrets = ix.market_value_weight("XSRet")
+    sector_xsrets_6m = sector_xsrets[sector_xsrets.index > dates["~6m"]]
+    xsrets = sector_xsrets_6m - index_xsrets
+    xsret_z_scores = (xsrets - np.mean(xsrets)) / np.std(xsrets)
+    z = xsret_z_scores[-1]
+    z = 0 if np.isnan(z) else z
 
     # Builid row of the table.
     d = OrderedDict([("Close*OAS", oas[-1]), ("Close*Price", price[-1])])
@@ -291,7 +319,8 @@ def get_snapshot_values(ix, dates, index_mv):
     d["6m*Min"] = np.min(oas_6m)
     d["6m*Max"] = np.max(oas_6m)
     d["6m*%tile"] = 100 * oas_6m.rank(pct=True)[-1]
-    d["color"] = "blue" if z < -2 else "red" if z > 2 else None
+    d["z"] = z
+    d["color"] = "blue" if z > 2 else "red" if z < -2 else None
     return pd.DataFrame(d, index=[ix.name])
 
 
