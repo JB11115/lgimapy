@@ -53,9 +53,9 @@ around this issue.
 
 #### Other Requirements
 * [Bloomberg API] C/C++ Supported Release v3.12.3.1
-* [Visual Studio C++ Build Tools] (for convex optimization)
-* [Microsoft Build Tools] (for convex optimization)
-* MikTex, download from the Software Center (for building pdf documents)
+* [Visual Studio C++ Build Tools] for convex optimization
+* [Microsoft Build Tools] for convex optimization
+* MikTex, download from the Software Center for building pdf documents
 
 #### Setting Environment Variables
 Using Windows start menu, search for `environment` and select
