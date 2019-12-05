@@ -4,14 +4,19 @@ from lgimapy.data import Database
 from lgimapy.utils import root
 
 
-def update_trade_dates():
+def update_trade_dates(dates=None):
     """
     Update `trade_dates.csv` file with all trade dates
     and holidays.
+
+    Parameters
+    ----------
+    dates: List[datetime].
+        List of all trade dates available in DataMart.
     """
     # Create DataFrame with trade date index and boolean value for holiday.
     fid = root("data/trade_dates.csv")
-    trade_dates = Database().load_trade_dates()
+    trade_dates = Database().load_trade_dates() if dates is None else dates
     df = pd.DataFrame(index=trade_dates)
     df["holiday"] = 0
 
