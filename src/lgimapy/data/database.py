@@ -11,7 +11,14 @@ import pyodbc
 
 from lgimapy.bloomberg import get_bloomberg_subsector
 from lgimapy.data import concat_index_dfs, Index, new_issue_mask
-from lgimapy.utils import dump_json, load_json, replace_multiple, root, tolist
+from lgimapy.utils import (
+    dump_json,
+    load_json,
+    replace_multiple,
+    root,
+    to_list,
+    to_datetime,
+)
 
 
 # %%
@@ -57,6 +64,8 @@ def clean_dtypes(df):
             "AnyIndexFlag",
             "USAggReturnsFlag",
             "USAggStatisticsFlag",
+            "USHYReturnsFlag",
+            "USHYStatisticsFlag",
         ],
         "category": [
             "CUSIP",
@@ -95,6 +104,11 @@ class Database:
     """
     Class to pull and clean index data from SQL database.
 
+    Parameters
+    ----------
+    server: {'LIVE', 'DEV'}, default='LIVE'
+        Choice between live and development servers.
+
     Attributes
     ----------
     df: pd.DataFrame
@@ -105,12 +119,14 @@ class Database:
         List of dates currently loaded by builder.
     """
 
-    def __init__(self):
+    def __init__(self, server="LIVE"):
         # Load mapping from standard ratings to numeric values.
         self._ratings = load_json("ratings")
+        self._bbg_dfs = {}
+        n = 1 if server.upper() == "LIVE" else 2
         self._conn = pyodbc.connect(
             "Driver={SQL Server};"
-            "SERVER=XWNUSSQL01\\LIVE;"
+            f"SERVER=XWNUSSQL0{n}\\{server.upper()};"
             "DATABASE=LGIMADatamart;"
             "Trusted_Connection=yes;"
         )
@@ -176,6 +192,28 @@ class Database:
             )
         )
 
+    @property
+    @lru_cache(maxsize=None)
+    def _manager_to_accounts(self):
+        """Dict[str: str]: Respective accounts for each PM."""
+        return load_json("manager_accounts")
+
+    def load_trade_dates(self):
+        """List[datetime]: Dates with credit data."""
+        dates_sql = "select distinct effectivedatekey from \
+            dbo.InstrumentAnalytics order by effectivedatekey"
+
+        return list(
+            pd.to_datetime(
+                pd.read_sql(dates_sql, self._conn).values.ravel(),
+                format="%Y%m%d",
+            )
+        )
+
+    def display_all_columns(self):
+        """Set DataFrames to display all columnns in IPython."""
+        pd.set_option("display.max_columns", 999)
+
     def nearest_date(self, date):
         """
         Return trade date nearest to input date.
@@ -190,9 +228,7 @@ class Database:
         datetime:
             Trade date nearest to input date.
         """
-        return min(
-            self.trade_dates, key=lambda x: abs(x - pd.to_datetime(date))
-        )
+        return min(self.trade_dates, key=lambda x: abs(x - to_datetime(date)))
 
     def _convert_sectors_to_fin_flags(self, sectors):
         """
@@ -599,6 +635,54 @@ class Database:
             "MarketValue = AmountOutstanding * DirtyPrice / 100", inplace=True
         )
 
+        # TEMP: Calculate HY Flags.
+        hy_eliginble_countries = {
+            "AU",
+            "BE",
+            "CA",
+            "CH",
+            "CY",
+            "DE",
+            "DK",
+            "ES",
+            "FI",
+            "FR",
+            "GB",
+            "GR",
+            "HK",
+            "IE",
+            "IT",
+            "JE",
+            "LU",
+            "MO",
+            "NL",
+            "NO",
+            "NZ",
+            "PR",
+            "SE",
+            "SG",
+            "US",
+        }
+        non_hy_sectors = [
+            "OWNED_NO_GUARANTEE",
+            "SOVEREIGN",
+            "SUPRANATIONAL",
+            "LOCAL_AUTHORITIES",
+        ]
+        df.loc[
+            ((df["USHYStatisticsFlag"] == -1) | (df["USHYReturnsFlag"] == -1))
+            & (df["NumericRating"] >= 11)
+            & (df["NumericRating"] <= 21)
+            & (df["Currency"] == "USD")
+            & (~df["Sector"].isin(non_hy_sectors))
+            & (df["AmountOutstanding"] >= 150)
+            & (df["CountryOfRisk"].isin(hy_eliginble_countries))
+            & (df["AnyIndexFlag"] == 1),
+            ["USHYStatisticsFlag", "USHYReturnsFlag"],
+        ] = 1
+        df.loc[df["USHYStatisticsFlag"] == -1, "USHYStatisticsFlag"] = 0
+        df.loc[df["USHYReturnsFlag"] == -1, "USHYReturnsFlag"] = 0
+
         # Make new fields categories and drop duplicates.
         return clean_dtypes(df).drop_duplicates(subset=["CUSIP", "Date"])
 
@@ -609,7 +693,6 @@ class Database:
         end=None,
         cusips=None,
         clean=True,
-        dev=False,
         ret_df=False,
         local=False,
         data=None,
@@ -639,9 +722,6 @@ class Database:
             List of cusips to specify for the load, by default load all.
         clean: bool, default=True
             If true, apply standard cleaning rules to loaded DataFrame.
-        dev: bool, default=False
-            If True, use development SQL query to load all fields.
-            **DO NOT USE IN PRODUCTION CODE**
         ret_df: bool, default=False
             If True, return loaded DataFrame.
         local: bool, default=False
@@ -664,11 +744,11 @@ class Database:
             else:
                 return
 
-        # Load local feather if
+        # Load local feather files if specified.
         if local:
             # Find correct feather files to load.
             fmt = "%Y_%m.feather"
-            s = pd.to_datetime(start)
+            s = self.trade_dates[-1] if start is None else to_datetime(start)
             start_month = pd.to_datetime(f"{s.month}/1/{s.year}")
             end = self.trade_dates[-1] if end is None else end
             feathers = pd.date_range(start_month, end, freq="MS").strftime(fmt)
@@ -677,120 +757,14 @@ class Database:
             # Load feather files as DataFrames and subset to correct dates.
             self.df = concat_index_dfs([pd.read_feather(f) for f in fids])
             self.df = self.df[
-                (self.df["Date"] >= pd.to_datetime(start))
-                & (self.df["Date"] <= pd.to_datetime(end))
+                (self.df["Date"] >= to_datetime(s))
+                & (self.df["Date"] <= to_datetime(end))
             ]
 
             if ret_df:
                 return self.df
             else:
                 return
-
-        if dev:
-            # Development SQL call.
-            # **DO NOT USE IN PRODUCTION CODE**
-            sql = """\
-                DECLARE @RunDateBegin DATE = {};\
-                DECLARE @RunDateEnd DATE = ISNULL({}, @RunDateBegin);\
-            	DECLARE @CUSIPS VARCHAR(8000) = \
-                NULLIF(LTRIM(RTRIM({})), '');
-
-                SELECT\
-                      D.[Date],\
-                      I.CUSIP,\
-                      Ticker = COALESCE(I.BBTicker, I.FutureTicker, IA.Ticker),\
-                      I.Issuer,\
-                      CouponRate = ISNULL(I.CouponRate, IA.Coupon),\
-                      MaturityDate = ISNULL(I.MaturityDate, IA.MaturityDate),\
-                      I.IssueDate,\
-                      IndustryClassification4 = \
-                        dbo.GetInstrumentClassificationLadder(\
-                            I.SourceKey,\
-                            I.IndustryClassification4,\
-                            IA.Classification4,\
-                            NULL,\
-                            I.ISIN\
-                            ),\
-                      I.MoodyRating,\
-                      I.SPRating,\
-                      I.FitchRating,\
-                      I.CollateralType,\
-                      I.AmountOutstanding,\
-                      I.MarketOfIssue,\
-                      I.NextCallDate,\
-                      I.CouponType,\
-                      CallType = ISNULL(I.CallType,P.CallType),\
-                      IA.Price,\
-                      IA.OAD,\
-                      IA.OAS,\
-                      IA.OASD,\
-                      OAS_1W = IA.OAS1WChange,\
-                      OAS_1M = IA.OAS1MChange,\
-                      OAS_3M = IA.OAS3MChange,\
-                      OAS_6M = IA.OAS6MChange,\
-                      OAS_12M = IA.OAS12MChange,\
-                      ISNULL(IA.LiquidityCostScore,IAP.LiquidityScore) \
-                        as LiquidityCostScore,\
-                      Eligibility144AFlag = ISNULL(I.Eligibility144AFlag, -1),\
-                      Currency = I.ISOCurrency,\
-                      I.CountryOfRisk,\
-                      I.CountryOfDomicile,\
-                      CASE IAP.CustomUSCreditFlag\
-                            WHEN 'US CREDIT - Both' THEN 1\
-                            WHEN 'US CREDIT - Returns' THEN 1\
-                            WHEN 'US CREDIT - Statistics' THEN 0\
-                            ELSE -1\
-                      END AS USCreditReturnsFlag,\
-                      CASE IAP.CustomUSCreditFlag \
-                            WHEN 'US CREDIT - Both' THEN 1\
-                            WHEN 'US CREDIT - Statistics' THEN 1\
-                            WHEN 'US CREDIT - Returns' THEN 0\
-                            ELSE -1\
-                      END AS USCreditStatisticsFlag,\
-                      CASE IAP.AnyIndexFlag\
-                            WHEN 'YES' THEN 1\
-                            WHEN 'NO' THEN 0\
-                            ELSE -1\
-                      END AS AnyIndexFlag,\
-                      CASE IAP.IdxFlagUSAgg\
-                            WHEN 'BOTH_IND' THEN 1\
-                            WHEN 'BACKWARD' THEN 1\
-                            WHEN 'FORWARD' THEN 0\
-                            ELSE -1\
-                      END AS USAggReturnsFlag,\
-                      CASE IAP.IdxFlagUSAgg\
-                            WHEN 'BOTH_IND' THEN 1\
-                            WHEN 'FORWARD' THEN 1\
-                            WHEN 'BACKWARD' THEN 0\
-                            ELSE -1\
-                      END AS USAggStatisticsFlag,\
-                      IA.AccruedInterest,\
-                      IA.LiquidityCostScore as LQA,\
-                      IA.KRD06mo,\
-                      IA.KRD02yr,\
-                      IA.KRD05yr,\
-                      IA.KRD10yr,\
-                      IA.KRD20yr,\
-                      IA.KRD30yr,\
-                      IA.OAC\
-                FROM DimDate AS D WITH (NOLOCK)\
-                INNER JOIN InstrumentAnalytics AS IA WITH (NOLOCK)\
-                      ON    IA.EffectiveDateKey = D.DateKey\
-                      AND IA.SourceKey in (1,5)\
-                INNER JOIN DimInstrument AS I WITH (NOLOCK)\
-                      ON    I.InstrumentKey = IA.InstrumentKey\
-                LEFT JOIN Staging.CallType_Bloomberg_PORT AS P WITH (NOLOCK)\
-                      ON    I.Cusip = P.Cusip\
-                LEFT JOIN Staging.InstrumentAnalytics_Port AS IAP WITH (NOLOCK)\
-                      ON    I.Cusip = IAP.Cusip\
-                      AND D.[Date] = CONVERT(DATE,IAP.EffectiveDate)\
-                WHERE D.[Date] BETWEEN @RunDateBegin AND @RunDateEnd\
-                      AND   IA.Price IS NOT NULL\
-                      {}
-                ORDER BY 1, 2, 3, 4, 5;\
-                """
-        else:
-            sql = "exec [LGIMADatamart].[dbo].[sp_AFI_Get_SecurityAnalytics] {}"
 
         # Use day count if start is integer.
         if isinstance(start, int):
@@ -801,51 +775,23 @@ class Database:
             start = (
                 None
                 if start is None
-                else pd.to_datetime(start).strftime("%m/%d/%Y")
+                else to_datetime(start).strftime("%m/%d/%Y")
             )
-            end = (
-                None
-                if end is None
-                else pd.to_datetime(end).strftime("%m/%d/%Y")
-            )
+            end = None if end is None else to_datetime(end).strftime("%m/%d/%Y")
 
         # Perform SQL query.
         yesterday = self.trade_dates[-1].strftime("%m/%d/%Y")
-        if dev:
-            if cusips is None:
-                cusip_str1 = "''"
-                cusip_str2 = "AND I.CUSIP IS NOT NULL"
-            else:
-                cusip_str1 = f"'{','.join(cusips)}'"
-                cusip_str2 = """
-                    AND I.CUSIP IN \
-                        (SELECT ParamItem FROM \
-                        dbo.SplitDelimitedString(@CUSIPS, ','))\
-                    """
-            if start is None and end is None:
-                query = sql.format(
-                    f"'{yesterday}'", "NULL", cusip_str1, cusip_str2
-                )
-            elif start is not None and end is None:
-                query = sql.format(
-                    f"'{start}'", f"'{yesterday}'", cusip_str1, cusip_str2
-                )
-            else:
-                query = sql.format(
-                    f"'{start}'", f"'{end}'", cusip_str1, cusip_str2
-                )
-
+        sql = "exec [LGIMADatamart].[dbo].[sp_AFI_Get_SecurityAnalytics] {}"
+        if start is None and end is None:
+            query = sql.format(f"'{yesterday}', '{yesterday}'")
+        elif start is not None and end is None:
+            query = sql.format(f"'{start}', '{yesterday}'")
         else:
-            if start is None and end is None:
-                query = sql.format(f"'{yesterday}', '{yesterday}'")
-            elif start is not None and end is None:
-                query = sql.format(f"'{start}', '{yesterday}'")
-            else:
-                query = sql.format(f"'{start}', '{end}'")
-            # Add specific cusips if required.
-            if cusips is not None:
-                cusip_str = f", '{','.join(cusips)}'"
-                query += cusip_str
+            query = sql.format(f"'{start}', '{end}'")
+        # Add specific cusips if required.
+        if cusips is not None:
+            cusip_str = f", '{','.join(cusips)}'"
+            query += cusip_str
 
         # Load data into a DataFrame form SQL in chunks to
         # reduce memory usage, cleaning them on the fly.
@@ -975,6 +921,11 @@ class Database:
         liquidity_score=(None, None),
         in_stats_index=None,
         in_returns_index=None,
+        in_agg_stats_index=None,
+        in_agg_returns_index=None,
+        in_hy_stats_index=None,
+        in_hy_returns_index=None,
+        in_any_index=None,
         is_144A=None,
         is_new_issue=None,
         financial_flag=None,
@@ -1048,7 +999,6 @@ class Database:
             Range of option adjusted spread durations, default is all.
         liquidity_score: Tuple[float, float], default=(None, None).
             Range of liquidty scores to use, default is all.
-
         in_stats_index: bool, default=None
             If True, only include bonds in stats index.
             If False, only include bonds out of stats index.
@@ -1056,6 +1006,26 @@ class Database:
         in_returns_index: bool, default=None
             If True, only include bonds in returns index.
             If False, only include bonds out of returns index.
+            By defualt include both.
+        in_agg_stats_index: bool, default=None
+            If True, only include bonds in aggregate stats index.
+            If False, only include bonds out of aggregate stats index.
+            By defualt include both.
+        in_agg_returns_index: bool, default=None
+            If True, only include bonds in aggregate returns index.
+            If False, only include bonds out of aggregate returns index.
+            By defualt include both.
+        in_hy_stats_index: bool, default=None
+            If True, only include bonds in HY stats index.
+            If False, only include bonds out of HY stats index.
+            By defualt include both.
+        in_hy_returns_index: bool, default=None
+            If True, only include bonds in HY returns index.
+            If False, only include bonds out of HY returns index.
+            By defualt include both.
+        in_any_index: bool, default=None
+            If True, only include bonds in any index.
+            If False, only include bonds not in any index.
             By defualt include both.
         is_144A: bool, default=None
             If True, only include 144A bonds.
@@ -1148,6 +1118,11 @@ class Database:
         self._flags = {}
         self._add_flag_input(in_returns_index, "USCreditReturnsFlag")
         self._add_flag_input(in_stats_index, "USCreditStatisticsFlag")
+        self._add_flag_input(in_agg_returns_index, "USAggReturnsFlag")
+        self._add_flag_input(in_agg_stats_index, "USAggStatisticsFlag")
+        self._add_flag_input(in_hy_stats_index, "USHYStatisticsFlag")
+        self._add_flag_input(in_hy_returns_index, "USHYReturnsFlag")
+        self._add_flag_input(in_any_index, "AnyIndexFlag")
         self._add_flag_input(is_144A, "Eligibility144AFlag")
         self._add_flag_input(is_new_issue, "NewIssueMask")
 
@@ -1233,7 +1208,33 @@ class Database:
             DataFrame with correct column dtypes and names.
         """
         # Fix bad column names.
-        col_map = {"PMV": "PortfolioWeight", "PMV INDEX": "BenchmarkWeight"}
+        col_map = {
+            "PMV": "P_Weight",
+            "PMV INDEX": "BM_Weight",
+            "PMV VAR": "Weight_Diff",
+            "OADAgg": "P_OAD",
+            "BmOADAgg": "BM_OAD",
+            "OADVar": "OAD_Diff",
+            "AssetValue": "P_AssetValue",
+            "BMAssetValue": "BM_AssetValue",
+            "L4": "Sector",
+            "Price_Dirty": "DirtyPrice",
+            "Price": "CleanPrice",
+            "OASDAgg": "P_OASD",
+            "BMOASDAgg": "BM_OASD",
+            "OASDVar": "OASD_Diff",
+            "OASAgg": "P_OAS",
+            "BMOASAgg": "BM_OAS",
+            "OASVar": "OAS_Diff",
+            "YTWAgg": "P_YTW",
+            "BMYTWAgg": "BM_YTW",
+            "YTWVar": "YTW_Diff",
+            "DTSAgg": "P_DTS",
+            "BMDTSAgg": "BM_DTS",
+            "DTSVar": "DTS_Diff",
+            "MKT_VAL": "StrategyMarketValue",
+        }
+
         df.columns = [col_map.get(col, col) for col in df.columns]
         df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d")
         return clean_dtypes(df)
@@ -1241,6 +1242,8 @@ class Database:
     def load_portfolio(
         self,
         date=None,
+        start=None,
+        end=None,
         accounts=None,
         strategy=None,
         manager=None,
@@ -1253,27 +1256,45 @@ class Database:
         Optionally load from local compressed format for increased
         performance or feed a DataFrame directly.
         """
-        if date is None:
-            date = self.trade_dates[-1]
+        # Format dates for SQL call.
+        fmt = "%Y%m%d"
+        current_date = self.trade_dates[-1].strftime(fmt)
+        if date is not None:
+            start = end = date
+        start = (
+            current_date
+            if start is None
+            else pd.to_datetime(start).strftime(fmt)
+        )
+        end = current_date if end is None else pd.to_datetime(end).strftime(fmt)
 
         # Convert inputs for SQL call.
-        date = pd.to_datetime(date).strftime("%Y%m%d")
         if accounts is None:
             accounts = "NULL"
         else:
-            acnts = tolist(accounts, dtype=str)
+            acnts = to_list(accounts, dtype=str)
             accounts = f"'{','.join(acnts) if len(acnts) > 1 else acnts[0]}'"
 
-        strategy = "NULL" if strategy is None else strategy
+        strategy = "NULL" if strategy is None else f"'{strategy}'"
         manager = "NULL" if manager is None else f"'{manager}'"
+        universe = {"stats": "statistics"}.get(universe.lower(), universe)
         universe = f"'{universe.title()}'"
-        inputs = [date, strategy, accounts, manager, "NULL", universe]
+        inputs = [
+            start,
+            strategy,
+            accounts,
+            manager,
+            "NULL",
+            universe,
+            "1",
+            end,
+        ]
 
         # Build SQL calls using stored procedure.
         sql_base = f"exec LGIMADatamart.[dbo].[sp_AFI_GetPortfolioAnalytics] "
         sql_benchmark = ", ".join(inputs + ["3"])
         sql_portfolio = ", ".join(inputs + ["2"])
-        sql_both = ", ".join(inputs + ["1"])
+        sql_both = ", ".join(inputs)
 
         # # Query SQL.
         # bm_df = pd.read_sql(sql_base + sql_benchmark, self._conn)
@@ -1282,6 +1303,7 @@ class Database:
         both_df = self._preprocess_portfolio_data(both_df)
         if not len(both_df):
             raise ValueError("No data for specified date.")
+        both_df["Date"] = pd.to_datetime(both_df["Date"])
         rating_cols = ["Moody", "S&P", "Fitch"]
         both_df["NumericRating"] = self._get_numeric_ratings(
             both_df, rating_cols
@@ -1323,3 +1345,87 @@ class Database:
             for strat in df["strategy"].unique()
         }
         dump_json(strategy_accounts, "strategy_accounts")
+
+    def _read_bbg_df(self, field):
+        """
+        Read cached Bloomberg data file. If not cached,
+        load and cache file before returning.
+
+        Parameters
+        ----------
+        field: str, ``{'OAS', 'YTW', 'TRET', 'XSRET', etc.}``
+            Bloomberg field to read.
+
+        Returns
+        -------
+        pd.DataFrame:
+            Bloomberg data for specified field.
+        """
+        try:
+            return self._bbg_dfs[field]
+        except KeyError:
+            df = pd.read_csv(
+                root(f"data/bloomberg_timeseries/{field}.csv"),
+                index_col=0,
+                parse_dates=True,
+                infer_datetime_format=True,
+            )
+            self._bbg_dfs[field] = df
+            return df
+
+    def load_bbg_data(
+        self, securities, field, start=None, end=None, nan=None, **kwargs
+    ):
+        """
+        Load Bloomberg BDH data for given securities.
+
+        Parameters
+        ----------
+        securities: str or List[str].
+            Security or secuirites to load data for.
+        field: str, ``{'OAS', 'Price', 'TRET', 'XSRET', 'YTW', etc.}``
+            Field of data to load.
+        start: datetime, default=None.
+            Inclusive start date for data.
+        end: datetime, default=None.
+            Inclusive end date for data.
+        nan: ``{None, 'drop', 'ffill', 'interp'}``, default=None
+            Method to use for filling missing values in loaded data.
+        kwargs:
+            Keyword arguments to pass to interpolating function.
+
+            * method: ``{'linear', 'spline', etc.}``, default='linear'
+                ``'spline'`` and ``'polynomial'`` require an order.
+            * order: int, order for polynomial or spline.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Bloomberg data subset to proper date range and
+            processed missing data.
+        """
+        # Load data for selected securities.
+        if securities == "all":
+            df = self._read_bbg_df(field).copy()
+        else:
+            df = self._read_bbg_df(field)[securities].copy()
+
+        # Subset to proper date region
+        if start is not None:
+            df = df[df.index >= to_datetime(start)]
+        if end is not None:
+            df = df[df.index <= to_datetime(end)]
+
+        # Process missing values.
+        if nan is None:
+            pass
+        elif nan == "drop":
+            df.dropna(inplace=True)
+        elif nan == "ffill":
+            df.fillna(method="ffill", inplace=True)
+        elif nan == "interp":
+            df.interpolate(
+                limit_direction="forward", axis=0, inplace=True, **kwargs
+            )
+
+        return df
