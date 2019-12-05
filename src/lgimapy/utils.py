@@ -153,17 +153,7 @@ def mkdir(directory):
         pass
 
 
-def savefig(fid, path=None, dpi=300):
-    """Save figure to specified location."""
-    if path is not None:
-        mkdir(path)
-        full_fid = f"{str(path)}/{fid}.png"
-    else:
-        full_fid = f"{fid}.png"
-    plt.savefig(full_fid, dpi=dpi, bbox_inches="tight")
-
-
-def tolist(obj, dtype=None):
+def to_list(obj, dtype=None):
     """
     Convert single object to list if it is not already
     a list-like object.
@@ -198,6 +188,53 @@ def tolist(obj, dtype=None):
             return obj
         else:
             return list(obj)
+
+
+def to_datetime(date):
+    """
+    Convert a datetime object to pandas datetime only if necessary.
+
+    Parameters
+    ----------
+    date: datetime
+        Date in any datetime type e.g., str.
+
+    Returns
+    -------
+    pd._libs.tslibs.timestamps.Timestamp:
+        Pandas datetime object of input date.
+    """
+    if isinstance(date, pd._libs.tslibs.timestamps.Timestamp):
+        return date
+    else:
+        return pd.to_datetime(date)
+
+
+def first_unique(vals, fill=""):
+    """
+    Find first unique values in a sorted list.
+
+    Parameters
+    ----------
+    vals: list-like
+        Sorted input list.
+    fill: scalar, default=""
+        Fill value to replace non-unique values in input list.
+    Returns
+    -------
+    unique_locs: List[int].
+        List of unique value locations.
+    unique_list: List[scalar].
+        List of unique values with non-unique values replaced with fill.
+    """
+    unique_list, unique_locs = [], []
+    for i, val in enumerate(vals):
+        if val in unique_list:
+            unique_list.append(fill)
+        else:
+            unique_list.append(val)
+            unique_locs.append(i)
+    return unique_locs, unique_list
 
 
 def nearest(items, pivot):
