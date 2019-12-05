@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from lgimapy.latex import greeks_to_latex
-from lgimapy.utils import replace_multiple, tolist
+from lgimapy.utils import replace_multiple, to_list
 
 
 def combine_error_table(vals, errs, prec=3, latex_format=True):
@@ -128,6 +128,7 @@ def latex_table(
     row_color=None,
     row_font=None,
     col_style=None,
+    alternating_colors=(None, None),
 ):
     r"""
     Return table with syntax formatted for LaTeX.
@@ -197,6 +198,8 @@ def latex_table(
 
         * Bar Plot: ```[col: \mybar]```
         * Bold: ```[col: \textbf]```
+    alternating_colors: Tuple(str), default=(None, None).
+        Color 1 and Color 2 for for alternating row colors.
 
     Returns
     -------
@@ -252,6 +255,11 @@ def latex_table(
         fout += f"\caption{{{caption}}}\n"
     else:
         fout += "%\caption{}\n"
+    if alternating_colors != (None, None):
+        c1, c2 = alternating_colors
+        c1 = "" if c1 is None else c1
+        c2 = "" if c2 is None else c2
+        fout += f"\\rowcolors{{1}}{{{c1}}}{{{c2}}}\n"
     fout += "\centering\n"
     if adjust:
         fout += "\\begin{adjustbox}{width =\\textwidth}\n"
@@ -283,6 +291,8 @@ def latex_table(
         "\\}": "}",
         "\}": "}",
         "\_": "_",
+        ">": "$>$",
+        "<": "$<$",
         "\\textasciicircum ": "^",
         "\\begin{tabular}": "\\begin{tabu} to \linewidth",
         "\end{tabular}": "\end{tabu}",
@@ -312,14 +322,18 @@ def latex_table(
     # Add midrules if necesary.
     if midrule_locs is not None:
         fmt_str = "\midrule \n"
-        midrule_locs = tolist(midrule_locs, str)
+        midrule_locs = to_list(midrule_locs, str)
         for loc in midrule_locs:
-            if loc == "header":
-                match = "\n{}"
-                n = 1
+            if hide_index:
+                n = 0
+                body = fout[fout.find("\\midrule\n") :][9:]
+                match = body.split("\\\\\n")[int(loc)]
             else:
-                match = f"\n{loc}"
                 n = 1
+                if loc == "header":
+                    match = "\n{}"
+                else:
+                    match = f"\n{loc}"
             ix = fout.find(match)
             if ix != -1:
                 fout = fmt_str.join((fout[: ix + n], fout[ix + n :]))
@@ -327,7 +341,7 @@ def latex_table(
     # Add specialrules if necesary.
     if specialrule_locs is not None:
         fmt_str = "\specialrule{2.5pt}{1pt}{1pt} \n"
-        specialrule_locs = tolist(specialrule_locs, str)
+        specialrule_locs = to_list(specialrule_locs, str)
         for loc in specialrule_locs:
             if loc == "header":
                 match = "\n{}"
@@ -343,7 +357,7 @@ def latex_table(
     if row_font is not None:
         for rows, row_fmt in row_font.items():
             fmt_str = f"\\rowfont{{{row_fmt}}} \n"
-            rows = tolist(rows, str)
+            rows = to_list(rows, str)
             for loc in rows:
                 if loc == "header":
                     match = "\n{}"
@@ -359,7 +373,7 @@ def latex_table(
     if row_color is not None:
         for rows, color in row_color.items():
             fmt_str = f"\\rowcolor{{{color}}} \n"
-            rows = tolist(rows, str)
+            rows = to_list(rows, str)
             for loc in rows:
                 if loc == "header":
                     match = "\n{}"

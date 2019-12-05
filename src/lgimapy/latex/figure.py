@@ -1,4 +1,4 @@
-from lgimapy.utils import tolist
+from lgimapy.utils import to_list
 
 
 def latex_figure(fids, caption=None, subcaptions=None, width=0.9, tab=2):
@@ -23,7 +23,7 @@ def latex_figure(fids, caption=None, subcaptions=None, width=0.9, tab=2):
         Number of spaces to indent each tab.
 
     """
-    fids = tolist(fids, dtype=str)
+    fids = to_list(fids, dtype=str)
     n = len(fids)
     subcaps = subcaptions if subcaptions else [None] * n
     t = " " * tab  # tab size
