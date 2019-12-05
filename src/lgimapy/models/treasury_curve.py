@@ -16,11 +16,12 @@ from scipy.interpolate import interp1d
 from scipy.optimize import fsolve, minimize
 from tqdm import tqdm
 
+import lgimapy.vis as vis
 from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import Database, TBond, SyntheticTBill, TreasuryCurve
-from lgimapy.utils import nearest, mkdir, root, tolist, smooth_weight, savefig
+from lgimapy.utils import nearest, mkdir, root, smooth_weight
 
-plt.style.use("fivethirtyeight")
+vis.style()
 warnings.simplefilter("default", RuntimeWarning)
 # %matplotlib qt
 
@@ -564,8 +565,11 @@ class TreasuryCurveBuilder:
         mkdir(fig_dir)
         fig, ax = plt.subplots(1, 1, figsize=(8, 6))
         self.plot(ax=ax)
-        savefig(fig_dir / self.date.strftime("%Y_%m_%d"))
+        vis.savefig(fig_dir / self.date.strftime("%Y_%m_%d"))
+        plt.cla()
+        plt.clf()
         plt.close(fig)
+        plt.close("all")
 
     def _get_yield(self, t):
         """
@@ -805,20 +809,22 @@ class TreasuryCurveBuilder:
         ax.set_title(self.date.strftime("%m/%d/%Y"))
 
 
-def update_treasury_curve_dates(verbose=True):
+def update_treasury_curve_dates(dates=None, verbose=True):
     """
     Update `.data/treasury_curve_params.csv` file
     with most recent data.
 
     Parameters
     ----------
+    dates: List[datetime].
+        List of all trade dates available in DataMart.
     verbose: bool, default=True
         If True print progress on each fitting to screen.
     """
     # Get list of dates with treasury curves
     db = Database()
-    trade_dates = db.load_trade_dates()
-    start = pd.to_datetime("12/31/2003")
+    trade_dates = db.load_trade_dates() if dates is None else dates
+    start = pd.to_datetime("1/2/1998")
     end = None
 
     verbose = True
