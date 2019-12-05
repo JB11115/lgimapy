@@ -1,7 +1,7 @@
 import pandas as pd
 
 from lgimapy.bloomberg import bdh
-from lgimapy.utils import load_json, tolist
+from lgimapy.utils import load_json, to_list
 
 
 def bloomberg_index_history(
@@ -29,7 +29,7 @@ def bloomberg_index_history(
         DataFrame of index history.
     """
     index_map = load_json("bloomberg_indexes")
-    indexes = tolist(index, dtype=str)
+    indexes = to_list(index, dtype=str)
 
     field_map = {
         "TR": "TRUU",

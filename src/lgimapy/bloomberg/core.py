@@ -1,8 +1,11 @@
 import datetime as dt
 import warnings
+from collections.abc import Iterable
 
 import pandas as pd
 import pybbg
+
+from lgimapy.utils import to_list
 
 
 def bdh(securities, yellow_key, fields, start, end=None, ovrd=None):
@@ -13,8 +16,8 @@ def bdh(securities, yellow_key, fields, start, end=None, ovrd=None):
     ----------
     securities: str or List[str].
         Security name(s) or cusip(s).
-    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
-        Bloomberg yellow key for securities. Case insensitive.
+    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}`` or List[str].
+        Bloomberg yellow key(s) for securities. Case insensitive.
     fields: str or List[str].
         Bloomberg field(s) to collect history.
     start: datetime object
@@ -38,11 +41,15 @@ def bdh(securities, yellow_key, fields, start, end=None, ovrd=None):
             a multi-index header column is used.
     """
     # Convert inputs for pybbg.
-    if isinstance(securities, str):
-        securities = [securities]
-    if isinstance(fields, str):
-        fields = [fields]
-    tickers = [f"{security} {yellow_key}" for security in securities]
+    securities = to_list(securities, dtype=str)
+    fields = to_list(fields, dtype=str)
+    if isinstance(yellow_key, str):
+        tickers = [f"{security} {yellow_key}" for security in securities]
+    elif isinstance(yellow_key, Iterable):
+        tickers = [f"{s} {yk}" for s, yk in zip(securities, yellow_key)]
+    else:
+        raise ValueError(f"{type(yellow_key)} is not valid for `yellow_key`.")
+
     start = pd.to_datetime(start).strftime("%Y%m%d")
     end = dt.date.today() if end is None else pd.to_datetime(end)
     end = end.strftime("%Y%m%d")
@@ -70,8 +77,8 @@ def bdp(securities, yellow_key, fields, ovrd=None):
     ----------
     securities: str or List[str].
         Security name(s) or cusip(s).
-    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}``.
-        Bloomberg yellow key for securities. Case insensitive.
+    yellow_key: ``{'Govt', 'Corp', 'Equity', 'Index', etc.}`` or List[str].
+        Bloomberg yellow key(s) for securities. Case insensitive.
     fields: str or List[str].
         Bloomberg field(s) to collect history.
     ovrd: dict, default=None
@@ -83,11 +90,14 @@ def bdp(securities, yellow_key, fields, ovrd=None):
         DataFrame with security index and field columns.
     """
     # Convert inputs for pybbg.
-    if isinstance(securities, str):
-        securities = [securities]
-    if isinstance(fields, str):
-        fields = [fields]
-    tickers = [f"{security} {yellow_key}" for security in securities]
+    securities = to_list(securities, dtype=str)
+    fields = to_list(fields, dtype=str)
+    if isinstance(yellow_key, str):
+        tickers = [f"{security} {yellow_key}" for security in securities]
+    elif isinstance(yellow_key, Iterable):
+        tickers = [f"{s} {yk}" for s, yk in zip(securities, yellow_key)]
+    else:
+        raise ValueError(f"{type(yellow_key)} is not valid for `yellow_key`.")
 
     # Scrape from Bloomberg.
     warnings.simplefilter(action="ignore", category=UserWarning)
@@ -140,6 +150,3 @@ def bds(security, yellow_key, field, ovrd=None):
     if len(date_cols) == 1:
         df.set_index(date_cols[0], inplace=True)
     return df
-
-
-# bdh('AN920287@trace', 'Corp', 'TRACE_NUMBER_OF_TRADES', start='8/1/2019')
