@@ -7,10 +7,17 @@ from lgimapy.utils import root
 import matplotlib.pyplot as plt
 
 
-def update_fed_funds():
-    """Update fed funds data to current date in database."""
+def update_fed_funds(dates=None):
+    """
+    Update fed funds data to current date in database.
+
+    Parameters
+    ----------
+    dates: List[datetime].
+        List of all trade dates available in DataMart.
+    """
     # Scrape fed funds data.
-    dates = Database().load_trade_dates()
+    dates = Database().load_trade_dates() if dates is None else dates
     df = bdh("FDTRMID", "Index", fields="PX_MID", start=dates[0])
 
     # Include all possible dates, filling scraped dates forward.
