@@ -1,24 +1,41 @@
 import os
+import re
 from datetime import datetime as dt
 from datetime import timedelta
+from inspect import cleandoc
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import statsmodels.api as sms
 import squarify
+from pandas._libs.tslibs.timestamps import Timestamp
 from tqdm import tqdm
 
 from lgimapy.bloomberg import bdh
 from lgimapy.data import Database
-from lgimapy.utils import savefig, root
+from lgimapy.utils import root
 
-pd.plotting.register_matplotlib_converters()
-plt.style.use("fivethirtyeight")
+# pd.plotting.register_matplotlib_converters()
 # %matplotlib qt
-os.chdir(root("src/lgimapy/vis"))
+# os.chdir(root("src/lgimapy/vis"))
+
+# %%
+def style(background="white"):
+    """Apply preferred style to interactive and saved plots."""
+    pd.plotting.register_matplotlib_converters()
+    plt.style.use("fivethirtyeight")
+    mpl.rcParams["axes.facecolor"] = background
+    mpl.rcParams["axes.edgecolor"] = background
+    mpl.rcParams["figure.facecolor"] = background
+    mpl.rcParams["figure.edgecolor"] = background
+    mpl.rcParams["savefig.facecolor"] = background
+    mpl.rcParams["savefig.edgecolor"] = background
+
+
+# %%
 
 
 def colors(color):
@@ -55,7 +72,7 @@ def coolwarm(x, center=0, symettric=False, quality=1000):
     Parameters
     ----------
     x: array-like
-        Values to be converted to colors.
+        Sorted values to be converted to colors.
     center: float, default=0
         Central value for divergin colorbar.
     symmetric: # TODO bool, default=False
@@ -75,7 +92,6 @@ def coolwarm(x, center=0, symettric=False, quality=1000):
         List of custom color pallete hex codes for each
         respective input value.
     """
-
     pal = sns.color_palette("coolwarm", quality).as_hex()
 
     # Convert x into array and split by center value.
@@ -94,12 +110,14 @@ def coolwarm(x, center=0, symettric=False, quality=1000):
     return [pal[ix] for ix in np.concatenate([x_neg_norm, x_pos_norm])]
 
 
-# %%
-
-
-def main():
-    fdir = "../fig"
-    save = False
+def savefig(fid, path=None, dpi=300):
+    """Save figure to specified location."""
+    if path is not None:
+        mkdir(path)
+        full_fid = f"{str(path)}/{fid}.png"
+    else:
+        full_fid = f"{fid}.png"
+    plt.savefig(full_fid, dpi=dpi, bbox_inches="tight")
 
 
 def spider_plots():
@@ -226,6 +244,10 @@ def treemap():
     plt.show()
 
 
+def fed_funds_probability():
+    ff12 = bdh
+
+
 def linreg():
     # %%
     x = np.array([46, 12, 14, 18, 15, 19, 20, 30, 20, 20])
@@ -241,11 +263,329 @@ def linreg():
     ax.plot(x, x * ols.params[1] + ols.params[0], lw=1.5, c="#FDD302")
     ax.set_xlabel("Downgrades in US Credit")
     ax.set_ylabel("LGIMA Outperformance")
-    tick = mtick.StrMethodFormatter("{x:.1f}%")
+    tick = mpl.ticker.StrMethodFormatter("{x:.1f}%")
     ax.yaxis.set_major_formatter(tick)
     savefig("dongrades vs outperformance")
     plt.show()
     # %%
+
+
+# %%
+def plot_mulit_y_axis_timeseries(
+    s_left,
+    s_right,
+    start=None,
+    end=None,
+    ax=None,
+    figsize=(8, 6),
+    xtickfmt=None,
+    xlabel="Date",
+    ytickfmt_left=None,
+    ytickfmt_right=None,
+    ylabel_left=None,
+    ylabel_right=None,
+    title=None,
+    legend=False,
+    left_plot_kwargs=None,
+    right_plot_kwargs=None,
+    color_yticks=False,
+):
+    """Plot two timeseries, one on each y-axis."""
+    if ax is None:
+        fig, ax_left = plt.subplots(1, 1, figsize=figsize)
+    else:
+        ax_left = ax
+    ax_right = ax_left.twinx()
+    ax_right.grid(False)
+
+    # Update kwargs and plot.
+    kwargs_left = {
+        "color": "steelblue",
+        "alpha": 0.9,
+        "lw": 1.5,
+        "label": s_left.name,
+    }
+    if left_plot_kwargs is not None:
+        kwargs_left.update(**left_plot_kwargs)
+    kwargs_right = {
+        "color": "firebrick",
+        "alpha": 0.9,
+        "lw": 1.5,
+        "label": s_right.name,
+    }
+    if right_plot_kwargs is not None:
+        kwargs_right.update(**right_plot_kwargs)
+    ln_left = ax_left.plot(s_left, **kwargs_left)
+    ln_right = ax_right.plot(s_right, **kwargs_right)
+
+    # Apply custom formatting on x and y-axis if specified.
+    format_yaxis(ax_left, ytickfmt_left)
+    format_yaxis(ax_right, ytickfmt_right)
+    format_xaxis(ax_right, s_right, xtickfmt)
+
+    # Add extra info and color labels.
+    if title is not None:
+        ax_right.set_title(title)
+    if xlabel is not None:
+        ax_right.set_xlabel("Date")
+    if ylabel_left is not None:
+        ax_left.set_ylabel(ylabel_left, color=kwargs_left["color"])
+    if ylabel_right is not None:
+        ax_right.set_ylabel(ylabel_right, color=kwargs_right["color"])
+    if color_yticks:
+        ax_left.tick_params(axis="y", colors=kwargs_left["color"])
+        ax_right.tick_params(axis="y", colors=kwargs_right["color"])
+    if legend:
+        lns = ln_left + ln_right
+        labs = [ln.get_label() for ln in lns]
+        ax_right.legend(lns, labs)
+    plt.tight_layout()
+
+
+def plot_timeseries(
+    s,
+    start=None,
+    end=None,
+    stats_start="1/1/2010",
+    stats=False,
+    bollinger=False,
+    mean_line=False,
+    pct_lines=False,
+    ax=None,
+    figsize=(8, 6),
+    ytickfmt=None,
+    xtickfmt=None,
+    ylabel=None,
+    xlabel=None,
+    title=None,
+    legend=True,
+    **kwargs,
+):
+    """Plot simple timeseries."""
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+    plot_kwargs = {"color": "steelblue", "alpha": 0.9, "lw": 2.5}
+    plot_kwargs.update(**kwargs)
+
+    # Subset series to stat collection period and get stat formats.
+    s = s[s.index >= pd.to_datetime(stats_start)].copy()
+    if ytickfmt is None:
+        n = 0
+        f = "f"
+    else:
+        n = int(re.findall("\d+", ytickfmt)[0])
+        if "%" in ytickfmt:
+            n += 1
+            f = "%"
+        else:
+            f = "f"
+
+    # Get stats and format them into the legend.
+    if stats:
+        plot_kwargs["label"] = cleandoc(
+            f"""
+             Last: {s[-1]:.{n}{f}}
+             %tile: {s.rank(pct=True)[-1]:.0%}
+             Range: [{np.min(s):.{n}{f}}, {np.max(s):.{n}{f}}]
+             """
+        )
+    else:
+        plot_kwargs["label"] = "_nolegend_"
+
+    if mean_line:
+        avg = np.mean(s)
+        ax.axhline(
+            avg,
+            ls="--",
+            lw=1.5,
+            color="firebrick",
+            label=f"Mean: {np.mean(s):.{n}{f}}",
+        )
+
+    if pct_lines:
+        pct_line_kwargs = {"ls": "--", "lw": 1.5, "color": "dimgrey"}
+        low = np.percentile(s, pct_lines[0])
+        high = np.percentile(s, pct_lines[1])
+        label = f"{pct_lines[0]}/{pct_lines[1]} %tiles"
+        ax.axhline(low, label=label, **pct_line_kwargs)
+        ax.axhline(high, label="_nolegend_", **pct_line_kwargs)
+
+    # Add Bollinger bands if specified.
+    if bollinger:
+        upper_band, lower_band = bollinger_bands(s, window_size=20, n_std=2)
+        ax.fill_between(
+            s.index,
+            lower_band,
+            upper_band,
+            color="lightgrey",
+            alpha=0.7,
+            label="Bollinger Bands",
+        )
+
+    # Plot main series.
+    start = s.index[0] if start is None else pd.to_datetime(start)
+    end = s.index[-1] if end is None else pd.to_datetime(end)
+    s = s[(s.index >= start) & (s.index <= end)].copy()
+    ax.plot(s.index, s.values, **plot_kwargs)
+
+    # Apply custom formatting on x and y-axis if specified.
+    format_yaxis(ax, ytickfmt)
+    format_xaxis(ax, s, xtickfmt)
+    ax.set_xlim(start, end)
+
+    # Add extra info.
+    if title is not None:
+        ax.set_title(title)
+    if xlabel is not None:
+        if isinstance(s_list[0].index[0], Timestamp):
+            ax.set_xlabel("Date")
+        else:
+            ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+    if legend and (
+        plot_kwargs["label"] != "_nolegend_" or mean_line or pct_lines
+    ):
+        ax.legend()
+    plt.tight_layout()
+
+
+def plot_multiple_timeseries(
+    s_list,
+    c_list=None,
+    ls_list=None,
+    start=None,
+    end=None,
+    ax=None,
+    figsize=(8, 6),
+    ytickfmt=None,
+    xtickfmt=None,
+    ylabel=None,
+    xlabel=None,
+    title=None,
+    legend=True,
+    **kwargs,
+):
+    """Plot multiple timeseries on same axis."""
+    # Set default plot params and update with specified params.
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    plot_kwargs = {"alpha": 0.8, "lw": 2}
+    plot_kwargs.update(**kwargs)
+
+    default_c_list = [
+        "steelblue",
+        "firebrick",
+        "darkgreen",
+        "darkoragne",
+        "darkorchid",
+        "deepskyblue",
+        "navy",
+        "coral",
+    ]
+    c_list = default_c_list if c_list is None else c_list
+
+    if ls_list is None:
+        ls_list = [plot_kwargs.get("ls", "-")] * len(s_list)
+    plot_kwargs.pop("ls", None)
+
+    # Format start date for all series.
+    if start is not None:
+        old_s_list = s_list.copy()
+        s_list = []
+        start_date = pd.to_datetime(start)
+        s_list = [[s.index >= start_date].copy() for s in old_s_list]
+
+    # Plot data and format axis.
+    for s, c, ls in zip(s_list, c_list, ls_list):
+        ax.plot(s.index, s.values, c=c, ls=ls, **plot_kwargs, label=s.name)
+    format_xaxis(ax, s_list[0], xtickfmt)
+    format_yaxis(ax, ytickfmt)
+
+    # Add extra info.
+    if title is not None:
+        ax.set_title(title)
+    if xlabel is not None:
+        if isinstance(s_list[0].index[0], Timestamp):
+            ax.set_xlabel("Date")
+        else:
+            ax.set_xlabel(xlabel)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+    if legend:
+        ax.legend()
+    plt.tight_layout()
+
+
+def format_xaxis(ax, s, xtickfmt):
+    """Format dates on x axis if necessary."""
+    if not isinstance(s.index[0], Timestamp):
+        return
+    if xtickfmt is None:
+        day_range = (s.index[-1] - s.index[0]).days
+        if day_range > 1000:
+            loc = mpl.dates.MonthLocator(bymonth=1, bymonthday=1)
+            date_fmt = mpl.dates.DateFormatter("%Y")
+        elif day_range > 720:
+            loc = mpl.dates.MonthLocator(bymonth=(1, 7), bymonthday=1)
+            date_fmt = mpl.dates.DateFormatter("%b-%Y")
+        elif day_range > 360:
+            loc = mpl.dates.MonthLocator(bymonth=(1, 5, 9), bymonthday=1)
+            date_fmt = mpl.dates.DateFormatter("%b-%Y")
+        elif day_range > 220:
+            loc = mpl.dates.MonthLocator(bymonthday=1, interval=2)
+            date_fmt = mpl.dates.DateFormatter("%b-%d")
+        elif day_range > 90:
+            loc = mpl.dates.MonthLocator(bymonthday=1)
+            date_fmt = mpl.dates.DateFormatter("%b-%d")
+        elif day_range > 45:
+            loc = mpl.dates.MonthLocator(bymonthday=(1, 15))
+            date_fmt = mpl.dates.DateFormatter("%b-%d")
+        elif day_range > 25:
+            loc = mpl.dates.MonthLocator(bymonthday=(1, 10, 20))
+            date_fmt = mpl.dates.DateFormatter("%b-%d")
+        else:
+            loc = mpl.dates.AutoDateLocator(minticks=3, maxticks=9)
+            date_fmt = mpl.dates.ConciseDateFormatter(loc)
+    elif xtickfmt == "auto":
+        loc = mpl.dates.AutoDateLocator(minticks=3, maxticks=9)
+        date_fmt = mpl.dates.ConciseDateFormatter(loc)
+
+    ax.xaxis.set_major_locator(loc)
+    ax.xaxis.set_major_formatter(date_fmt)
+
+
+def format_yaxis(ax, ytickfmt):
+    """Formate y axis to specified formatter"""
+    if ytickfmt is not None:
+        tick = mpl.ticker.StrMethodFormatter(ytickfmt)
+        ax.yaxis.set_major_formatter(tick)
+
+
+def bollinger_bands(vals, window_size, n_std):
+    """Bollinger band calculation."""
+    rolling_mean = vals.rolling(window=window_size, min_periods=1).mean()
+    rolling_std = vals.rolling(window=window_size, min_periods=1).std()
+    upper_band = rolling_mean + (rolling_std * n_std)
+    lower_band = rolling_mean - (rolling_std * n_std)
+    return upper_band, lower_band
+
+
+# from lgimapy.bloomberg import bdh
+# df = bdh("LULCOAS", "Index", "PX_LAST", start="1/1/2000")
+# # plot_timeseries(100 * df_temp["PX_LAST"], xtickfmt=None, start="1/1/2018")
+# plot_timeseries(
+#     100 * df_temp["PX_LAST"],
+#     xtickfmt="auto",
+#     bollinger=True,
+#     stats=True,
+#     start="1/1/2018",
+# )
+# plt.show()
+
+
+# %%
 
 
 def rolling_correlation():
@@ -289,7 +629,7 @@ def rolling_correlation():
     # %%
     fig, ax = plt.subplots(1, 1, figsize=(14, 8))
     ax.plot(corr, c="#209CD8")
-    tick = mtick.StrMethodFormatter("{x:.0%}")
+    tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
     ax.yaxis.set_major_formatter(tick)
     ax.set_xlabel("Date")
     ax.set_ylabel("Rolling Correlation")
@@ -316,7 +656,7 @@ def rolling_correlation():
     ax.plot(x, x * ols.params[1] + ols.params[0], lw=1.5, c="#FDD302")
     ax.set_xlabel("Rolling Correlation")
     ax.set_ylabel("LGIMA Outperformance")
-    tick = mtick.StrMethodFormatter("{x:.1f}%")
+    tick = mpl.ticker.StrMethodFormatter("{x:.1f}%")
     ax.yaxis.set_major_formatter(tick)
     savefig("ro")
     plt.show()
@@ -330,7 +670,7 @@ def rolling_correlation():
     bar_dates = [pd.to_datetime(f"6/1/{y}") for y in gdf.index]
     ticks = [pd.to_datetime(f"1/1/{y}") for y in gdf.index]
     ax2.bar(bar_dates, gdf["corr"].values, width=200, color="grey", alpha=0.4)
-    tick = mtick.StrMethodFormatter("{x:.0%}")
+    tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
     ax2.yaxis.set_major_formatter(tick)
     ax2.grid(False)
     ax.set_ylim((None, 700))
@@ -369,7 +709,7 @@ def rolling_correlation():
     # %%
     fig, ax = plt.subplots(1, 1, figsize=(14, 8))
     ax.plot(corr, c="#209CD8")
-    tick = mtick.StrMethodFormatter("{x:.0%}")
+    tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
     ax.yaxis.set_major_formatter(tick)
     ax.set_xlabel("Date")
     ax.set_ylabel("Rolling Correlation")
@@ -393,7 +733,7 @@ def rolling_correlation():
         bar_dates, disp_gdf["disp"].values, width=200, color="grey", alpha=0.4
     )
     fs = 24
-    tick = mtick.StrMethodFormatter("{x:.0f}")
+    tick = mpl.ticker.StrMethodFormatter("{x:.0f}")
     ax2.yaxis.set_major_formatter(tick)
     ax2.grid(False)
     ax.set_ylim((None, 500))
@@ -460,7 +800,7 @@ def libor_vs_long_credit_yield():
     axes[0].plot(libor, c="firebrick", lw=lw, label="3 Month Libor")
     axes[0].legend(loc="upper right")
     axes[0].set_ylim((None, 0.058))
-    tick = mtick.StrMethodFormatter("{x:.1%}")
+    tick = mpl.ticker.StrMethodFormatter("{x:.1%}")
     axes[0].yaxis.set_major_formatter(tick)
     axes[1].plot(diff, c="k", lw=lw, label="Long Credit Yield - Libor")
     axes[1].legend()
@@ -563,7 +903,7 @@ def market_value_timeseries():
         colors=[colors(c) for c in "rbyg"],
         alpha=0.8,
     )
-    tick = mtick.StrMethodFormatter("{x:.0%}")
+    tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
     ax.yaxis.set_major_formatter(tick)
     plt.margins(0, 0)
     ax.grid(False)
@@ -588,9 +928,19 @@ def ebitda_by_sector():
     ax.set_yticks(y_pos)
     ax.set_yticklabels(df["sector"])
     ax.grid(False, axis="y")
-    tick = mtick.StrMethodFormatter("{x:.0f}%")
+    tick = mpl.ticker.StrMethodFormatter("{x:.0f}%")
     ax.xaxis.set_major_formatter(tick)
     ax.set_title("EBITDA Growth by Sector (y/y)")
     savefig("EBITDA_by_sector")
     plt.show()
     # %%
+
+
+def fed_funds():
+    start = dt.today() - timedelta(365)
+    ff12 = bdh("FF12", "Comdty", fields="PX_LAST", start=start)
+    ff1 = bdh("FF1", "Comdty", fields="PX_LAST", start=start)
+    diff = 100 * (ff1 - ff12)
+    title = "Rate Hikes (Cuts) Priced in 12 Months Forward (bp)"
+    vis.plot_timeseries(diff, title=title)
+    vis.savefig("fed_funds_priced_in_rates")
