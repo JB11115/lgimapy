@@ -25,6 +25,7 @@
         "HJBNM",
         "HPBNM",
         "HPDBNM",
+        "HSBCBNM",
         "HSHHBNM",
         "HSHSBNM",
         "IMBBNM",
@@ -34,6 +35,7 @@
         "LEGSBNM",
         "LL1BNM",
         "LL2BNM",
+        "LRBNM",
         "MFBNM",
         "MONBNM",
         "NESBNM",
@@ -99,7 +101,9 @@
         "AHLD",
         "AHSLD",
         "AIGLD",
+        "AOCLD",
         "ATILD",
+        "AURLD",
         "AXPLD",
         "BCBSLD",
         "BINGLD",
@@ -166,12 +170,20 @@
         "USGLD",
         "VEBALD",
         "VZLD",
+        "WMBLD",
         "WRKLD",
         "WTWLD",
         "XRXLD"
     ],
     "US Government": [
         "AHGOVI"
+    ],
+    "US Strips 20+ Yr": [
+        "AHGTTRAN",
+        "AIGSTRP",
+        "AONSTRP",
+        "CNPSTRP",
+        "GENMSTRP"
     ],
     "US Credit": [
         "AHMC",
@@ -196,11 +208,6 @@
     ],
     "US Agg Securitized Passive": [
         "AHSEC"
-    ],
-    "US Strips 20+ Yr": [
-        "AIGSTRP",
-        "CNPSTRP",
-        "GENMSTRP"
     ],
     "US Long GC 70/30": [
         "AILGC",
@@ -230,12 +237,25 @@
         "SESIBNM",
         "SEUIBNM"
     ],
+    "US High Yield": [
+        "BETUSHY",
+        "GHYHPXV",
+        "GHYPLM",
+        "GHYUSA",
+        "HITHY",
+        "LGA-BLHY",
+        "LGA-WPHY",
+        "PMCHY",
+        "RMMUSHY",
+        "SICHY"
+    ],
     "US Long Corporate": [
         "BGGLC",
         "BMSLC",
         "GSKLC",
         "MDLZLC",
-        "MERLC"
+        "MERLC",
+        "SGOLC"
     ],
     "Custom Management No Benchmark": [
         "BL-ESCR",
@@ -377,8 +397,6 @@
     ],
     "Global Agg USD Securitized Passive": [
         "LGA-BL",
-        "LGA-BLHY",
-        "LGA-WPHY",
         "MYAMSC"
     ],
     "US Corporate IG": [

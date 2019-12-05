@@ -92,6 +92,52 @@
         ],
         "in_stats_index": true
     },
+    "BBB_LARGEST_ISSUERS": {
+        "name": "BBB Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": "non-financial",
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "VZ",
+            "ABIBB",
+            "ABBV",
+            "CVS",
+            "KMI",
+            "CHTR",
+            "EPD",
+            "ETP",
+            "UTX",
+            "VOD",
+            "KHC",
+            "UNP",
+            "GE",
+            "AMGN",
+            "OXY",
+            "CSX",
+            "TELEFO",
+            "TWC",
+            "TRPCN",
+            "MO",
+            "MCD",
+            "BATSLN",
+            "CI",
+            "FDX",
+            "GM",
+            "ANTM",
+            "WMB",
+            "HAL",
+            "SO",
+            "SUCN"
+        ]
+    },
     "IG_most_trade_exposed": {
         "OAS": [
             -10,
@@ -243,15 +289,25 @@
             "FINANCIAL_OTHER",
             "FINANCE_COMPANIES",
             "OFFICE_REITS",
+            "LOCAL_AUTHORITIES",
             "TREASURIES",
             "SOVEREIGN",
             "SUPRANATIONAL",
-            "INDUSTRIAL_OTHER",
             "GOVERNMENT_GUARANTEE",
-            "OWNED_NO_GUARANTEE"
+            "OWNED_NO_GUARANTEE",
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "subsector": [
+            "Medical-Hospitals",
+            "Schools"
+        ],
+        "ticker": [
+            "KPERM"
         ],
         "in_stats_index": true,
-        "special_rules": "~Sector"
+        "special_rules": "~Sector & ~Subsector & ~Ticker"
     },
     "INDUSTRIALS_EX_ENERGY_MM": {
         "name": "ex Energy & M/M",
@@ -271,10 +327,10 @@
             "FINANCIAL_OTHER",
             "FINANCE_COMPANIES",
             "OFFICE_REITS",
+            "LOCAL_AUTHORITIES",
             "TREASURIES",
             "SOVEREIGN",
             "SUPRANATIONAL",
-            "INDUSTRIAL_OTHER",
             "GOVERNMENT_GUARANTEE",
             "OWNED_NO_GUARANTEE",
             "INDEPENDENT",
@@ -282,10 +338,43 @@
             "OIL_FIELD_SERVICES",
             "INTEGRATED",
             "MIDSTREAM",
-            "METALS_AND_MINING"
+            "METALS_AND_MINING",
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "subsector": [
+            "Medical-Hospitals",
+            "Schools"
+        ],
+        "ticker": [
+            "KPERM"
         ],
         "in_stats_index": true,
-        "special_rules": "~Sector"
+        "special_rules": "~Sector & ~Subsector & ~Ticker"
+    },
+    "NON_CORP": {
+        "name": "Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GOVERNMENT_GUARANTEE",
+            "LOCAL_AUTHORITIES",
+            "OWNED_NO_GUARANTEE",
+            "SOVEREIGN",
+            "SUPRANATIONAL"
+        ],
+        "subsector": [
+            "Medical-Hospitals",
+            "Schools"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "Sector | Subsector | Ticker"
     },
     "BASICS": {
         "name": "Basics",
@@ -380,6 +469,53 @@
             "REFINING",
             "OIL_FIELD_SERVICES",
             "INTEGRATED",
+            "MIDSTREAM"
+        ],
+        "in_stats_index": true
+    },
+    "UPSTREAM_HIGH_FEDERAL_LAND_DEP": {
+        "name": "Upsteam with High Federal Land % of Revenue",
+        "ticker": [
+            "CXO",
+            "DVN",
+            "APC",
+            "XEC",
+            "HES",
+            "NBL"
+        ],
+        "in_stats_index": true
+    },
+    "UPSTREAM_MEDIUM_FEDERAL_LAND_DEP": {
+        "name": "Upsteam with Medium Federal Land % of Revenue",
+        "ticker": [
+            "EOG",
+            "CLR",
+            "OXY",
+            "ECACN"
+        ],
+        "in_stats_index": true
+    },
+    "UPSTREAM_LOW_FEDERAL_LAND_DEP": {
+        "name": "Upsteam with Low Federal Land % of Revenue",
+        "ticker": [
+            "MRO",
+            "APA",
+            "XOM",
+            "CVX",
+            "COP",
+            "FANG",
+            "PXD",
+            "EQT"
+        ],
+        "in_stats_index": true
+    },
+    "MIDSTREAM": {
+        "name": "Midstream",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
             "MIDSTREAM"
         ],
         "in_stats_index": true
@@ -525,13 +661,21 @@
         ],
         "sector": [
             "HEALTHCARE",
+            "HEALTH_INSURANCE",
             "PHARMACEUTICALS",
             "SUPERMARKETS",
             "TOBACCO",
             "FOOD_AND_BEVERAGE",
             "CONSUMER_PRODUCTS"
         ],
-        "in_stats_index": true
+        "subsector": [
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector & ~Ticker"
     },
     "WIRELINES_WIRELESS": {
         "name": "Wirelines/Wireless",
@@ -581,8 +725,8 @@
         "subsector": "Schools",
         "in_stats_index": true
     },
-    "INDUSTRIAL_OTHER": {
-        "name": "Industrial Other",
+    "ENVIRONMENTAL_IND_OTHER": {
+        "name": "Env/Ind. Other",
         "OAS": [
             -10,
             3000
@@ -716,7 +860,8 @@
             "GS",
             "JPM",
             "BAC",
-            "MS"
+            "MS",
+            "WFC"
         ],
         "special_rules": "~Ticker",
         "in_stats_index": true
@@ -736,8 +881,31 @@
         "special_rules": "~CountryOfRisk",
         "in_stats_index": true
     },
+    "YANKEE_BANKS": {
+        "name": "Yankee Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "C",
+            "GS",
+            "JPM",
+            "BAC",
+            "MS",
+            "WFC"
+        ],
+        "special_rules": "(~CountryOfRisk & ~Ticker)",
+        "in_stats_index": true
+    },
     "BROKERAGE_ASSETMANAGERS_EXCHANGES": {
-        "name": "Brokers/AssetMngr",
+        "name": "Brokers/Asset Mngr",
         "OAS": [
             -10,
             3000
@@ -811,10 +979,18 @@
         "sector": [
             "HEALTHCARE"
         ],
-        "in_stats_index": true
+        "subsector": [
+            "Medical-HMO",
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector & ~Ticker"
     },
-    "HEALTHCARE_EX_HOSPITALS": {
-        "name": "Healthcare ex Hospitals",
+    "HEALTHCARE_EX_MANAGED_CARE": {
+        "name": "Healthcare ex Managed",
         "OAS": [
             -10,
             3000
@@ -826,8 +1002,17 @@
             "Medical-HMO",
             "Medical-Hospitals"
         ],
+        "ticker": [
+            "AET",
+            "CI",
+            "CVS",
+            "ANTM",
+            "HUM",
+            "UNH",
+            "KPERM"
+        ],
         "in_stats_index": true,
-        "special_rules": "~Subsector"
+        "special_rules": "~Subsector & ~Ticker"
     },
     "HOSPITALS": {
         "name": "Hospitals",
@@ -835,14 +1020,14 @@
             -10,
             3000
         ],
+        "sector": [
+            "HEALTHCARE"
+        ],
         "subsector": [
+            "Medical-HMO",
             "Medical-Hospitals"
         ],
-        "ticker": [
-            "KPERM"
-        ],
-        "in_stats_index": true,
-        "special_rules": "(Subsector | Ticker)"
+        "in_stats_index": true
     },
     "MANAGED_CARE": {
         "name": "Managed Care",
@@ -907,17 +1092,6 @@
         ],
         "sector": [
             "MEDIA_ENTERTAINMENT"
-        ],
-        "in_stats_index": true
-    },
-    "MIDSTREAM": {
-        "name": "Midstream",
-        "OAS": [
-            -10,
-            3000
-        ],
-        "sector": [
-            "MIDSTREAM"
         ],
         "in_stats_index": true
     },
