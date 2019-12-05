@@ -6,21 +6,27 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 
-from lgimapy.bloomberg import bdh
-
-pd.plotting.register_matplotlib_converters()
-plt.style.use("fivethirtyeight")
+import lgimapy.vis as vis
+from lgimapy.data import Database
 
 
 def main():
+
     args = parse_args()
 
     # Subset data to last year.
-    start = pd.to_datetime(dt.date.today() - dt.timedelta(days=365))
-    df = bdh(args.index, yellow_key="Index", fields="PX_BID", start=start)
-    y = 100 * df["PX_BID"].values
+    start = (
+        pd.to_datetime(dt.date.today() - dt.timedelta(days=365))
+        if args.start is None
+        else pd.to_datetime(args.start)
+    )
+
+    db = Database()
+    df = db.load_bbg_data("US_CORP", "OAS", nan="drop", start=start)
+    y = df.values
 
     # Plot index data.
+    vis.style()
     fig, ax = plt.subplots(1, 1, figsize=(12, 6))
     ax.plot(df.index, y, c="steelblue")
 
@@ -47,8 +53,11 @@ def parse_args():
     """Collect settings from command line and set defaults."""
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--index", help="Credit Index")
-    parser.add_argument("-p", "--prominence", help="Valley Prominence Level")
-    parser.set_defaults(index="LULCOAS", prominence=None)
+    parser.add_argument("-s", "--start", help="Start Date")
+    parser.add_argument(
+        "-p", "--prominence", type=int, help="Valley Prominence Level"
+    )
+    parser.set_defaults(index="US_IG_10+", start=None, prominence=None)
     return parser.parse_args()
 
 
