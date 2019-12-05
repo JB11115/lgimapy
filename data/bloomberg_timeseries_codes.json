@@ -1,0 +1,533 @@
+{
+    "ITRAXX_MAIN": {
+        "OAS": "ITRXEBE CBBT Curncy",
+        "TRET": "ITRXTE5I Index",
+        "XSRET": "ERIXITEU Index"
+    },
+    "ITRAXX_XOVER": {
+        "OAS": "ITRXEXE CBBT Curncy",
+        "TRET": "ITRXTX5I Index",
+        "XSRET": "ERIXITXO Index"
+    },
+    "UST_2Y": {
+        "YTW": "USGG2YR Index"
+    },
+    "UST_3Y": {
+        "YTW": "USGG3YR Index"
+    },
+    "UST_5Y": {
+        "YTW": "USGG5YR Index"
+    },
+    "UST_7Y": {
+        "YTW": "USGG7YR Index"
+    },
+    "UST_10Y": {
+        "YTW": "USGG10YR Index"
+    },
+    "UST_30Y": {
+        "YTW": "USGG30YR Index"
+    },
+    "BUND_10Y": {
+        "YTW": "GDBR10 Index"
+    },
+    "BUND_30Y": {
+        "YTW": "GDBR30 Index"
+    },
+    "JGB_10Y": {
+        "YTW": "I03000JPYW Index"
+    },
+    "JGB_30Y": {
+        "YTW": "I29068JPYW Index"
+    },
+    "ITALY_10Y": {
+        "YTW": "GBTPGR10YW Index"
+    },
+    "ITALY_30Y": {
+        "YTW": "GBTPGR30YW Index"
+    },
+    "SPAIN_10Y": {
+        "YTW": "GSPG10YRYW Index"
+    },
+    "SPAIN_30Y": {
+        "YTW": "GSPG30YRYW Index"
+    },
+    "VIX": {
+        "PRICE": "UX1 Index"
+    },
+    "VIX_3M": {
+        "PRICE": "UX3 Index"
+    },
+    "VIX_6M": {
+        "PRICE": "UX6 Index"
+    },
+    "VVIX": {
+        "PRICE": "VVIX Index"
+    },
+    "MOVE": {
+        "PRICE": "MOVE Index"
+    },
+    "OIL_VOL": {
+        "PRICE": "OVX Index"
+    },
+    "JPYAUD": {
+        "PRICE": "JPYAUD Curncy"
+    },
+    "USD_TW": {
+        "PRICE": "USTWBROA Index"
+    },
+    "EURUSD": {
+        "PRICE": "EURUSD Curncy"
+    },
+    "CHFGBP": {
+        "PRICE": "CHFGBP Curncy"
+    },
+    "GOLD": {
+        "PRICE": "XAU Curncy"
+    },
+    "US_PC_RATIO": {
+        "PRICE": "PCUSEQTR Index"
+    },
+    "US_SKEW": {
+        "PRICE": "SKEW Index"
+    },
+    "EUR_PC_RATIO": {
+        "PRICE": "SX5EPT Index"
+    },
+    "SP500": {
+        "PRICE": "SPX Index",
+        "PE_RATIO": "SPX Index|BEST_PE_RATIO"
+    },
+    "SP500_FINS": {
+        "PRICE": "S5FINL Index",
+        "PE_RATIO": "S5FINL Index|BEST_PE_RATIO"
+    },
+    "SP500_STAP": {
+        "PRICE": "S5CONS Index",
+        "PE_RATIO": "S5CONS Index|BEST_PE_RATIO"
+    },
+    "SP500_INFO": {
+        "PRICE": "S5INFT Index",
+        "PE_RATIO": "S5INFT Index|BEST_PE_RATIO"
+    },
+    "SP500_ENER": {
+        "PRICE": "S5ENRS Index",
+        "PE_RATIO": "S5ENRS Index|BEST_PE_RATIO"
+    },
+    "SP500_HEAL": {
+        "PRICE": "S5HLTH Index",
+        "PE_RATIO": "S5HLTH Index|BEST_PE_RATIO"
+    },
+    "SP500_UTIL": {
+        "PRICE": "S5UTIL Index",
+        "PE_RATIO": "S5UTIL Index|BEST_PE_RATIO"
+    },
+    "SP500_INDU": {
+        "PRICE": "S5INDU Index",
+        "PE_RATIO": "S5INDU Index|BEST_PE_RATIO"
+    },
+    "SP500_DISC": {
+        "PRICE": "S5COND Index",
+        "PE_RATIO": "S5COND Index|BEST_PE_RATIO"
+    },
+    "SP500_TELE": {
+        "PRICE": "S5TELS Index",
+        "PE_RATIO": "S5TELS Index|BEST_PE_RATIO"
+    },
+    "SP500_MATS": {
+        "PRICE": "S5MATR Index",
+        "PE_RATIO": "S5MATR Index|BEST_PE_RATIO"
+    },
+    "SP500_REAL": {
+        "PRICE": "S5RLST Index",
+        "PE_RATIO": "S5RLST Index|BEST_PE_RATIO"
+    },
+    "SP500_LOWV": {
+        "PRICE": "SP5LVI Index",
+        "PE_RATIO": "SP5LVI Index|BEST_PE_RATIO"
+    },
+    "SP500_GROW": {
+        "PRICE": "SGX Index",
+        "PE_RATIO": "SGX Index|BEST_PE_RATIO"
+    },
+    "SP500_VALU": {
+        "PRICE": "SVX Index",
+        "PE_RATIO": "SVX Index|BEST_PE_RATIO"
+    },
+    "RUSSELL_1000": {
+        "PRICE": "RIY Index",
+        "PE_RATIO": "RIY Index|BEST_PE_RATIO"
+    },
+    "RUSSELL_2000": {
+        "PRICE": "RTY Index",
+        "PE_RATIO": "RTY Index|BEST_PE_RATIO"
+    },
+    "MSCI_EM": {
+        "PRICE": "MXEF Index",
+        "PE_RATIO": "MXEF Index|BEST_PE_RATIO"
+    },
+    "STAN_RISK_APP": {
+        "PRICE": "SCGRRAI Index"
+    },
+    "GS_RISK_APP": {
+        "PRICE": "GSRAII Index"
+    },
+    "US_IG": {
+        "OAS": "LUCROAS Index",
+        "TRET": "LUCRTRUU Index",
+        "XSRET": "LUCRER Index",
+        "YTW": "LUCRYW Index"
+    },
+    "US_IG_1-5": {
+        "OAS": "LD18OAS Index",
+        "TRET": "LD18TRUU Index",
+        "XSRET": "LD18ER Index",
+        "YTW": "LD18YW Index"
+    },
+    "US_IG_5-10": {
+        "OAS": "LD26OAS Index",
+        "TRET": "LD26TRUU Index",
+        "XSRET": "LD26ER Index",
+        "YTW": "LD26YW Index"
+    },
+    "US_IG_10+": {
+        "OAS": "LULCOAS Index",
+        "TRET": "LULCTRUU Index",
+        "XSRET": "LULCER Index",
+        "YTW": "LULCYW Index"
+    },
+    "GLOBAL_HY": {
+        "OAS": "LG30OAS Index",
+        "TRET": "LG30TRUU Index",
+        "XSRET": "LG30ER Index",
+        "YTW": "LG30YW Index"
+    },
+    "US_HY": {
+        "OAS": "LF98OAS Index",
+        "TRET": "LF98TRUU Index",
+        "XSRET": "LF98ER Index",
+        "YTW": "LF98YW Index"
+    },
+    "US_CORP": {
+        "OAS": "LUACOAS Index",
+        "TRET": "LUACTRUU Index",
+        "XSRET": "LUACER Index",
+        "YTW": "LUACYW Index"
+    },
+    "US_CORP_1-5": {
+        "OAS": "LDC5OAS Index",
+        "TRET": "LDC5TRUU Index",
+        "XSRET": "LDC5ER Index",
+        "YTW": "LDC5YW Index"
+    },
+    "US_CORP_5-10": {
+        "OAS": "BCR5OAS Index",
+        "TRET": "BCR5TRUU Index",
+        "XSRET": "BCR5ER Index",
+        "YTW": "BCR5YW Index"
+    },
+    "US_CORP_10+": {
+        "OAS": "LD07OAS Index",
+        "TRET": "LD07TRUU Index",
+        "XSRET": "LD07ER Index",
+        "YTW": "LD07YW Index"
+    },
+    "US_AAA": {
+        "OAS": "LDA3OAS Index",
+        "TRET": "LDA3TRUU Index",
+        "XSRET": "LDA3ER Index",
+        "YTW": "LDA3YW Index"
+    },
+    "US_AA": {
+        "OAS": "LDA2OAS Index",
+        "TRET": "LDA2TRUU Index",
+        "XSRET": "LDA2ER Index",
+        "YTW": "LDA2YW Index"
+    },
+    "US_A": {
+        "OAS": "LDA1OAS Index",
+        "TRET": "LDA1TRUU Index",
+        "XSRET": "LDA1ER Index",
+        "YTW": "LDA1YW Index"
+    },
+    "US_BBB": {
+        "OAS": "LDB1OAS Index",
+        "TRET": "LDB1TRUU Index",
+        "XSRET": "LDB1ER Index",
+        "YTW": "LDB1YW Index"
+    },
+    "US_BB": {
+        "OAS": "BCBAOAS Index",
+        "TRET": "BCBATRUU Index",
+        "XSRET": "BCBAER Index",
+        "YTW": "BCBAYW Index"
+    },
+    "US_B": {
+        "OAS": "BCBHOAS Index",
+        "TRET": "BCBHTRUU Index",
+        "XSRET": "BCBHER Index",
+        "YTW": "BCBHYW Index"
+    },
+    "US_CCC": {
+        "OAS": "BCAUOAS Index",
+        "TRET": "BCAUTRUU Index",
+        "XSRET": "BCAUER Index",
+        "YTW": "BCAUYW Index"
+    },
+    "CDX_IG": {
+        "OAS": "CDX IG CDSI GEN 5Y Corp",
+        "TRET": "LX01TRUU Index",
+        "XSRET": "UISYMI5E Index"
+    },
+    "CDX_HY": {
+        "OAS": "CDX HY CDSI GEN 5Y SPRD Corp",
+        "TRET": "LX07TRUU Index",
+        "XSRET": "UISYMH5E Index",
+        "PRICE": "CDX HY CDSI GEN 5Y PRC Corp"
+    },
+    "CDX_EM": {
+        "OAS": "CDX EM CDSI GEN 5Y SPRD Corp",
+        "TRET": "LX10TRUU Index",
+        "PRICE": "CDX EM CDSI GEN 5Y PRC Corp"
+    },
+    "EU_IG": {
+        "OAS": "LECROAS Index",
+        "TRET": "LECRTREU Index",
+        "XSRET": "LECRER Index",
+        "YTW": "LECRYW Index"
+    },
+    "EU_IG_1-3": {
+        "OAS": "LECEOAS Index",
+        "TRET": "LECETRUU Index",
+        "XSRET": "LECEER Index",
+        "YTW": "LECEYW Index"
+    },
+    "EU_IG_3-5": {
+        "OAS": "LEC3OAS Index",
+        "TRET": "LEC3TREU Index",
+        "XSRET": "LEC3ER Index",
+        "YTW": "LEC3YW Index"
+    },
+    "EU_IG_5-7": {
+        "OAS": "LEC5OAS Index",
+        "TRET": "LEC5TREU Index",
+        "XSRET": "LEC5ER Index",
+        "YTW": "LEC5YW Index"
+    },
+    "EU_IG_7-10": {
+        "OAS": "LEC7OAS Index",
+        "TRET": "LEC7TREU Index",
+        "XSRET": "LEC7ER Index",
+        "YTW": "LEC7YW Index"
+    },
+    "EU_IG_10+": {
+        "OAS": "LEC0OAS Index",
+        "TRET": "LEC0TREU Index",
+        "XSRET": "LEC0ER Index",
+        "YTW": "LEC0YW Index"
+    },
+    "EU_HY": {
+        "OAS": "LP01OAS Index",
+        "TRET": "LP01TREU Index",
+        "XSRET": "LP01ER Index",
+        "YTW": "LP01YW Index"
+    },
+    "EU_CORP": {
+        "OAS": "LECPOAS Index",
+        "TRET": "LECPTREU Index",
+        "XSRET": "LECPER Index",
+        "YTW": "LECPYW Index"
+    },
+    "EU_AA": {
+        "OAS": "LEC8OAS Index",
+        "TRET": "LEC8TREU Index",
+        "XSRET": "LEC8ER Index",
+        "YTW": "LEC8YW Index"
+    },
+    "EU_A": {
+        "OAS": "LEC9OAS Index",
+        "TRET": "LEC9TREU Index",
+        "XSRET": "LEC9ER Index",
+        "YTW": "LEC9YW Index"
+    },
+    "EU_BBB": {
+        "OAS": "LECBOAS Index",
+        "TRET": "LECBTREU Index",
+        "XSRET": "LECBER Index",
+        "YTW": "LECBYW Index"
+    },
+    "EU_BB": {
+        "OAS": "LP07OAS Index",
+        "TRET": "LP07TREU Index",
+        "XSRET": "LP07ER Index",
+        "YTW": "LP07YW Index"
+    },
+    "EU_B": {
+        "OAS": "LHYBOAS Index",
+        "TRET": "LHYBTREU Index",
+        "XSRET": "LHYBER Index",
+        "YTW": "LHYBYW Index"
+    },
+    "EU_CCC": {
+        "OAS": "BEYHOAS Index",
+        "TRET": "BEYHTREU Index",
+        "XSRET": "BEYHER Index",
+        "YTW": "BEYHYW Index"
+    },
+    "GBP_IG": {
+        "OAS": "LC84OAS Index",
+        "XSRET": "LC84ER Index",
+        "YTW": "LC84YW Index"
+    },
+    "GBP_IG_1-3": {
+        "OAS": "LF62OAS Index",
+        "XSRET": "LF62ER Index",
+        "YTW": "LF62YW Index"
+    },
+    "GBP_IG_3-5": {
+        "OAS": "LF63OAS Index",
+        "XSRET": "LF63ER Index",
+        "YTW": "LF63YW Index"
+    },
+    "GBP_IG_5-7": {
+        "OAS": "LF64OAS Index",
+        "XSRET": "LF64ER Index",
+        "YTW": "LF64YW Index"
+    },
+    "GBP_IG_7-10": {
+        "OAS": "LF65OAS Index",
+        "XSRET": "LF65ER Index",
+        "YTW": "LF65YW Index"
+    },
+    "GBP_IG_10-15": {
+        "OAS": "LF66OAS Index",
+        "XSRET": "LF66ER Index",
+        "YTW": "LF66YW Index"
+    },
+    "GBP_IG_15+": {
+        "OAS": "LF67OAS Index",
+        "XSRET": "LF67ER Index",
+        "YTW": "LF67YW Index"
+    },
+    "GBP_CORP": {
+        "OAS": "LC61OAS Index",
+        "TRET": "LC61TRUU Index",
+        "XSRET": "LC61ER Index",
+        "YTW": "LC61YW Index"
+    },
+    "GBP_AAA": {
+        "OAS": "LF79OAS Index",
+        "XSRET": "LF79ER Index",
+        "YTW": "LF79YW Index"
+    },
+    "GBP_AA": {
+        "OAS": "LF80OAS Index",
+        "XSRET": "LF80ER Index",
+        "YTW": "LF80YW Index"
+    },
+    "GBP_A": {
+        "OAS": "LF81OAS Index",
+        "XSRET": "LF81ER Index",
+        "YTW": "LF81YW Index"
+    },
+    "GBP_BBB": {
+        "OAS": "LF82OAS Index",
+        "XSRET": "LF82ER Index",
+        "YTW": "LF82YW Index"
+    },
+    "EM_IG": {
+        "OAS": "BEHGOAS Index",
+        "TRET": "BEHGTRUU Index",
+        "XSRET": "BEHGER Index",
+        "YTW": "BEHGYW Index"
+    },
+    "EM_HY": {
+        "OAS": "BEBGOAS Index",
+        "TRET": "BEBGTRUU Index",
+        "XSRET": "BEBGER Index",
+        "YTW": "BEBGYW Index"
+    },
+    "EM_CORP": {
+        "OAS": "CEMBTOBS Index",
+        "TRET": "CEMBTOTR Index",
+        "YTW": "CEMBTOYI Index",
+        "PRICE": "CEMBTOPRC Index"
+    },
+    "EM_SOV": {
+        "OAS": "BSSUOAS Index",
+        "TRET": "BSSUTRUU Index",
+        "XSRET": "BSSUER Index",
+        "YTW": "BSSUYW Index"
+    },
+    "EM_QUASISOV": {
+        "OAS": "BESQOAS Index",
+        "TRET": "BESQTRUU Index",
+        "XSRET": "BESQER Index",
+        "YTW": "BESQYW Index"
+    },
+    "EM_IG_QUASISOV": {
+        "OAS": "BQIGOAS Index",
+        "TRET": "BQIGTRUU Index",
+        "XSRET": "BQIGER Index",
+        "YTW": "BQIGYW Index"
+    },
+    "EM_HY_QUASISOV": {
+        "OAS": "BQHYOAS Index",
+        "TRET": "BQHYTRUU Index",
+        "XSRET": "BQHYER Index",
+        "YTW": "BQHYYW Index"
+    },
+    "EM_LATAM": {
+        "OAS": "BSSSOAS Index",
+        "TRET": "BSSSTRUU Index",
+        "XSRET": "BSSSER Index",
+        "YTW": "BSSSYW Index"
+    },
+    "EM_LATAM_QUASISOV": {
+        "OAS": "BQAMOAS Index",
+        "TRET": "BQAMTRUU Index",
+        "XSRET": "BQAMER Index",
+        "YTW": "BQAMYW Index"
+    },
+    "EM_LATAM_CORP": {
+        "OAS": "BUCROAS Index",
+        "TRET": "BUCRTRUU Index",
+        "XSRET": "BUCRER Index",
+        "YTW": "BUCRYW Index"
+    },
+    "EM_ASIA_SOV": {
+        "OAS": "BSSAOAS Index",
+        "TRET": "BSSATRUU Index",
+        "XSRET": "BSSAER Index",
+        "YTW": "BSSAYW Index"
+    },
+    "EM_ASIA_QUASISOV": {
+        "OAS": "BQASOAS Index",
+        "TRET": "BQASTRUU Index",
+        "XSRET": "BQASER Index",
+        "YTW": "BQASYW Index"
+    },
+    "EM_ASIA_CORP": {
+        "OAS": "BUCSOAS Index",
+        "TRET": "BUCSTRUU Index",
+        "XSRET": "BUCSER Index",
+        "YTW": "BUCSYW Index"
+    },
+    "EM_EMEA_SOV": {
+        "OAS": "BSSEOAS Index",
+        "TRET": "BSSETRUU Index",
+        "XSRET": "BSSEER Index",
+        "YTW": "BSSEYW Index"
+    },
+    "EM_EMEA_QUASISOV": {
+        "OAS": "BQEMOAS Index",
+        "TRET": "BQEMTRUU Index",
+        "XSRET": "BQEMER Index",
+        "YTW": "BQEMYW Index"
+    },
+    "EM_EMEA_CORP": {
+        "OAS": "BUCMOAS Index",
+        "TRET": "BUCMTRUU Index",
+        "XSRET": "BUCMER Index",
+        "YTW": "BUCMYW Index"
+    }
+}
