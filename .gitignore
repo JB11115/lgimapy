@@ -74,6 +74,7 @@ __pycache__/
 ##############
 data/coupons/
 data/feathers/
+data/
 src/lgimapy/notebooks/
 src/lgimapy.egg-info/
-reports/
+reports/long_credit_snapshot/
