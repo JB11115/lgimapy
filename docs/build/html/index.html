@@ -37,7 +37,7 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Oct 16, 2019 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Dec 05, 2019 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.data">
@@ -45,13 +45,13 @@
 <dl class="function">
 <dt id="lgimapy.data.concat_index_dfs">
 <code class="descclassname">lgimapy.data.</code><code class="descname">concat_index_dfs</code><span class="sig-paren">(</span><em>dfs</em>, <em>join='outer'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.concat_index_dfs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append two :att:<a href="#id1"><span class="problematic" id="id2">`</span></a>Index.df`s.</p>
+<dd><p>Append two :attr:<a href="#id1"><span class="problematic" id="id2">`</span></a>Index.df`s.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>dfs</strong> (List[<a href="#id3"><span class="problematic" id="id4">:att:`Index.df`</span></a>].) – List of DataFrames to append together.</li>
+<li><strong>dfs</strong> (List[<a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>].) – List of DataFrames to append together.</li>
 <li><strong>join</strong> (<em>{'inner'</em><em>, </em><em>'outer'}</em><em>, </em><em>default='outer'</em>) – How to handle indexes on other axis(es).</li>
 </ul>
 </td>
@@ -91,14 +91,14 @@ orinal issue month.</td>
 <dt id="lgimapy.data.spread_diff">
 <code class="descclassname">lgimapy.data.</code><code class="descname">spread_diff</code><span class="sig-paren">(</span><em>df1</em>, <em>df2</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.spread_diff" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate spread difference for cusips from single
-date :attr:<a href="#id5"><span class="problematic" id="id6">`</span></a>Index.df`s df1 to df2.</p>
+date :attr:<a href="#id3"><span class="problematic" id="id4">`</span></a>Index.df`s df1 to df2.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>df1</strong> (<a href="#id9"><span class="problematic" id="id10">:att:`Index.df`</span></a>) – Older <a href="#id7"><span class="problematic" id="id8">:att:`Index.df`</span></a>.</li>
-<li><strong>df2</strong> (<a href="#id13"><span class="problematic" id="id14">:att:`Index.df`</span></a>) – Newer <a href="#id11"><span class="problematic" id="id12">:att:`Index.df`</span></a>.</li>
+<li><strong>df1</strong> (<a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>) – Older <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</li>
+<li><strong>df2</strong> (<a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>) – Newer <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -826,19 +826,26 @@ columns for specified cusip.</td>
 
 <dl class="method">
 <dt id="lgimapy.data.Index.get_synthetic_differenced_history">
-<code class="descname">get_synthetic_differenced_history</code><span class="sig-paren">(</span><em>col</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.get_synthetic_differenced_history" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_synthetic_differenced_history</code><span class="sig-paren">(</span><em>col</em>, <em>dropna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.get_synthetic_differenced_history" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save the difference history of a column.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>col</strong> (<em>str</em>) – Column from <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a> to build synthetic
-differenced history for (e.g., ‘OAS’).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>col</strong> (<em>str</em>) – Column from <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a> to build synthetic
+differenced history for (e.g., ‘OAS’).</li>
+<li><strong>dropna</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True drop columns with missing values for either
+<cite>MarketValue</cite> or specified column.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Series of sythetically differenced market value
-weighting for specified column.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Series of sythetically differenced market value
+weighting for specified column.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd.Series</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.Series</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -888,7 +895,7 @@ If False do not include end date.</li>
 
 <dl class="method">
 <dt id="lgimapy.data.Index.market_value_weight">
-<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em>, <em>synthetic=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
+<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em>, <em>synthetic=False</em>, <em>dropna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
 <dd><p>Market value weight a specified column vs entire
 index market value.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -898,6 +905,8 @@ index market value.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>col</strong> (<em>str</em>) – Column name to weight, (e.g., ‘OAS’).</li>
 <li><strong>synthethic</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, use synthethic day data.</li>
+<li><strong>dropna</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True drop columns with missing values for either
+<cite>MarketValue</cite> or specified column.</li>
 </ul>
 </td>
 </tr>
@@ -941,7 +950,7 @@ index market value.</p>
 
 <dl class="method">
 <dt id="lgimapy.data.Index.subset">
-<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.subset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.subset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subset <a class="reference internal" href="#lgimapy.data.Index" title="lgimapy.data.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> with customized rules from
 <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -996,6 +1005,21 @@ If False, only include bonds out of stats index.
 By defualt include both.</li>
 <li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in returns index.
 If False, only include bonds out of returns index.
+By defualt include both.</li>
+<li><strong>in_agg_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate stats index.
+If False, only include bonds out of aggregate stats index.
+By defualt include both.</li>
+<li><strong>in_agg_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate returns index.
+If False, only include bonds out of aggregate returns index.
+By defualt include both.</li>
+<li><strong>in_hy_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY stats index.
+If False, only include bonds out of HY stats index.
+By defualt include both.</li>
+<li><strong>in_hy_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY returns index.
+If False, only include bonds out of HY returns index.
+By defualt include both.</li>
+<li><strong>in_any_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in any index.
+If False, only include bonds not in any index.
 By defualt include both.</li>
 <li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include 144A bonds.
 If False, only include non 144A bonds.
@@ -1083,8 +1107,16 @@ of a DataFrame.</li>
 
 <dl class="class">
 <dt id="lgimapy.data.Database">
-<em class="property">class </em><code class="descclassname">lgimapy.data.</code><code class="descname">Database</code><a class="headerlink" href="#lgimapy.data.Database" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lgimapy.data.</code><code class="descname">Database</code><span class="sig-paren">(</span><em>server='LIVE'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to pull and clean index data from SQL database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>server</strong> (<em>{'LIVE'</em><em>, </em><em>'DEV'}</em><em>, </em><em>default='LIVE'</em>) – Choice between live and development servers.</td>
+</tr>
+</tbody>
+</table>
 <dl class="attribute">
 <dt id="lgimapy.data.Database.df">
 <code class="descname">df</code><a class="headerlink" href="#lgimapy.data.Database.df" title="Permalink to this definition">¶</a></dt>
@@ -1143,7 +1175,7 @@ of a DataFrame.</li>
 
 <dl class="method">
 <dt id="lgimapy.data.Database.build_market_index">
-<code class="descname">build_market_index</code><span class="sig-paren">(</span><em>name=''</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.build_market_index" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build_market_index</code><span class="sig-paren">(</span><em>name=''</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.build_market_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build index with customized rules from <a class="reference internal" href="#lgimapy.data.Database.df" title="lgimapy.data.Database.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Database.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1197,6 +1229,21 @@ By defualt include both.</li>
 <li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in returns index.
 If False, only include bonds out of returns index.
 By defualt include both.</li>
+<li><strong>in_agg_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate stats index.
+If False, only include bonds out of aggregate stats index.
+By defualt include both.</li>
+<li><strong>in_agg_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate returns index.
+If False, only include bonds out of aggregate returns index.
+By defualt include both.</li>
+<li><strong>in_hy_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY stats index.
+If False, only include bonds out of HY stats index.
+By defualt include both.</li>
+<li><strong>in_hy_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY returns index.
+If False, only include bonds out of HY returns index.
+By defualt include both.</li>
+<li><strong>in_any_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in any index.
+If False, only include bonds not in any index.
+By defualt include both.</li>
 <li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include 144A bonds.
 If False, only include non 144A bonds.
 By defualt include both.</li>
@@ -1232,6 +1279,12 @@ sectors) xor specified maturities:
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="lgimapy.data.Database.display_all_columns">
+<code class="descname">display_all_columns</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.display_all_columns" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set DataFrames to display all columnns in IPython.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="lgimapy.data.Database.holiday_dates">
 <code class="descname">holiday_dates</code><a class="headerlink" href="#lgimapy.data.Database.holiday_dates" title="Permalink to this definition">¶</a></dt>
@@ -1247,8 +1300,46 @@ sectors) xor specified maturities:
 </dd></dl>
 
 <dl class="method">
+<dt id="lgimapy.data.Database.load_bbg_data">
+<code class="descname">load_bbg_data</code><span class="sig-paren">(</span><em>securities</em>, <em>field</em>, <em>start=None</em>, <em>end=None</em>, <em>nan=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_bbg_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load Bloomberg BDH data for given securities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>securities</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Security or secuirites to load data for.</li>
+<li><strong>field</strong> (str, <code class="docutils literal notranslate"><span class="pre">{'OAS',</span> <span class="pre">'Price',</span> <span class="pre">'TRET',</span> <span class="pre">'XSRET',</span> <span class="pre">'YTW',</span> <span class="pre">etc.}</span></code>) – Field of data to load.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive start date for data.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive end date for data.</li>
+<li><strong>nan</strong> (<code class="docutils literal notranslate"><span class="pre">{None,</span> <span class="pre">'drop',</span> <span class="pre">'ffill',</span> <span class="pre">'interp'}</span></code>, default=None) – Method to use for filling missing values in loaded data.</li>
+<li><strong>kwargs</strong> – <p>Keyword arguments to pass to interpolating function.</p>
+<ul>
+<li><dl class="first docutils">
+<dt>method: <code class="docutils literal notranslate"><span class="pre">{'linear',</span> <span class="pre">'spline',</span> <span class="pre">etc.}</span></code>, default=’linear’</dt>
+<dd><code class="docutils literal notranslate"><span class="pre">'spline'</span></code> and <code class="docutils literal notranslate"><span class="pre">'polynomial'</span></code> require an order.</dd>
+</dl>
+</li>
+<li>order: int, order for polynomial or spline.</li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>df</strong> – Bloomberg data subset to proper date range and
+processed missing data.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="lgimapy.data.Database.load_market_data">
-<code class="descname">load_market_data</code><span class="sig-paren">(</span><em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>cusips=None</em>, <em>clean=True</em>, <em>dev=False</em>, <em>ret_df=False</em>, <em>local=False</em>, <em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_market_data" title="Permalink to this definition">¶</a></dt>
+<code class="descname">load_market_data</code><span class="sig-paren">(</span><em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>cusips=None</em>, <em>clean=True</em>, <em>ret_df=False</em>, <em>local=False</em>, <em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_market_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load market data from SQL server. If end is not specified
 data is scraped through previous day. If neither start nor
 end are given only the data from previous day is scraped.
@@ -1268,8 +1359,6 @@ be prompted to provide the numeric value, and the
 <li><strong>end</strong> (<em>str</em><em>, </em><em>datetime</em><em>, </em><em>default=None</em>) – Ending date for scrape.</li>
 <li><strong>cusips</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – List of cusips to specify for the load, by default load all.</li>
 <li><strong>clean</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If true, apply standard cleaning rules to loaded DataFrame.</li>
-<li><strong>dev</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, use development SQL query to load all fields.
-<strong>DO NOT USE IN PRODUCTION CODE</strong></li>
 <li><strong>ret_df</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, return loaded DataFrame.</li>
 <li><strong>local</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Load index from local feather file.</li>
 </ul>
@@ -1287,7 +1376,7 @@ be prompted to provide the numeric value, and the
 
 <dl class="method">
 <dt id="lgimapy.data.Database.load_portfolio">
-<code class="descname">load_portfolio</code><span class="sig-paren">(</span><em>date=None</em>, <em>accounts=None</em>, <em>strategy=None</em>, <em>manager=None</em>, <em>universe='returns'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_portfolio" title="Permalink to this definition">¶</a></dt>
+<code class="descname">load_portfolio</code><span class="sig-paren">(</span><em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>accounts=None</em>, <em>strategy=None</em>, <em>manager=None</em>, <em>universe='returns'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_portfolio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load market data from SQL server. If end is not specified
 data is scraped through previous day. If neither start nor
 end are given only the data from previous day is scraped.
@@ -1336,22 +1425,37 @@ performance or feed a DataFrame directly.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="lgimapy.data.update_fed_funds">
-<code class="descclassname">lgimapy.data.</code><code class="descname">update_fed_funds</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_fed_funds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update fed funds data to current date in database.</p>
+<dt id="lgimapy.data.update_bloomberg_data">
+<code class="descclassname">lgimapy.data.</code><code class="descname">update_bloomberg_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_bloomberg_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update all Bloomberg timeseries data.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="lgimapy.data.update_feathers">
-<code class="descclassname">lgimapy.data.</code><code class="descname">update_feathers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_feathers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update feather files. Finds and creates any missing
-historical feathers and updates the feather for
-current day.</p>
+<dt id="lgimapy.data.update_fed_funds">
+<code class="descclassname">lgimapy.data.</code><code class="descname">update_fed_funds</code><span class="sig-paren">(</span><em>dates=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_fed_funds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update fed funds data to current date in database.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True print updating message and display progress bar.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dates</strong> (<em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – List of all trade dates available in DataMart.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.data.update_feathers">
+<code class="descclassname">lgimapy.data.</code><code class="descname">update_feathers</code><span class="sig-paren">(</span><em>dates=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_feathers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update feather files. Finds and creates any missing
+historical feathers and updates the feather for
+current day. Creates verbose progress bar if more
+than 2 files are to be created.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dates</strong> (<em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – List of all trade dates available in DataMart.</td>
 </tr>
 </tbody>
 </table>
@@ -1359,9 +1463,23 @@ current day.</p>
 
 <dl class="function">
 <dt id="lgimapy.data.update_trade_dates">
-<code class="descclassname">lgimapy.data.</code><code class="descname">update_trade_dates</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_trade_dates" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.data.</code><code class="descname">update_trade_dates</code><span class="sig-paren">(</span><em>dates=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_trade_dates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update <cite>trade_dates.csv</cite> file with all trade dates
 and holidays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dates</strong> (<em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – List of all trade dates available in DataMart.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.data.update_dealer_inventory">
+<code class="descclassname">lgimapy.data.</code><code class="descname">update_dealer_inventory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.update_dealer_inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update dealer inventory for IG and HY bonds.</p>
 </dd></dl>
 
 </div>
@@ -1479,14 +1597,18 @@ and save key rate durations, coupons, and total returns to
 
 <dl class="function">
 <dt id="lgimapy.models.update_treasury_curve_dates">
-<code class="descclassname">lgimapy.models.</code><code class="descname">update_treasury_curve_dates</code><span class="sig-paren">(</span><em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.update_treasury_curve_dates" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.models.</code><code class="descname">update_treasury_curve_dates</code><span class="sig-paren">(</span><em>dates=None</em>, <em>verbose=True</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.update_treasury_curve_dates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update <cite>.data/treasury_curve_params.csv</cite> file
 with most recent data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>verbose</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True print progress on each fitting to screen.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dates</strong> (<em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – List of all trade dates available in DataMart.</li>
+<li><strong>verbose</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True print progress on each fitting to screen.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1505,7 +1627,7 @@ with most recent data.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>securities</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Security name(s) or cusip(s).</li>
-<li><strong>yellow_key</strong> (<code class="docutils literal notranslate"><span class="pre">{'Govt',</span> <span class="pre">'Corp',</span> <span class="pre">'Equity',</span> <span class="pre">'Index',</span> <span class="pre">etc.}</span></code>.) – Bloomberg yellow key for securities. Case insensitive.</li>
+<li><strong>yellow_key</strong> (<code class="docutils literal notranslate"><span class="pre">{'Govt',</span> <span class="pre">'Corp',</span> <span class="pre">'Equity',</span> <span class="pre">'Index',</span> <span class="pre">etc.}</span></code> or List[str].) – Bloomberg yellow key(s) for securities. Case insensitive.</li>
 <li><strong>fields</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Bloomberg field(s) to collect history.</li>
 <li><strong>start</strong> (<em>datetime object</em>) – Start date for scrape.</li>
 <li><strong>end</strong> (<em>datetime object</em><em>, </em><em>default=None</em>) – End date for scrape, if None most recent date is used.</li>
@@ -1552,7 +1674,7 @@ with most recent data.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>securities</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Security name(s) or cusip(s).</li>
-<li><strong>yellow_key</strong> (<code class="docutils literal notranslate"><span class="pre">{'Govt',</span> <span class="pre">'Corp',</span> <span class="pre">'Equity',</span> <span class="pre">'Index',</span> <span class="pre">etc.}</span></code>.) – Bloomberg yellow key for securities. Case insensitive.</li>
+<li><strong>yellow_key</strong> (<code class="docutils literal notranslate"><span class="pre">{'Govt',</span> <span class="pre">'Corp',</span> <span class="pre">'Equity',</span> <span class="pre">'Index',</span> <span class="pre">etc.}</span></code> or List[str].) – Bloomberg yellow key(s) for securities. Case insensitive.</li>
 <li><strong>fields</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Bloomberg field(s) to collect history.</li>
 <li><strong>ovrd</strong> (<em>dict</em><em>, </em><em>default=None</em>) – Bloomberg overrides {field: value}.</li>
 </ul>
@@ -1651,6 +1773,33 @@ cusips and their subsectors.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cusips</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Cusip(s) to search bloomberg for subsectors.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.bloomberg.bloomberg_index_history">
+<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">bloomberg_index_history</code><span class="sig-paren">(</span><em>index</em>, <em>start</em>, <em>end=None</em>, <em>field=None</em>, <em>bloomberg_field='PX_LAST'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.bloomberg_index_history" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get bloomberg index history for specified index.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>index</strong> (<em>str</em>) – Specified index.</li>
+<li><strong>start</strong> (<em>datetime</em><em> or </em><em>str</em>) – Start date for history.</li>
+<li><strong>end</strong> (<em>datetime</em><em> or </em><em>str</em>) – Inlcusive end date for history.</li>
+<li><strong>field</strong> (<em>str</em><em>, </em><em>default=None</em>) – Field for fixed income indexes.</li>
+<li><strong>bloomberg_field</strong> (<em>str</em><em>, </em><em>default=&quot;PX_LAST&quot;</em>) – Bloomberg field for index.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DataFrame of index history.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1771,6 +1920,73 @@ for any cusip which is unsuccesful.</p>
 </div>
 <div class="section" id="module-lgimapy.vis">
 <span id="lgimapy-vis"></span><h2>lgimapy vis<a class="headerlink" href="#module-lgimapy.vis" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="lgimapy.vis.colors">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">colors</code><span class="sig-paren">(</span><em>color</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.colors" title="Permalink to this definition">¶</a></dt>
+<dd><p>LGIMA umbrella colors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>color</strong> (<em>str</em>) – Umbrella color or first letter of color to return.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Specified color hex code.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.style">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">style</code><span class="sig-paren">(</span><em>background='white'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply preferred style to interactive and saved plots.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.coolwarm">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">coolwarm</code><span class="sig-paren">(</span><em>x</em>, <em>center=0</em>, <em>symettric=False</em>, <em>quality=1000</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.coolwarm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create custom diverging color palette centered around
+specified value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> (<em>array-like</em>) – Sorted values to be converted to colors.</li>
+<li><strong>center</strong> (<em>float</em><em>, </em><em>default=0</em>) – Central value for divergin colorbar.</li>
+<li><strong>symmetric</strong> (<em># TODO bool</em><em>, </em><em>default=False</em>) – If True, use symmetric gradient for each side of
+the color range, such that full color range
+would not be used for skewed data.
+If False, use full color gradient to both min and
+max of the value range, so that full color bar
+is used regardless of skew in data.</li>
+<li><strong>quality</strong> (<em>int</em><em>, </em><em>default=1000</em>) – Total number of uniuqe colors to include in colorbar.
+Higher number gives better gradient between colors.</li>
+<li><strong>Retuns</strong> – </li>
+<li><strong>------</strong> – </li>
+<li><strong>List</strong><strong>[</strong><strong>str</strong><strong>]</strong> – List of custom color pallete hex codes for each
+respective input value.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.plot_timeseries">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>s</em>, <em>start=None</em>, <em>end=None</em>, <em>stats_start='1/1/2010'</em>, <em>stats=False</em>, <em>bollinger=False</em>, <em>mean_line=False</em>, <em>pct_lines=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot simple timeseries.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.savefig">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">savefig</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>dpi=300</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.savefig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save figure to specified location.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-lgimapy.latex">
 <span id="lgimapy-latex"></span><h2>lgimapy latex<a class="headerlink" href="#module-lgimapy.latex" title="Permalink to this headline">¶</a></h2>
@@ -1930,7 +2146,7 @@ subscripts to proper LaTeX representation.</p>
 
 <dl class="function">
 <dt id="lgimapy.latex.latex_table">
-<code class="descclassname">lgimapy.latex.</code><code class="descname">latex_table</code><span class="sig-paren">(</span><em>df</em>, <em>caption=None</em>, <em>col_fmt=None</em>, <em>prec=3</em>, <em>adjust=False</em>, <em>hide_index=False</em>, <em>int_vals=False</em>, <em>nan_value='-'</em>, <em>font_size=None</em>, <em>midrule_locs=None</em>, <em>greeks=True</em>, <em>multi_row_header=False</em>, <em>loc_style=None</em>, <em>col_style=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.latex_table" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.latex.</code><code class="descname">latex_table</code><span class="sig-paren">(</span><em>df</em>, <em>caption=None</em>, <em>col_fmt=None</em>, <em>prec=3</em>, <em>adjust=False</em>, <em>hide_index=False</em>, <em>add_blank_column=False</em>, <em>int_vals=False</em>, <em>nan_value='-'</em>, <em>font_size=None</em>, <em>midrule_locs=None</em>, <em>specialrule_locs=None</em>, <em>greeks=True</em>, <em>multi_row_header=False</em>, <em>loc_style=None</em>, <em>row_color=None</em>, <em>row_font=None</em>, <em>col_style=None</em>, <em>alternating_colors=(None</em>, <em>None)</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.latex_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return table with syntax formatted for LaTeX.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1950,6 +2166,7 @@ keys with respective string formatting as values.</p>
 <li><strong>adjust</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, fit table to page width, especially usefull for
 tables with many columns.</li>
 <li><strong>hide_index</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, hide index from printing in LaTeX.</li>
+<li><strong>add_blank_column</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, append a blank column to the right side of the table.</li>
 <li><strong>int_vals</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, remove decimal places for number where
 all trailing values are 0 (e.g., 3.00 –&gt; 3).</li>
 <li><strong>nan_value</strong> (<em>str</em><em>, </em><em>default='-'</em>) – Value to fill NaNs with in LaTeX table.
@@ -1958,6 +2175,7 @@ For blank, use <code class="docutils literal notranslate"><span class="pre">`&qu
 {‘tiny’, ‘scriptsize’, ‘footnotesize’, ‘small’, ‘normalsize’,
 ‘large’, ‘Large’, ‘LARGE’, ‘huge’, ‘Huge’}.</li>
 <li><strong>midrule_locs</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Index or list of index values to place a midrule line above.</li>
+<li><strong>specialrule_locs</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Index or list of index values to place a midrule line above.</li>
 <li><strong>greeks</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True, convert all instances of greek letters to LaTeX syntax.</li>
 <li><strong>multi_row_header</strong> (<em>bool</em><em>, </em><em>default=False</em>) – if True, use \thead to make header column multiple lines.
 Expects <code class="docutils literal notranslate"><span class="pre">`*`</span></code> as separator between lines in header column.</li>
@@ -1970,6 +2188,12 @@ LaTeX formatting as values.</p>
 <li>Red Font: <code class="docutils literal notranslate"><span class="pre">`loc_style={'\color{red}':</span> <span class="pre">[(0,</span> <span class="pre">1),</span> <span class="pre">(1,</span> <span class="pre">5)]}`</span></code></li>
 </ul>
 </li>
+<li><strong>row_font</strong> (<em>Dict</em><em>[</em><em>str: str</em><em>]</em><em></em>) – Special styling for a specific row.
+Input is expected as a dict with row names as keys and
+respective LaTeX formatting as value.</li>
+<li><strong>row_color</strong> (<em>Dict</em><em>[</em><em>str: str</em><em>]</em><em></em>) – Background colors for specific rows.
+Input is expected as a dict with row names as keys and
+respective colors as values.</li>
 <li><strong>col_style</strong> (<em>Dict</em><em>[</em><em>str: str</em><em>]</em><em></em>) – <p>Special styling for specific columns.
 Input is expexted as dict with column names as keys
 and respective LaTeX formatting as values.</p>
@@ -1978,6 +2202,7 @@ and respective LaTeX formatting as values.</p>
 <li>Bold: <code class="docutils literal notranslate"><span class="pre">`[col:</span> <span class="pre">\textbf]`</span></code></li>
 </ul>
 </li>
+<li><strong>alternating_colors</strong> (<em>Tuple</em><em>(</em><em>str</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Color 1 and Color 2 for for alternating row colors.</li>
 </ul>
 </td>
 </tr>
@@ -1993,9 +2218,10 @@ and respective LaTeX formatting as values.</p>
 <p>Requires the folloiwng LaTeX packages in preamble</p>
 <blockquote>
 <div><ul class="simple">
+<li>adjustbox: Fit table to page width.</li>
 <li>caption: Add caption.</li>
 <li>makecell: Create multi-row headers.</li>
-<li>adjustbox: Fit table to page width.</li>
+<li>tabu: Build table with fancy formatting options.</li>
 <li>xcolor: Change font color of table values.</li>
 </ul>
 </div></blockquote>
@@ -2064,6 +2290,12 @@ and respective LaTeX formatting as values.</p>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="lgimapy.latex.Document.add_background_image">
+<code class="descname">add_background_image</code><span class="sig-paren">(</span><em>image</em>, <em>scale=1</em>, <em>width=None</em>, <em>height=None</em>, <em>angle=0</em>, <em>vshift=0</em>, <em>hshift=0</em>, <em>unit='cm'</em>, <em>alpha=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_background_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a background image to the document.</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="lgimapy.latex.Document.add_bibliography">
 <code class="descname">add_bibliography</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_bibliography" title="Permalink to this definition">¶</a></dt>
@@ -2142,9 +2374,9 @@ of days before or after the event.</p>
 Series with datetime indexes.</li>
 <li><strong>event_dates</strong> (<em>datetime</em><em> or </em><em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – Date(s) of event(s).</li>
 <li><strong>lookback</strong> (<em>str</em>) – String representation of start relative to
-event date. Input to <a href="#id15"><span class="problematic" id="id16">:function:`floatftime`</span></a>.</li>
+event date. Input to <a href="#id5"><span class="problematic" id="id6">:function:`floatftime`</span></a>.</li>
 <li><strong>lookforward</strong> (<em>str</em>) – String representation of end relative to
-event date. Input to <a href="#id17"><span class="problematic" id="id18">:function:`floatftime`</span></a>.</li>
+event date. Input to <a href="#id7"><span class="problematic" id="id8">:function:`floatftime`</span></a>.</li>
 </ul>
 </td>
 </tr>
@@ -2376,6 +2608,31 @@ dropped.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="lgimapy.utils.first_unique">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">first_unique</code><span class="sig-paren">(</span><em>vals</em>, <em>fill=''</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.first_unique" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find first unique values in a sorted list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>vals</strong> (<em>list-like</em>) – Sorted input list.</li>
+<li><strong>fill</strong> (<em>scalar</em><em>, </em><em>default=&quot;&quot;</em>) – Fill value to replace non-unique values in input list.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>unique_locs</strong> (<em>List[int].</em>) – List of unique value locations.</li>
+<li><strong>unique_list</strong> (<em>List[scalar].</em>) – List of unique values with non-unique values replaced with fill.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="lgimapy.utils.floatftime">
 <code class="descclassname">lgimapy.utils.</code><code class="descname">floatftime</code><span class="sig-paren">(</span><em>time_horizon</em>, <em>unit='d'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.floatftime" title="Permalink to this definition">¶</a></dt>
 <dd><p>Similar to <cite>strftime</cite>, format time to numeric float.</p>
@@ -2537,20 +2794,32 @@ str values as values.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="lgimapy.utils.savefig">
-<code class="descclassname">lgimapy.utils.</code><code class="descname">savefig</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>dpi=300</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.savefig" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save figure to specified location.</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="lgimapy.utils.smooth_weight">
 <code class="descclassname">lgimapy.utils.</code><code class="descname">smooth_weight</code><span class="sig-paren">(</span><em>x</em>, <em>B</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.smooth_weight" title="Permalink to this definition">¶</a></dt>
 <dd><p>Weight functcion for smoothing two overlapping curves.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="lgimapy.utils.tolist">
-<code class="descclassname">lgimapy.utils.</code><code class="descname">tolist</code><span class="sig-paren">(</span><em>obj</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.tolist" title="Permalink to this definition">¶</a></dt>
+<dt id="lgimapy.utils.to_datetime">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">to_datetime</code><span class="sig-paren">(</span><em>date</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.to_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a datetime object to pandas datetime only if necessary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime</em>) – Date in any datetime type e.g., str.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Pandas datetime object of input date.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">pd._libs.tslibs.timestamps.Timestamp</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.utils.to_list">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">to_list</code><span class="sig-paren">(</span><em>obj</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.to_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert single object to list if it is not already
 a list-like object.</p>
 <table class="docutils field-list" frame="void" rules="none">
