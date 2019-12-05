@@ -8,7 +8,13 @@ import pandas as pd
 
 from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import Bond, concat_index_dfs, new_issue_mask, TreasuryCurve
-from lgimapy.utils import check_all_equal, load_json, replace_multiple, root
+from lgimapy.utils import (
+    check_all_equal,
+    load_json,
+    replace_multiple,
+    root,
+    to_datetime,
+)
 
 # %%
 
@@ -173,8 +179,7 @@ class Index:
         df or Index: pd.DataFrame or :class:`Index`
             DataFrame or Index for single specified date.
         """
-        if not isinstance(date, pd._libs.tslibs.timestamps.Timestamp):
-            date = pd.to_datetime(date)
+        date = to_datetime(date)
         # Create cache key of all columns added to :attr:`Index.df`.
         current_cache_key = "_".join(self.df.columns)
         if current_cache_key == self._day_cache_key:
@@ -221,10 +226,7 @@ class Index:
             DataFrame or Index for specified date.
         """
         # Get data for current and previous day.
-        if not isinstance(date, pd._libs.tslibs.timestamps.Timestamp):
-            current_date = pd.to_datetime(date)
-        else:
-            current_date = date
+        current_date = to_datetime(date)
         prev_date = self.dates[bisect_left(self.dates, current_date) - 1]
         if prev_date == self.dates[-1]:
             msg = "First day in index history, synthetic day not possible."
@@ -274,6 +276,11 @@ class Index:
         liquidity_score=(None, None),
         in_stats_index=None,
         in_returns_index=None,
+        in_agg_stats_index=None,
+        in_agg_returns_index=None,
+        in_hy_stats_index=None,
+        in_hy_returns_index=None,
+        in_any_index=None,
         is_144A=None,
         is_new_issue=None,
         financial_flag=None,
@@ -357,6 +364,26 @@ class Index:
             If True, only include bonds in returns index.
             If False, only include bonds out of returns index.
             By defualt include both.
+        in_agg_stats_index: bool, default=None
+            If True, only include bonds in aggregate stats index.
+            If False, only include bonds out of aggregate stats index.
+            By defualt include both.
+        in_agg_returns_index: bool, default=None
+            If True, only include bonds in aggregate returns index.
+            If False, only include bonds out of aggregate returns index.
+            By defualt include both.
+        in_hy_stats_index: bool, default=None
+            If True, only include bonds in HY stats index.
+            If False, only include bonds out of HY stats index.
+            By defualt include both.
+        in_hy_returns_index: bool, default=None
+            If True, only include bonds in HY returns index.
+            If False, only include bonds out of HY returns index.
+            By defualt include both.
+        in_any_index: bool, default=None
+            If True, only include bonds in any index.
+            If False, only include bonds not in any index.
+            By defualt include both.
         is_144A: bool, default=None
             If True, only include 144A bonds.
             If False, only include non 144A bonds.
@@ -393,8 +420,8 @@ class Index:
         # Convert dates to datetime.
         if date is not None:
             start = end = date
-        start = None if start is None else pd.to_datetime(start)
-        end = None if end is None else pd.to_datetime(end)
+        start = None if start is None else to_datetime(start)
+        end = None if end is None else to_datetime(end)
 
         # Convert rating to range of inclusive ratings.
         if rating is None:
@@ -451,6 +478,11 @@ class Index:
         self._flags = {}
         self._add_flag_input(in_returns_index, "USCreditReturnsFlag")
         self._add_flag_input(in_stats_index, "USCreditStatisticsFlag")
+        self._add_flag_input(in_agg_returns_index, "USAggReturnsFlag")
+        self._add_flag_input(in_agg_stats_index, "USAggStatisticsFlag")
+        self._add_flag_input(in_hy_stats_index, "USHYStatisticsFlag")
+        self._add_flag_input(in_hy_returns_index, "USHYReturnsFlag")
+        self._add_flag_input(in_any_index, "AnyIndexFlag")
         self._add_flag_input(is_144A, "Eligibility144AFlag")
         self._add_flag_input(is_new_issue, "NewIssueMask")
 
@@ -670,12 +702,12 @@ class Index:
         cusips = set(self.cusips)
         dates = self.dates[1:] if synthetic else self.dates
         if start is not None:
-            dates = dates[dates >= pd.to_datetime(start)]
+            dates = dates[dates >= to_datetime(start)]
         if end is not None:
             if inclusive_end_date:
-                dates = dates[dates <= pd.to_datetime(end)]
+                dates = dates[dates <= to_datetime(end)]
             else:
-                dates = dates[dates < pd.to_datetime(end)]
+                dates = dates[dates < to_datetime(end)]
 
         # Build dict of historical values for each CUSIP and
         # convert to DataFrame.
@@ -692,7 +724,7 @@ class Index:
 
         return pd.DataFrame(hist_d, index=dates)
 
-    def get_synthetic_differenced_history(self, col):
+    def get_synthetic_differenced_history(self, col, dropna=False):
         """
         Save the difference history of a column.
 
@@ -701,6 +733,9 @@ class Index:
         col: str
             Column from :attr:`Index.df` to build synthetic
             differenced history for (e.g., 'OAS').
+        dropna: bool, default=False
+            If True drop columns with missing values for either
+            `MarketValue` or specified column.
 
         Returns
         -------
@@ -713,8 +748,12 @@ class Index:
         cols = ["MarketValue", col]
         warnings.simplefilter("ignore", category=RuntimeWarning)
         for i, date in enumerate(dates):
-            df = self.synthetic_day(date).dropna(subset=cols)
-            prev_df = self.day(self.dates[i]).dropna(subset=cols)
+            if dropna:
+                df = self.synthetic_day(date).dropna(subset=cols)
+                prev_df = self.day(self.dates[i]).dropna(subset=cols)
+            else:
+                df = self.synthetic_day(date)
+                prev_df = self.day(self.dates[i])
             prev_df = prev_df[prev_df.index.isin(df.index)]
             a[i] = (
                 np.sum(df["MarketValue"] * df[col]) / np.sum(df["MarketValue"])
@@ -757,7 +796,7 @@ class Index:
             ]
         )
 
-    def market_value_weight(self, col, synthetic=False):
+    def market_value_weight(self, col, synthetic=False, dropna=False):
         """
         Market value weight a specified column vs entire
         index market value.
@@ -768,6 +807,9 @@ class Index:
             Column name to weight, (e.g., 'OAS').
         synthethic: bool, default=False
             If True, use synthethic day data.
+        dropna: bool, default=False
+            If True drop columns with missing values for either
+            `MarketValue` or specified column.
 
         Returns
         -------
@@ -780,7 +822,8 @@ class Index:
         warnings.simplefilter("ignore", category=RuntimeWarning)
         for i, date in enumerate(dates):
             df = self.synthetic_day(date) if synthetic else self.day(date)
-            df = df.dropna(subset=["MarketValue", col])
+            if dropna:
+                df = df.dropna(subset=["MarketValue", col])
             a[i] = np.sum(df["MarketValue"] * df[col]) / np.sum(
                 df["MarketValue"]
             )
@@ -969,8 +1012,8 @@ class Index:
         ex_rets = self.market_value_weight("XSRet")
         t_rets = self.market_value_weight("TRet")
         if start_date is not None:
-            ex_rets = ex_rets[ex_rets.index > pd.to_datetime(start_date)]
-            t_rets = t_rets[t_rets.index > pd.to_datetime(start_date)]
+            ex_rets = ex_rets[ex_rets.index > to_datetime(start_date)]
+            t_rets = t_rets[t_rets.index > to_datetime(start_date)]
 
         # Calculate implied treasy returns.
         tsy_t_rets = t_rets - ex_rets
