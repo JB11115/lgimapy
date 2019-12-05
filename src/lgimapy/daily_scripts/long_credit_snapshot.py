@@ -17,7 +17,9 @@ from lgimapy.utils import load_json, mkdir, root, Time
 
 def build_long_credit_snapshot():
     # Define filename and directories to save data.
-    fid = f"{dt.today().strftime('%Y-%m-%d')}_Long_Credit_Snapshot"
+    # actual_date = pd.to_datetime("9/30/2019")
+    actual_date = dt.today()
+    fid = f"{actual_date.strftime('%Y-%m-%d')}_Long_Credit_Snapshot"
     csv_path = root("data/long_credit_snapshot")
     pdf_path = root("reports/long_credit_snapshot")
     mkdir(csv_path)
@@ -25,10 +27,18 @@ def build_long_credit_snapshot():
     # Define sectors for each table.
     # Subsectors are indicated with a leading `~`.
     # Major sectors are indicated with a leading `^`
-    market_sectors = ["STATS_all", "~AAA", "~AA", "~A", "~BBB"]
+    market_sectors = [
+        "STATS_all",
+        "~AAA",
+        "~AA",
+        "~A",
+        "~BBB",
+        "~BBB_LARGEST_ISSUERS",
+    ]
     ig_sectors = [
         "INDUSTRIALS",  # Industrials
         "BASICS",
+        "~CHEMICALS",
         "~METALS_AND_MINING",
         "CAPITAL_GOODS",
         "COMMUNICATIONS",
@@ -82,22 +92,23 @@ def build_long_credit_snapshot():
     # Store dates not to be used in table with a `~` before them.
     db = Database()
     tdates = db.trade_dates
-
-    today = tdates[-1]
     last_trade = partial(bisect_left, tdates)
+    today = tdates[-1]
+    # today = db.nearest_date(actual_date)
     dates_dict = {
-        "~today": tdates[-1],
+        "~today": today,
         "~6m": db.nearest_date(today - timedelta(183)),
-        "Daily": tdates[-2],
+        "Daily": tdates[last_trade(today) - 1],
         "WTD": tdates[last_trade(today - timedelta(today.weekday() + 1)) - 1],
         "MTD": tdates[last_trade(today.replace(day=1)) - 1],
+        # "QTD": db.nearest_date(pd.to_datetime("6/29/2019")),
         "YTD": tdates[last_trade(today.replace(month=1, day=1)) - 1],
     }
 
     # Create indexes for all sectors.
     dates_dict["~start"] = min(dates_dict.values())
     kwargs = load_json("indexes")
-    db.load_market_data(start=dates_dict["~start"], local=True)
+    db.load_market_data(start=dates_dict["~start"], end=today, local=True)
     ix_dict = {
         sector: db.build_market_index(
             **kwargs[sector.strip("^~")], maturity=(10, None)
@@ -132,6 +143,7 @@ def build_long_credit_snapshot():
     dates_fmt += [
         f"{k}: $\Delta${dates_dict[k].strftime('%m/%d')}"
         for k in "Daily WTD MTD".split()
+        # for k in "Daily MTD QTD".split()
     ]
 
     dates_key = ", \hspace{0.2cm} ".join(dates_fmt)
@@ -145,19 +157,19 @@ def build_long_credit_snapshot():
         f"IG Sectors  \hspace{{9.2cm}} \\normalfont{{{colors_key}}}",
     ]
 
+    # %%
     # Create daily snapshot tables and save to pdf.
     doc = Document(fid, path=pdf_path)
     doc.add_preamble(
         margin={"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2},
         page_numbers=False,
     )
-    doc.add_background_image(
-        "plain_umbrella", scale=2.2, vshift=1.3, alpha=0.04
-    )
+    doc.add_background_image("umbrella", scale=1.1, vshift=2.2, alpha=0.04)
     sector_list = [market_sectors, ig_sectors]
     for sector_subset, cap in zip(sector_list, captions):
         doc.add_table(make_table(table_df, sector_subset, cap, kwargs))
     doc.save()
+    # %%
 
 
 def make_table(full_df, sectors, caption, ix_kwargs):
@@ -244,6 +256,8 @@ def make_table(full_df, sectors, caption, ix_kwargs):
         "WTD*Price": "1f",
         "MTD*OAS": "0f",
         "MTD*Price": "1f",
+        # "QTD*OAS": "0f",
+        # "QTD*Price": "1f",
         "YTD*OAS": "0f",
         "YTD*Price": "1f",
         "OAD": "1f",
