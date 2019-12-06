@@ -271,7 +271,7 @@ def linreg():
 
 
 # %%
-def plot_mulit_y_axis_timeseries(
+def plot_multi_y_axis_timeseries(
     s_left,
     s_right,
     start=None,
