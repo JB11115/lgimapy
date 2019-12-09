@@ -163,6 +163,7 @@ def build_long_credit_snapshot():
     doc.add_preamble(
         margin={"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2},
         page_numbers=False,
+        ignore_bottom_margin=True,
     )
     doc.add_background_image("umbrella", scale=1.1, vshift=2.2, alpha=0.04)
     sector_list = [market_sectors, ig_sectors]
