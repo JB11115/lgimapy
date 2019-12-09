@@ -1424,8 +1424,10 @@ class Database:
         elif nan == "ffill":
             df.fillna(method="ffill", inplace=True)
         elif nan == "interp":
+            interp_kwargs = {"method": "linear"}
+            interp_kwargs.update(**kwargs)
             df.interpolate(
-                limit_direction="forward", axis=0, inplace=True, **kwargs
+                limit_direction="forward", axis=0, inplace=True, **interp_kwargs
             )
 
         return df
