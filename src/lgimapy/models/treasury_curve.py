@@ -566,10 +566,7 @@ class TreasuryCurveBuilder:
         fig, ax = plt.subplots(1, 1, figsize=(8, 6))
         self.plot(ax=ax)
         vis.savefig(fig_dir / self.date.strftime("%Y_%m_%d"))
-        plt.cla()
-        plt.clf()
-        plt.close(fig)
-        plt.close("all")
+        vis.close(fig)
 
     def _get_yield(self, t):
         """
