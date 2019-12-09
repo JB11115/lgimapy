@@ -35,6 +35,30 @@ def style(background="white"):
     mpl.rcParams["savefig.edgecolor"] = background
 
 
+def show():
+    """Display current figure."""
+    plt.show()
+
+
+def close(fig=None):
+    """
+    Clear current figure and all axes.
+
+    Parameters
+    ----------
+    fig: mpl.Figure
+        Figure instance to close.
+
+    """
+    plt.cla()
+    plt.clf()
+    if fig is not None:
+        plt.close(fig)
+    else:
+        plt.close(plt.gcf())
+    plt.close("all")
+
+
 # %%
 
 

@@ -1,21 +1,29 @@
 from lgimapy.vis.vis import (
-    colors,
+    show,
+    close,
+    savefig,
     style,
+    colors,
     coolwarm,
     plot_timeseries,
-    savefig,
     plot_timeseries,
     plot_multiple_timeseries,
     plot_multi_y_axis_timeseries,
+    format_xaxis,
+    format_yaxis,
 )
 
 __all__ = [
-    "colors",
+    "show",
+    "close",
+    "savefig",
     "style",
+    "colors",
     "coolwarm",
     "plot_timeseries",
-    "savefig",
     "plot_timeseries",
     "plot_multiple_timeseries",
     "plot_multi_y_axis_timeseries",
+    "format_xaxis",
+    "format_yaxis",
 ]
