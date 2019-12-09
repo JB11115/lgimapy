@@ -11,7 +11,6 @@ from lgimapy.data import Database
 
 
 def main():
-
     args = parse_args()
 
     # Subset data to last year.
@@ -22,7 +21,7 @@ def main():
     )
 
     db = Database()
-    df = db.load_bbg_data("US_CORP", "OAS", nan="drop", start=start)
+    df = db.load_bbg_data(args.index, "OAS", nan="drop", start=start)
     y = df.values
 
     # Plot index data.
