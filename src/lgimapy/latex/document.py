@@ -4,8 +4,9 @@ import sys
 from inspect import cleandoc
 from pathlib import Path
 
+import lgimapy.vis as vis
 from lgimapy.latex import latex_array, latex_matrix, latex_table, latex_figure
-from lgimapy.utils import mkdir, root
+from lgimapy.utils import mkdir, root, to_list
 
 # %%
 
@@ -17,14 +18,12 @@ class Document:
     TODO: add other types such as
         * array
         * matrix
-        * figure
 
     TODO: add LaTeX functions such as
         * appendix
         * header
         * equation
         * bibliography
-        * bodies of text
 
     Parameters
     ----------
@@ -38,18 +37,27 @@ class Document:
         * str: create `root/latex/{str}` directory, create dir if required.
     """
 
-    def __init__(self, fid, path=None):
+    def __init__(self, fid, path=None, fig_dir=False):
         # Format fid and path.
         self.fid = fid[:-4] if fid.endswith(".tex") else fid
         if path is None:
-            self.path = ""
+            self.path = Path(os.getcwd())
         elif isinstance(path, str):
             self.path = root(f"latex/{path}")
             mkdir(self.path)
         else:
-            self.path = path
+            self.path = Path(path)
             mkdir(self.path)
 
+        # Create figure directory if required.
+        self._fig_dir_bool = fig_dir
+        if fig_dir:
+            self.fig_dir = self.path.joinpath("fig/")
+            mkdir(self.fig_dir)
+        else:
+            self.fig_dir = self.path
+
+        # Initialize document components.
         self.body = "\n\n\\begin{document}\n\n"
         self.add_preamble()
         self.bibliography = ""
@@ -62,7 +70,7 @@ class Document:
         margin=None,
         margin_unit="cm",
         page_numbers=False,
-        ignore_bottom_margin=True,
+        ignore_bottom_margin=False,
     ):
 
         # Format margin.
@@ -227,6 +235,39 @@ class Document:
             table = latex_table(table_or_df, **kwargs)
             self.body = "\n\n".join((self.body, table))
 
+    def add_figure(self, fids, savefig=False, **kwargs):
+        """
+        Add table to document using :func:`latex_table`.
+
+        Parameters
+        ----------
+        fids: fids: str or List[str].
+            Filenames for figure(s).
+        savefig: bool, default=False
+            If True save single Figure to proper directory.
+        kwargs:
+            Keyword arguments for :func:`latex_figure`.
+
+
+        See Also
+        --------
+        :func:`latex_figure`: Return figure with syntax formatted for LaTeX.
+        """
+        fids = to_list(fids, dtype=str)
+        if self._fig_dir_bool:
+            fids = [f"fig/{fid}" for fid in fids]
+
+        if savefig:
+            if len(fids) == 1:
+                vis.savefig(self.fig_dir / fids[0])
+                vis.close()
+            else:
+                msg = "Saving can only be done on individual Figures."
+                raise ValueError(msg)
+
+        fig = latex_figure(fids, **kwargs)
+        self.body = "\n\n".join((self.body, fig))
+
     def save(self, save_tex=False):
         """
         Save `.tex` file and compile to `.pdf`.
@@ -251,7 +292,7 @@ class Document:
         # Clean file path and move to proper directory.
         if self.path:
             os.chdir(self.path)
-            fid = Path(self.path).joinpath(self.fid)
+            fid = self.path.joinpath(self.fid)
         else:
             fid = self.fid
 
