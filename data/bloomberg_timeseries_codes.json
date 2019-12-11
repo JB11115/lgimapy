@@ -9,6 +9,21 @@
         "TRET": "ITRXTX5I Index",
         "XSRET": "ERIXITXO Index"
     },
+    "FF_1M": {
+        "PRICE": "FF1 Comdty"
+    },
+    "FF_3M": {
+        "PRICE": "FF3 Comdty"
+    },
+    "FF_6M": {
+        "PRICE": "FF6 Comdty"
+    },
+    "FF_9M": {
+        "PRICE": "FF9 Comdty"
+    },
+    "FF_12M": {
+        "PRICE": "FF12 Comdty"
+    },
     "UST_2Y": {
         "YTW": "USGG2YR Index"
     },
@@ -529,5 +544,71 @@
         "TRET": "BUCMTRUU Index",
         "XSRET": "BUCMER Index",
         "YTW": "BUCMYW Index"
+    },
+    "LIBOR": {
+        "YTW": "US0003M Index"
+    },
+    "US_ECO_SURP": {
+        "LEVEL": "ECSURPUS Index"
+    },
+    "US_GDP_QOQ": {
+        "LEVEL": "GDP CQOQ Index"
+    },
+    "US_LEAD_IND": {
+        "LEVEL": "LEI TOTL Index"
+    },
+    "US_IND_PROD_YOY": {
+        "LEVEL": "IP YOY Index"
+    },
+    "US_IND_PROD": {
+        "LEVEL": "IP Index"
+    },
+    "US_UNEMPLOY": {
+        "LEVEL": "USURTOT Index"
+    },
+    "US_EARN_REV_UP": {
+        "LEVEL": "FINOUP Index"
+    },
+    "US_EARN_REV_DOWN": {
+        "LEVEL": "FINODOWN Index"
+    },
+    "US_EARN_REV_TOT": {
+        "LEVEL": "FINOTOTL Index"
+    },
+    "US_NET_LEV_EX_FIN": {
+        "LEVEL": ".SPNDEBIT G Index"
+    },
+    "US_COMP_PMI": {
+        "LEVEL": "MPMIUSCA Index"
+    },
+    "US_ZEW": {
+        "LEVEL": "GRZEUSEX Index"
+    },
+    "US_CONS_CONF": {
+        "LEVEL": "CONCCONF Index"
+    },
+    "US_POLICY_UNCERT": {
+        "LEVEL": "EPUCNUSD Index"
+    },
+    "GLOBAL_POLICY_UNCERT": {
+        "LEVEL": "EPUCGLCP Index"
+    },
+    "US_TRADE_UNCERT": {
+        "LEVEL": "EPUCTRAD Index"
+    },
+    "US_ECO_SENT": {
+        "LEVEL": "CONSCURR Index"
+    },
+    "US_ECO_SURP": {
+        "LEVEL": "ECSURPUS Index"
+    },
+    "US_IND_CONF": {
+        "LEVEL": "OEUSJAIL Index"
+    },
+    "US_SR_LOAN": {
+        "LEVEL": "SLDETIGT Index"
+    },
+    "US_LOAN_DEMAND": {
+        "LEVEL": "SLDEDEMD Index"
     }
 }
