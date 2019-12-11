@@ -37,7 +37,7 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Dec 05, 2019 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Dec 11, 2019 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.data">
@@ -1779,33 +1779,6 @@ cusips and their subsectors.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="lgimapy.bloomberg.bloomberg_index_history">
-<code class="descclassname">lgimapy.bloomberg.</code><code class="descname">bloomberg_index_history</code><span class="sig-paren">(</span><em>index</em>, <em>start</em>, <em>end=None</em>, <em>field=None</em>, <em>bloomberg_field='PX_LAST'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.bloomberg_index_history" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get bloomberg index history for specified index.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>index</strong> (<em>str</em>) – Specified index.</li>
-<li><strong>start</strong> (<em>datetime</em><em> or </em><em>str</em>) – Start date for history.</li>
-<li><strong>end</strong> (<em>datetime</em><em> or </em><em>str</em>) – Inlcusive end date for history.</li>
-<li><strong>field</strong> (<em>str</em><em>, </em><em>default=None</em>) – Field for fixed income indexes.</li>
-<li><strong>bloomberg_field</strong> (<em>str</em><em>, </em><em>default=&quot;PX_LAST&quot;</em>) – Bloomberg field for index.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">DataFrame of index history.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.DataFrame</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="lgimapy.bloomberg.get_cashflows">
 <code class="descclassname">lgimapy.bloomberg.</code><code class="descname">get_cashflows</code><span class="sig-paren">(</span><em>cusip</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.bloomberg.get_cashflows" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get cash flows and respective dates for specified cusip.</p>
@@ -1921,6 +1894,67 @@ for any cusip which is unsuccesful.</p>
 <div class="section" id="module-lgimapy.vis">
 <span id="lgimapy-vis"></span><h2>lgimapy vis<a class="headerlink" href="#module-lgimapy.vis" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
+<dt id="lgimapy.vis.show">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display current figure.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.close">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">close</code><span class="sig-paren">(</span><em>fig=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear current figure and all axes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fig</strong> (<em>mpl.Figure</em>) – Figure instance to close.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.savefig">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">savefig</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>dpi=300</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.savefig" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save figure to specified location.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.subplots">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">subplots</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.subplots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a matplotlib figure and set of subplots.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-func docutils literal notranslate"><span class="pre">matplotlib.pyplot.subplots()</span></code></p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>args</strong> – Positional arguments for matplotlib.pyplot.subplots</li>
+<li><strong>kwargs</strong> – Keyword arguments for matplotlib.pyplot.subplots</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>fig</strong> (<em>matplotlib.Figure</em>) – Figure instance.</li>
+<li><strong>ax</strong> (<em>matplotlib.axes.Axes</em>) – Object or array of Axes objects.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.style">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">style</code><span class="sig-paren">(</span><em>background='white'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.style" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply preferred style to interactive and saved plots.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="lgimapy.vis.colors">
 <code class="descclassname">lgimapy.vis.</code><code class="descname">colors</code><span class="sig-paren">(</span><em>color</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.colors" title="Permalink to this definition">¶</a></dt>
 <dd><p>LGIMA umbrella colors.</p>
@@ -1936,12 +1970,6 @@ for any cusip which is unsuccesful.</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="lgimapy.vis.style">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">style</code><span class="sig-paren">(</span><em>background='white'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.style" title="Permalink to this definition">¶</a></dt>
-<dd><p>Apply preferred style to interactive and saved plots.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1982,9 +2010,33 @@ respective input value.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="lgimapy.vis.savefig">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">savefig</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>dpi=300</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.savefig" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save figure to specified location.</p>
+<dt>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>s</em>, <em>start=None</em>, <em>end=None</em>, <em>stats_start='1/1/2010'</em>, <em>stats=False</em>, <em>bollinger=False</em>, <em>mean_line=False</em>, <em>pct_lines=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot simple timeseries.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.plot_multiple_timeseries">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_multiple_timeseries</code><span class="sig-paren">(</span><em>s_list</em>, <em>c_list=None</em>, <em>ls_list=None</em>, <em>start=None</em>, <em>end=None</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_multiple_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot multiple timeseries on same axis.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.plot_multi_y_axis_timeseries">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_multi_y_axis_timeseries</code><span class="sig-paren">(</span><em>s_left</em>, <em>s_right</em>, <em>start=None</em>, <em>end=None</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>xtickfmt=None</em>, <em>xlabel=None</em>, <em>ytickfmt_left=None</em>, <em>ytickfmt_right=None</em>, <em>ylabel_left=None</em>, <em>ylabel_right=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>plot_kwargs=None</em>, <em>left_plot_kwargs=None</em>, <em>right_plot_kwargs=None</em>, <em>color_yticks=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_multi_y_axis_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot two timeseries, one on each y-axis.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.format_xaxis">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">format_xaxis</code><span class="sig-paren">(</span><em>ax</em>, <em>s</em>, <em>xtickfmt</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.format_xaxis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Format dates on x axis if necessary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.format_yaxis">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">format_yaxis</code><span class="sig-paren">(</span><em>ax</em>, <em>ytickfmt</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.format_yaxis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formate y axis to specified formatter</p>
 </dd></dl>
 
 </div>
@@ -2229,7 +2281,7 @@ and respective LaTeX formatting as values.</p>
 
 <dl class="function">
 <dt id="lgimapy.latex.latex_figure">
-<code class="descclassname">lgimapy.latex.</code><code class="descname">latex_figure</code><span class="sig-paren">(</span><em>fids</em>, <em>caption=None</em>, <em>subcaptions=None</em>, <em>width=0.9</em>, <em>tab=2</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.latex_figure" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.latex.</code><code class="descname">latex_figure</code><span class="sig-paren">(</span><em>fids</em>, <em>caption=None</em>, <em>subcaptions=None</em>, <em>width=0.9</em>, <em>tab=2</em>, <em>caption_on_top=True</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.latex_figure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns figure(s) syntax formatted for LaTeX.</p>
 <p class="rubric">Notes</p>
 <p>Requires usepackage{graphicx, caption, subcaption} in LaTeX preamble.</p>
@@ -2243,6 +2295,7 @@ and respective LaTeX formatting as values.</p>
 <li><strong>subcaptions</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>defualt=None</em>) – Subcaptions for each subfigure.</li>
 <li><strong>width</strong> (<em>float</em><em>, </em><em>default=0.9</em>) – Fraction of page width for figure to fill.</li>
 <li><strong>tab</strong> (<em>int</em><em>, </em><em>default=2</em>) – Number of spaces to indent each tab.</li>
+<li><strong>caption_on_top</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Location of caption relative to figure.</li>
 </ul>
 </td>
 </tr>
@@ -2252,14 +2305,13 @@ and respective LaTeX formatting as values.</p>
 
 <dl class="class">
 <dt id="lgimapy.latex.Document">
-<em class="property">class </em><code class="descclassname">lgimapy.latex.</code><code class="descname">Document</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lgimapy.latex.</code><code class="descname">Document</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>fig_dir=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for building a document in LaTeX.</p>
 <dl class="docutils">
 <dt>TODO: add other types such as</dt>
 <dd><ul class="first last simple">
 <li>array</li>
 <li>matrix</li>
-<li>figure</li>
 </ul>
 </dd>
 <dt>TODO: add LaTeX functions such as</dt>
@@ -2268,7 +2320,6 @@ and respective LaTeX formatting as values.</p>
 <li>header</li>
 <li>equation</li>
 <li>bibliography</li>
-<li>bodies of text</li>
 </ul>
 </dd>
 </dl>
@@ -2300,6 +2351,32 @@ and respective LaTeX formatting as values.</p>
 <dt id="lgimapy.latex.Document.add_bibliography">
 <code class="descname">add_bibliography</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_bibliography" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.latex.Document.add_figure">
+<code class="descname">add_figure</code><span class="sig-paren">(</span><em>fids</em>, <em>savefig=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_figure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add table to document using <a class="reference internal" href="#lgimapy.latex.latex_table" title="lgimapy.latex.latex_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">latex_table()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fids</strong> (<em>fids: str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Filenames for figure(s).</li>
+<li><strong>savefig</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True save single Figure to proper directory.</li>
+<li><strong>kwargs</strong> – Keyword arguments for <a class="reference internal" href="#lgimapy.latex.latex_figure" title="lgimapy.latex.latex_figure"><code class="xref py py-func docutils literal notranslate"><span class="pre">latex_figure()</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="#lgimapy.latex.latex_figure" title="lgimapy.latex.latex_figure"><code class="xref py py-func docutils literal notranslate"><span class="pre">latex_figure()</span></code></a></dt>
+<dd>Return figure with syntax formatted for LaTeX.</dd>
+</dl>
+</div>
 </dd></dl>
 
 <dl class="method">
