@@ -16,7 +16,7 @@ def update_bloomberg_data():
 
 class BBGTimeseriesScraper:
     def __init__(self):
-        self.start = "1/1/1990"  # Start date for all files
+        self.start = pd.to_datetime("1/1/1990")  # Start date for all files
         self.fid = root("data/bloomberg_timeseries")
         self.load_bbg_codes()
         mkdir(self.fid)
@@ -80,7 +80,10 @@ class BBGTimeseriesScraper:
         # Update current file with new data. Start with the last
         # day all securities had data, re-scraping for that day to
         # ensure closing values are stored not intra-day values.
-        start = old_df.dropna().index[-1]
+        try:
+            start = old_df.dropna().index[-1]
+        except IndexError:
+            start = self.start
         old_df = old_df[old_df.index < start]
         new_df = self.scrape_data(old_df.columns, start - timedelta(20))
         new_df = new_df[new_df.index >= start]
@@ -192,3 +195,6 @@ class BBGTimeseriesScraper:
 
 if __name__ == "__main__":
     update_bloomberg_data()
+    # self = BBGTimeseriesScraper()
+    # field = "LEVEL"
+    # self.create_data_file(field)
