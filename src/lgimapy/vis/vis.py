@@ -59,7 +59,41 @@ def close(fig=None):
     plt.close("all")
 
 
-# %%
+def savefig(fid, path=None, dpi=300):
+    """Save figure to specified location."""
+    if path is not None:
+        mkdir(path)
+        full_fid = f"{str(path)}/{fid}.png"
+    else:
+        full_fid = f"{fid}.png"
+    plt.savefig(full_fid, dpi=dpi, bbox_inches="tight")
+
+
+def subplots(*args, **kwargs):
+    """
+    Create a matplotlib figure and set of subplots.
+
+    See Also
+    --------
+    matplotlib.pyplot.subplots
+
+    Parameters
+    ----------
+    args:
+        Positional arguments for matplotlib.pyplot.subplots
+    kwargs:
+        Keyword arguments for matplotlib.pyplot.subplots
+
+    Returns
+    -------
+    fig: matplotlib.Figure
+        Figure instance.
+    ax: matplotlib.axes.Axes
+        Object or array of Axes objects.
+    """
+    plot_kwargs = {"figsize": (8, 6)}
+    plot_kwargs.update(**kwargs)
+    return plt.subplots(*args, **plot_kwargs)
 
 
 def colors(color):
@@ -88,6 +122,7 @@ def colors(color):
     }[color.lower()]
 
 
+# %%
 def coolwarm(x, center=0, symettric=False, quality=1000):
     """
     Create custom diverging color palette centered around
@@ -132,16 +167,6 @@ def coolwarm(x, center=0, symettric=False, quality=1000):
     x_pos_norm = ((quality - 1) * (0.5 + 0.5 * x_pos_center[1:])).astype(int)
 
     return [pal[ix] for ix in np.concatenate([x_neg_norm, x_pos_norm])]
-
-
-def savefig(fid, path=None, dpi=300):
-    """Save figure to specified location."""
-    if path is not None:
-        mkdir(path)
-        full_fid = f"{str(path)}/{fid}.png"
-    else:
-        full_fid = f"{fid}.png"
-    plt.savefig(full_fid, dpi=dpi, bbox_inches="tight")
 
 
 def spider_plots():
@@ -268,10 +293,6 @@ def treemap():
     plt.show()
 
 
-def fed_funds_probability():
-    ff12 = bdh
-
-
 def linreg():
     # %%
     x = np.array([46, 12, 14, 18, 15, 19, 20, 30, 20, 20])
@@ -295,6 +316,20 @@ def linreg():
 
 
 # %%
+def calculate_ticks(ax, ticks, round_to=0.1, center=False):
+    """Naive solution to aligning grids for multi y-axis plot."""
+    upperbound = np.ceil(ax.get_ybound()[1] / round_to)
+    lowerbound = np.floor(ax.get_ybound()[0] / round_to)
+    dy = upperbound - lowerbound
+    fit = np.floor(dy / (ticks - 1)) + 1
+    dy_new = (ticks - 1) * fit
+    if center:
+        offset = np.floor((dy_new - dy) / 2)
+        lowerbound = lowerbound - offset
+    values = np.linspace(lowerbound, lowerbound + dy_new, ticks)
+    return values * round_to
+
+
 def plot_multi_y_axis_timeseries(
     s_left,
     s_right,
@@ -303,16 +338,18 @@ def plot_multi_y_axis_timeseries(
     ax=None,
     figsize=(8, 6),
     xtickfmt=None,
-    xlabel="Date",
+    xlabel=None,
     ytickfmt_left=None,
     ytickfmt_right=None,
     ylabel_left=None,
     ylabel_right=None,
     title=None,
     legend=False,
+    plot_kwargs=None,
     left_plot_kwargs=None,
     right_plot_kwargs=None,
     color_yticks=False,
+    **kwargs,
 ):
     """Plot two timeseries, one on each y-axis."""
     if ax is None:
@@ -320,7 +357,8 @@ def plot_multi_y_axis_timeseries(
     else:
         ax_left = ax
     ax_right = ax_left.twinx()
-    ax_right.grid(False)
+
+    # ax_right.grid(False)
 
     # Update kwargs and plot.
     kwargs_left = {
@@ -329,6 +367,7 @@ def plot_multi_y_axis_timeseries(
         "lw": 1.5,
         "label": s_left.name,
     }
+    kwargs_left.update(**kwargs)
     if left_plot_kwargs is not None:
         kwargs_left.update(**left_plot_kwargs)
     kwargs_right = {
@@ -337,6 +376,7 @@ def plot_multi_y_axis_timeseries(
         "lw": 1.5,
         "label": s_right.name,
     }
+    kwargs_right.update(**kwargs)
     if right_plot_kwargs is not None:
         kwargs_right.update(**right_plot_kwargs)
     ln_left = ax_left.plot(s_left, **kwargs_left)
@@ -351,7 +391,7 @@ def plot_multi_y_axis_timeseries(
     if title is not None:
         ax_right.set_title(title)
     if xlabel is not None:
-        ax_right.set_xlabel("Date")
+        ax_right.set_xlabel(xlabel)
     if ylabel_left is not None:
         ax_left.set_ylabel(ylabel_left, color=kwargs_left["color"])
     if ylabel_right is not None:
@@ -364,6 +404,9 @@ def plot_multi_y_axis_timeseries(
         labs = [ln.get_label() for ln in lns]
         ax_right.legend(lns, labs)
     plt.tight_layout()
+
+
+# %%
 
 
 def plot_timeseries(
@@ -461,10 +504,7 @@ def plot_timeseries(
     if title is not None:
         ax.set_title(title)
     if xlabel is not None:
-        if isinstance(s_list[0].index[0], Timestamp):
-            ax.set_xlabel("Date")
-        else:
-            ax.set_xlabel(xlabel)
+        ax.set_xlabel(xlabel)
     if ylabel is not None:
         ax.set_ylabel(ylabel)
     if legend and (
@@ -495,6 +535,9 @@ def plot_multiple_timeseries(
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
+    if isinstance(s_list, pd.DataFrame):
+        s_list = [s_list[col] for col in s_list]
+
     plot_kwargs = {"alpha": 0.8, "lw": 2}
     plot_kwargs.update(**kwargs)
 
@@ -502,7 +545,7 @@ def plot_multiple_timeseries(
         "steelblue",
         "firebrick",
         "darkgreen",
-        "darkoragne",
+        "darkorange",
         "darkorchid",
         "deepskyblue",
         "navy",
@@ -531,10 +574,7 @@ def plot_multiple_timeseries(
     if title is not None:
         ax.set_title(title)
     if xlabel is not None:
-        if isinstance(s_list[0].index[0], Timestamp):
-            ax.set_xlabel("Date")
-        else:
-            ax.set_xlabel(xlabel)
+        ax.set_xlabel(xlabel)
     if ylabel is not None:
         ax.set_ylabel(ylabel)
     if legend:
@@ -832,6 +872,7 @@ def libor_vs_long_credit_yield():
     axes[1].set_xlabel("Date")
     savefig("libor_vs_long_credit_yield")
     plt.show()
+    # %%
 
 
 def highlighted_sector_downgrades():
@@ -958,13 +999,3 @@ def ebitda_by_sector():
     savefig("EBITDA_by_sector")
     plt.show()
     # %%
-
-
-def fed_funds():
-    start = dt.today() - timedelta(365)
-    ff12 = bdh("FF12", "Comdty", fields="PX_LAST", start=start)
-    ff1 = bdh("FF1", "Comdty", fields="PX_LAST", start=start)
-    diff = 100 * (ff1 - ff12)
-    title = "Rate Hikes (Cuts) Priced in 12 Months Forward (bp)"
-    vis.plot_timeseries(diff, title=title)
-    vis.savefig("fed_funds_priced_in_rates")
