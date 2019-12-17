@@ -28,11 +28,12 @@ class BBGTimeseriesScraper:
         """
         self.bbg_ts_codes = load_json("bloomberg_timeseries_codes")
         self.securities = {}
-        self.fields = list(
+        fields = list(
             set(
                 chain(*[fields.keys() for fields in self.bbg_ts_codes.values()])
             )
         )
+        self.fields = [field for field in fields if field != "NAME"]
         for field in self.fields:
             self.securities[field] = [
                 security
