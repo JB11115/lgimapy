@@ -3,6 +3,7 @@ import pickle
 import warnings
 from functools import lru_cache
 from glob import glob
+from inspect import cleandoc
 
 import datetime as dt
 import numpy as np
@@ -908,6 +909,7 @@ class Database:
         treasuries=False,
         municipals=True,
         maturity=(None, None),
+        original_maturity=(None, None),
         price=(None, None),
         coupon_rate=(None, None),
         country_of_domicile=None,
@@ -976,6 +978,8 @@ class Database:
             * 10: 6-11
             * 20: 11-25
             * 30: 25 - 31
+        original_maturity: Tuple[float, float], default=(None, None).
+            Range of original bond maturities to include.
         price: Tuple[float, float]), default=(None, None).
             Price range of bonds to include, default is all.
         coupon_rate: Tuple[float, float]), default=(None, None).
@@ -1105,6 +1109,7 @@ class Database:
         self._add_range_input((start, end), "Date")
         self._add_range_input(ratings, "NumericRating")
         self._add_range_input(maturity, "MaturityYears")
+        self._add_range_input(original_maturity, "OriginalMaturity")
         self._add_range_input(price, "DirtyPrice")
         self._add_range_input(coupon_rate, "CouponRate")
         self._add_range_input(amount_outstanding, "AmountOutstanding")
@@ -1405,8 +1410,9 @@ class Database:
             processed missing data.
         """
         # Load data for selected securities.
+        field = field.upper()
         if securities == "all":
-            df = self._read_bbg_df(field).copy()
+            df = self._read_bbg_df(field.upper).copy()
         else:
             df = self._read_bbg_df(field)[securities].copy()
 
@@ -1417,6 +1423,7 @@ class Database:
             df = df[df.index <= to_datetime(end)]
 
         # Process missing values.
+        df.dropna(how="all", inplace=True)
         if nan is None:
             pass
         elif nan == "drop":
@@ -1431,3 +1438,62 @@ class Database:
             )
 
         return df
+
+    @property
+    @lru_cache(maxsize=None)
+    def bbg_names(self):
+        """
+        Formatted names for Bloomberg data.
+
+        Returns
+        -------
+        names: Dict[str: str].
+            Map from Bloomberg json code to foramtted name.
+        """
+        bbg_ts_codes = load_json("bloomberg_timeseries_codes")
+        names = {
+            security: fields["NAME"]
+            for security, fields in bbg_ts_codes.items()
+            if "NAME" in fields
+        }
+        return names
+
+    def load_cusip_event_dates(self, start=None, end=None):
+        """
+        Load event dates for cusips.
+
+        Parameters
+        ----------
+        start: datetime, default=None.
+            Inclusive start date for data.
+        end: datetime, default=None.
+            Inclusive end date for data.
+
+        Returns
+        -------
+        s: pd.Series
+            Event dates indexed by respective CUSIPs.
+        """
+        sql = cleandoc(
+            """
+            select i.*
+            from dbo.DimInstrument i
+            inner join
+            (
+                select cusip, max(instrumentkey) as InstrumentKey,
+                    max(dateend) as DateEnd
+                from diminstrument
+                where dateend <> '9999-12-31' and cusip is not null
+                group by cusip
+            ) a
+            on i.instrumentkey = a.instrumentkey
+            order by i.cusip
+            """
+        )
+        df = pd.read_sql(sql, self._conn)
+        s = pd.to_datetime(df.set_index("CUSIP")["DateEnd"])
+        if start is not None:
+            s = s[s >= to_datetime(start)]
+        if end is not None:
+            s = s[s <= to_datetime(end)]
+        return s
