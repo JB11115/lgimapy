@@ -263,6 +263,7 @@ class Index:
         treasuries=False,
         municipals=True,
         maturity=(None, None),
+        original_maturity=(None, None),
         price=(None, None),
         coupon_rate=(None, None),
         country_of_domicile=None,
@@ -332,6 +333,8 @@ class Index:
             * 10: 6-11
             * 20: 11-25
             * 30: 25 - 31
+        original_maturity: Tuple[float, float], default=(None, None).
+            Range of original bond maturities to include.
         price: Tuple[float, float]), default=(None, None).
             Price range of bonds to include, default is all.
         coupon_rate: Tuple[float, float]), default=(None, None).
@@ -465,6 +468,7 @@ class Index:
         self._add_range_input((start, end), "Date")
         self._add_range_input(ratings, "NumericRating")
         self._add_range_input(maturity, "MaturityYears")
+        self._add_range_input(original_maturity, "OriginalMaturity")
         self._add_range_input(price, "DirtyPrice")
         self._add_range_input(coupon_rate, "CouponRate")
         self._add_range_input(amount_outstanding, "AmountOutstanding")
@@ -796,7 +800,7 @@ class Index:
             ]
         )
 
-    def market_value_weight(self, col, synthetic=False, dropna=False):
+    def market_value_weight(self, col, low_memory=False):
         """
         Market value weight a specified column vs entire
         index market value.
@@ -805,30 +809,31 @@ class Index:
         ----------
         col: str
             Column name to weight, (e.g., 'OAS').
-        synthethic: bool, default=False
-            If True, use synthethic day data.
-        dropna: bool, default=False
-            If True drop columns with missing values for either
-            `MarketValue` or specified column.
+        low_memory: bool, default=False
+            If True, perform all operations inplace on :attr:`Index.df`.
 
         Returns
         -------
         pd.Series:
             Series of market value weighting for specified column.
         """
-        dates = self.dates[1:] if synthetic else self.dates
-
-        a = np.zeros(len(dates))
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        for i, date in enumerate(dates):
-            df = self.synthetic_day(date) if synthetic else self.day(date)
-            if dropna:
-                df = df.dropna(subset=["MarketValue", col])
-            a[i] = np.sum(df["MarketValue"] * df[col]) / np.sum(
-                df["MarketValue"]
+        if low_memory:
+            # Perform entire operation inplace to save memory.
+            return (
+                (
+                    self.df[["Date", "MarketValue", col]]
+                    .eval(f"mvw_col=MarketValue*{col}")
+                    .groupby("Date")
+                    .sum()
+                )
+                .eval("mvw_col/MarketValue")
+                .rename(col)
             )
-        warnings.simplefilter("default", category=RuntimeWarning)
-        return pd.Series(a, index=dates, name=col)
+        else:
+            df = self.df[["Date", "MarketValue", col]].copy()
+            df["mvw_col"] = df["MarketValue"] * df[col]
+            g = df[["Date", "MarketValue", "mvw_col"]].groupby("Date").sum()
+            return (g["mvw_col"] / g["MarketValue"]).rename(col)
 
     def find_rating_changes(self, rating_agency):
         """
@@ -908,6 +913,7 @@ class Index:
             return
 
         # Compute total returns without adjusting for coupons.
+        np.seterr(divide="ignore", invalid="ignore")
         price_df = self.get_value_history("DirtyPrice")
         cols = list(price_df)
         price = price_df.values
