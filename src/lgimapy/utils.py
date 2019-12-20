@@ -253,6 +253,30 @@ def smooth_weight(x, B):
         return 1 / (1 + (x / (1 - x)) ** (-B))
 
 
+def sep_str_int(input_string):
+    """
+    Efficiently separate a string and integer.
+    Only finds first integer and first partial string
+    in inpute string.
+
+    Parameters
+    ----------
+    string: str
+        Input string with embedded integer.
+
+    Returns
+    -------
+    num: int
+        Integer from input string.
+    output_string: str
+        String portion of input string.
+    """
+    num = re.findall("(\d+)", input_string)
+    num = num[0] if num else 1  # set number to 1 if no number present
+    output_string = re.findall(r"[a-zA-Z]+", input_string)[0]
+    return int(num), output_string
+
+
 def floatftime(time_horizon, unit="d"):
     """
     Similar to `strftime`, format time to numeric float.
