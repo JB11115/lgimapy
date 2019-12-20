@@ -1,7 +1,10 @@
 import json
 import pickle
 import warnings
-from functools import lru_cache
+from bisect import bisect_left
+from datetime import timedelta
+from dateutil.relativedelta import relativedelta
+from functools import lru_cache, partial
 from glob import glob
 from inspect import cleandoc
 
@@ -17,6 +20,7 @@ from lgimapy.utils import (
     load_json,
     replace_multiple,
     root,
+    sep_str_int,
     to_list,
     to_datetime,
 )
@@ -162,6 +166,63 @@ class Database:
             parse_dates=True,
             infer_datetime_format=True,
         )
+
+    @lru_cache(maxsize=None)
+    def date(self, date_delta, referce_date=None):
+        """
+        Find date relative to a specified date.
+
+        Parameters
+        ----------
+        date_delta: str, ``{'today', 'WTD', 'MTD', 'YTD', '3d', '5y', etc}``
+            Difference between reference date and target date.
+        referce_date: datetime, default=None
+            Reference date to use, if None use most recent trade date.
+
+        Returns
+        -------
+        datetime:
+            Target date from reference and delta.
+        """
+        date_delta = date_delta.upper()
+        # Use today as reference date if none is provided,
+        # otherwise find closes trading date to reference date.
+        if referce_date is None:
+            today = self.trade_dates[-1]
+        else:
+            today = db.nearest_date(to_datetime(referce_date))
+
+        last_trade = partial(bisect_left, self.trade_dates)
+        if date_delta == "TODAY":
+            return today
+        elif date_delta == "YESTERDAY" or date_delta == "DAILY":
+            return self.trade_dates[-2]
+        elif date_delta == "WTD":
+            return self.trade_dates[
+                last_trade(today - timedelta(today.weekday() + 1)) - 1
+            ]
+        elif date_delta == "MTD":
+            return self.trade_dates[last_trade(today.replace(day=1)) - 1]
+        elif date_delta == "YTD":
+            return self.trade_dates[
+                last_trade(today.replace(month=1, day=1)) - 1
+            ]
+        else:
+            # Assume value-unit specification.
+            val, unit = sep_str_int(date_delta.upper())
+            reverse_kwarg_map = {
+                "days": ["D", "DAY", "DAYS"],
+                "weeks": ["W", "WEEK", "WEEKS"],
+                "months": ["M", "MONTH", "MONTHS"],
+                "years": ["Y", "YEAR", "YEARS"],
+            }
+            kwarg_map = {
+                key: kwarg
+                for kwarg, keys in reverse_kwarg_map.items()
+                for key in keys
+            }
+            kwargs = {kwarg_map[unit]: val}
+            return self.nearest_date(today - relativedelta(**kwargs))
 
     @property
     @lru_cache(maxsize=None)
