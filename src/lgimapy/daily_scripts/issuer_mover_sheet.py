@@ -22,12 +22,17 @@ def build_movers_sheets():
     # Find date for month to date.
     today = dt.date.today()
     if today.day < 10:
-        month_date = pd.to_datetime(
-            f"{today.month-1}/{1}/{today.year}"
-        ) - dt.timedelta(1)
+        if today.month == 1:
+            month_date = pd.to_datetime(f"12/1/{today.year-1}") - dt.timedelta(
+                1
+            )
+        else:
+            month_date = pd.to_datetime(
+                f"{today.month-1}/1/{today.year}"
+            ) - dt.timedelta(1)
     else:
         month_date = pd.to_datetime(
-            f"{today.month}/{1}/{today.year}"
+            f"{today.month}/1/{today.year}"
         ) - dt.timedelta(1)
 
     # Make dict of dates to analyze and then choose nearest traded dates.
