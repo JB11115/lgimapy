@@ -171,8 +171,13 @@ class Document:
         # Combine pre- and post-edited sections of the .tex document
         # with the newly created edited section.
         start_phrase = f"%%\\begin{{{self._current_keyword}}}"
-        self.body = "\n\n".join(
-            [self._pre_edit, start_phrase, self.body, self._post_edit]
+        self.body = "\n".join(
+            [
+                self._pre_edit.rstirp("\n"),
+                start_phrase,
+                self.body,
+                self._post_edit,
+            ]
         )
 
         # Close edit so document can be safely saved.
@@ -463,7 +468,7 @@ class Document:
         """
         return "\n\n".join(
             [
-                self.preamble,
+                self.preamble.rstrip("\n"),
                 self.background_image,
                 self.body,
                 "\end{document}",
