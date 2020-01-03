@@ -25,6 +25,8 @@ class Document:
         * equation
         * bibliography
 
+    TODO: documentation
+
     Parameters
     ----------
     fid: str
@@ -66,6 +68,8 @@ class Document:
 
     def add_preamble(
         self,
+        packages=None,
+        orientation="portrait",
         font_size=12,
         margin=None,
         margin_unit="cm",
@@ -84,42 +88,55 @@ class Document:
             )
 
         # Format other options.
+        orient = {"portrait": "", "landscape": ", landscape"}[orientation]
         page_numbers = "" if page_numbers else "\pagenumbering{gobble}"
         ignore_bmargin = (
             "\enlargethispage{100\\baselineskip}"
             if ignore_bottom_margin
             else ""
         )
+        default_packages = [
+            "amsmath",
+            "amsthm",
+            "amssymb",
+            "adjustbox",
+            "array",
+            "background",
+            "booktabs",
+            "bm",
+            "caption",
+            "colortbl",
+            "dsfont",
+            "enumitem",
+            "epigraph",
+            "fancyhdr",
+            "float",
+            "graphicx",
+            "makecell",
+            "MnSymbol",
+            "nicefrac",
+            "ragged2e",
+            "subcaption",
+            "tabu",
+            "titlesec",
+            "transparent",
+            "xcolor",
+        ]
+        if packages is not None:
+            all_packages = sorted(
+                list(set(default_packages + to_list(packages, dtype=str)))
+            )
+        else:
+            all_packages = default_packages
+        use_packages = ",\n\t\t".join(all_packages)
 
         self.preamble = cleandoc(
             f"""
             \documentclass[{font_size}pt]{{article}}
-            \\usepackage[{margin}]{{geometry}}
+            \\usepackage[{margin}{orient}]{{geometry}}
             \\usepackage[table]{{xcolor}}
             \\usepackage{{
-                amsmath,
-                amsthm,
-                amssymb,
-                adjustbox,
-                array,
-                background,
-                booktabs,
-                bm,
-                caption,
-                dsfont,
-                enumitem,
-                epigraph,
-                fancyhdr,
-                float,
-                graphicx,
-                makecell,
-                MnSymbol,
-                nicefrac,
-                subcaption,
-                tabu,
-                titlesec,
-                transparent,
-                xcolor,
+                {use_packages}
             }}
             \PassOptionsToPackage{{hyphens}}{{url}}\\usepackage{{hyperref}}
 
@@ -254,9 +271,6 @@ class Document:
         :func:`latex_figure`: Return figure with syntax formatted for LaTeX.
         """
         fids = to_list(fids, dtype=str)
-        if self._fig_dir_bool:
-            fids = [f"fig/{fid}" for fid in fids]
-
         if savefig:
             if len(fids) == 1:
                 vis.savefig(self.fig_dir / fids[0])
@@ -265,20 +279,23 @@ class Document:
                 msg = "Saving can only be done on individual Figures."
                 raise ValueError(msg)
 
+        if self._fig_dir_bool:
+            fids = [f"fig/{fid}" for fid in fids]
+
         fig = latex_figure(fids, **kwargs)
         self.body = "\n\n".join((self.body, fig))
 
-    def save(self, save_tex=False):
+    @property
+    def doc(self):
         """
-        Save `.tex` file and compile to `.pdf`.
+        Combine all parts of the document.
 
-        Parameters
-        ----------
-        save_tex: bool, default=False
-            If True, save `.tex` as well as `.pdf`.
+        Returns
+        -------
+        str:
+            Entire document contents.
         """
-        # Combine all parts of the document.
-        doc = "\n\n".join(
+        return "\n\n".join(
             [
                 self.preamble,
                 self.background_image,
@@ -289,6 +306,8 @@ class Document:
             ]
         )
 
+    def write_tex(self):
+        """Save .tex file of current document."""
         # Clean file path and move to proper directory.
         if self.path:
             os.chdir(self.path)
@@ -296,7 +315,28 @@ class Document:
         else:
             fid = self.fid
 
-        # Save tex file, compile, and delete intermediate files.
+        # Save tex file.
+        with open(f"{fid}.tex", "w") as f:
+            f.write(self.doc)
+
+    def save(self, save_tex=False):
+        """
+        Save `.tex` file and compile to `.pdf`.
+
+        Parameters
+        ----------
+        save_tex: bool, default=False
+            If True, save `.tex` as well as `.pdf`.
+        """
+        # Clean file path and move to proper directory.
+        if self.path:
+            os.chdir(self.path)
+            fid = self.path.joinpath(self.fid)
+        else:
+            fid = self.fid
+
+        # Save tex file.
+        doc = self.doc
         with open(f"{fid}.tex", "w") as f:
             f.write(doc)
 
@@ -315,3 +355,6 @@ class Document:
         os.remove(f"{fid}.aux")
         os.remove(f"{fid}.log")
         os.remove(f"{fid}.out")
+
+
+# %%
