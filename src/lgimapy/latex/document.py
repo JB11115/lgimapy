@@ -76,6 +76,32 @@ class Document:
         page_numbers=False,
         ignore_bottom_margin=False,
     ):
+        """
+        Add preamble with custom specifications.
+
+        Parameters
+        ----------
+        packages: str, List[str], default=None
+            Additonal packages to include for rendering document.
+            By default no additional packages are included.
+        orientation: ``{'landscape', 'portrait'}``, default='portrait'
+            Page orientation.
+        font_size: int, default=12
+            Base font size for general text.
+        margin: float or Dict[str: float], default=None
+            Page margins. One universal margin can be used
+            or individual margins can be specified:
+
+            *``margin=2``
+            *``margin={'top': 1, 'bottom': 0.5, 'left': 0.3, 'right': 0.3}``
+        margin_unit: str, default='cm'
+            Unit for margin size(s).
+        page_numbers: bool, default=False
+            If True include centered page numbers in the footer.
+        ignore_bottom_margin: bool, default=False
+            If True completely ignore bottom margin such that extra
+            content runs off the page but does not start on a new page.
+        """
 
         # Format margin.
         if margin is None:
