@@ -173,7 +173,7 @@ class Document:
         start_phrase = f"%%\\begin{{{self._current_keyword}}}"
         self.body = "\n".join(
             [
-                self._pre_edit.rstirp("\n"),
+                self._pre_edit.rstrip("\n"),
                 start_phrase,
                 self.body,
                 self._post_edit,
