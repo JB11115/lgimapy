@@ -170,12 +170,12 @@ class Document:
 
         # Combine pre- and post-edited sections of the .tex document
         # with the newly created edited section.
-        start_phrase = f"%%\\begin{{{self._current_keyword}}}"
+        start_phrase = f"\n%%\\begin{{{self._current_keyword}}}"
         self.body = "\n".join(
             [
                 self._pre_edit.rstrip("\n"),
                 start_phrase,
-                self.body,
+                self.body.lstrip("\n"),
                 self._post_edit,
             ]
         )
