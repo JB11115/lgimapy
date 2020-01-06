@@ -108,7 +108,73 @@ def latex_array(obj, prec=3):
     return fout
 
 
-# %%
+def make_latex_gradient(
+    vals,
+    vmin=None,
+    vmax=None,
+    center=0,
+    cmin="steelblue",
+    cmid="white",
+    cmax="firebrick",
+    alphamax=80,
+    symmetric=False,
+):
+    """
+    Create gradient colormap for coloring cells in LaTeX.
+
+    Parameters
+    ----------
+    vals: array-like
+        Numeric values to assign color codes to.
+    vmin: float, default=None
+        Values to anchor the colormap, otherwise they are
+        inferred from the data and other keyword arguments.
+    vmax: float, default=None
+        Values to anchor the colormap, otherwise they are
+        inferred from the data and other keyword arguments.
+    center: float, default=0
+        The value at which to center the colormap when
+        plotting divergant data.
+    cmin: str, default='steelblue'
+        Pre-defined color in LaTeX preamble for values below center.
+    cmid: str, default="white"
+        Pre-defined color in LaTeX preamble for central color.
+    cmax: str, default='firebrick'
+        Pre-defined color in LaTeX preamble for values above center.
+    alphamax: int, default=80
+        Maximum blending parameter for cmin and cmax colors.
+    symmetric: bool, default=False
+        If True, set vmin and vmax to the same distance away
+        from the center such that the color scheme diverges
+        symettrically in value.
+
+    Returns
+    -------
+    grad: List[str].
+        List of colors matching gradient for given input values.
+    """
+    vmin = np.min(vals) if vmin is None else vmin
+    vmax = np.max(vals) if vmax is None else vmax
+    if symmetric:
+        vdist = max(np.abs(vmax - center), np.abs(vmin - center))
+        vmin = center - vdist
+        vmax = center + vdist
+
+    grad = []
+    for val in vals:
+        if val < center:
+            color = cmin
+            val = max(val, vmin)
+            alpha = max(1, int(alphamax * (center - val) / (center - vmin)))
+        elif val >= center:
+            color = cmax
+            val = min(val, vmax)
+            alpha = max(1, int(alphamax * (val - center) / (vmax - center)))
+        grad.append(f"{{{color}!{alpha}!{cmid}}}")
+
+    return grad
+
+
 def latex_table(
     df,
     caption=None,
@@ -128,6 +194,8 @@ def latex_table(
     row_color=None,
     row_font=None,
     col_style=None,
+    gradient_cell_col=None,
+    gradient_cell_kwargs=None,
     alternating_colors=(None, None),
 ):
     r"""
@@ -198,6 +266,17 @@ def latex_table(
 
         * Bar Plot: ```[col: \mybar]```
         * Bold: ```[col: \textbf]```
+    gradient_cell_col: str or List[str], default=None
+        Columns(s) to apply background cell color gradient to based
+        on column values.
+    gradient_cell_kwargs: Dict, default=None
+        Keyword arguments for columns to apply cell gradients on.
+        If all columns have the same arguments simply specify
+        ``gradient_cell_kwargs=`Dict[**kwargs]``.  To customize
+        arguments by column specify
+        ``gradient_cell_kwargs=`Dict[col: Dict[**col_kwargs]``
+        for each column.
+
     alternating_colors: Tuple(str), default=(None, None).
         Color 1 and Color 2 for for alternating row colors.
 
@@ -205,7 +284,6 @@ def latex_table(
     -------
     fout: str
         Table formatted with LaTeX syntax.
-
 
     Notes
     -----
@@ -228,6 +306,30 @@ def latex_table(
             cfmt = col_fmt
     else:
         cfmt = "l" + "c" * n_cols
+
+    # Collect gradient values if needed.
+    if gradient_cell_col is not None:
+        gradient_cell_cols = to_list(gradient_cell_col, str)
+        if gradient_cell_kwargs is None:
+            # Use default kwargs for making gradients for all columns.
+            gradient_cells = {
+                col: make_latex_gradient(df[col]) for col in gradient_cell_cols
+            }
+        else:
+            if isinstance(list(gradient_cell_kwargs.values())[0], dict):
+                # Use column specific kwargs for each columns' gradients.
+                gradient_cells = {
+                    col: make_latex_gradient(df[col], **kwargs)
+                    for col, kwargs in gradient_cell_cols
+                }
+            else:
+                # Use single set of kwargs for all column's gradients.
+                gradient_cells = {
+                    col: make_latex_gradient(df[col], **gradient_cell_kwargs)
+                    for col in gradient_cell_cols
+                }
+    else:
+        gradient_cells = None
 
     # Round values toi specified precision.
     if isinstance(prec, int):
@@ -281,6 +383,14 @@ def latex_table(
     if col_style is not None:
         for col, fmt in col_style.items():
             df[col] = [f"{fmt}{{{v}}}" for v in df[col]]
+
+    # Apply column gradient coloring if required.
+    if gradient_cells is not None:
+        for col, colors in gradient_cells.items():
+            df[col] = [
+                "\\cellcolor{} {}".format(color, val)
+                for color, val in zip(colors, df[col].values)
+            ]
 
     # Replace improperly formatted values in table.
     repl = {
