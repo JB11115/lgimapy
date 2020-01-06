@@ -2,6 +2,7 @@ import os
 import json
 import pprint as pp
 import re
+from bisect import bisect_left, bisect_right
 from collections import defaultdict, OrderedDict
 from datetime import timedelta
 from functools import lru_cache
@@ -240,6 +241,46 @@ def first_unique(vals, fill=""):
 def nearest(items, pivot):
     """Return nearest nearest item in list to pivot."""
     return min(items, key=lambda x: abs(x - pivot))
+
+
+def nearest_date(date, date_list, inclusive=True, before=True, after=True):
+    """
+    Search list of dates for nearest date to reference.
+
+    Parameters
+    ----------
+    date: datetime
+        Reference date to find date near.
+    date_list: List[datetime].
+        List of dates to search.
+    inclusive: bool, default=True
+        Whether to include to specified reference date in
+        the searchable list.
+    before: bool, default=True
+        Whether to include dates before the reference date.
+    after: bool, default=True
+        Whether to include dates after the reference date.
+    """
+    ref_date = to_datetime(date)
+    if inclusive:
+        if before and after:
+            return min(date_list, key=lambda x: abs(x - ref_date))
+        elif before:
+            return date_list[bisect_right(date_list, ref_date) - 1]
+        elif after:
+            return date_list[bisect_left(date_list, ref_date)]
+        else:
+            raise ValueError("Either before or after must be True")
+    else:
+        if before and after:
+            date_ex = date_list[date_list != ref_date]
+            return min(date_ex, key=lambda x: abs(x - ref_date))
+        elif before:
+            return date_list[bisect_left(date_list, ref_date) - 1]
+        elif after:
+            return date_list[bisect_right(date_list, ref_date)]
+        else:
+            raise ValueError("Either before or after must be True")
 
 
 def check_all_equal(lst):
