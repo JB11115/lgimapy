@@ -264,7 +264,11 @@ def nearest_date(date, date_list, inclusive=True, before=True, after=True):
     ref_date = to_datetime(date)
     if inclusive:
         if before and after:
-            return min(date_list, key=lambda x: abs(x - ref_date))
+            closest_dates = [
+                nearest_date(ref_date, date_list, before=False),
+                nearest_date(ref_date, date_list, after=False),
+            ]
+            return min(closest_dates, key=lambda x: abs(x - ref_date))
         elif before:
             return date_list[bisect_right(date_list, ref_date) - 1]
         elif after:
@@ -273,8 +277,11 @@ def nearest_date(date, date_list, inclusive=True, before=True, after=True):
             raise ValueError("Either before or after must be True")
     else:
         if before and after:
-            date_ex = date_list[date_list != ref_date]
-            return min(date_ex, key=lambda x: abs(x - ref_date))
+            closest_dates = [
+                nearest_date(ref_date, date_list, False, before=False),
+                nearest_date(ref_date, date_list, False, after=False),
+            ]
+            return min(closest_dates, key=lambda x: abs(x - ref_date))
         elif before:
             return date_list[bisect_left(date_list, ref_date) - 1]
         elif after:
@@ -712,3 +719,9 @@ class EventDistance:
         a = np.full(self._n, np.NaN)
         a[ix_mask] = s.values
         return a
+
+
+date_list = pd.date_range("1/1/2000", "1/1/2020", freq="M")
+date = "3/5/2019"
+
+# %%
