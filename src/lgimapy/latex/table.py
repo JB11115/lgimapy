@@ -108,7 +108,7 @@ def latex_array(obj, prec=3):
     return fout
 
 
-def make_latex_gradient(
+def latex_color_gradient(
     vals,
     vmin=None,
     vmax=None,
@@ -116,7 +116,7 @@ def make_latex_gradient(
     cmin="steelblue",
     cmid="white",
     cmax="firebrick",
-    alphamax=80,
+    alphamax=70,
     symmetric=False,
 ):
     """
@@ -127,11 +127,11 @@ def make_latex_gradient(
     vals: array-like
         Numeric values to assign color codes to.
     vmin: float, default=None
-        Values to anchor the colormap, otherwise they are
-        inferred from the data and other keyword arguments.
+        Value to anchor the colormap minimum, otherwise it is
+        inferred from the data.
     vmax: float, default=None
-        Values to anchor the colormap, otherwise they are
-        inferred from the data and other keyword arguments.
+        Value to anchor the colormap maximum, otherwise it is
+        inferred from the data.
     center: float, default=0
         The value at which to center the colormap when
         plotting divergant data.
@@ -150,7 +150,7 @@ def make_latex_gradient(
 
     Returns
     -------
-    grad: List[str].
+    gradient_colors: List[str].
         List of colors matching gradient for given input values.
     """
     vmin = np.min(vals) if vmin is None else vmin
@@ -160,19 +160,61 @@ def make_latex_gradient(
         vmin = center - vdist
         vmax = center + vdist
 
-    grad = []
+    gradient_colors = []
     for val in vals:
         if val < center:
-            color = cmin
             val = max(val, vmin)
-            alpha = max(1, int(alphamax * (center - val) / (center - vmin)))
-        elif val >= center:
+            alpha = int(alphamax * (center - val) / (center - vmin))
+            gradient_colors.append(f"{{{cmin}!{alpha}!{cmid}}}")
+        else:
             color = cmax
             val = min(val, vmax)
-            alpha = max(1, int(alphamax * (val - center) / (vmax - center)))
-        grad.append(f"{{{color}!{alpha}!{cmid}}}")
+            alpha = int(alphamax * (val - center) / (vmax - center))
+            gradient_colors.append(f"{{{cmax}!{alpha}!{cmid}}}")
 
-    return grad
+    return gradient_colors
+
+
+def latex_diverging_bars(
+    vals, vmax=None, center=0, cmin="steelblue", cmax="firebrick"
+):
+    """
+    Create divergent bar plot corresponding to specified values
+    in a LaTeX table.
+
+    Parameters
+    ----------
+    vals: array-like
+        Numeric values to assign color codes to.
+    vmax: float, default=None
+        Value to anchor the maximum bar size, otherwise it is
+        inferred from the data.
+    center: float, default=0
+        The value at which to center the bars.
+    cmin: str, default='steelblue'
+        Pre-defined color in LaTeX preamble for values below center.
+    cmax: str, default='firebrick'
+        Pre-defined color in LaTeX preamble for values above center.
+
+    Returns
+    -------
+    divergent_bars: List[str].
+        List of commands to make divergent bars in LaTeX table.
+    """
+    vmax = np.max(np.abs(vals)) if vmax is None else vmax
+
+    divergent_bars = []
+    for val in vals:
+        if val < center:
+            val = max(val, -vmax)
+            bar_size = int(50 * (val - center) / (vmax - center))
+            divergent_bars.append(f"\\divbar{{{bar_size}}}{{{cmin}}}")
+        else:
+            val = min(val, vmax)
+            bar_size = int(50 * (val - center) / (vmax - center))
+            divergent_bars.append(f"\\divbar{{{bar_size}}}{{{cmax}}}")
+
+    return divergent_bars
 
 
 def latex_table(
@@ -196,6 +238,8 @@ def latex_table(
     col_style=None,
     gradient_cell_col=None,
     gradient_cell_kwargs=None,
+    div_bar_col=None,
+    div_bar_kwargs=None,
     alternating_colors=(None, None),
 ):
     r"""
@@ -264,7 +308,7 @@ def latex_table(
         Input is expexted as dict with column names as keys
         and respective LaTeX formatting as values.
 
-        * Bar Plot: ```[col: \mybar]```
+        * Bar Plot: ```[col: \pctbar]```
         * Bold: ```[col: \textbf]```
     gradient_cell_col: str or List[str], default=None
         Columns(s) to apply background cell color gradient to based
@@ -276,7 +320,16 @@ def latex_table(
         arguments by column specify
         ``gradient_cell_kwargs=`Dict[col: Dict[**col_kwargs]``
         for each column.
-
+    div_bar_col: str or List[str], default=None
+        Columns(s) to apply divergent bar plots to based
+        on column values.
+    div_bar_kwargs: Dict, default=None
+        Keyword arguments for columns to apply divergent bar plots on.
+        If all columns have the same arguments simply specify
+        ``div_bar_kwargs=`Dict[**kwargs]``.  To customize
+        arguments by column specify
+        ``div_bar_kwargs=`Dict[col: Dict[**col_kwargs]``
+        for each column.
     alternating_colors: Tuple(str), default=(None, None).
         Color 1 and Color 2 for for alternating row colors.
 
@@ -313,23 +366,47 @@ def latex_table(
         if gradient_cell_kwargs is None:
             # Use default kwargs for making gradients for all columns.
             gradient_cells = {
-                col: make_latex_gradient(df[col]) for col in gradient_cell_cols
+                col: latex_color_gradient(df[col]) for col in gradient_cell_cols
             }
         else:
             if isinstance(list(gradient_cell_kwargs.values())[0], dict):
                 # Use column specific kwargs for each columns' gradients.
                 gradient_cells = {
-                    col: make_latex_gradient(df[col], **kwargs)
+                    col: latex_color_gradient(df[col], **kwargs)
                     for col, kwargs in gradient_cell_cols
                 }
             else:
                 # Use single set of kwargs for all column's gradients.
                 gradient_cells = {
-                    col: make_latex_gradient(df[col], **gradient_cell_kwargs)
+                    col: latex_color_gradient(df[col], **gradient_cell_kwargs)
                     for col in gradient_cell_cols
                 }
     else:
         gradient_cells = None
+
+    # Collect diverging bar values if needed.
+    if div_bar_col is not None:
+        div_bar_cols = to_list(div_bar_col, str)
+        if div_bar_kwargs is None:
+            # Use default kwargs for making divergent bars for all columns.
+            div_bars = {
+                col: latex_diverging_bars(df[col]) for col in div_bar_cols
+            }
+        else:
+            if isinstance(list(div_bar_kwargs.values())[0], dict):
+                # Use column specific kwargs for each columns' div bars.
+                div_bars = {
+                    col: latex_diverging_bars(df[col], **kwargs)
+                    for col, kwargs in div_bar_cols
+                }
+            else:
+                # Use single set of kwargs for all column's div bars.
+                div_bars = {
+                    col: latex_diverging_bars(df[col], **div_bar_kwargs)
+                    for col in div_bar_cols
+                }
+    else:
+        div_bars = None
 
     # Round values toi specified precision.
     if isinstance(prec, int):
@@ -391,6 +468,20 @@ def latex_table(
                 "\\cellcolor{} {}".format(color, val)
                 for color, val in zip(colors, df[col].values)
             ]
+
+    # Create divergent bar plots if required.
+    if div_bars is not None:
+        # Create bar plots.
+        for col, bars in div_bars.items():
+            df[col] = [
+                "{} {}".format(val, bar)
+                for bar, val in zip(bars, df[col].values)
+            ]
+        # Center column titles.
+        col_map = {
+            col: f"\\multicolumn{{1}}{{c}}{{{col}}}" for col in div_bars.keys()
+        }
+        df.rename(columns=col_map, inplace=True)
 
     # Replace improperly formatted values in table.
     repl = {
