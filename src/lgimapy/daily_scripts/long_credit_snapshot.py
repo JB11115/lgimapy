@@ -91,18 +91,16 @@ def build_long_credit_snapshot():
     # Find dates for daily, week, month, and year to date calculations.
     # Store dates not to be used in table with a `~` before them.
     db = Database()
-    tdates = db.trade_dates
-    last_trade = partial(bisect_left, tdates)
-    today = tdates[-1]
-    # today = db.nearest_date(actual_date)
+    today = db.date("today")
+    # today = actual_date
     dates_dict = {
         "~today": today,
-        "~6m": db.nearest_date(today - timedelta(183)),
-        "Daily": tdates[last_trade(today) - 1],
-        "WTD": tdates[last_trade(today - timedelta(today.weekday() + 1)) - 1],
-        "MTD": tdates[last_trade(today.replace(day=1)) - 1],
+        "~6m": db.date("6m", today),
+        "Daily": db.date("yesterday", today),
+        "WTD": db.date("WTD", today),
+        "MTD": db.date("MTD", today),
         # "QTD": db.nearest_date(pd.to_datetime("6/29/2019")),
-        "YTD": tdates[last_trade(today.replace(month=1, day=1)) - 1],
+        "YTD": db.date("YTD", today),
     }
 
     # Create indexes for all sectors.
@@ -124,8 +122,7 @@ def build_long_credit_snapshot():
 
     # Create DataFrame of snapshot values with each sector as a row.
     # Use multiprocessing to speed up computation.
-    # pool = mp.Pool(processes=mp.cpu_count())
-    pool = mp.Pool(processes=7)
+    pool = mp.Pool(processes=mp.cpu_count() - 2)
     results = [
         pool.apply_async(
             get_snapshot_values,
@@ -166,6 +163,7 @@ def build_long_credit_snapshot():
         ignore_bottom_margin=True,
     )
     doc.add_background_image("umbrella", scale=1.1, vshift=2.2, alpha=0.04)
+    # doc.add_background_image("xmas_tree", scale=1.1, vshift=2, alpha=0.08)
     sector_list = [market_sectors, ig_sectors]
     for sector_subset, cap in zip(sector_list, captions):
         doc.add_table(make_table(table_df, sector_subset, cap, kwargs))
@@ -278,7 +276,7 @@ def make_table(full_df, sectors, caption, ix_kwargs):
         specialrule_locs=major_sectors,
         row_color={"header": "darkgray", tuple(major_sectors): "lightgray"},
         row_font={"header": "\color{white}\\bfseries"},
-        col_style={"6m*%tile": "\mybar"},
+        col_style={"6m*%tile": "\pctbar"},
         loc_style=color_locs,
         multi_row_header=True,
         adjust=True,
