@@ -18,6 +18,7 @@ from lgimapy.data import concat_index_dfs, Index, new_issue_mask
 from lgimapy.utils import (
     dump_json,
     load_json,
+    nearest_date,
     replace_multiple,
     root,
     sep_str_int,
@@ -168,7 +169,7 @@ class Database:
         )
 
     @lru_cache(maxsize=None)
-    def date(self, date_delta, referce_date=None):
+    def date(self, date_delta, reference_date=None):
         """
         Find date relative to a specified date.
 
@@ -176,7 +177,7 @@ class Database:
         ----------
         date_delta: str, ``{'today', 'WTD', 'MTD', 'YTD', '3d', '5y', etc}``
             Difference between reference date and target date.
-        referce_date: datetime, default=None
+        reference_date: datetime, default=None
             Reference date to use, if None use most recent trade date.
 
         Returns
@@ -187,10 +188,10 @@ class Database:
         date_delta = date_delta.upper()
         # Use today as reference date if none is provided,
         # otherwise find closes trading date to reference date.
-        if referce_date is None:
+        if reference_date is None:
             today = self.trade_dates[-1]
         else:
-            today = db.nearest_date(to_datetime(referce_date))
+            today = self.nearest_date(to_datetime(reference_date))
 
         last_trade = partial(bisect_left, self.trade_dates)
         if date_delta == "TODAY":
@@ -276,7 +277,7 @@ class Database:
         """Set DataFrames to display all columnns in IPython."""
         pd.set_option("display.max_columns", 999)
 
-    def nearest_date(self, date):
+    def nearest_date(self, date, **kwargs):
         """
         Return trade date nearest to input date.
 
@@ -284,13 +285,19 @@ class Database:
         ----------
         date: datetime object
             Input date.
+        kwargs:
+            Keyword arguments for :func:`nearest_date`.
 
         Returns
         -------
         datetime:
             Trade date nearest to input date.
+
+        See Also
+        --------
+        :func:`nearest_date`
         """
-        return min(self.trade_dates, key=lambda x: abs(x - to_datetime(date)))
+        return nearest_date(date, self.trade_dates, **kwargs)
 
     def _convert_sectors_to_fin_flags(self, sectors):
         """
