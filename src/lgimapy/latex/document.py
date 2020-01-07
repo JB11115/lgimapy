@@ -232,9 +232,9 @@ class Document:
 
         # Format other options.
         orient = {"portrait": "", "landscape": ", landscape"}[orientation]
-        page_numbers = "" if page_numbers else "\pagenumbering{gobble}"
+        page_numbers = "" if page_numbers else "\\pagenumbering{gobble}"
         ignore_bmargin = (
-            "\enlargethispage{100\\baselineskip}"
+            "\\enlargethispage{100\\baselineskip}"
             if ignore_bottom_margin
             else ""
         )
@@ -275,17 +275,17 @@ class Document:
 
         self.preamble = cleandoc(
             f"""
-            \documentclass[{font_size}pt]{{article}}
+            \\documentclass[{font_size}pt]{{article}}
             \\usepackage[{margin}{orient}]{{geometry}}
             \\usepackage[table]{{xcolor}}
             \\usepackage{{
                 {use_packages}
             }}
-            \PassOptionsToPackage{{hyphens}}{{url}}\\usepackage{{hyperref}}
+            \\PassOptionsToPackage{{hyphens}}{{url}}\\usepackage{{hyperref}}
 
             \\backgroundsetup{{contents={{}}}}
 
-            \captionsetup{{
+            \\captionsetup{{
                 justification=raggedright,
                 singlelinecheck=false,
                 font={{footnotesize, bf}},
@@ -293,22 +293,48 @@ class Document:
                 belowskip=0pt,
                 labelformat=empty
             }}
-            \setlength{{\\textfloatsep}}{{0.1mm}}
-            \setlength{{\\floatsep}}{{1mm}}
-            \setlength{{\intextsep}}{{2mm}}
 
-            \\newcommand{{\\N}}{{\mathbb{{N}}}}
-            \\newcommand{{\Z}}{{\mathbb{{Z}}}}
-            \DeclareMathOperator*{{\\argmax}}{{argmax}}
-            \DeclareMathOperator*{{\\argmin}}{{argmin}}
-            \setcounter{{MaxMatrixCols}}{{20}}
+            %% Change separations distances for better presentation.
+            \\setlength{{\\textfloatsep}}{{0.1mm}}
+            \\setlength{{\\floatsep}}{{1mm}}
+            \\setlength{{\\intextsep}}{{2mm}}
 
+            %% Declare operators for mathematical expressions.
+            \\newcommand{{\\N}}{{\\mathbb{{N}}}}
+            \\newcommand{{\\Z}}{{\\mathbb{{Z}}}}
+            \\DeclareMathOperator*{{\\argmax}}{{argmax}}
+            \\DeclareMathOperator*{{\\argmin}}{{argmin}}
+            \\setcounter{{MaxMatrixCols}}{{20}}
+
+            %% Define custom colors.
+            \\definecolor{{lightgray}}{{gray}}{{0.9}}
+            \\definecolor{{steelblue}}{{HTML}}{{0C70D5}}
+            \\definecolor{{firebrick}}{{HTML}}{{E85650}}
+
+            %% Define function for perctile bars in tables.
             \\newlength{{\\barw}}
-            \setlength{{\\barw}}{{0.15mm}}
-            \def\mybar#1{{%%
-            	{{\color{{gray}}\\rule{{#1\\barw}}{{10pt}}}} #1\%}}
+            \\setlength{{\\barw}}{{0.15mm}}
+            \\def\\pctbar#1{{%%
+            	{{\\color{{gray}}\\rule{{#1\\barw}}{{10pt}}}} #1\%}}
 
-            \definecolor{{lightgray}}{{gray}}{{0.9}}
+            %% Define function for divergent bars in tables.
+            \\def\\bar#1#2{{%
+            	\\color{{#2}}\\rule{{#1\\barw}}{{10pt}}
+            }}
+
+            \\def\\divbar#1#2{{%
+            	\\ifnum#1<0{{%
+            		\\bar{{\\the\\numexpr50+#1}}{{white}}
+                    \\bar{{-#1}}{{#2}}
+                    \\bar{{50}}{{white}}
+                }}
+            	\\else{{%
+            		\\bar{{50}}{{white}}
+                    \\bar{{#1}}{{#2}}
+                    \\bar{{\\the\\numexpr50-#1}}{{white}}
+                }}
+            	\\fi
+            }}
 
             {page_numbers}
             {ignore_bmargin}
@@ -391,7 +417,7 @@ class Document:
                 vshift={vshift}{unit},
                 hshift={hshift}{unit},
                 contents={{
-                    {transparent}\includegraphics{dims}{{{image}}}}}\\\\
+                    {transparent}\\includegraphics{dims}{{{image}}}}}\\\\
                 }}
 
             """
@@ -471,7 +497,7 @@ class Document:
                 self.preamble.rstrip("\n"),
                 self.background_image,
                 self.body,
-                "\end{document}",
+                "\\end{document}",
                 self.bibliography,
                 self.appendix,
             ]
@@ -529,7 +555,6 @@ class Document:
 
         # Clean up temporary files.
         if not save_tex and not self._loaded_file:
-            print("deleted")
             os.remove(f"{fid}.tex")
         os.remove(f"{fid}.aux")
         os.remove(f"{fid}.log")
