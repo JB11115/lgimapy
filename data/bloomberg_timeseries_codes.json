@@ -1,14 +1,4 @@
 {
-    "ITRAXX_MAIN": {
-        "OAS": "ITRXEBE CBBT Curncy",
-        "TRET": "ITRXTE5I Index",
-        "XSRET": "ERIXITEU Index"
-    },
-    "ITRAXX_XOVER": {
-        "OAS": "ITRXEXE CBBT Curncy",
-        "TRET": "ITRXTX5I Index",
-        "XSRET": "ERIXITXO Index"
-    },
     "FF_1M": {
         "PRICE": "FF1 Comdty"
     },
@@ -25,33 +15,59 @@
         "PRICE": "FF12 Comdty"
     },
     "UST_2Y": {
+        "NAME": "UST 2Y",
         "YTW": "USGG2YR Index"
     },
     "UST_3Y": {
+        "NAME": "UST 3Y",
         "YTW": "USGG3YR Index"
     },
     "UST_5Y": {
+        "NAME": "UST 5Y",
         "YTW": "USGG5YR Index"
     },
     "UST_7Y": {
+        "NAME": "UST 7Y",
         "YTW": "USGG7YR Index"
     },
     "UST_10Y": {
+        "NAME": "UST 10Y",
         "YTW": "USGG10YR Index"
     },
     "UST_30Y": {
+        "NAME": "UST 30Y",
         "YTW": "USGG30YR Index"
     },
+    "UST_10Y_RY": {
+        "NAME": "UST 10Y Real Yield",
+        "YTW": "USGGT10Y Index"
+    },
+    "UST_10Y_BE": {
+        "NAME": "UST 10Y Breakeven",
+        "YTW": "USGGBE10 Index"
+    },
+    "UST_2Y_10Y": {
+        "NAME": "UST 2Y/10Y",
+        "YTW": "USYC2Y10 Index"
+    },
+    "UST_5Y_30Y": {
+        "NAME": "UST 5Y/30Y",
+        "YTW": "USYC5Y30 Index"
+    },
     "BUND_10Y": {
+        "NAME": "Bund 10Y",
         "YTW": "GDBR10 Index"
     },
     "BUND_30Y": {
+        "NAME": "Bund 30Y",
         "YTW": "GDBR30 Index"
     },
     "JGB_10Y": {
+        "NAME": "JGB 10Y",
         "YTW": "I03000JPYW Index"
     },
     "JGB_30Y": {
+        "NAME": "JGB 30Y",
         "YTW": "I29068JPYW Index"
     },
     "ITALY_10Y": {
@@ -67,22 +83,32 @@
         "YTW": "GSPG30YRYW Index"
     },
     "VIX": {
+        "NAME": "Vix",
         "PRICE": "UX1 Index"
     },
     "VIX_3M": {
+        "NAME": "3M Vix",
         "PRICE": "UX3 Index"
     },
     "VIX_6M": {
+        "NAME": "6M Vix",
         "PRICE": "UX6 Index"
     },
+    "VIX_9M": {
+        "NAME": "9M Vix",
+        "PRICE": "UX9 Index"
+    },
+    "OIL_VOL": {
+        "NAME": "Oil Vix",
+        "PRICE": "OVX Index"
+    },
     "VVIX": {
+        "NAME": "VVix",
         "PRICE": "VVIX Index"
     },
     "MOVE": {
+        "NAME": "MOVE",
         "PRICE": "MOVE Index"
-    },
-    "OIL_VOL": {
-        "PRICE": "OVX Index"
     },
     "JPYAUD": {
         "PRICE": "JPYAUD Curncy"
@@ -96,8 +122,25 @@
     "CHFGBP": {
         "PRICE": "CHFGBP Curncy"
     },
+    "OIL": {
+        "NAME": "WTI Crude",
+        "PRICE": "CL1 Comdty"
+    },
     "GOLD": {
+        "NAME": "Gold",
         "PRICE": "XAU Curncy"
+    },
+    "SILVER": {
+        "NAME": "Silver",
+        "PRICE": "XAG Curncy"
+    },
+    "COPPER": {
+        "NAME": "Copper",
+        "PRICE": "HG1 Comdty"
+    },
+    "IRON": {
+        "NAME": "Iron Ore",
+        "PRICE": "IOE1 Comdty"
     },
     "US_PC_RATIO": {
         "PRICE": "PCUSEQTR Index"
@@ -109,62 +152,77 @@
         "PRICE": "SX5EPT Index"
     },
     "SP500": {
+        "NAME": "S&P 500",
         "PRICE": "SPX Index",
         "PE_RATIO": "SPX Index|BEST_PE_RATIO"
     },
     "SP500_FINS": {
+        "NAME": "Financials",
         "PRICE": "S5FINL Index",
         "PE_RATIO": "S5FINL Index|BEST_PE_RATIO"
     },
     "SP500_STAP": {
+        "NAME": "Cons. Staple",
         "PRICE": "S5CONS Index",
         "PE_RATIO": "S5CONS Index|BEST_PE_RATIO"
     },
     "SP500_INFO": {
+        "NAME": "Technology",
         "PRICE": "S5INFT Index",
         "PE_RATIO": "S5INFT Index|BEST_PE_RATIO"
     },
     "SP500_ENER": {
+        "NAME": "Energy",
         "PRICE": "S5ENRS Index",
         "PE_RATIO": "S5ENRS Index|BEST_PE_RATIO"
     },
     "SP500_HEAL": {
+        "NAME": "Healthcare",
         "PRICE": "S5HLTH Index",
         "PE_RATIO": "S5HLTH Index|BEST_PE_RATIO"
     },
     "SP500_UTIL": {
+        "NAME": "Utilities",
         "PRICE": "S5UTIL Index",
         "PE_RATIO": "S5UTIL Index|BEST_PE_RATIO"
     },
     "SP500_INDU": {
+        "NAME": "Industrials",
         "PRICE": "S5INDU Index",
         "PE_RATIO": "S5INDU Index|BEST_PE_RATIO"
     },
     "SP500_DISC": {
+        "NAME": "Cons. Disc.",
         "PRICE": "S5COND Index",
         "PE_RATIO": "S5COND Index|BEST_PE_RATIO"
     },
     "SP500_TELE": {
+        "NAME": "Telecom",
         "PRICE": "S5TELS Index",
         "PE_RATIO": "S5TELS Index|BEST_PE_RATIO"
     },
     "SP500_MATS": {
+        "NAME": "Materials",
         "PRICE": "S5MATR Index",
         "PE_RATIO": "S5MATR Index|BEST_PE_RATIO"
     },
     "SP500_REAL": {
+        "NAME": "Real Estate",
         "PRICE": "S5RLST Index",
         "PE_RATIO": "S5RLST Index|BEST_PE_RATIO"
     },
     "SP500_LOWV": {
+        "NAME": "Low Vol",
         "PRICE": "SP5LVI Index",
         "PE_RATIO": "SP5LVI Index|BEST_PE_RATIO"
     },
     "SP500_GROW": {
+        "NAME": "Growth",
         "PRICE": "SGX Index",
         "PE_RATIO": "SGX Index|BEST_PE_RATIO"
     },
     "SP500_VALU": {
+        "NAME": "Value",
         "PRICE": "SVX Index",
         "PE_RATIO": "SVX Index|BEST_PE_RATIO"
     },
@@ -173,12 +231,37 @@
         "PE_RATIO": "RIY Index|BEST_PE_RATIO"
     },
     "RUSSELL_2000": {
+        "NAME": "Russell 2000",
         "PRICE": "RTY Index",
         "PE_RATIO": "RTY Index|BEST_PE_RATIO"
     },
+    "RUSSELL_3000": {
+        "NAME": "Russell 3000",
+        "PRICE": "RAY Index",
+        "PE_RATIO": "RAY Index|BEST_PE_RATIO"
+    },
+    "TOPIX": {
+        "NAME": "TOPIX",
+        "PRICE": "TPX Index"
+    },
+    "MSCI_ACWI": {
+        "NAME": "MSCI ACWI",
+        "PRICE": "MXWD Index",
+        "PE_RATIO": "MXWD Index|BEST_PE_RATIO"
+    },
+    "MSCI_EU": {
+        "NAME": "MSCI Europe",
+        "PRICE": "MSER Index",
+        "PE_RATIO": "MSER Index|BEST_PE_RATIO"
+    },
     "MSCI_EM": {
+        "NAME": "MSCI EM",
         "PRICE": "MXEF Index",
         "PE_RATIO": "MXEF Index|BEST_PE_RATIO"
+    },
+    "GSCI": {
+        "NAME": "GSCI",
+        "PRICE": "SPGSCI Index"
     },
     "STAN_RISK_APP": {
         "PRICE": "SCGRRAI Index"
@@ -187,124 +270,157 @@
         "PRICE": "GSRAII Index"
     },
     "US_IG": {
+        "NAME": "US Market Credit",
         "OAS": "LUCROAS Index",
         "TRET": "LUCRTRUU Index",
         "XSRET": "LUCRER Index",
         "YTW": "LUCRYW Index"
     },
     "US_IG_1-5": {
+        "NAME": "US Credit 1-5 yr",
         "OAS": "LD18OAS Index",
         "TRET": "LD18TRUU Index",
         "XSRET": "LD18ER Index",
         "YTW": "LD18YW Index"
     },
     "US_IG_5-10": {
+        "NAME": "US Credit 5-10 yr",
         "OAS": "LD26OAS Index",
         "TRET": "LD26TRUU Index",
         "XSRET": "LD26ER Index",
         "YTW": "LD26YW Index"
     },
     "US_IG_10+": {
+        "NAME": "US Long Credit",
         "OAS": "LULCOAS Index",
         "TRET": "LULCTRUU Index",
         "XSRET": "LULCER Index",
         "YTW": "LULCYW Index"
     },
     "GLOBAL_HY": {
+        "NAME": "Global HY",
         "OAS": "LG30OAS Index",
         "TRET": "LG30TRUU Index",
         "XSRET": "LG30ER Index",
         "YTW": "LG30YW Index"
     },
     "US_HY": {
+        "NAME": "US HY",
         "OAS": "LF98OAS Index",
         "TRET": "LF98TRUU Index",
         "XSRET": "LF98ER Index",
         "YTW": "LF98YW Index"
     },
     "US_CORP": {
+        "NAME": "US Corp",
         "OAS": "LUACOAS Index",
         "TRET": "LUACTRUU Index",
         "XSRET": "LUACER Index",
         "YTW": "LUACYW Index"
     },
     "US_CORP_1-5": {
+        "NAME": "US Corp 1-5 yr",
         "OAS": "LDC5OAS Index",
         "TRET": "LDC5TRUU Index",
         "XSRET": "LDC5ER Index",
         "YTW": "LDC5YW Index"
     },
     "US_CORP_5-10": {
+        "NAME": "US Corp 5-10 yr",
         "OAS": "BCR5OAS Index",
         "TRET": "BCR5TRUU Index",
         "XSRET": "BCR5ER Index",
         "YTW": "BCR5YW Index"
     },
     "US_CORP_10+": {
+        "NAME": "US Long Corp",
         "OAS": "LD07OAS Index",
         "TRET": "LD07TRUU Index",
         "XSRET": "LD07ER Index",
         "YTW": "LD07YW Index"
     },
     "US_AAA": {
+        "NAME": "US AAA",
         "OAS": "LDA3OAS Index",
         "TRET": "LDA3TRUU Index",
         "XSRET": "LDA3ER Index",
         "YTW": "LDA3YW Index"
     },
     "US_AA": {
+        "NAME": "US AA",
         "OAS": "LDA2OAS Index",
         "TRET": "LDA2TRUU Index",
         "XSRET": "LDA2ER Index",
         "YTW": "LDA2YW Index"
     },
     "US_A": {
+        "NAME": "US A",
         "OAS": "LDA1OAS Index",
         "TRET": "LDA1TRUU Index",
         "XSRET": "LDA1ER Index",
         "YTW": "LDA1YW Index"
     },
     "US_BBB": {
+        "NAME": "US BBB",
         "OAS": "LDB1OAS Index",
         "TRET": "LDB1TRUU Index",
         "XSRET": "LDB1ER Index",
         "YTW": "LDB1YW Index"
     },
     "US_BB": {
+        "NAME": "US BB",
         "OAS": "BCBAOAS Index",
         "TRET": "BCBATRUU Index",
         "XSRET": "BCBAER Index",
         "YTW": "BCBAYW Index"
     },
     "US_B": {
+        "NAME": "US B",
         "OAS": "BCBHOAS Index",
         "TRET": "BCBHTRUU Index",
         "XSRET": "BCBHER Index",
         "YTW": "BCBHYW Index"
     },
     "US_CCC": {
+        "NAME": "US CCC",
         "OAS": "BCAUOAS Index",
         "TRET": "BCAUTRUU Index",
         "XSRET": "BCAUER Index",
         "YTW": "BCAUYW Index"
     },
     "CDX_IG": {
+        "NAME": "CDX IG",
         "OAS": "CDX IG CDSI GEN 5Y Corp",
         "TRET": "LX01TRUU Index",
         "XSRET": "UISYMI5E Index"
     },
     "CDX_HY": {
+        "NAME": "CDX HY",
         "OAS": "CDX HY CDSI GEN 5Y SPRD Corp",
         "TRET": "LX07TRUU Index",
         "XSRET": "UISYMH5E Index",
         "PRICE": "CDX HY CDSI GEN 5Y PRC Corp"
     },
     "CDX_EM": {
+        "NAME": "CDX EM",
         "OAS": "CDX EM CDSI GEN 5Y SPRD Corp",
         "TRET": "LX10TRUU Index",
         "PRICE": "CDX EM CDSI GEN 5Y PRC Corp"
     },
+    "ITRAXX_MAIN": {
+        "NAME": "iTraxx Main",
+        "OAS": "ITRXEBE CBBT Curncy",
+        "TRET": "ITRXTE5I Index",
+        "XSRET": "ERIXITEU Index"
+    },
+    "ITRAXX_XOVER": {
+        "NAME": "iTraxx Xover",
+        "OAS": "ITRXEXE CBBT Curncy",
+        "TRET": "ITRXTX5I Index",
+        "XSRET": "ERIXITXO Index"
+    },
     "EU_IG": {
+        "NAME": "EU Credit",
         "OAS": "LECROAS Index",
         "TRET": "LECRTREU Index",
         "XSRET": "LECRER Index",
@@ -341,12 +457,14 @@
         "YTW": "LEC0YW Index"
     },
     "EU_HY": {
+        "NAME": "EU HY",
         "OAS": "LP01OAS Index",
         "TRET": "LP01TREU Index",
         "XSRET": "LP01ER Index",
         "YTW": "LP01YW Index"
     },
     "EU_CORP": {
+        "NAME": "EU Corp",
         "OAS": "LECPOAS Index",
         "TRET": "LECPTREU Index",
         "XSRET": "LECPER Index",
@@ -389,6 +507,7 @@
         "YTW": "BEYHYW Index"
     },
     "GBP_IG": {
+        "NAME": "GBP IG",
         "OAS": "LC84OAS Index",
         "XSRET": "LC84ER Index",
         "YTW": "LC84YW Index"
@@ -424,6 +543,7 @@
         "YTW": "LF67YW Index"
     },
     "GBP_CORP": {
+        "NAME": "GBP Corp",
         "OAS": "LC61OAS Index",
         "TRET": "LC61TRUU Index",
         "XSRET": "LC61ER Index",
@@ -450,30 +570,35 @@
         "YTW": "LF82YW Index"
     },
     "EM_IG": {
+        "NAME": "EM IG",
         "OAS": "BEHGOAS Index",
         "TRET": "BEHGTRUU Index",
         "XSRET": "BEHGER Index",
         "YTW": "BEHGYW Index"
     },
     "EM_HY": {
+        "NAME": "EM HY",
         "OAS": "BEBGOAS Index",
         "TRET": "BEBGTRUU Index",
         "XSRET": "BEBGER Index",
         "YTW": "BEBGYW Index"
     },
     "EM_CORP": {
+        "NAME": "EM Corp",
         "OAS": "CEMBTOBS Index",
         "TRET": "CEMBTOTR Index",
         "YTW": "CEMBTOYI Index",
         "PRICE": "CEMBTOPRC Index"
     },
     "EM_SOV": {
+        "NAME": "EM Sov",
         "OAS": "BSSUOAS Index",
         "TRET": "BSSUTRUU Index",
         "XSRET": "BSSUER Index",
         "YTW": "BSSUYW Index"
     },
     "EM_QUASISOV": {
+        "NAME": "EM Quasi-sov",
         "OAS": "BESQOAS Index",
         "TRET": "BESQTRUU Index",
         "XSRET": "BESQER Index",
@@ -546,69 +671,91 @@
         "YTW": "BUCMYW Index"
     },
     "LIBOR": {
+        "NAME": "LIBOR",
         "YTW": "US0003M Index"
     },
     "US_ECO_SURP": {
+        "NAME": "US Economic Surprise",
         "LEVEL": "ECSURPUS Index"
     },
     "US_GDP_QOQ": {
+        "NAME": "US GDP QoQ",
         "LEVEL": "GDP CQOQ Index"
     },
     "US_LEAD_IND": {
+        "NAME": "US Leading Indicator",
         "LEVEL": "LEI TOTL Index"
     },
     "US_IND_PROD_YOY": {
+        "NAME": "US Industrial Production YoY",
         "LEVEL": "IP YOY Index"
     },
     "US_IND_PROD": {
+        "NAME": "US Industrial Production",
         "LEVEL": "IP Index"
     },
     "US_UNEMPLOY": {
+        "NAME": "US Unemployment Rate",
         "LEVEL": "USURTOT Index"
     },
-    "US_EARN_REV_UP": {
+    "US_FINO_UP": {
+        "NAME": "US Earnings Revisions Up",
         "LEVEL": "FINOUP Index"
     },
-    "US_EARN_REV_DOWN": {
+    "US_FINO_DOWN": {
+        "NAME": "US Earnings Revisions Down",
         "LEVEL": "FINODOWN Index"
     },
-    "US_EARN_REV_TOT": {
+    "US_FINO_TOT": {
+        "NAME": "US Total Earnings Revisions",
         "LEVEL": "FINOTOTL Index"
     },
-    "US_NET_LEV_EX_FIN": {
-        "LEVEL": ".SPNDEBIT G Index"
-    },
     "US_COMP_PMI": {
+        "NAME": "US Composite PMI",
         "LEVEL": "MPMIUSCA Index"
     },
+    "US_MFG_ISM": {
+        "NAME": "US Manufacturing ISM",
+        "LEVEL": "NAPMPMI Index"
+    },
     "US_ZEW": {
+        "NAME": "US ZEW Economic Growth Expectations",
         "LEVEL": "GRZEUSEX Index"
     },
     "US_CONS_CONF": {
+        "NAME": "US Consumer Confidence",
         "LEVEL": "CONCCONF Index"
     },
     "US_POLICY_UNCERT": {
+        "NAME": "US Policy Uncertainty",
         "LEVEL": "EPUCNUSD Index"
     },
     "GLOBAL_POLICY_UNCERT": {
+        "NAME": "Global Policy Uncertainty",
         "LEVEL": "EPUCGLCP Index"
     },
     "US_TRADE_UNCERT": {
+        "NAME": "US Trade Uncertainty",
         "LEVEL": "EPUCTRAD Index"
     },
     "US_ECO_SENT": {
+        "NAME": "US Economic Sentiment",
         "LEVEL": "CONSCURR Index"
     },
     "US_ECO_SURP": {
+        "NAME": "US Economic Surprise",
         "LEVEL": "ECSURPUS Index"
     },
     "US_IND_CONF": {
+        "NAME": "US Industrial Confidence",
         "LEVEL": "OEUSJAIL Index"
     },
     "US_SR_LOAN": {
+        "NAME": "US Senior Loan Officer Survey",
         "LEVEL": "SLDETIGT Index"
     },
     "US_LOAN_DEMAND": {
+        "NAME": "US Demand for Loans",
         "LEVEL": "SLDEDEMD Index"
     }
 }
