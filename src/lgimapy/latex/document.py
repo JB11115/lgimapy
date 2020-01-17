@@ -145,11 +145,18 @@ class Document:
             msg = f"'{keyword}' not found as editing keyword in {self.fid}.tex"
             raise KeywordNotFoundError(msg)
 
+        # Find amount of white space before before
+        pre_edit = self.body[:start_ix].rstrip("\n")
+        no_white_space = pre_edit.rstrip(" \t")
+        n = len(pre_edit) - len(no_white_space)
+        prefix = pre_edit[-n:]
+        self._prefix = prefix
+
         # Store keyword and sections of the document surrounding
         # area to be edited to recombine later.
-        self._current_keyword = keyword
-        self._pre_edit = self.body[:start_ix]
-        self._post_edit = self.body[end_ix:]
+        self._start_phrase = f"{prefix}%%\\begin{{{keyword}}}"
+        self._pre_edit = pre_edit[:-n].rstrip()
+        self._post_edit = f"{prefix}{self.body[end_ix:]}"
         self.body = ""
 
         # Make safety flag to avoid saving file before edit is complete.
@@ -170,14 +177,11 @@ class Document:
 
         # Combine pre- and post-edited sections of the .tex document
         # with the newly created edited section.
-        start_phrase = f"\n%%\\begin{{{self._current_keyword}}}"
+        body = self._prefix + self.body.lstrip().replace(
+            "\n", "\n" + self._prefix
+        )
         self.body = "\n".join(
-            [
-                self._pre_edit.rstrip("\n"),
-                start_phrase,
-                self.body.lstrip("\n"),
-                self._post_edit,
-            ]
+            [self._pre_edit, self._start_phrase, body, self._post_edit]
         )
 
         # Close edit so document can be safely saved.
@@ -293,6 +297,10 @@ class Document:
                 belowskip=0pt,
                 labelformat=empty
             }}
+            %% Define columns with fixed widths for tables.
+            \\newcolumntype{{L}}[1]{{>{{\\raggedright\\arraybackslash}}p{{#1}}}}
+            \\newcolumntype{{C}}[1]{{>{{\\centering\\arraybackslash}}p{{#1}}}}
+            \\newcolumntype{{R}}[1]{{>{{\\raggedleft\\arraybackslash}}p{{#1}}}}
 
             %% Change separations distances for better presentation.
             \\setlength{{\\textfloatsep}}{{0.1mm}}
@@ -496,7 +504,7 @@ class Document:
             [
                 self.preamble.rstrip("\n"),
                 self.background_image,
-                self.body,
+                self.body.rstrip("\n"),
                 "\\end{document}",
                 self.bibliography,
                 self.appendix,
