@@ -1,21 +1,27 @@
 {
     "FF_1M": {
+        "NAME": "Fed Funds 1M Future",
         "PRICE": "FF1 Comdty"
     },
     "FF_3M": {
+        "NAME": "Fed Funds 3M Future",
         "PRICE": "FF3 Comdty"
     },
     "FF_6M": {
+        "NAME": "Fed Funds 6M Future",
         "PRICE": "FF6 Comdty"
     },
     "FF_9M": {
+        "NAME": "Fed Funds 9M Future",
         "PRICE": "FF9 Comdty"
     },
     "FF_12M": {
+        "NAME": "Fed Funds 1Y Future",
         "PRICE": "FF12 Comdty"
     },
     "UST_2Y": {
         "NAME": "UST 2Y",
+        "TRET": "LT01TRUU Index",
         "YTW": "USGG2YR Index"
     },
     "UST_3Y": {
@@ -24,6 +30,7 @@
     },
     "UST_5Y": {
         "NAME": "UST 5Y",
+        "TRET": "LT13TRUU Index",
         "YTW": "USGG5YR Index"
     },
     "UST_7Y": {
@@ -32,10 +39,12 @@
     },
     "UST_10Y": {
         "NAME": "UST 10Y",
+        "TRET": "LT09TRUU Index",
         "YTW": "USGG10YR Index"
     },
     "UST_30Y": {
         "NAME": "UST 30Y",
+        "TRET": "LT11TRUU Index",
         "YTW": "USGG30YR Index"
     },
     "UST_10Y_RY": {
@@ -56,30 +65,46 @@
     },
     "BUND_10Y": {
         "NAME": "Bund 10Y",
+        "TRET": "LET7TREU Index",
         "YTW": "GDBR10 Index"
     },
     "BUND_30Y": {
         "NAME": "Bund 30Y",
+        "TRET": "LEG2TREU Index",
         "YTW": "GDBR30 Index"
     },
     "JGB_10Y": {
         "NAME": "JGB 10Y",
-        "YTW": "I03000JPYW Index"
+        "TRET": "I03000JP Index",
+        "YTW": "GTJPY10YR Corp"
     },
     "JGB_30Y": {
         "NAME": "JGB 30Y",
-        "YTW": "I29068JPYW Index"
+        "TRET": "I29068JP Index",
+        "YTW": "GTJPY30YR Corp"
+    },
+    "UK_10Y": {
+        "NAME": "UK 10Y",
+        "YTW": "GUKG10 Index"
+    },
+    "UK_30Y": {
+        "NAME": "UK 30Y",
+        "YTW": "GUKG30 Index"
     },
     "ITALY_10Y": {
+        "NAME": "Italy 10Y",
         "YTW": "GBTPGR10YW Index"
     },
     "ITALY_30Y": {
+        "NAME": "Italy 30Y",
         "YTW": "GBTPGR30YW Index"
     },
     "SPAIN_10Y": {
+        "NAME": "Spain 10Y",
         "YTW": "GSPG10YRYW Index"
     },
     "SPAIN_30Y": {
+        "NAME": "Spain 30Y",
         "YTW": "GSPG30YRYW Index"
     },
     "VIX": {
@@ -124,11 +149,13 @@
     },
     "OIL": {
         "NAME": "WTI Crude",
-        "PRICE": "CL1 Comdty"
+        "PRICE": "CL1 Comdty",
+        "TRET": "BCOMCLTR Index"
     },
     "GOLD": {
         "NAME": "Gold",
-        "PRICE": "XAU Curncy"
+        "PRICE": "XAU Curncy",
+        "TRET": "DJCIGCT Index"
     },
     "SILVER": {
         "NAME": "Silver",
@@ -143,131 +170,176 @@
         "PRICE": "IOE1 Comdty"
     },
     "US_PC_RATIO": {
+        "NAME": "US Equity Put/Call Ratio",
         "PRICE": "PCUSEQTR Index"
     },
     "US_SKEW": {
+        "NAME": "CBOE Skew Index",
         "PRICE": "SKEW Index"
     },
     "EUR_PC_RATIO": {
+        "NAME": "Euro Stoxx 50 Put/Call Ratio",
         "PRICE": "SX5EPT Index"
     },
     "SP500": {
         "NAME": "S&P 500",
         "PRICE": "SPX Index",
-        "PE_RATIO": "SPX Index|BEST_PE_RATIO"
+        "TRET": "SPXT Index",
+        "PE_RATIO": "SPX Index|BEST_PE_RATIO",
+        "PB_RATIO": "SPX Index|BEST_PX_BPS_RATIO"
     },
     "SP500_FINS": {
         "NAME": "Financials",
         "PRICE": "S5FINL Index",
-        "PE_RATIO": "S5FINL Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5FINL Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5FINL Index|BEST_PX_BPS_RATIO"
     },
     "SP500_STAP": {
         "NAME": "Cons. Staple",
         "PRICE": "S5CONS Index",
-        "PE_RATIO": "S5CONS Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5CONS Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5CONS Index|BEST_PX_BPS_RATIO"
     },
     "SP500_INFO": {
         "NAME": "Technology",
         "PRICE": "S5INFT Index",
-        "PE_RATIO": "S5INFT Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5INFT Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5INFT Index|BEST_PX_BPS_RATIO"
     },
     "SP500_ENER": {
         "NAME": "Energy",
         "PRICE": "S5ENRS Index",
-        "PE_RATIO": "S5ENRS Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5ENRS Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5ENRS Index|BEST_PX_BPS_RATIO"
     },
     "SP500_HEAL": {
         "NAME": "Healthcare",
         "PRICE": "S5HLTH Index",
-        "PE_RATIO": "S5HLTH Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5HLTH Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5HLTH Index|BEST_PX_BPS_RATIO"
     },
     "SP500_UTIL": {
         "NAME": "Utilities",
         "PRICE": "S5UTIL Index",
-        "PE_RATIO": "S5UTIL Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5UTIL Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5UTIL Index|BEST_PX_BPS_RATIO"
     },
     "SP500_INDU": {
         "NAME": "Industrials",
         "PRICE": "S5INDU Index",
-        "PE_RATIO": "S5INDU Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5INDU Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5INDU Index|BEST_PX_BPS_RATIO"
     },
     "SP500_DISC": {
         "NAME": "Cons. Disc.",
         "PRICE": "S5COND Index",
-        "PE_RATIO": "S5COND Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5COND Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5COND Index|BEST_PX_BPS_RATIO"
     },
     "SP500_TELE": {
         "NAME": "Telecom",
         "PRICE": "S5TELS Index",
-        "PE_RATIO": "S5TELS Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5TELS Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5TELS Index|BEST_PX_BPS_RATIO"
     },
     "SP500_MATS": {
         "NAME": "Materials",
         "PRICE": "S5MATR Index",
-        "PE_RATIO": "S5MATR Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5MATR Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5MATR Index|BEST_PX_BPS_RATIO"
     },
     "SP500_REAL": {
         "NAME": "Real Estate",
         "PRICE": "S5RLST Index",
-        "PE_RATIO": "S5RLST Index|BEST_PE_RATIO"
+        "PE_RATIO": "S5RLST Index|BEST_PE_RATIO",
+        "PB_RATIO": "S5RLST Index|BEST_PX_BPS_RATIO"
     },
     "SP500_LOWV": {
         "NAME": "Low Vol",
         "PRICE": "SP5LVI Index",
-        "PE_RATIO": "SP5LVI Index|BEST_PE_RATIO"
+        "PE_RATIO": "SP5LVI Index|BEST_PE_RATIO",
+        "PB_RATIO": "SP5LVI Index|BEST_PX_BPS_RATIO"
+    },
+    "SP500_HIGHV": {
+        "NAME": "High Vol",
+        "PRICE": "SP5HBI Index",
+        "PE_RATIO": "SP5HBI Index|BEST_PE_RATIO",
+        "PB_RATIO": "SP5HBI Index|BEST_PX_BPS_RATIO"
     },
     "SP500_GROW": {
         "NAME": "Growth",
         "PRICE": "SGX Index",
-        "PE_RATIO": "SGX Index|BEST_PE_RATIO"
+        "PE_RATIO": "SGX Index|BEST_PE_RATIO",
+        "PB_RATIO": "SGX Index|BEST_PX_BPS_RATIO"
     },
     "SP500_VALU": {
         "NAME": "Value",
         "PRICE": "SVX Index",
-        "PE_RATIO": "SVX Index|BEST_PE_RATIO"
+        "PE_RATIO": "SVX Index|BEST_PE_RATIO",
+        "PB_RATIO": "SVX Index|BEST_PX_BPS_RATIO"
+    },
+    "SP500_MOM": {
+        "NAME": "Momentum",
+        "PRICE": "SP500MUP Index",
+        "PE_RATIO": "SP500MUP Index|BEST_PE_RATIO",
+        "PB_RATIO": "SP500MUP Index|BEST_PX_BPS_RATIO"
+    },
+    "SP500_CONSERVATIVE": {
+        "NAME": "Conservative",
+        "PRICE": "SPXMRC Index"
+    },
+    "SP500_AGGRESSIVE": {
+        "NAME": "Conservative",
+        "PRICE": "SPXMRA Index"
     },
     "RUSSELL_1000": {
         "PRICE": "RIY Index",
-        "PE_RATIO": "RIY Index|BEST_PE_RATIO"
+        "PE_RATIO": "RIY Index|BEST_PE_RATIO",
+        "PB_RATIO": "RIY Index|BEST_PX_BPS_RATIO"
     },
     "RUSSELL_2000": {
         "NAME": "Russell 2000",
         "PRICE": "RTY Index",
-        "PE_RATIO": "RTY Index|BEST_PE_RATIO"
+        "TRET": "RU20INTR Index",
+        "PE_RATIO": "RTY Index|BEST_PE_RATIO",
+        "PB_RATIO": "RTY Index|BEST_PX_BPS_RATIO"
     },
     "RUSSELL_3000": {
         "NAME": "Russell 3000",
         "PRICE": "RAY Index",
-        "PE_RATIO": "RAY Index|BEST_PE_RATIO"
+        "PE_RATIO": "RAY Index|BEST_PE_RATIO",
+        "PB_RATIO": "RAY Index|BEST_PX_BPS_RATIO"
     },
     "TOPIX": {
         "NAME": "TOPIX",
-        "PRICE": "TPX Index"
+        "PRICE": "TPX Index",
+        "TRET": "SPTPXUT Index"
     },
     "MSCI_ACWI": {
         "NAME": "MSCI ACWI",
         "PRICE": "MXWD Index",
-        "PE_RATIO": "MXWD Index|BEST_PE_RATIO"
+        "TRET": "NDUEACWF Index",
+        "PE_RATIO": "MXWD Index|BEST_PE_RATIO",
+        "PB_RATIO": "MXWD Index|BEST_PX_BPS_RATIO"
     },
     "MSCI_EU": {
         "NAME": "MSCI Europe",
         "PRICE": "MSER Index",
-        "PE_RATIO": "MSER Index|BEST_PE_RATIO"
+        "TRET": "NDDUE15 Index",
+        "PE_RATIO": "MSER Index|BEST_PE_RATIO",
+        "PB_RATIO": "MSER Index|BEST_PX_BPS_RATIO"
     },
     "MSCI_EM": {
         "NAME": "MSCI EM",
         "PRICE": "MXEF Index",
-        "PE_RATIO": "MXEF Index|BEST_PE_RATIO"
+        "TRET": "NDUEEGF Index",
+        "PE_RATIO": "MXEF Index|BEST_PE_RATIO",
+        "PB_RATIO": "MXEF Index|BEST_PX_BPS_RATIO"
     },
     "GSCI": {
         "NAME": "GSCI",
-        "PRICE": "SPGSCI Index"
-    },
-    "STAN_RISK_APP": {
-        "PRICE": "SCGRRAI Index"
-    },
-    "GS_RISK_APP": {
-        "PRICE": "GSRAII Index"
+        "PRICE": "SPGSCI Index",
+        "TRET": "SPGSCITR Index"
     },
     "US_IG": {
         "NAME": "US Market Credit",
@@ -409,15 +481,21 @@
     },
     "ITRAXX_MAIN": {
         "NAME": "iTraxx Main",
-        "OAS": "ITRXEBE CBBT Curncy",
+        "OAS": "ITRXEBE MSG1 Curncy",
         "TRET": "ITRXTE5I Index",
-        "XSRET": "ERIXITEU Index"
+        "XSRET": "ERIXITEU Index",
+        "ERRONEOUS_DATA": {
+            "OAS": "8/5/2009"
+        }
     },
     "ITRAXX_XOVER": {
         "NAME": "iTraxx Xover",
-        "OAS": "ITRXEXE CBBT Curncy",
+        "OAS": "ITRXEXE MSG1 Curncy",
         "TRET": "ITRXTX5I Index",
-        "XSRET": "ERIXITXO Index"
+        "XSRET": "ERIXITXO Index",
+        "ERRONEOUS_DATA": {
+        "OAS": ["4/2/2018", "5/7/2018"]
+        }
     },
     "EU_IG": {
         "NAME": "EU Credit",
@@ -757,5 +835,17 @@
     "US_LOAN_DEMAND": {
         "NAME": "US Demand for Loans",
         "LEVEL": "SLDEDEMD Index"
+    },
+    "STAN_RISK_APP": {
+        "NAME": "Standard Chartered Global Risk Appetite",
+        "LEVEL": "SCGRRAI Index"
+    },
+    "GS_RISK_APP": {
+        "NAME": "GS Risk Appetite",
+        "LEVEL": "GSRAII Index"
+    },
+    "GS_US_FCI": {
+        "NAME": "GS US Financial Conditions Index",
+        "LEVEL": "GSUSFCI Index"
     }
 }
