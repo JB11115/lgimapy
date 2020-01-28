@@ -1,10 +1,12 @@
 from collections import Counter, defaultdict
 from datetime import timedelta
 from itertools import chain
+
+import numpy as np
 import pandas as pd
 
 from lgimapy.bloomberg import bdh
-from lgimapy.utils import root, load_json, dump_json, mkdir, Time, to_list
+from lgimapy.utils import load_json, mkdir, root, to_list
 
 
 def update_bloomberg_data():
@@ -33,7 +35,9 @@ class BBGTimeseriesScraper:
                 chain(*[fields.keys() for fields in self.bbg_ts_codes.values()])
             )
         )
-        self.fields = [field for field in fields if field != "NAME"]
+        non_fields = {"NAME", "ERRONEOUS_DATA"}
+        self.fields = [field for field in fields if field not in non_fields]
+
         for field in self.fields:
             self.securities[field] = [
                 security
@@ -50,7 +54,7 @@ class BBGTimeseriesScraper:
         field: str, ``{'OAS', 'YTW', 'TRET', 'XSRET', etc.}``
             Field to scrape data for.
         """
-        self.check_for_duplicates(field)
+        self._check_for_duplicates(field)
         self._field = field
 
         # Load previously scraped data.
@@ -89,6 +93,21 @@ class BBGTimeseriesScraper:
         new_df = self.scrape_data(old_df.columns, start - timedelta(20))
         new_df = new_df[new_df.index >= start]
         updated_df = pd.concat([old_df, new_df], axis=0, sort=True)
+
+        # Remove erroneous data.
+        for security in updated_df.columns:
+            try:
+                bad_dates = pd.to_datetime(
+                    to_list(
+                        self.bbg_ts_codes[security]["ERRONEOUS_DATA"][field],
+                        dtype=str,
+                    )
+                )
+            except KeyError:
+                continue
+            else:
+                for date in bad_dates:
+                    updated_df.loc[date, security] = np.nan
 
         # Save the updated data.
         updated_df.to_csv(fid)
@@ -149,19 +168,9 @@ class BBGTimeseriesScraper:
                         )
 
         df = pd.concat(df_list, axis=1, sort=True).rename(columns=col_names)
-        if self._field == "OAS":
-            exceptions = ["EM_CORP"]
-            multiply_cols = [
-                security
-                for security in df.columns
-                if "Index" in self.bbg_ts_codes[security]["OAS"]
-                and security not in exceptions
-            ]
-            self.bbg_ts_codes
-            df[multiply_cols] = df[multiply_cols].multiply(100)
-        return df
+        return self._fix_orders_of_magnitude(df)
 
-    def check_for_duplicates(self, field):
+    def _check_for_duplicates(self, field):
         """
         Check for duplicate entries in the Bloomberg codes file
         and Return errors for all duplicates.
@@ -193,9 +202,45 @@ class BBGTimeseriesScraper:
                 f"\t\tsecurities: {dupe_securities}"
             )
 
+    def _fix_orders_of_magnitude(self, df):
+        """
+        Correct securities for which Bloomberg does
+        not return consistent orders of magnitude.
+
+        Parameters
+        ----------
+        df: pd.DataFrame
+            Scraped DataFrame.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            DataFrame corrected for orders of magnitude.
+        """
+        if self._field == "OAS":
+            exceptions = ["EM_CORP"]
+            multiply_cols = [
+                col
+                for col in df.columns
+                if "Index" in self.bbg_ts_codes[col]["OAS"]
+                and col not in exceptions
+            ]
+            df[multiply_cols] = df[multiply_cols].multiply(100)
+        elif self._field == "YTW":
+            exceptions = ["UST_10Y_RY"]
+            div_cols = [
+                col
+                for col in df.columns
+                if ("UST" in col and Counter(col.lower())["y"] > 1)
+                and col not in exceptions
+            ]
+            df[div_cols] = df[div_cols].divide(100)
+            df /= 100
+        return df
+
 
 if __name__ == "__main__":
     update_bloomberg_data()
-    # self = BBGTimeseriesScraper()
-    # field = "LEVEL"
-    # self.create_data_file(field)
+    self = BBGTimeseriesScraper()
+    field = "OAS"
+    self.create_data_file(field)
