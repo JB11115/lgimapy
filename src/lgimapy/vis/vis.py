@@ -16,17 +16,17 @@ from tqdm import tqdm
 
 from lgimapy.bloomberg import bdh
 from lgimapy.data import Database
-from lgimapy.utils import root
+from lgimapy.utils import mkdir, root, to_list
 
 # pd.plotting.register_matplotlib_converters()
 # %matplotlib qt
 # os.chdir(root("src/lgimapy/vis"))
 
 # %%
-def style(background="white"):
+def style(style="fivethirtyeight", background="white"):
     """Apply preferred style to interactive and saved plots."""
     pd.plotting.register_matplotlib_converters()
-    plt.style.use("fivethirtyeight")
+    plt.style.use(style)
     mpl.rcParams["axes.facecolor"] = background
     mpl.rcParams["axes.edgecolor"] = background
     mpl.rcParams["figure.facecolor"] = background
@@ -37,6 +37,7 @@ def style(background="white"):
 
 def show():
     """Display current figure."""
+    plt.tight_layout()
     plt.show()
 
 
@@ -66,6 +67,7 @@ def savefig(fid, path=None, dpi=300):
         full_fid = f"{str(path)}/{fid}.png"
     else:
         full_fid = f"{fid}.png"
+    plt.tight_layout()
     plt.savefig(full_fid, dpi=dpi, bbox_inches="tight")
 
 
@@ -123,7 +125,9 @@ def colors(color):
 
 
 # %%
-def coolwarm(x, center=0, symettric=False, quality=1000):
+def coolwarm(
+    x, center=0, symettric=False, quality=1000, cmap="coolwarm", pal=None
+):
     """
     Create custom diverging color palette centered around
     specified value.
@@ -151,7 +155,8 @@ def coolwarm(x, center=0, symettric=False, quality=1000):
         List of custom color pallete hex codes for each
         respective input value.
     """
-    pal = sns.color_palette("coolwarm", quality).as_hex()
+    if pal is None:
+        pal = sns.color_palette(cmap, quality).as_hex()
 
     # Convert x into array and split by center value.
     x = np.array(x)
@@ -167,6 +172,32 @@ def coolwarm(x, center=0, symettric=False, quality=1000):
     x_pos_norm = ((quality - 1) * (0.5 + 0.5 * x_pos_center[1:])).astype(int)
 
     return [pal[ix] for ix in np.concatenate([x_neg_norm, x_pos_norm])]
+
+
+def hex_to_rgb(h):
+    """
+    Convert hex color codes to RGB.
+
+    Parameters
+    ----------
+    h: str or List[str].
+        Hex codes for conversion.
+
+    Returns
+    -------
+    Tuple[int] or List[Tuple[int]]:
+        RGB triple(s) for input hex code(s).
+    """
+    hex_codes = to_list(h, dtype=str)
+    rgb_codes = []
+    for hex_code in hex_codes:
+        rgb_codes.append(
+            tuple(int(hex_code.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
+        )
+    if len(rgb_codes) == 1:
+        return rgb_codes[0]
+    else:
+        return rgb_codes
 
 
 def spider_plots():
@@ -330,11 +361,12 @@ def calculate_ticks(ax, ticks, round_to=0.1, center=False):
     return values * round_to
 
 
-def plot_multi_y_axis_timeseries(
+def plot_double_y_axis_timeseries(
     s_left,
     s_right,
     start=None,
     end=None,
+    invert_right_axis=False,
     ax=None,
     figsize=(8, 6),
     xtickfmt=None,
@@ -348,17 +380,25 @@ def plot_multi_y_axis_timeseries(
     plot_kwargs=None,
     left_plot_kwargs=None,
     right_plot_kwargs=None,
-    color_yticks=False,
+    color_yticks=True,
     **kwargs,
 ):
     """Plot two timeseries, one on each y-axis."""
+    # Fix start and end dates of series.
+    if start is not None:
+        s_left = s_left[s_left.index >= start]
+        s_right = s_right[s_right.index >= start]
+    if end is not None:
+        s_left = s_left[s_left.index <= end]
+        s_right = s_right[s_right.index <= end]
+
+    # Create axis objects.
     if ax is None:
         fig, ax_left = plt.subplots(1, 1, figsize=figsize)
     else:
         ax_left = ax
     ax_right = ax_left.twinx()
-
-    # ax_right.grid(False)
+    ax_right.grid(False)
 
     # Update kwargs and plot.
     kwargs_left = {
@@ -389,7 +429,7 @@ def plot_multi_y_axis_timeseries(
 
     # Add extra info and color labels.
     if title is not None:
-        ax_right.set_title(title)
+        ax_right.set_title(title, fontweight="bold")
     if xlabel is not None:
         ax_right.set_xlabel(xlabel)
     if ylabel_left is not None:
@@ -403,17 +443,143 @@ def plot_multi_y_axis_timeseries(
         lns = ln_left + ln_right
         labs = [ln.get_label() for ln in lns]
         ax_right.legend(lns, labs)
+    if invert_right_axis:
+        ax_right.set_ylim(*ax_right.get_ybound()[::-1])
     plt.tight_layout()
 
 
-# %%
+def plot_triple_y_axis_timeseries(
+    s_left,
+    s_right_inner,
+    s_right_outer,
+    start=None,
+    end=None,
+    invert_left_axis=False,
+    ax=None,
+    figsize=(8, 6),
+    xtickfmt=None,
+    xlabel=None,
+    ytickfmt_left=None,
+    ytickfmt_right_inner=None,
+    ytickfmt_right_outer=None,
+    ylabel_left=None,
+    ylabel_right_inner=None,
+    ylabel_right_outer=None,
+    title=None,
+    legend=False,
+    grid=True,
+    plot_kwargs=None,
+    plot_kwargs_left=None,
+    plot_kwargs_right_inner=None,
+    plot_kwargs_right_outer=None,
+    color_yticks=True,
+    **kwargs,
+):
+    """Plot two timeseries, one on each y-axis."""
+    # Fix start and end dates of series.
+    if start is not None:
+        s_left = s_left[s_left.index >= start]
+        s_right_inner = s_right_inner[s_right_inner.index >= start]
+        s_right_outer = s_right_outer[s_right_outer.index >= start]
+    if end is not None:
+        s_left = s_left[s_left.index <= end]
+        s_right_inner = s_right_inner[s_right_inner.index <= end]
+        s_right_outer = s_right_outer[s_right_outer.index <= end]
+
+    # Create axis objects.
+    if ax is None:
+        fig, ax_left = plt.subplots(1, 1, figsize=figsize)
+    else:
+        ax_left = ax
+    ax_right_inner = ax_left.twinx()
+    ax_right_outer = ax_left.twinx()
+    if not grid:
+        ax_left.grid(False)
+
+    # Make spine visible for outer right axis and push it
+    # outside the inner axis.
+    ax_right_inner.spines["right"].set_position(("axes", 1.05))
+    ax_right_outer.spines["right"].set_position(("axes", 1.25))
+    make_patch_spines_invisible(ax_left)
+    for axis in [ax_right_inner, ax_right_outer]:
+        make_patch_spines_invisible(axis)
+        axis.grid(False)
+        axis.spines["right"].set_visible(True)
+        axis.spines["right"].set_linewidth(1.5)
+        axis.spines["right"].set_color("lightgrey")
+        axis.tick_params(right="on", length=5)
+
+    # Update kwargs and plot.
+    kwargs_left = {
+        "color": "darkorchid",
+        "alpha": 0.9,
+        "lw": 1.5,
+        "label": s_left.name,
+    }
+    kwargs_left.update(**kwargs)
+    if plot_kwargs_left is not None:
+        kwargs_left.update(**plot_kwargs_left)
+    kwargs_right_inner = {
+        "color": "navy",
+        "alpha": 0.9,
+        "lw": 1.5,
+        "label": s_right_inner.name,
+    }
+    kwargs_right_inner.update(**kwargs)
+    if plot_kwargs_right_inner is not None:
+        kwargs_right_inner.update(**plot_kwargs_right_inner)
+    kwargs_right_outer = {
+        "color": "dodgerblue",
+        "alpha": 0.9,
+        "lw": 1.5,
+        "label": s_right_outer.name,
+    }
+    kwargs_right_outer.update(**kwargs)
+    if plot_kwargs_right_outer is not None:
+        kwargs_right_outer.update(**plot_kwargs_right_outer)
+    ln_left = ax_left.plot(s_left, **kwargs_left)
+    ln_right_inner = ax_right_inner.plot(s_right_inner, **kwargs_right_inner)
+    ln_right_outer = ax_right_outer.plot(s_right_outer, **kwargs_right_outer)
+
+    # Apply custom formatting on x and y-axis if specified.
+    format_yaxis(ax_left, ytickfmt_left)
+    format_yaxis(ax_right_inner, ytickfmt_right_inner)
+    format_yaxis(ax_right_outer, ytickfmt_right_outer)
+    format_xaxis(ax_right_outer, s_right_outer, xtickfmt)
+
+    # Add extra info and color labels.
+    if title is not None:
+        ax_right_outer.set_title(title, fontweight="bold")
+    if xlabel is not None:
+        ax_right_outer.set_xlabel(xlabel)
+    if ylabel_left is not None:
+        ax_left.set_ylabel(ylabel_left, color=kwargs_left["color"])
+    if ylabel_right_inner is not None:
+        ax_right_inner.set_ylabel(
+            ylabel_right_inner, color=kwargs_right_inner["color"]
+        )
+    if ylabel_right_outer is not None:
+        ax_right_outer.set_ylabel(
+            ylabel_right_outer, color=kwargs_right_outer["color"]
+        )
+    if color_yticks:
+        ax_left.tick_params(axis="y", colors=kwargs_left["color"])
+        ax_right_inner.tick_params(axis="y", colors=kwargs_right_inner["color"])
+        ax_right_outer.tick_params(axis="y", colors=kwargs_right_outer["color"])
+    if legend:
+        lns = ln_left + ln_right_inner + ln_right_outer
+        labs = [ln.get_label() for ln in lns]
+        ax_right_outer.legend(lns, labs)
+    if invert_left_axis:
+        ax_left.set_ylim(*ax_left.get_ybound()[::-1])
+    plt.tight_layout()
 
 
 def plot_timeseries(
     s,
     start=None,
     end=None,
-    stats_start="1/1/2010",
+    stats_start=None,
     stats=False,
     bollinger=False,
     mean_line=False,
@@ -435,7 +601,8 @@ def plot_timeseries(
     plot_kwargs.update(**kwargs)
 
     # Subset series to stat collection period and get stat formats.
-    s = s[s.index >= pd.to_datetime(stats_start)].copy()
+    if stats_start is not None:
+        s = s[s.index >= pd.to_datetime(stats_start)].copy()
     if ytickfmt is None:
         n = 0
         f = "f"
@@ -457,7 +624,8 @@ def plot_timeseries(
              """
         )
     else:
-        plot_kwargs["label"] = "_nolegend_"
+        if "label" not in plot_kwargs:
+            plot_kwargs["label"] = "_nolegend_"
 
     if mean_line:
         avg = np.mean(s)
@@ -466,7 +634,7 @@ def plot_timeseries(
             ls="--",
             lw=1.5,
             color="firebrick",
-            label=f"Mean: {np.mean(s):.{n}{f}}",
+            label=f"Mean: {avg:.{n}{f}}",
         )
 
     if pct_lines:
@@ -502,7 +670,7 @@ def plot_timeseries(
 
     # Add extra info.
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(title, fontweight="bold")
     if xlabel is not None:
         ax.set_xlabel(xlabel)
     if ylabel is not None:
@@ -572,7 +740,7 @@ def plot_multiple_timeseries(
 
     # Add extra info.
     if title is not None:
-        ax.set_title(title)
+        ax.set_title(title, fontweight="bold")
     if xlabel is not None:
         ax.set_xlabel(xlabel)
     if ylabel is not None:
@@ -582,20 +750,33 @@ def plot_multiple_timeseries(
     plt.tight_layout()
 
 
+# %%
 def format_xaxis(ax, s, xtickfmt):
     """Format dates on x axis if necessary."""
     if not isinstance(s.index[0], Timestamp):
         return
     if xtickfmt is None:
         day_range = (s.index[-1] - s.index[0]).days
-        if day_range > 1000:
+        if day_range > 365 * 35:
+            loc = mpl.dates.YearLocator(10)
+            date_fmt = mpl.dates.DateFormatter("%Y")
+        elif day_range > 365 * 20:
+            loc = mpl.dates.YearLocator(5)
+            date_fmt = mpl.dates.DateFormatter("%Y")
+        elif day_range > 365 * 12:
+            loc = mpl.dates.YearLocator(4)
+            date_fmt = mpl.dates.DateFormatter("%Y")
+        elif day_range > 365 * 6:
+            loc = mpl.dates.YearLocator(2)
+            date_fmt = mpl.dates.DateFormatter("%Y")
+        elif day_range > 1000:
             loc = mpl.dates.MonthLocator(bymonth=1, bymonthday=1)
             date_fmt = mpl.dates.DateFormatter("%Y")
         elif day_range > 720:
             loc = mpl.dates.MonthLocator(bymonth=(1, 7), bymonthday=1)
             date_fmt = mpl.dates.DateFormatter("%b-%Y")
         elif day_range > 360:
-            loc = mpl.dates.MonthLocator(bymonth=(1, 5, 9), bymonthday=1)
+            loc = mpl.dates.MonthLocator(bymonth=(1, 4, 7, 10), bymonthday=1)
             date_fmt = mpl.dates.DateFormatter("%b-%Y")
         elif day_range > 220:
             loc = mpl.dates.MonthLocator(bymonthday=1, interval=2)
@@ -647,9 +828,6 @@ def bollinger_bands(vals, window_size, n_std):
 #     start="1/1/2018",
 # )
 # plt.show()
-
-
-# %%
 
 
 def rolling_correlation():
@@ -999,3 +1177,58 @@ def ebitda_by_sector():
     savefig("EBITDA_by_sector")
     plt.show()
     # %%
+
+
+def make_patch_spines_invisible(ax):
+    """Make axis edges invisible."""
+    ax.set_frame_on(True)
+    ax.patch.set_visible(False)
+    for sp in ax.spines.values():
+        sp.set_visible(False)
+
+
+def set_percentile_limits(series, axes, percentiles=(5, 95)):
+    """Set limits such that 5/95 percentils are equal."""
+    vals = {}
+    for s, ax_side in zip(series, ["left", "right"]):
+        vals[ax_side] = {
+            "min": np.min(s),
+            "max": np.max(s),
+            "pct_min": np.percentile(s, percentiles[0]),
+            "pct_max": np.percentile(s, percentiles[1]),
+            "tgt_min": 0.98 * np.min(s),
+            "tgt_max": 1.02 * np.max(s),
+        }
+    mult_offset = 0
+    while (
+        vals["left"]["pct_min"] * (1 - mult_offset) > vals["left"]["tgt_min"]
+        or vals["right"]["pct_min"] * (1 - mult_offset)
+        > vals["right"]["tgt_min"]
+        or vals["left"]["pct_max"] * (1 + mult_offset) < vals["left"]["tgt_max"]
+        or vals["right"]["pct_max"] * (1 + mult_offset)
+        < vals["right"]["tgt_max"]
+    ):
+        mult_offset += 0.001
+    axes[0].set_ylim(
+        (1 - mult_offset) * vals["left"]["pct_min"],
+        (1 + mult_offset) * vals["left"]["pct_max"],
+    )
+    axes[1].set_ylim(
+        (1 - mult_offset) * vals["right"]["pct_min"],
+        (1 + mult_offset) * vals["right"]["pct_max"],
+    )
+
+
+def hist(ax, a, bins=20, weights=None, normed=True, bin_width=1, **kwargs):
+    # Find histogram bin locations and sizes.
+    res, edges = np.histogram(a, bins=bins, weights=weights, density=normed)
+    bw = edges[1] - edges[0]
+    pct = res * bw
+
+    # Update plot arguments.
+    plot_kwargs = {"color": "steelblue", "alpha": 0.7}
+    plot_kwargs.update(**kwargs)
+    ax.bar(edges[:-1], pct, width=(bin_width * bw), **plot_kwargs)
+    if normed:
+        tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
+        ax.yaxis.set_major_formatter(tick)

@@ -9,9 +9,12 @@ from lgimapy.vis.vis import (
     plot_timeseries,
     plot_timeseries,
     plot_multiple_timeseries,
-    plot_multi_y_axis_timeseries,
+    plot_double_y_axis_timeseries,
+    plot_triple_y_axis_timeseries,
     format_xaxis,
     format_yaxis,
+    set_percentile_limits,
+    hist,
 )
 
 __all__ = [
@@ -25,7 +28,10 @@ __all__ = [
     "plot_timeseries",
     "plot_timeseries",
     "plot_multiple_timeseries",
-    "plot_multi_y_axis_timeseries",
+    "plot_double_y_axis_timeseries",
+    "plot_triple_y_axis_timeseries",
     "format_xaxis",
     "format_yaxis",
+    "set_percentile_limits",
+    "hist",
 ]
