@@ -37,14 +37,13 @@ def build_movers_sheets():
 
     # Make dict of dates to analyze and then choose nearest traded dates.
     db = Database()
-    raw_dates = {
-        "yesterday": db.trade_dates[-1],
-        "week": pd.to_datetime(dt.date.today() - dt.timedelta(days=7)),
+    dates = {
+        "yesterday": db.date("today"),
+        "week": db.date("6d"),
         # 'month': pd.to_datetime(dt.date.today() - dt.timedelta(days=30)),
-        "month": pd.to_datetime(month_date),
-        "tights": pd.to_datetime(tights_date),
+        "month": db.nearest_date(month_date),
+        "tights": db.nearest_date(tights_date),
     }
-    dates = {k: db.nearest_date(v) for k, v in raw_dates.items()}
     date_df = pd.DataFrame(dates, index=["date"])[["week", "month", "tights"]]
     date_df.to_csv(fid.format(9))
 
