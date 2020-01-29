@@ -274,7 +274,7 @@ def nearest_date(date, date_list, inclusive=True, before=True, after=True):
         elif after:
             return date_list[bisect_left(date_list, ref_date)]
         else:
-            raise ValueError("Either before or after must be True")
+            raise ValueError("Either before or after must be True.")
     else:
         if before and after:
             closest_dates = [
@@ -287,7 +287,7 @@ def nearest_date(date, date_list, inclusive=True, before=True, after=True):
         elif after:
             return date_list[bisect_right(date_list, ref_date)]
         else:
-            raise ValueError("Either before or after must be True")
+            raise ValueError("Either before or after must be True.")
 
 
 def check_all_equal(lst):
