@@ -121,13 +121,12 @@ class Database:
         Full DataFrame of all cusips over loaded period.
     trade_dates: List[datetime].
         List of dates with bond data.
-    loaded_dates: List[datetime].
-        List of dates currently loaded by builder.
     """
 
     def __init__(self, server="LIVE"):
         # Load mapping from standard ratings to numeric values.
         self._ratings = load_json("ratings")
+        self._loaded_dates = None
         self._bbg_dfs = {}
         n = 1 if server.upper() == "LIVE" else 2
         self._conn = pyodbc.connect(
@@ -168,8 +167,7 @@ class Database:
             infer_datetime_format=True,
         )
 
-    @lru_cache(maxsize=None)
-    def date(self, date_delta, reference_date=None):
+    def date(self, date_delta, reference_date=None, **kwargs):
         """
         Find date relative to a specified date.
 
@@ -179,11 +177,17 @@ class Database:
             Difference between reference date and target date.
         reference_date: datetime, default=None
             Reference date to use, if None use most recent trade date.
+        kwargs:
+            Keyword arguments for :func:`nearest_date`.
 
         Returns
         -------
         datetime:
             Target date from reference and delta.
+
+        See Also
+        --------
+        :func:`nearest_date`
         """
         date_delta = date_delta.upper()
         # Use today as reference date if none is provided,
@@ -191,7 +195,7 @@ class Database:
         if reference_date is None:
             today = self.trade_dates[-1]
         else:
-            today = self.nearest_date(to_datetime(reference_date))
+            today = self.nearest_date(reference_date, **kwargs)
 
         last_trade = partial(bisect_left, self.trade_dates)
         if date_delta == "TODAY":
@@ -210,20 +214,28 @@ class Database:
             ]
         else:
             # Assume value-unit specification.
-            val, unit = sep_str_int(date_delta.upper())
+            positive = "+" in date_delta
+            val, unit = sep_str_int(date_delta.strip("+"))
             reverse_kwarg_map = {
                 "days": ["D", "DAY", "DAYS"],
                 "weeks": ["W", "WEEK", "WEEKS"],
                 "months": ["M", "MONTH", "MONTHS"],
                 "years": ["Y", "YEAR", "YEARS"],
             }
-            kwarg_map = {
+            dt_kwarg_map = {
                 key: kwarg
                 for kwarg, keys in reverse_kwarg_map.items()
                 for key in keys
             }
-            kwargs = {kwarg_map[unit]: val}
-            return self.nearest_date(today - relativedelta(**kwargs))
+            dt_kwargs = {dt_kwarg_map[unit]: val}
+            if positive:
+                return self.nearest_date(
+                    today + relativedelta(**dt_kwargs), **kwargs
+                )
+            else:
+                return self.nearest_date(
+                    today - relativedelta(**dt_kwargs), **kwargs
+                )
 
     @property
     @lru_cache(maxsize=None)
@@ -365,7 +377,7 @@ class Database:
         df: pd.DataFrame
             DataFrame with all CUSIPs updated to current values.
         """
-        dates = list(self.loaded_dates)[::-1]
+        dates = list(self._loaded_dates)[::-1]
         df.set_index("CUSIP", inplace=True)
 
         # Build CUSIP map of CUSIPs which change.
@@ -829,7 +841,7 @@ class Database:
                 (self.df["Date"] >= to_datetime(s))
                 & (self.df["Date"] <= to_datetime(end))
             ]
-
+            self._loaded_dates = list(pd.to_datetime(self.df["Date"].unique()))
             if ret_df:
                 return self.df
             else:
@@ -885,7 +897,7 @@ class Database:
                 raise ValueError("Empty Index, try selecting different dates.")
 
         # Save unique loaded dates to memory.
-        self.loaded_dates = list(pd.to_datetime(sql_df["Date"].unique()))
+        self._loaded_dates = list(pd.to_datetime(sql_df["Date"].unique()))
 
         # Standardize cusips over full period.
         if clean:
@@ -1321,6 +1333,9 @@ class Database:
         strategy=None,
         manager=None,
         universe="returns",
+        drop_cash=True,
+        drop_treasuries=True,
+        market_cols=None,
     ):
         """
         Load market data from SQL server. If end is not specified
@@ -1335,11 +1350,9 @@ class Database:
         if date is not None:
             start = end = date
         start = (
-            current_date
-            if start is None
-            else pd.to_datetime(start).strftime(fmt)
+            current_date if start is None else to_datetime(start).strftime(fmt)
         )
-        end = current_date if end is None else pd.to_datetime(end).strftime(fmt)
+        end = current_date if end is None else to_datetime(end).strftime(fmt)
 
         # Convert inputs for SQL call.
         if accounts is None:
@@ -1372,16 +1385,51 @@ class Database:
         # # Query SQL.
         # bm_df = pd.read_sql(sql_base + sql_benchmark, self._conn)
         # p_df = pd.read_sql(sql_base + sql_portfolio, self._conn)
-        both_df = pd.read_sql(sql_base + sql_both, self._conn)
-        both_df = self._preprocess_portfolio_data(both_df)
-        if not len(both_df):
+        df = pd.read_sql(sql_base + sql_both, self._conn)
+        df = self._preprocess_portfolio_data(df)
+        if not len(df):
             raise ValueError("No data for specified date.")
-        both_df["Date"] = pd.to_datetime(both_df["Date"])
-        rating_cols = ["Moody", "S&P", "Fitch"]
-        both_df["NumericRating"] = self._get_numeric_ratings(
-            both_df, rating_cols
-        )
-        return both_df
+
+        # Fix dtypes.
+        df["Date"] = pd.to_datetime(df["Date"])
+
+        # Drop cash and treasuries if needed.
+        bad_sectors = []
+        if drop_cash:
+            bad_sectors.append("CASH")
+        if drop_treasuries:
+            bad_sectors.append("TREASURIES")
+        if bad_sectors:
+            df = df[~df["Sector"].isin(set(bad_sectors))].copy()
+
+        if market_cols is None:
+            return df.sort_values(["Date", "Ticker"])
+
+        else:
+            # Get market data, loading if required.
+            if (
+                self._loaded_dates is None
+                or to_datetime(start) < self._loaded_dates[0]
+                or to_datetime(end) > self._loaded_dates[-1]
+            ):
+                self.load_market_data(start=start, end=end, local=True)
+            market_df = self.build_market_index(start=start, end=end).df
+
+            # Subset columns to append to portfolio data.
+            if market_cols == "all":
+                market_cols = list(set(market_df) - set(df))
+            else:
+                market_cols = to_list(market_cols, dtype=str)
+            ix = ["Date", "CUSIP"]
+            market_cols.extend(ix)
+
+            # Combine market data to portfolio data.
+            return (
+                df.set_index(ix)
+                .join(market_df[market_cols].set_index(ix), on=ix)
+                .reset_index()
+                .sort_values(["Date", "Ticker"])
+            )
 
     def update_portfolio_account_data(self):
         # Load SQL table.
@@ -1505,11 +1553,13 @@ class Database:
                 limit_direction="forward", axis=0, inplace=True, **interp_kwargs
             )
 
+        # Add market data if specified.
+
         return df
 
     @property
     @lru_cache(maxsize=None)
-    def bbg_names(self):
+    def _bbg_name_dict(self):
         """
         Formatted names for Bloomberg data.
 
@@ -1525,6 +1575,14 @@ class Database:
             if "NAME" in fields
         }
         return names
+
+    def bbg_names(self, codes):
+        code_list = to_list(codes, dtype=str)
+        names = [self._bbg_name_dict[code] for code in code_list]
+        if len(names) == 1:
+            return names[0]
+        else:
+            return names
 
     def load_cusip_event_dates(self, start=None, end=None):
         """
