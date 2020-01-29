@@ -1416,7 +1416,7 @@ class Database:
             market_df = self.build_market_index(start=start, end=end).df
 
             # Subset columns to append to portfolio data.
-            if market_cols == "all":
+            if market_cols is True:
                 market_cols = list(set(market_df) - set(df))
             else:
                 market_cols = to_list(market_cols, dtype=str)
