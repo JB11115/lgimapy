@@ -325,7 +325,6 @@ def treemap():
 
 
 def linreg():
-    # %%
     x = np.array([46, 12, 14, 18, 15, 19, 20, 30, 20, 20])
     bm = np.array([16.8, 10.7, 17.1, 12.7, -6.6, 16.4, -4.6, 10.2, 12.2, -6.8])
     lgim = np.array([19.8, 12.2, 18.3, 14.5, -4.7, 16.6, -4.1, 11, 12.3, -6.5])
@@ -343,10 +342,8 @@ def linreg():
     ax.yaxis.set_major_formatter(tick)
     savefig("dongrades vs outperformance")
     plt.show()
-    # %%
 
 
-# %%
 def calculate_ticks(ax, ticks, round_to=0.1, center=False):
     """Naive solution to aligning grids for multi y-axis plot."""
     upperbound = np.ceil(ax.get_ybound()[1] / round_to)
@@ -455,6 +452,8 @@ def plot_triple_y_axis_timeseries(
     start=None,
     end=None,
     invert_left_axis=False,
+    invert_right_inner_axis=False,
+    invert_right_outer_axis=False,
     ax=None,
     figsize=(8, 6),
     xtickfmt=None,
@@ -475,7 +474,7 @@ def plot_triple_y_axis_timeseries(
     color_yticks=True,
     **kwargs,
 ):
-    """Plot two timeseries, one on each y-axis."""
+    """Plot three timeseries, one on the left y-axis and two on the right."""
     # Fix start and end dates of series.
     if start is not None:
         s_left = s_left[s_left.index >= start]
@@ -572,6 +571,10 @@ def plot_triple_y_axis_timeseries(
         ax_right_outer.legend(lns, labs)
     if invert_left_axis:
         ax_left.set_ylim(*ax_left.get_ybound()[::-1])
+    if invert_right_inner_axis:
+        ax_right_inner.set_ylim(*ax_right_inner.get_ybound()[::-1])
+    if invert_right_outer_axis:
+        ax_right_outer.set_ylim(*ax_right_outer.get_ybound()[::-1])
     plt.tight_layout()
 
 
@@ -750,7 +753,6 @@ def plot_multiple_timeseries(
     plt.tight_layout()
 
 
-# %%
 def format_xaxis(ax, s, xtickfmt):
     """Format dates on x axis if necessary."""
     if not isinstance(s.index[0], Timestamp):
@@ -1090,7 +1092,6 @@ def highlighted_sector_downgrades():
     df = combine_sectors(df, least_downgraded, "Other")
     df.index = [ix.replace("_", " ").title() for ix in df.index]
 
-    # %%
     clrs = [colors(c) for c in "bgry"] + ["#002D72", "grey"]
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     df.T.plot.bar(stacked=True, ax=ax, color=clrs, rot=0, alpha=0.8)
@@ -1113,7 +1114,6 @@ def number_of_issuers_timeseries():
         n_issuers[i, 0] = len(df_a["Issuer"].dropna().unique())
         n_issuers[i, 1] = len(df_b["Issuer"].dropna().unique())
 
-    # %%
     df = pd.DataFrame(n_issuers, columns=["A", "BBB"], index=ix_a.dates)
     for col in df.columns:
         df[col] = df[col] / df[col][0]
@@ -1134,7 +1134,6 @@ def market_value_timeseries():
     df = df.divide(df.sum(axis=1), axis=0)
     df = df[df.index > pd.to_datetime("6/1/2008")]
 
-    # %%
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
     plt.stackplot(
         df.index,
@@ -1156,14 +1155,12 @@ def market_value_timeseries():
 
 
 def ebitda_by_sector():
-    # %%
     df = pd.read_clipboard(
         names=["sector", "change_mn", "change", "level"], sep="\s{2,}"
     )
     df["sector"] = df["sector"].str.replace(" e", "e")
     df["change"] = [float(val.replace("%", "")) for val in df["change"]]
 
-    # %%
     pal = sns.set_palette("coolwarm")
     fig, ax = plt.subplots(1, 1, figsize=[8, 8])
     y_pos = np.arange(len(df))
@@ -1176,7 +1173,6 @@ def ebitda_by_sector():
     ax.set_title("EBITDA Growth by Sector (y/y)")
     savefig("EBITDA_by_sector")
     plt.show()
-    # %%
 
 
 def make_patch_spines_invisible(ax):
@@ -1219,16 +1215,79 @@ def set_percentile_limits(series, axes, percentiles=(5, 95)):
     )
 
 
-def hist(ax, a, bins=20, weights=None, normed=True, bin_width=1, **kwargs):
+def weighted_median(a, weights):
+    df = pd.DataFrame({"a": a, "weights": weights})
+    df.sort_values("a", inplace=True)
+    cumsum = np.cumsum(df["a"])
+    cutoff = np.sum(df["a"]) / 2
+    return df[cumsum >= cutoff]["a"].iloc[0]
+
+
+# %%
+
+
+def plot_hist(
+    a,
+    bins=20,
+    bin_width=1,
+    weights=None,
+    normed=True,
+    mean=False,
+    mean_kws=None,
+    median=False,
+    median_kws=None,
+    prec=1,
+    ax=None,
+    figsize=(6, 4),
+    **kwargs,
+):
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+
     # Find histogram bin locations and sizes.
     res, edges = np.histogram(a, bins=bins, weights=weights, density=normed)
     bw = edges[1] - edges[0]
-    pct = res * bw
+    if normed:
+        res *= bw
 
     # Update plot arguments.
-    plot_kwargs = {"color": "steelblue", "alpha": 0.7}
+    plot_kwargs = {"color": "steelblue", "alpha": 0.7, "label": "_nolegend_"}
     plot_kwargs.update(**kwargs)
-    ax.bar(edges[:-1], pct, width=(bin_width * bw), **plot_kwargs)
+    ax.bar(edges[:-1], res, width=(bin_width * bw), **plot_kwargs)
     if normed:
         tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
         ax.yaxis.set_major_formatter(tick)
+
+    # Add mean/median lines.
+    if mean:
+        if weights is not None:
+            mean_val = np.sum(a * weights / np.sum(weights))
+        else:
+            mean_val = np.mean(a)
+        mean_kwargs = {
+            "color": "darkorange",
+            "ls": "--",
+            "lw": 1.5,
+            "label": f"Mean: {mean_val:.{prec}f}",
+        }
+        if mean_kws is not None:
+            mean_kwargs.update(mean_kws)
+        ax.axvline(mean_val, **mean_kwargs)
+
+    if median:
+        if weights is not None:
+            median_val = weighted_median(a, weights)
+        else:
+            median_val = np.median(a)
+        median_kwargs = {
+            "color": "firebrick",
+            "ls": "--",
+            "lw": 1.5,
+            "label": f"Mean: {median_val:.{prec}f}",
+        }
+        if median_kws is not None:
+            median_kwargs.update(median_kws)
+        ax.axvline(median_val, **median_kwargs)
+
+    if mean or median:
+        ax.legend()
