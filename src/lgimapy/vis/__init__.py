@@ -14,7 +14,7 @@ from lgimapy.vis.vis import (
     format_xaxis,
     format_yaxis,
     set_percentile_limits,
-    hist,
+    plot_hist,
 )
 
 __all__ = [
@@ -33,5 +33,5 @@ __all__ = [
     "format_xaxis",
     "format_yaxis",
     "set_percentile_limits",
-    "hist",
+    "plot_hist",
 ]
