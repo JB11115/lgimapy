@@ -23,8 +23,17 @@ from lgimapy.utils import mkdir, root, to_list
 # os.chdir(root("src/lgimapy/vis"))
 
 # %%
-def style(style="fivethirtyeight", background="white"):
-    """Apply preferred style to interactive and saved plots."""
+def style(background="white", style="fivethirtyeight"):
+    """
+    Apply preferred style to interactive and saved plots.
+
+    Parameters
+    ----------
+    background: matplotlib color, default='white'
+        Color for figure background.
+    style: matplotlib style, default='fivethirtyeight'
+        Style sheet for figures.
+    """
     pd.plotting.register_matplotlib_converters()
     plt.style.use(style)
     mpl.rcParams["axes.facecolor"] = background
@@ -61,7 +70,18 @@ def close(fig=None):
 
 
 def savefig(fid, path=None, dpi=300):
-    """Save figure to specified location."""
+    """
+    Save figure to specified location.
+
+    Parameters
+    ----------
+    fid: str
+        Filename for saved figure.
+    path: Path, optional
+        Path to directory to save figure.
+    dpi: int, default=300
+        Figure resolution (dots per inch).
+    """
     if path is not None:
         mkdir(path)
         full_fid = f"{str(path)}/{fid}.png"
@@ -93,9 +113,9 @@ def subplots(*args, **kwargs):
     ax: matplotlib.axes.Axes
         Object or array of Axes objects.
     """
-    plot_kwargs = {"figsize": (8, 6)}
-    plot_kwargs.update(**kwargs)
-    return plt.subplots(*args, **plot_kwargs)
+    plot_kws = {"figsize": (8, 6)}
+    plot_kws.update(**kwargs)
+    return plt.subplots(*args, **plot_kws)
 
 
 def colors(color):
@@ -201,7 +221,6 @@ def hex_to_rgb(h):
 
 
 def spider_plots():
-    # %%
     prev_df = pd.DataFrame(
         {
             "Economic Backdrop": [1, 0, 1, 0],
@@ -235,8 +254,6 @@ def spider_plots():
     ).T
 
     col = "US"
-
-    # %%
 
     fig, axes = plt.subplots(2, 2, figsize=(10, 10), subplot_kw={"polar": True})
 
@@ -272,19 +289,15 @@ def spider_plots():
         ax.grid(True)
     plt.tight_layout()
     plt.show()
-    # %%
 
 
 def treemap():
-    from lgimapy.data import Database
-
     db = Database()
     db.load_market_data()
     ix = db.build_market_index(
         rating=("BBB+", "BBB-"), financial_flag="non-financial"
     )
 
-    # %%
     ix.df["market_value"] = ix.df["AmountOutstanding"] * ix.df["DirtyPrice"]
     df = ix.df[["Ticker", "market_value"]]
     df.set_index("Ticker", inplace=True)
@@ -298,7 +311,6 @@ def treemap():
     ]
 
     df.sort_values("market_value", inplace=True)
-    # %%
     plt.figure(figsize=[22, 14])
     colors = ["#DD2026", "#209CD8", "#FDD302", "#09933C"]
     squarify.plot(
@@ -374,13 +386,53 @@ def plot_double_y_axis_timeseries(
     ylabel_right=None,
     title=None,
     legend=False,
-    plot_kwargs=None,
-    left_plot_kwargs=None,
-    right_plot_kwargs=None,
+    plot_kws=None,
+    plot_kws_left=None,
+    plot_kws_right=None,
     color_yticks=True,
     **kwargs,
 ):
-    """Plot two timeseries, one on each y-axis."""
+    """
+    Plot two timeseries, one on each y-axis.
+
+    Parameters
+    ----------
+    s_{left, right}: pd.Series
+        Series for `left` or `right` axis.
+    start: datetime, optional
+        Date to begin plot.
+    end, datetime, optional
+        Date to end plot.
+    invert_right_axis: bool, default=False
+        If True invert right axis.
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+    figsize: (float, float), default=(8, 6).
+        Figure size.
+    xtickfmt: `{'auto', None}`, optional
+        Format for x tick labels. If `auto` use matplotlib's
+        AutoDateLocator and ConciseDateFormatter.
+    xlabel: str, optional
+        X-axis label.
+    ytickfmt_{left, right}: str, optional
+        Format as used by `str.format()` for `left` or `right`
+        y-axis.
+    ylabel_{left, right}: str, optional
+        Y-axis label for `left` or `right` axis.
+    title: str, optional
+        Plot title.
+    legend: bool or dict, default=False
+        If False, hide legend. If True, show legend defaulting
+        to names of `s_left` and `s_right` with default parameters.
+        For non-default parameters pass kwargs to `Axes.legend()`.
+    plot_kws: dict, optional
+        Kwargs for both plots.
+    plot_kws_{left, right}, optional
+        Kwargs for either `left` or `right` plots.
+    color_yticks: bool, default=True
+        If True color y-axis tick labels to match respective
+        colors from line plots.
+    """
     # Fix start and end dates of series.
     if start is not None:
         s_left = s_left[s_left.index >= start]
@@ -405,8 +457,8 @@ def plot_double_y_axis_timeseries(
         "label": s_left.name,
     }
     kwargs_left.update(**kwargs)
-    if left_plot_kwargs is not None:
-        kwargs_left.update(**left_plot_kwargs)
+    if plot_kws_left is not None:
+        kwargs_left.update(**plot_kws_left)
     kwargs_right = {
         "color": "firebrick",
         "alpha": 0.9,
@@ -414,8 +466,8 @@ def plot_double_y_axis_timeseries(
         "label": s_right.name,
     }
     kwargs_right.update(**kwargs)
-    if right_plot_kwargs is not None:
-        kwargs_right.update(**right_plot_kwargs)
+    if plot_kws_right is not None:
+        kwargs_right.update(**plot_kws_right)
     ln_left = ax_left.plot(s_left, **kwargs_left)
     ln_right = ax_right.plot(s_right, **kwargs_right)
 
@@ -439,10 +491,14 @@ def plot_double_y_axis_timeseries(
     if legend:
         lns = ln_left + ln_right
         labs = [ln.get_label() for ln in lns]
-        ax_right.legend(lns, labs)
+        if isinstance(legend, dict):
+            ax_right.legend(lns, labs, **legend)
+        else:
+            ax_right.legend(lns, labs)
     if invert_right_axis:
         ax_right.set_ylim(*ax_right.get_ybound()[::-1])
     plt.tight_layout()
+    help(sns.regplot)
 
 
 def plot_triple_y_axis_timeseries(
@@ -467,14 +523,55 @@ def plot_triple_y_axis_timeseries(
     title=None,
     legend=False,
     grid=True,
-    plot_kwargs=None,
-    plot_kwargs_left=None,
-    plot_kwargs_right_inner=None,
-    plot_kwargs_right_outer=None,
+    plot_kws=None,
+    plot_kws_left=None,
+    plot_kws_right_inner=None,
+    plot_kws_right_outer=None,
     color_yticks=True,
     **kwargs,
 ):
-    """Plot three timeseries, one on the left y-axis and two on the right."""
+    """
+    Plot three timeseries, one on the left y-axis and two on the right.
+
+    Parameters
+    ----------
+    s_{left, right_inner, right_outer}: pd.Series
+        Series for ``left``, ``right_inner``, or ``right_outer`` axis.
+    start: datetime, optional
+        Date to begin plot.
+    end, datetime, optional
+        Date to end plot.
+    invert_right_{inner, outer}_axis: bool, default=False
+        If True invert ``right_inner`` or ``right_outer`` axis.
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+    figsize: (float, float), default=(8, 6).
+        Figure size.
+    xtickfmt: ``{'auto', None}``, optional
+        Format for x tick labels. If ``auto`` use matplotlib's
+        AutoDateLocator and ConciseDateFormatter.
+    xlabel: str, optional
+        X-axis label.
+    ytickfmt_{left, right_inner, right_outer}: str, optional
+        Format as used by ``str.format()`` for ``left``, ``right_inner``,
+        or ``right_outer`` y-axis.
+    ylabel_{left, right_inner, right_outer}: str, optional
+        Y-axis label for ``left``, ``right_inner``, or ``right_outer`` axis.
+    title: str, optional
+        Plot title.
+    legend: bool or dict, default=False
+        If False, hide legend. If True, show legend defaulting
+        to names of ``s_left`` and ``s_right`` with default parameters.
+        For non-default parameters pass kwargs to ``Axes.legend()``.
+    plot_kws: dict, optional
+        Kwargs for both plots.
+    plot_kws_{left, right_inner, right_outer}, optional
+        matpltolib kwargs for either ``left``, ``right_inner``, and
+        ``right_outer`` plots.
+    color_yticks: bool, default=True
+        If True color y-axis tick labels to match respective
+        colors from line plots.
+    """
     # Fix start and end dates of series.
     if start is not None:
         s_left = s_left[s_left.index >= start]
@@ -516,8 +613,8 @@ def plot_triple_y_axis_timeseries(
         "label": s_left.name,
     }
     kwargs_left.update(**kwargs)
-    if plot_kwargs_left is not None:
-        kwargs_left.update(**plot_kwargs_left)
+    if plot_kws_left is not None:
+        kwargs_left.update(**plot_kws_left)
     kwargs_right_inner = {
         "color": "navy",
         "alpha": 0.9,
@@ -525,8 +622,8 @@ def plot_triple_y_axis_timeseries(
         "label": s_right_inner.name,
     }
     kwargs_right_inner.update(**kwargs)
-    if plot_kwargs_right_inner is not None:
-        kwargs_right_inner.update(**plot_kwargs_right_inner)
+    if plot_kws_right_inner is not None:
+        kwargs_right_inner.update(**plot_kws_right_inner)
     kwargs_right_outer = {
         "color": "dodgerblue",
         "alpha": 0.9,
@@ -534,8 +631,8 @@ def plot_triple_y_axis_timeseries(
         "label": s_right_outer.name,
     }
     kwargs_right_outer.update(**kwargs)
-    if plot_kwargs_right_outer is not None:
-        kwargs_right_outer.update(**plot_kwargs_right_outer)
+    if plot_kws_right_outer is not None:
+        kwargs_right_outer.update(**plot_kws_right_outer)
     ln_left = ax_left.plot(s_left, **kwargs_left)
     ln_right_inner = ax_right_inner.plot(s_right_inner, **kwargs_right_inner)
     ln_right_outer = ax_right_outer.plot(s_right_outer, **kwargs_right_outer)
@@ -568,7 +665,10 @@ def plot_triple_y_axis_timeseries(
     if legend:
         lns = ln_left + ln_right_inner + ln_right_outer
         labs = [ln.get_label() for ln in lns]
-        ax_right_outer.legend(lns, labs)
+        if isinstance(legend, dict):
+            ax_right_outer.legend(lns, labs, **legend)
+        else:
+            ax_right_outer.legend(lns, labs)
     if invert_left_axis:
         ax_left.set_ylim(*ax_left.get_ybound()[::-1])
     if invert_right_inner_axis:
@@ -597,11 +697,60 @@ def plot_timeseries(
     legend=True,
     **kwargs,
 ):
-    """Plot simple timeseries."""
+    """
+    Plot simple timeseries.
+
+    Parameters
+    ----------
+    s: pd.Series
+        Series to plot.
+    start: datetime, optional
+        Date to begin plot.
+    end, datetime, optional
+        Date to end plot.
+    stats_start: datetime, optional
+        Date to start aggreating statistics, may be before ``start``.
+    stats: bool, default=False
+        If True display stats in Axes legend.
+    bollinger: bool, default=False
+        If True plot bollinger bands around series.
+    mean_line: bool, default=False
+        If True plot mean line.
+    pct_lines: bool or Tuple[int], default=False
+        If tuple is given, plot lines at the given percentiles.
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+    figsize: (float, float), default=(8, 6).
+        Figure size.
+    xtickfmt: ``{'auto', None}``, optional
+        Format for x tick labels. If ``auto`` use matplotlib's
+        AutoDateLocator and ConciseDateFormatter.
+    xlabel: str, optional
+        X-axis label.
+    ytickfmt_{left, right_inner, right_outer}: str, optional
+        Format as used by ``str.format()`` for ``left``, ``right_inner``,
+        or ``right_outer`` y-axis.
+    ylabel_{left, right_inner, right_outer}: str, optional
+        Y-axis label for ``left``, ``right_inner``, or ``right_outer`` axis.
+    title: str, optional
+        Plot title.
+    legend: bool or dict, default=False
+        If False, hide legend. If True, show legend defaulting
+        to names of ``s_left`` and ``s_right`` with default parameters.
+        For non-default parameters pass kwargs to ``Axes.legend()``.
+    plot_kws: dict, optional
+        Kwargs for both plots.
+    plot_kws_{left, right_inner, right_outer}, optional
+        matpltolib kwargs for either ``left``, ``right_inner``, and
+        ``right_outer`` plots.
+    color_yticks: bool, default=True
+        If True color y-axis tick labels to match respective
+        colors from line plots.
+    """
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
-    plot_kwargs = {"color": "steelblue", "alpha": 0.9, "lw": 2.5}
-    plot_kwargs.update(**kwargs)
+    plot_kws = {"color": "steelblue", "alpha": 0.9, "lw": 2.5}
+    plot_kws.update(**kwargs)
 
     # Subset series to stat collection period and get stat formats.
     if stats_start is not None:
@@ -619,7 +768,7 @@ def plot_timeseries(
 
     # Get stats and format them into the legend.
     if stats:
-        plot_kwargs["label"] = cleandoc(
+        plot_kws["label"] = cleandoc(
             f"""
              Last: {s[-1]:.{n}{f}}
              %tile: {s.rank(pct=True)[-1]:.0%}
@@ -627,8 +776,8 @@ def plot_timeseries(
              """
         )
     else:
-        if "label" not in plot_kwargs:
-            plot_kwargs["label"] = "_nolegend_"
+        if "label" not in plot_kws:
+            plot_kws["label"] = "_nolegend_"
 
     if mean_line:
         avg = np.mean(s)
@@ -664,7 +813,7 @@ def plot_timeseries(
     start = s.index[0] if start is None else pd.to_datetime(start)
     end = s.index[-1] if end is None else pd.to_datetime(end)
     s = s[(s.index >= start) & (s.index <= end)].copy()
-    ax.plot(s.index, s.values, **plot_kwargs)
+    ax.plot(s.index, s.values, **plot_kws)
 
     # Apply custom formatting on x and y-axis if specified.
     format_yaxis(ax, ytickfmt)
@@ -678,10 +827,11 @@ def plot_timeseries(
         ax.set_xlabel(xlabel)
     if ylabel is not None:
         ax.set_ylabel(ylabel)
-    if legend and (
-        plot_kwargs["label"] != "_nolegend_" or mean_line or pct_lines
-    ):
-        ax.legend()
+    if legend and (plot_kws["label"] != "_nolegend_" or mean_line or pct_lines):
+        if isinstance(legend, dict):
+            ax.legend(**legend)
+        else:
+            ax.legend()
     plt.tight_layout()
 
 
@@ -693,15 +843,51 @@ def plot_multiple_timeseries(
     end=None,
     ax=None,
     figsize=(8, 6),
-    ytickfmt=None,
     xtickfmt=None,
-    ylabel=None,
     xlabel=None,
+    ytickfmt=None,
+    ylabel=None,
     title=None,
     legend=True,
     **kwargs,
 ):
-    """Plot multiple timeseries on same axis."""
+    """
+    Plot multiple timeseries on same axis.
+
+    Parameters
+    ----------
+    s_list: pd.Dataframe or List[pd.Series].
+        DataFrame of list of series to plot.
+    c_list: List[matplotlib color], optional
+        List of colors for corresponding series.
+    ls_list: List[matplotlib linestyles], optional
+        List of linestyles for corresponding sereis.
+    start: datetime, optional
+        Date to begin plot.
+    end, datetime, optional
+        Date to end plot.
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+    figsize: (float, float), default=(8, 6).
+        Figure size.
+    xtickfmt: ``{'auto', None}``, optional
+        Format for x tick labels. If ``auto`` use matplotlib's
+        AutoDateLocator and ConciseDateFormatter.
+    xlabel: str, optional
+        X-axis label.
+    ytickfmt: str, optional
+        Format as used by ``str.format()`` for y-axis.
+    ylabel: str, optional
+        Y-axis label.
+    title: str, optional
+        Plot title.
+    legend: bool or dict, default=False
+        If False, hide legend. If True, show legend defaulting
+        to names of ``s_left`` and ``s_right`` with default parameters.
+        For non-default parameters pass kwargs to ``Axes.legend()``.
+    kwargs: dict, optional
+        Kwargs for matplotlib plot.
+    """
     # Set default plot params and update with specified params.
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -709,8 +895,8 @@ def plot_multiple_timeseries(
     if isinstance(s_list, pd.DataFrame):
         s_list = [s_list[col] for col in s_list]
 
-    plot_kwargs = {"alpha": 0.8, "lw": 2}
-    plot_kwargs.update(**kwargs)
+    plot_kws = {"alpha": 0.8, "lw": 2}
+    plot_kws.update(**kwargs)
 
     default_c_list = [
         "steelblue",
@@ -725,8 +911,8 @@ def plot_multiple_timeseries(
     c_list = default_c_list if c_list is None else c_list
 
     if ls_list is None:
-        ls_list = [plot_kwargs.get("ls", "-")] * len(s_list)
-    plot_kwargs.pop("ls", None)
+        ls_list = [plot_kws.get("ls", "-")] * len(s_list)
+    plot_kws.pop("ls", None)
 
     # Format start date for all series.
     if start is not None:
@@ -737,7 +923,7 @@ def plot_multiple_timeseries(
 
     # Plot data and format axis.
     for s, c, ls in zip(s_list, c_list, ls_list):
-        ax.plot(s.index, s.values, c=c, ls=ls, **plot_kwargs, label=s.name)
+        ax.plot(s.index, s.values, c=c, ls=ls, **plot_kws, label=s.name)
     format_xaxis(ax, s_list[0], xtickfmt)
     format_yaxis(ax, ytickfmt)
 
@@ -749,7 +935,10 @@ def plot_multiple_timeseries(
     if ylabel is not None:
         ax.set_ylabel(ylabel)
     if legend:
-        ax.legend()
+        if isinstance(legend, dict):
+            ax.legend(**legend)
+        else:
+            ax.legend()
     plt.tight_layout()
 
 
@@ -837,12 +1026,10 @@ def rolling_correlation():
     from lgimapy.data import Database, Index
     from lgimapy.bloomberg import bdh
 
-    # %%
     db = Database()
     start = "1/1/2007"
     db.load_market_data(start=start, local=True)
 
-    # %%
     ix = db.build_market_index(
         start="1/1/2007", in_stats_index=True, maturity=(10, None)
     )
@@ -870,7 +1057,6 @@ def rolling_correlation():
         .mean()
     )
 
-    # %%
     fig, ax = plt.subplots(1, 1, figsize=(14, 8))
     ax.plot(corr, c="#209CD8")
     tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
@@ -881,7 +1067,6 @@ def rolling_correlation():
     savefig("rolling correlation")
     plt.show()
 
-    # %%
     corr.index[0].year
     years = np.arange(corr.index[0].year, corr.index[-1].year + 1)
 
@@ -889,7 +1074,6 @@ def rolling_correlation():
     corr_df["year"] = [i.year for i in corr.index]
     gdf = pd.DataFrame(corr_df.groupby("year")["corr"].agg(np.mean))
 
-    # %%
     x = np.array([46, 12, 14, 18, 15, 19, 20, 30, 20, 20])
     y = gdf.values[2:-1]
     ols = sms.OLS(y, sms.add_constant(x)).fit()
@@ -905,10 +1089,8 @@ def rolling_correlation():
     savefig("ro")
     plt.show()
 
-    # %%
     luacoas = 100 * bdh("LULCOAS", "Index", start="1/1/2007", fields="PX_BID")
 
-    # %%
     fig, ax = plt.subplots(1, 1, figsize=(14, 8))
     ax2 = ax.twinx()
     bar_dates = [pd.to_datetime(f"6/1/{y}") for y in gdf.index]
@@ -937,8 +1119,6 @@ def rolling_correlation():
     )
     index_corr_df.to_csv("annual_index_correlation.csv")
 
-    # %%
-
     disps = []
     for i in range(len(oas_df)):
         a_i = oas_a[i]
@@ -950,7 +1130,6 @@ def rolling_correlation():
         pd.Series(disps, index=ix.dates).rolling(window=1, min_periods=1).mean()
     )
 
-    # %%
     fig, ax = plt.subplots(1, 1, figsize=(14, 8))
     ax.plot(corr, c="#209CD8")
     tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
@@ -960,7 +1139,7 @@ def rolling_correlation():
     fig.autofmt_xdate()
     # savefig("rolling correlation")
     plt.show()
-    # %%
+
     years = np.arange(disp.index[0].year, disp.index[-1].year + 1)
 
     disp_df = pd.DataFrame(disp, columns=["disp"])
@@ -968,7 +1147,6 @@ def rolling_correlation():
     disp_gdf = pd.DataFrame(disp_df.groupby("year")["disp"].agg(np.mean))
     disp_gdf
 
-    # %%
     fig, ax = plt.subplots(1, 1, figsize=(12, 10))
     ax2 = ax.twinx()
     bar_dates = [pd.to_datetime(f"6/1/{y}") for y in disp_gdf.index]
@@ -995,7 +1173,6 @@ def rolling_correlation():
     # savefig("yearly dispersion with index OAS")
     plt.show()
 
-    # %%
     index_disp_df = pd.DataFrame(
         {"date": bar_dates, "annual dispersion": disp_gdf["disp"].values}
     )
@@ -1013,13 +1190,10 @@ def rolling_correlation():
     ols = sms.OLS(alpha, sms.add_constant(lr_df)).fit()
     ols.summary()
 
-    # %%
     disp_gdf
     plt.figure()
     plt.plot(disp_gdf["disp"].values[2:-1], alpha, "o")
     plt.show()
-
-    # %%
 
     alpha_df = pd.DataFrame(
         {
@@ -1037,7 +1211,6 @@ def libor_vs_long_credit_yield():
     libor = bdh("US0003M", "Index", fields="PX_LAST", start=two_yrs_ago) / 100
     diff = (lc_yield - libor).dropna()
 
-    # %%
     lw = 3
     fig, axes = plt.subplots(2, 1, figsize=(8, 8), sharex=True)
     axes[0].plot(lc_yield, c="steelblue", lw=lw, label="Long Credit Yield")
@@ -1052,7 +1225,6 @@ def libor_vs_long_credit_yield():
     axes[1].set_xlabel("Date")
     savefig("libor_vs_long_credit_yield")
     plt.show()
-    # %%
 
 
 def highlighted_sector_downgrades():
@@ -1223,9 +1395,6 @@ def weighted_median(a, weights):
     return df[cumsum >= cutoff]["a"].iloc[0]
 
 
-# %%
-
-
 def plot_hist(
     a,
     bins=20,
@@ -1251,9 +1420,9 @@ def plot_hist(
         res *= bw
 
     # Update plot arguments.
-    plot_kwargs = {"color": "steelblue", "alpha": 0.7, "label": "_nolegend_"}
-    plot_kwargs.update(**kwargs)
-    ax.bar(edges[:-1], res, width=(bin_width * bw), **plot_kwargs)
+    plot_kws = {"color": "steelblue", "alpha": 0.7, "label": "_nolegend_"}
+    plot_kws.update(**kwargs)
+    ax.bar(edges[:-1], res, width=(bin_width * bw), **plot_kws)
     if normed:
         tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
         ax.yaxis.set_major_formatter(tick)
