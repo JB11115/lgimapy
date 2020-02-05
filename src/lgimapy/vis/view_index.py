@@ -14,20 +14,15 @@ def main():
     args = parse_args()
 
     # Subset data to last year.
-    start = (
-        pd.to_datetime(dt.date.today() - dt.timedelta(days=365))
-        if args.start is None
-        else pd.to_datetime(args.start)
-    )
-
     db = Database()
+    start = db.date("1y") if args.start is None else pd.to_datetime(args.start)
     df = db.load_bbg_data(args.index, "OAS", nan="drop", start=start)
     y = df.values
 
     # Plot index data.
     vis.style()
-    fig, ax = plt.subplots(1, 1, figsize=(12, 6))
-    ax.plot(df.index, y, c="steelblue")
+    fig, ax = vis.subplots(figsize=(12, 6))
+    vis.plot_timeseries(df, ax=ax, xtickfmt="auto")
 
     # Plot local minimums with labels to identify tights.
     valleys, _ = find_peaks(-y, distance=50, prominence=args.prominence)
@@ -43,8 +38,8 @@ def main():
             horizontalalignment="right",
         )
     ax.set_xlabel("Date")
-    ax.set_ylabel(f"{args.index} (bp)")
-    fig.autofmt_xdate()
+    ax.set_ylabel(f"{db.bbg_names(args.index)} OAS (bp)")
+    plt.tight_layout()
     plt.show()
 
 
