@@ -220,6 +220,7 @@ def latex_diverging_bars(
 def latex_table(
     df,
     caption=None,
+    table_notes=None,
     col_fmt=None,
     prec=3,
     adjust=False,
@@ -252,6 +253,8 @@ def latex_table(
         DataFrame object to convert for printing in LaTeX.
     caption: str, default=None
         Caption for table.
+    table_notes: str, default=None
+        Notes to place below table.
     col_fmt: str, default=None
         Column format for latex, (e.g., 'lrc').
     prec: int or Dict[str: str], default=3
@@ -593,6 +596,8 @@ def latex_table(
     # Adujst table to page width if specified.
     if adjust:
         fout += "\end{adjustbox}\n"
-
+    if table_notes is not None:
+        fout += f"{{\\justify {table_notes} \\par}}"
+        fout += "\n"
     fout += "\end{table}"
     return fout
