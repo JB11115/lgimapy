@@ -37,7 +37,9 @@ def latex_figure(
         # One main figure.
         if caption_on_top:
             fout += (
-                f"{t}\caption{{{caption}}}\n" if caption else "{t}%\caption{}\n"
+                f"{t}\caption{{{caption}}}\n"
+                if caption
+                else f"{t}%\caption{{}}\n"
             )
             fout += (
                 f"{t}\includegraphics[width={width}\\textwidth]{{{fids[0]}}}"
@@ -53,7 +55,7 @@ def latex_figure(
             fout += f"{t}\\begin{{subfigure}}[b]{{{width/n:.3f}\\textwidth}}"
             fout += f"\n{t}{t}\centering\n{t}{t}"
             if caption_on_top:
-                fout += f"\caption{{{subcap}}}" if subcap else "%\caption{}"
+                fout += f"\caption{{{subcap}}}\n" if subcap else "%\caption{}\n"
                 fout += f"\includegraphics[width=1\\textwidth]{{{fid}}}\n{t}{t}"
             else:
                 fout += f"\includegraphics[width=1\\textwidth]{{{fid}}}\n{t}{t}"
