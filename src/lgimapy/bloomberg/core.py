@@ -1,6 +1,7 @@
-import datetime as dt
+import re
 import warnings
 from collections.abc import Iterable
+from datetime import datetime as dt
 
 import pandas as pd
 import pybbg
@@ -51,7 +52,7 @@ def bdh(securities, yellow_key, fields, start, end=None, ovrd=None):
         raise ValueError(f"{type(yellow_key)} is not valid for `yellow_key`.")
 
     start = pd.to_datetime(start).strftime("%Y%m%d")
-    end = dt.date.today() if end is None else pd.to_datetime(end)
+    end = dt.today() if end is None else pd.to_datetime(end)
     end = end.strftime("%Y%m%d")
 
     # Scrape from Bloomberg.
@@ -107,7 +108,7 @@ def bdp(securities, yellow_key, fields, ovrd=None):
     warnings.simplefilter(action="default", category=UserWarning)
 
     # Format DataFrame.
-    df.index = [ix.strip(f" {yellow_key}") for ix in df.index]
+    df.index = [re.sub(f"\ {yellow_key}$", "", ix) for ix in df.index]
     return df.reindex(securities)
 
 
