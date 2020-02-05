@@ -843,6 +843,34 @@
         ],
         "in_stats_index": true
     },
+    "BANKS_SR": {
+        "name": "Banks (Sr)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "collateral_type": [
+            "UNSECURED"
+        ],
+        "in_stats_index": true
+    },
+    "BANKS_SUB": {
+        "name": "Banks (Sub)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "collateral_type": [
+            "SUBORDINATED"
+        ],
+        "in_stats_index": true
+    },
     "US_REGIONAL_BANKS": {
         "name": "US Regional Banks",
         "OAS": [
@@ -1250,6 +1278,30 @@
         ],
         "sector": [
             "GOVERNMENT_GUARANTEE"
+        ],
+        "in_stats_index": true
+    },
+    "EMERGING_MARKETS": {
+        "name": "Emergin Markets",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GOVERNMENT_GUARANTEE",
+            "SOVEREIGN"
+        ],
+        "in_stats_index": true
+    },
+    "ABS_CMBS": {
+        "name": "ABS/CMBS/Non-Agency RMBS",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "ABS_OTHER",
+            "NON_AGENCY_CMBS"
         ],
         "in_stats_index": true
     }
