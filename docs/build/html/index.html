@@ -37,7 +37,7 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Dec 11, 2019 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Feb 05, 2020 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.data">
@@ -895,7 +895,7 @@ If False do not include end date.</li>
 
 <dl class="method">
 <dt id="lgimapy.data.Index.market_value_weight">
-<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em>, <em>synthetic=False</em>, <em>dropna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
+<code class="descname">market_value_weight</code><span class="sig-paren">(</span><em>col</em>, <em>low_memory=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.market_value_weight" title="Permalink to this definition">¶</a></dt>
 <dd><p>Market value weight a specified column vs entire
 index market value.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -904,9 +904,7 @@ index market value.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>col</strong> (<em>str</em>) – Column name to weight, (e.g., ‘OAS’).</li>
-<li><strong>synthethic</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, use synthethic day data.</li>
-<li><strong>dropna</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True drop columns with missing values for either
-<cite>MarketValue</cite> or specified column.</li>
+<li><strong>low_memory</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, perform all operations inplace on <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -950,7 +948,7 @@ index market value.</p>
 
 <dl class="method">
 <dt id="lgimapy.data.Index.subset">
-<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.subset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>original_maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.subset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subset <a class="reference internal" href="#lgimapy.data.Index" title="lgimapy.data.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> with customized rules from
 <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -987,6 +985,7 @@ are used:</p>
 <li>30: 25 - 31</li>
 </ul>
 </li>
+<li><strong>original_maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of original bond maturities to include.</li>
 <li><strong>price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Price range of bonds to include, default is all.</li>
 <li><strong>coupon_rate</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Coupon rate range of bonds to include, default is all.</li>
 <li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries of domicile to
@@ -1146,20 +1145,6 @@ of a DataFrame.</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="lgimapy.data.Database.loaded_dates">
-<code class="descname">loaded_dates</code><a class="headerlink" href="#lgimapy.data.Database.loaded_dates" title="Permalink to this definition">¶</a></dt>
-<dd><p>List of dates currently loaded by builder.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">List[datetime]</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
 <dt id="lgimapy.data.Database.all_dates">
 <code class="descname">all_dates</code><a class="headerlink" href="#lgimapy.data.Database.all_dates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Memoized list of all dates in DataBase.</p>
@@ -1175,7 +1160,7 @@ of a DataFrame.</li>
 
 <dl class="method">
 <dt id="lgimapy.data.Database.build_market_index">
-<code class="descname">build_market_index</code><span class="sig-paren">(</span><em>name=''</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.build_market_index" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build_market_index</code><span class="sig-paren">(</span><em>name=''</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>original_maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.build_market_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build index with customized rules from <a class="reference internal" href="#lgimapy.data.Database.df" title="lgimapy.data.Database.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Database.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1211,6 +1196,7 @@ are used:</p>
 <li>30: 25 - 31</li>
 </ul>
 </li>
+<li><strong>original_maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of original bond maturities to include.</li>
 <li><strong>price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Price range of bonds to include, default is all.</li>
 <li><strong>coupon_rate</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Coupon rate range of bonds to include, default is all.</li>
 <li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries of domicile to include, default is all.</li>
@@ -1280,6 +1266,35 @@ sectors) xor specified maturities:
 </dd></dl>
 
 <dl class="method">
+<dt id="lgimapy.data.Database.date">
+<code class="descname">date</code><span class="sig-paren">(</span><em>date_delta</em>, <em>reference_date=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find date relative to a specified date.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>date_delta</strong> (str, <code class="docutils literal notranslate"><span class="pre">{'today',</span> <span class="pre">'WTD',</span> <span class="pre">'MTD',</span> <span class="pre">'YTD',</span> <span class="pre">'3d',</span> <span class="pre">'5y',</span> <span class="pre">etc}</span></code>) – Difference between reference date and target date.</li>
+<li><strong>reference_date</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Reference date to use, if None use most recent trade date.</li>
+<li><strong>kwargs</strong> – Keyword arguments for <a class="reference internal" href="#lgimapy.data.Database.nearest_date" title="lgimapy.data.Database.nearest_date"><code class="xref py py-func docutils literal notranslate"><span class="pre">nearest_date()</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Target date from reference and delta.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">datetime</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#lgimapy.data.Database.nearest_date" title="lgimapy.data.Database.nearest_date"><code class="xref py py-func docutils literal notranslate"><span class="pre">nearest_date()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="lgimapy.data.Database.display_all_columns">
 <code class="descname">display_all_columns</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.display_all_columns" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set DataFrames to display all columnns in IPython.</p>
@@ -1338,6 +1353,30 @@ processed missing data.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="lgimapy.data.Database.load_cusip_event_dates">
+<code class="descname">load_cusip_event_dates</code><span class="sig-paren">(</span><em>start=None</em>, <em>end=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_cusip_event_dates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load event dates for cusips.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive start date for data.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive end date for data.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>s</strong> – Event dates indexed by respective CUSIPs.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.Series</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="lgimapy.data.Database.load_market_data">
 <code class="descname">load_market_data</code><span class="sig-paren">(</span><em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>cusips=None</em>, <em>clean=True</em>, <em>ret_df=False</em>, <em>local=False</em>, <em>data=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_market_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load market data from SQL server. If end is not specified
@@ -1376,7 +1415,7 @@ be prompted to provide the numeric value, and the
 
 <dl class="method">
 <dt id="lgimapy.data.Database.load_portfolio">
-<code class="descname">load_portfolio</code><span class="sig-paren">(</span><em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>accounts=None</em>, <em>strategy=None</em>, <em>manager=None</em>, <em>universe='returns'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_portfolio" title="Permalink to this definition">¶</a></dt>
+<code class="descname">load_portfolio</code><span class="sig-paren">(</span><em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>accounts=None</em>, <em>strategy=None</em>, <em>manager=None</em>, <em>universe='returns'</em>, <em>drop_cash=True</em>, <em>drop_treasuries=True</em>, <em>market_cols=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.load_portfolio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load market data from SQL server. If end is not specified
 data is scraped through previous day. If neither start nor
 end are given only the data from previous day is scraped.
@@ -1392,20 +1431,30 @@ performance or feed a DataFrame directly.</p>
 
 <dl class="method">
 <dt id="lgimapy.data.Database.nearest_date">
-<code class="descname">nearest_date</code><span class="sig-paren">(</span><em>date</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.nearest_date" title="Permalink to this definition">¶</a></dt>
+<code class="descname">nearest_date</code><span class="sig-paren">(</span><em>date</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.nearest_date" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return trade date nearest to input date.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>date</strong> (<em>datetime object</em>) – Input date.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>date</strong> (<em>datetime object</em>) – Input date.</li>
+<li><strong>kwargs</strong> – Keyword arguments for <a class="reference internal" href="#lgimapy.data.Database.nearest_date" title="lgimapy.data.Database.nearest_date"><code class="xref py py-func docutils literal notranslate"><span class="pre">nearest_date()</span></code></a>.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Trade date nearest to input date.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Trade date nearest to input date.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">datetime</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">datetime</p>
+</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#lgimapy.data.Database.nearest_date" title="lgimapy.data.Database.nearest_date"><code class="xref py py-func docutils literal notranslate"><span class="pre">nearest_date()</span></code></a></p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -1612,6 +1661,203 @@ with most recent data.</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="class">
+<dt id="lgimapy.models.TLS">
+<em class="property">class </em><code class="descclassname">lgimapy.models.</code><code class="descname">TLS</code><span class="sig-paren">(</span><em>df</em>, <em>y_col</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TLS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class to implement Total Least Squares (TLS) regression
+on one or more variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>df</strong> (<em>pd.DataFrame</em>) – DataFrame of all X and Y data to be used
+in TLS regression.</li>
+<li><strong>y_col</strong> (<em>str</em>) – Column name for Y variable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.norm_df">
+<code class="descname">norm_df</code><a class="headerlink" href="#lgimapy.models.TLS.norm_df" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalized DataFrame of inputs with missing data removed.
+Data is normalized using full series before remoivng missing
+data as to not lose information.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">pd.DataFrame</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.y">
+<code class="descname">y</code><a class="headerlink" href="#lgimapy.models.TLS.y" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalized y values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.X">
+<code class="descname">X</code><a class="headerlink" href="#lgimapy.models.TLS.X" title="Permalink to this definition">¶</a></dt>
+<dd><p>Nomalized X values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.n">
+<code class="descname">n</code><a class="headerlink" href="#lgimapy.models.TLS.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of samples.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.beta">
+<code class="descname">beta</code><a class="headerlink" href="#lgimapy.models.TLS.beta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimated model parameter values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.X_resid">
+<code class="descname">X_resid</code><a class="headerlink" href="#lgimapy.models.TLS.X_resid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimated errors in input X variables, same shape as <cite>X</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.y_resid">
+<code class="descname">y_resid</code><a class="headerlink" href="#lgimapy.models.TLS.y_resid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimated error in input y values, same shape as <cite>y</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.resid">
+<code class="descname">resid</code><a class="headerlink" href="#lgimapy.models.TLS.resid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimated orthogonal error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.norm_resid">
+<code class="descname">norm_resid</code><a class="headerlink" href="#lgimapy.models.TLS.norm_resid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Normalized estimated orthogonal error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.models.TLS.frobenius_norm">
+<code class="descname">frobenius_norm</code><a class="headerlink" href="#lgimapy.models.TLS.frobenius_norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Frobenius norm of of residuals.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.models.TLS.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TLS.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fit TLS model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Fit TLS model with result attributes.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#lgimapy.models.TLS" title="lgimapy.models.TLS"><code class="xref py py-class docutils literal notranslate"><span class="pre">TLS</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.models.TLS.plot">
+<code class="descname">plot</code><span class="sig-paren">(</span><em>highlight_last=True</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.models.TLS.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot TLS results in normalized space.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>highlight_last</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If true, highlight last data point from input DataFrame.</li>
+<li><strong>ax</strong> (<em>matplotlib axis</em><em>, </em><em>default=None</em>) – Matplotlib axis to plot figure, if None one is created.</li>
+<li><strong>figsize</strong> (<em>list</em><em> or </em><em>tuple</em><em>, </em><em>default=</em><em>(</em><em>6</em><em>, </em><em>6</em><em>)</em><em></em>) – Figure size.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1917,6 +2163,19 @@ for any cusip which is unsuccesful.</p>
 <dt id="lgimapy.vis.savefig">
 <code class="descclassname">lgimapy.vis.</code><code class="descname">savefig</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>dpi=300</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.savefig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save figure to specified location.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>fid</strong> (<em>str</em>) – Filename for saved figure.</li>
+<li><strong>path</strong> (<em>Path</em><em>, </em><em>optional</em>) – Path to directory to save figure.</li>
+<li><strong>dpi</strong> (<em>int</em><em>, </em><em>default=300</em>) – Figure resolution (dots per inch).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -1950,8 +2209,20 @@ for any cusip which is unsuccesful.</p>
 
 <dl class="function">
 <dt id="lgimapy.vis.style">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">style</code><span class="sig-paren">(</span><em>background='white'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.style" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">style</code><span class="sig-paren">(</span><em>background='white'</em>, <em>style='fivethirtyeight'</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.style" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply preferred style to interactive and saved plots.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>background</strong> (<em>matplotlib color</em><em>, </em><em>default='white'</em>) – Color for figure background.</li>
+<li><strong>style</strong> (<em>matplotlib style</em><em>, </em><em>default='fivethirtyeight'</em>) – Style sheet for figures.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -1974,7 +2245,7 @@ for any cusip which is unsuccesful.</p>
 
 <dl class="function">
 <dt id="lgimapy.vis.coolwarm">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">coolwarm</code><span class="sig-paren">(</span><em>x</em>, <em>center=0</em>, <em>symettric=False</em>, <em>quality=1000</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.coolwarm" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">coolwarm</code><span class="sig-paren">(</span><em>x</em>, <em>center=0</em>, <em>symettric=False</em>, <em>quality=1000</em>, <em>cmap='coolwarm'</em>, <em>pal=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.coolwarm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create custom diverging color palette centered around
 specified value.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2005,26 +2276,190 @@ respective input value.</li>
 
 <dl class="function">
 <dt id="lgimapy.vis.plot_timeseries">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>s</em>, <em>start=None</em>, <em>end=None</em>, <em>stats_start='1/1/2010'</em>, <em>stats=False</em>, <em>bollinger=False</em>, <em>mean_line=False</em>, <em>pct_lines=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_timeseries" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>s</em>, <em>start=None</em>, <em>end=None</em>, <em>stats_start=None</em>, <em>stats=False</em>, <em>bollinger=False</em>, <em>mean_line=False</em>, <em>pct_lines=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_timeseries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot simple timeseries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>s</strong> (<em>pd.Series</em>) – Series to plot.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to begin plot.</li>
+<li><strong>datetime</strong><strong>, </strong><strong>optional</strong> (<em>end</em><em>,</em>) – Date to end plot.</li>
+<li><strong>stats_start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to start aggreating statistics, may be before <code class="docutils literal notranslate"><span class="pre">start</span></code>.</li>
+<li><strong>stats</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True display stats in Axes legend.</li>
+<li><strong>bollinger</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True plot bollinger bands around series.</li>
+<li><strong>mean_line</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True plot mean line.</li>
+<li><strong>pct_lines</strong> (<em>bool</em><em> or </em><em>Tuple</em><em>[</em><em>int</em><em>]</em><em>, </em><em>default=False</em>) – If tuple is given, plot lines at the given percentiles.</li>
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to draw plot, otherwise activate Axes.</li>
+<li><strong>figsize</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>8</em><em>, </em><em>6</em><em>)</em><em></em>) – Figure size.</li>
+<li><strong>xtickfmt</strong> (<code class="docutils literal notranslate"><span class="pre">{'auto',</span> <span class="pre">None}</span></code>, optional) – Format for x tick labels. If <code class="docutils literal notranslate"><span class="pre">auto</span></code> use matplotlib’s
+AutoDateLocator and ConciseDateFormatter.</li>
+<li><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – X-axis label.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong> (<em>ylabel_{left</em><em>,</em>) – Format as used by <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> for <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> y-axis.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong> – Y-axis label for <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>, or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> axis.</li>
+<li><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</li>
+<li><strong>legend</strong> (<em>bool</em><em> or </em><em>dict</em><em>, </em><em>default=False</em>) – If False, hide legend. If True, show legend defaulting
+to names of <code class="docutils literal notranslate"><span class="pre">s_left</span></code> and <code class="docutils literal notranslate"><span class="pre">s_right</span></code> with default parameters.
+For non-default parameters pass kwargs to <code class="docutils literal notranslate"><span class="pre">Axes.legend()</span></code>.</li>
+<li><strong>plot_kws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Kwargs for both plots.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong><strong>, </strong><strong>optional</strong> (<em>plot_kws_{left</em><em>,</em>) – matpltolib kwargs for either <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">right_outer</span></code> plots.</li>
+<li><strong>color_yticks</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True color y-axis tick labels to match respective
+colors from line plots.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt>
-<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>s</em>, <em>start=None</em>, <em>end=None</em>, <em>stats_start='1/1/2010'</em>, <em>stats=False</em>, <em>bollinger=False</em>, <em>mean_line=False</em>, <em>pct_lines=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>s</em>, <em>start=None</em>, <em>end=None</em>, <em>stats_start=None</em>, <em>stats=False</em>, <em>bollinger=False</em>, <em>mean_line=False</em>, <em>pct_lines=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
 <dd><p>Plot simple timeseries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>s</strong> (<em>pd.Series</em>) – Series to plot.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to begin plot.</li>
+<li><strong>datetime</strong><strong>, </strong><strong>optional</strong> (<em>end</em><em>,</em>) – Date to end plot.</li>
+<li><strong>stats_start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to start aggreating statistics, may be before <code class="docutils literal notranslate"><span class="pre">start</span></code>.</li>
+<li><strong>stats</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True display stats in Axes legend.</li>
+<li><strong>bollinger</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True plot bollinger bands around series.</li>
+<li><strong>mean_line</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True plot mean line.</li>
+<li><strong>pct_lines</strong> (<em>bool</em><em> or </em><em>Tuple</em><em>[</em><em>int</em><em>]</em><em>, </em><em>default=False</em>) – If tuple is given, plot lines at the given percentiles.</li>
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to draw plot, otherwise activate Axes.</li>
+<li><strong>figsize</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>8</em><em>, </em><em>6</em><em>)</em><em></em>) – Figure size.</li>
+<li><strong>xtickfmt</strong> (<code class="docutils literal notranslate"><span class="pre">{'auto',</span> <span class="pre">None}</span></code>, optional) – Format for x tick labels. If <code class="docutils literal notranslate"><span class="pre">auto</span></code> use matplotlib’s
+AutoDateLocator and ConciseDateFormatter.</li>
+<li><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – X-axis label.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong> (<em>ylabel_{left</em><em>,</em>) – Format as used by <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> for <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> y-axis.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong> – Y-axis label for <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>, or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> axis.</li>
+<li><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</li>
+<li><strong>legend</strong> (<em>bool</em><em> or </em><em>dict</em><em>, </em><em>default=False</em>) – If False, hide legend. If True, show legend defaulting
+to names of <code class="docutils literal notranslate"><span class="pre">s_left</span></code> and <code class="docutils literal notranslate"><span class="pre">s_right</span></code> with default parameters.
+For non-default parameters pass kwargs to <code class="docutils literal notranslate"><span class="pre">Axes.legend()</span></code>.</li>
+<li><strong>plot_kws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Kwargs for both plots.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong><strong>, </strong><strong>optional</strong> (<em>plot_kws_{left</em><em>,</em>) – matpltolib kwargs for either <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">right_outer</span></code> plots.</li>
+<li><strong>color_yticks</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True color y-axis tick labels to match respective
+colors from line plots.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="lgimapy.vis.plot_multiple_timeseries">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_multiple_timeseries</code><span class="sig-paren">(</span><em>s_list</em>, <em>c_list=None</em>, <em>ls_list=None</em>, <em>start=None</em>, <em>end=None</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>ytickfmt=None</em>, <em>xtickfmt=None</em>, <em>ylabel=None</em>, <em>xlabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_multiple_timeseries" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_multiple_timeseries</code><span class="sig-paren">(</span><em>s_list</em>, <em>c_list=None</em>, <em>ls_list=None</em>, <em>start=None</em>, <em>end=None</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>xtickfmt=None</em>, <em>xlabel=None</em>, <em>ytickfmt=None</em>, <em>ylabel=None</em>, <em>title=None</em>, <em>legend=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_multiple_timeseries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot multiple timeseries on same axis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>s_list</strong> (<em>pd.Dataframe</em><em> or </em><em>List</em><em>[</em><em>pd.Series</em><em>]</em><em></em>) – DataFrame of list of series to plot.</li>
+<li><strong>c_list</strong> (<em>List</em><em>[</em><em>matplotlib color</em><em>]</em><em>, </em><em>optional</em>) – List of colors for corresponding series.</li>
+<li><strong>ls_list</strong> (<em>List</em><em>[</em><em>matplotlib linestyles</em><em>]</em><em>, </em><em>optional</em>) – List of linestyles for corresponding sereis.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to begin plot.</li>
+<li><strong>datetime</strong><strong>, </strong><strong>optional</strong> (<em>end</em><em>,</em>) – Date to end plot.</li>
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to draw plot, otherwise activate Axes.</li>
+<li><strong>figsize</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>8</em><em>, </em><em>6</em><em>)</em><em></em>) – Figure size.</li>
+<li><strong>xtickfmt</strong> (<code class="docutils literal notranslate"><span class="pre">{'auto',</span> <span class="pre">None}</span></code>, optional) – Format for x tick labels. If <code class="docutils literal notranslate"><span class="pre">auto</span></code> use matplotlib’s
+AutoDateLocator and ConciseDateFormatter.</li>
+<li><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – X-axis label.</li>
+<li><strong>ytickfmt</strong> (<em>str</em><em>, </em><em>optional</em>) – Format as used by <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> for y-axis.</li>
+<li><strong>ylabel</strong> (<em>str</em><em>, </em><em>optional</em>) – Y-axis label.</li>
+<li><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</li>
+<li><strong>legend</strong> (<em>bool</em><em> or </em><em>dict</em><em>, </em><em>default=False</em>) – If False, hide legend. If True, show legend defaulting
+to names of <code class="docutils literal notranslate"><span class="pre">s_left</span></code> and <code class="docutils literal notranslate"><span class="pre">s_right</span></code> with default parameters.
+For non-default parameters pass kwargs to <code class="docutils literal notranslate"><span class="pre">Axes.legend()</span></code>.</li>
+<li><strong>kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Kwargs for matplotlib plot.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="lgimapy.vis.plot_multi_y_axis_timeseries">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_multi_y_axis_timeseries</code><span class="sig-paren">(</span><em>s_left</em>, <em>s_right</em>, <em>start=None</em>, <em>end=None</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>xtickfmt=None</em>, <em>xlabel=None</em>, <em>ytickfmt_left=None</em>, <em>ytickfmt_right=None</em>, <em>ylabel_left=None</em>, <em>ylabel_right=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>plot_kwargs=None</em>, <em>left_plot_kwargs=None</em>, <em>right_plot_kwargs=None</em>, <em>color_yticks=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_multi_y_axis_timeseries" title="Permalink to this definition">¶</a></dt>
+<dt id="lgimapy.vis.plot_double_y_axis_timeseries">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_double_y_axis_timeseries</code><span class="sig-paren">(</span><em>s_left</em>, <em>s_right</em>, <em>start=None</em>, <em>end=None</em>, <em>invert_right_axis=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>xtickfmt=None</em>, <em>xlabel=None</em>, <em>ytickfmt_left=None</em>, <em>ytickfmt_right=None</em>, <em>ylabel_left=None</em>, <em>ylabel_right=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>plot_kws=None</em>, <em>plot_kws_left=None</em>, <em>plot_kws_right=None</em>, <em>color_yticks=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_double_y_axis_timeseries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot two timeseries, one on each y-axis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>right}</strong> (<em>ylabel_{left</em><em>,</em>) – Series for <cite>left</cite> or <cite>right</cite> axis.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to begin plot.</li>
+<li><strong>datetime</strong><strong>, </strong><strong>optional</strong> (<em>end</em><em>,</em>) – Date to end plot.</li>
+<li><strong>invert_right_axis</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True invert right axis.</li>
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to draw plot, otherwise activate Axes.</li>
+<li><strong>figsize</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>8</em><em>, </em><em>6</em><em>)</em><em></em>) – Figure size.</li>
+<li><strong>xtickfmt</strong> (<cite>{‘auto’, None}</cite>, optional) – Format for x tick labels. If <cite>auto</cite> use matplotlib’s
+AutoDateLocator and ConciseDateFormatter.</li>
+<li><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – X-axis label.</li>
+<li><strong>right}</strong> – Format as used by <cite>str.format()</cite> for <cite>left</cite> or <cite>right</cite>
+y-axis.</li>
+<li><strong>right}</strong> – Y-axis label for <cite>left</cite> or <cite>right</cite> axis.</li>
+<li><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</li>
+<li><strong>legend</strong> (<em>bool</em><em> or </em><em>dict</em><em>, </em><em>default=False</em>) – If False, hide legend. If True, show legend defaulting
+to names of <cite>s_left</cite> and <cite>s_right</cite> with default parameters.
+For non-default parameters pass kwargs to <cite>Axes.legend()</cite>.</li>
+<li><strong>plot_kws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Kwargs for both plots.</li>
+<li><strong>right}</strong><strong>, </strong><strong>optional</strong> (<em>plot_kws_{left</em><em>,</em>) – Kwargs for either <cite>left</cite> or <cite>right</cite> plots.</li>
+<li><strong>color_yticks</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True color y-axis tick labels to match respective
+colors from line plots.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.plot_triple_y_axis_timeseries">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_triple_y_axis_timeseries</code><span class="sig-paren">(</span><em>s_left</em>, <em>s_right_inner</em>, <em>s_right_outer</em>, <em>start=None</em>, <em>end=None</em>, <em>invert_left_axis=False</em>, <em>invert_right_inner_axis=False</em>, <em>invert_right_outer_axis=False</em>, <em>ax=None</em>, <em>figsize=(8</em>, <em>6)</em>, <em>xtickfmt=None</em>, <em>xlabel=None</em>, <em>ytickfmt_left=None</em>, <em>ytickfmt_right_inner=None</em>, <em>ytickfmt_right_outer=None</em>, <em>ylabel_left=None</em>, <em>ylabel_right_inner=None</em>, <em>ylabel_right_outer=None</em>, <em>title=None</em>, <em>legend=False</em>, <em>grid=True</em>, <em>plot_kws=None</em>, <em>plot_kws_left=None</em>, <em>plot_kws_right_inner=None</em>, <em>plot_kws_right_outer=None</em>, <em>color_yticks=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_triple_y_axis_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot three timeseries, one on the left y-axis and two on the right.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong> (<em>ylabel_{left</em><em>,</em>) – Series for <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>, or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> axis.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to begin plot.</li>
+<li><strong>datetime</strong><strong>, </strong><strong>optional</strong> (<em>end</em><em>,</em>) – Date to end plot.</li>
+<li><strong>outer}_axis</strong> (<em>invert_right_{inner</em><em>,</em>) – If True invert <code class="docutils literal notranslate"><span class="pre">right_inner</span></code> or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> axis.</li>
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to draw plot, otherwise activate Axes.</li>
+<li><strong>figsize</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>8</em><em>, </em><em>6</em><em>)</em><em></em>) – Figure size.</li>
+<li><strong>xtickfmt</strong> (<code class="docutils literal notranslate"><span class="pre">{'auto',</span> <span class="pre">None}</span></code>, optional) – Format for x tick labels. If <code class="docutils literal notranslate"><span class="pre">auto</span></code> use matplotlib’s
+AutoDateLocator and ConciseDateFormatter.</li>
+<li><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – X-axis label.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong> – Format as used by <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> for <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>,
+or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> y-axis.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong> – Y-axis label for <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>, or <code class="docutils literal notranslate"><span class="pre">right_outer</span></code> axis.</li>
+<li><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</li>
+<li><strong>legend</strong> (<em>bool</em><em> or </em><em>dict</em><em>, </em><em>default=False</em>) – If False, hide legend. If True, show legend defaulting
+to names of <code class="docutils literal notranslate"><span class="pre">s_left</span></code> and <code class="docutils literal notranslate"><span class="pre">s_right</span></code> with default parameters.
+For non-default parameters pass kwargs to <code class="docutils literal notranslate"><span class="pre">Axes.legend()</span></code>.</li>
+<li><strong>plot_kws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Kwargs for both plots.</li>
+<li><strong>right_inner</strong><strong>, </strong><strong>right_outer}</strong><strong>, </strong><strong>optional</strong> (<em>plot_kws_{left</em><em>,</em>) – matpltolib kwargs for either <code class="docutils literal notranslate"><span class="pre">left</span></code>, <code class="docutils literal notranslate"><span class="pre">right_inner</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">right_outer</span></code> plots.</li>
+<li><strong>color_yticks</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True color y-axis tick labels to match respective
+colors from line plots.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -2037,6 +2472,12 @@ respective input value.</li>
 <dt id="lgimapy.vis.format_yaxis">
 <code class="descclassname">lgimapy.vis.</code><code class="descname">format_yaxis</code><span class="sig-paren">(</span><em>ax</em>, <em>ytickfmt</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.format_yaxis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Formate y axis to specified formatter</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.set_percentile_limits">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">set_percentile_limits</code><span class="sig-paren">(</span><em>series</em>, <em>axes</em>, <em>percentiles=(5</em>, <em>95)</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.set_percentile_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set limits such that 5/95 percentils are equal.</p>
 </dd></dl>
 
 </div>
@@ -2198,7 +2639,7 @@ subscripts to proper LaTeX representation.</p>
 
 <dl class="function">
 <dt id="lgimapy.latex.latex_table">
-<code class="descclassname">lgimapy.latex.</code><code class="descname">latex_table</code><span class="sig-paren">(</span><em>df</em>, <em>caption=None</em>, <em>col_fmt=None</em>, <em>prec=3</em>, <em>adjust=False</em>, <em>hide_index=False</em>, <em>add_blank_column=False</em>, <em>int_vals=False</em>, <em>nan_value='-'</em>, <em>font_size=None</em>, <em>midrule_locs=None</em>, <em>specialrule_locs=None</em>, <em>greeks=True</em>, <em>multi_row_header=False</em>, <em>loc_style=None</em>, <em>row_color=None</em>, <em>row_font=None</em>, <em>col_style=None</em>, <em>alternating_colors=(None</em>, <em>None)</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.latex_table" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.latex.</code><code class="descname">latex_table</code><span class="sig-paren">(</span><em>df</em>, <em>caption=None</em>, <em>table_notes=None</em>, <em>col_fmt=None</em>, <em>prec=3</em>, <em>adjust=False</em>, <em>hide_index=False</em>, <em>add_blank_column=False</em>, <em>int_vals=False</em>, <em>nan_value='-'</em>, <em>font_size=None</em>, <em>midrule_locs=None</em>, <em>specialrule_locs=None</em>, <em>greeks=True</em>, <em>multi_row_header=False</em>, <em>loc_style=None</em>, <em>row_color=None</em>, <em>row_font=None</em>, <em>col_style=None</em>, <em>gradient_cell_col=None</em>, <em>gradient_cell_kwargs=None</em>, <em>div_bar_col=None</em>, <em>div_bar_kwargs=None</em>, <em>alternating_colors=(None</em>, <em>None)</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.latex_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return table with syntax formatted for LaTeX.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2207,6 +2648,7 @@ subscripts to proper LaTeX representation.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>df</strong> (<em>pd.DataFrame</em>) – DataFrame object to convert for printing in LaTeX.</li>
 <li><strong>caption</strong> (<em>str</em><em>, </em><em>default=None</em>) – Caption for table.</li>
+<li><strong>table_notes</strong> (<em>str</em><em>, </em><em>default=None</em>) – Notes to place below table.</li>
 <li><strong>col_fmt</strong> (<em>str</em><em>, </em><em>default=None</em>) – Column format for latex, (e.g., ‘lrc’).</li>
 <li><strong>prec</strong> (<em>int</em><em> or </em><em>Dict</em><em>[</em><em>str: str</em><em>]</em><em>, </em><em>default=3</em>) – <p>Precision for printing decimals.
 If Dict is given, input is expected to be column name
@@ -2250,10 +2692,26 @@ respective colors as values.</li>
 Input is expexted as dict with column names as keys
 and respective LaTeX formatting as values.</p>
 <ul>
-<li>Bar Plot: <code class="docutils literal notranslate"><span class="pre">`[col:</span> <span class="pre">\mybar]`</span></code></li>
+<li>Bar Plot: <code class="docutils literal notranslate"><span class="pre">`[col:</span> <span class="pre">\pctbar]`</span></code></li>
 <li>Bold: <code class="docutils literal notranslate"><span class="pre">`[col:</span> <span class="pre">\textbf]`</span></code></li>
 </ul>
 </li>
+<li><strong>gradient_cell_col</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Columns(s) to apply background cell color gradient to based
+on column values.</li>
+<li><strong>gradient_cell_kwargs</strong> (<em>Dict</em><em>, </em><em>default=None</em>) – Keyword arguments for columns to apply cell gradients on.
+If all columns have the same arguments simply specify
+<code class="docutils literal notranslate"><span class="pre">gradient_cell_kwargs=`Dict[**kwargs]</span></code>.  To customize
+arguments by column specify
+<code class="docutils literal notranslate"><span class="pre">gradient_cell_kwargs=`Dict[col:</span> <span class="pre">Dict[**col_kwargs]</span></code>
+for each column.</li>
+<li><strong>div_bar_col</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Columns(s) to apply divergent bar plots to based
+on column values.</li>
+<li><strong>div_bar_kwargs</strong> (<em>Dict</em><em>, </em><em>default=None</em>) – Keyword arguments for columns to apply divergent bar plots on.
+If all columns have the same arguments simply specify
+<code class="docutils literal notranslate"><span class="pre">div_bar_kwargs=`Dict[**kwargs]</span></code>.  To customize
+arguments by column specify
+<code class="docutils literal notranslate"><span class="pre">div_bar_kwargs=`Dict[col:</span> <span class="pre">Dict[**col_kwargs]</span></code>
+for each column.</li>
 <li><strong>alternating_colors</strong> (<em>Tuple</em><em>(</em><em>str</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Color 1 and Color 2 for for alternating row colors.</li>
 </ul>
 </td>
@@ -2305,7 +2763,7 @@ and respective LaTeX formatting as values.</p>
 
 <dl class="class">
 <dt id="lgimapy.latex.Document">
-<em class="property">class </em><code class="descclassname">lgimapy.latex.</code><code class="descname">Document</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>fig_dir=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lgimapy.latex.</code><code class="descname">Document</code><span class="sig-paren">(</span><em>fid</em>, <em>path=None</em>, <em>fig_dir=False</em>, <em>load_tex=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for building a document in LaTeX.</p>
 <dl class="docutils">
 <dt>TODO: add other types such as</dt>
@@ -2323,6 +2781,7 @@ and respective LaTeX formatting as values.</p>
 </ul>
 </dd>
 </dl>
+<p>TODO: documentation</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2336,11 +2795,21 @@ and respective LaTeX formatting as values.</p>
 <li>str: create <cite>root/latex/{str}</cite> directory, create dir if required.</li>
 </ul>
 </li>
+<li><strong>fig_dir</strong> (<em>bool</em><em>, </em><em>defautl=False</em>) – If True, create a directory named <code class="docutils literal notranslate"><span class="pre">fig</span></code> to store all
+figures in the specified path.</li>
+<li><strong>load_tex</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, load a tex file with the specified filename
+to edit.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="lgimapy.latex.Document.add_appendix">
+<code class="descname">add_appendix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_appendix" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO</p>
+</dd></dl>
+
 <dl class="method">
 <dt id="lgimapy.latex.Document.add_background_image">
 <code class="descname">add_background_image</code><span class="sig-paren">(</span><em>image</em>, <em>scale=1</em>, <em>width=None</em>, <em>height=None</em>, <em>angle=0</em>, <em>vshift=0</em>, <em>hshift=0</em>, <em>unit='cm'</em>, <em>alpha=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_background_image" title="Permalink to this definition">¶</a></dt>
@@ -2380,6 +2849,63 @@ and respective LaTeX formatting as values.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="lgimapy.latex.Document.add_paragraph">
+<code class="descname">add_paragraph</code><span class="sig-paren">(</span><em>paragraph</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_paragraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add text as a new paragraph to <code class="xref py py-attr docutils literal notranslate"><span class="pre">Document.body</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>paragraph</strong> (<em>str</em>) – Individual paragraph of text.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.latex.Document.add_preamble">
+<code class="descname">add_preamble</code><span class="sig-paren">(</span><em>packages=None</em>, <em>orientation='portrait'</em>, <em>font_size=12</em>, <em>margin=None</em>, <em>margin_unit='cm'</em>, <em>page_numbers=False</em>, <em>ignore_bottom_margin=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_preamble" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add preamble with custom specifications.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>packages</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Additonal packages to include for rendering document.
+By default no additional packages are included.</li>
+<li><strong>orientation</strong> (<code class="docutils literal notranslate"><span class="pre">{'landscape',</span> <span class="pre">'portrait'}</span></code>, default=’portrait’) – Page orientation.</li>
+<li><strong>font_size</strong> (<em>int</em><em>, </em><em>default=12</em>) – Base font size for general text.</li>
+<li><strong>margin</strong> (<em>float</em><em> or </em><em>Dict</em><em>[</em><em>str: float</em><em>]</em><em>, </em><em>default=None</em>) – <p>Page margins. One universal margin can be used
+or individual margins can be specified:</p>
+<p><a href="#id5"><span class="problematic" id="id6">*</span></a><code class="docutils literal notranslate"><span class="pre">margin=2</span></code>
+<a href="#id7"><span class="problematic" id="id8">*</span></a><code class="docutils literal notranslate"><span class="pre">margin={'top':</span> <span class="pre">1,</span> <span class="pre">'bottom':</span> <span class="pre">0.5,</span> <span class="pre">'left':</span> <span class="pre">0.3,</span> <span class="pre">'right':</span> <span class="pre">0.3}</span></code></p>
+</li>
+<li><strong>margin_unit</strong> (<em>str</em><em>, </em><em>default='cm'</em>) – Unit for margin size(s).</li>
+<li><strong>page_numbers</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True include centered page numbers in the footer.</li>
+<li><strong>ignore_bottom_margin</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True completely ignore bottom margin such that extra
+content runs off the page but does not start on a new page.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.latex.Document.add_section">
+<code class="descname">add_section</code><span class="sig-paren">(</span><em>section</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_section" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new section to <code class="xref py py-attr docutils literal notranslate"><span class="pre">Document.body</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>section</strong> (<em>str</em>) – Title of new section.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="lgimapy.latex.Document.add_table">
 <code class="descname">add_table</code><span class="sig-paren">(</span><em>table_or_df</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_table" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add table to document using <a class="reference internal" href="#lgimapy.latex.latex_table" title="lgimapy.latex.latex_table"><code class="xref py py-func docutils literal notranslate"><span class="pre">latex_table()</span></code></a>.</p>
@@ -2408,6 +2934,46 @@ a DataFrame is expected to be input into
 </dd></dl>
 
 <dl class="method">
+<dt id="lgimapy.latex.Document.add_text">
+<code class="descname">add_text</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.add_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add text to <code class="xref py py-attr docutils literal notranslate"><span class="pre">Document.body</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> (<em>str</em>) – Text to add to <code class="xref py py-attr docutils literal notranslate"><span class="pre">Document.body</span></code>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.latex.Document.doc">
+<code class="descname">doc</code><a class="headerlink" href="#lgimapy.latex.Document.doc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine all parts of the document.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Entire document contents.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.latex.Document.end_edit">
+<code class="descname">end_edit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.end_edit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finish previously started edit.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#lgimapy.latex.Document.start_edit" title="lgimapy.latex.Document.start_edit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Document.start_edit()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="method">
 <dt id="lgimapy.latex.Document.save">
 <code class="descname">save</code><span class="sig-paren">(</span><em>save_tex=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Save <cite>.tex</cite> file and compile to <cite>.pdf</cite>.</p>
@@ -2419,6 +2985,33 @@ a DataFrame is expected to be input into
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.latex.Document.save_tex">
+<code class="descname">save_tex</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.save_tex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save .tex file of current document.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="lgimapy.latex.Document.start_edit">
+<code class="descname">start_edit</code><span class="sig-paren">(</span><em>keyword</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.latex.Document.start_edit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Begin editing saved document at keyword location.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>keyword</strong> (<em>str</em>) – Keyword in .tex file to start edit.
+In .tex file use <code class="docutils literal notranslate"><span class="pre">%%egin{&lt;keyword&gt;}</span></code> to indicate
+starting location for edit. Use <code class="docutils literal notranslate"><span class="pre">%%\end{&lt;keyword&gt;}</span></code>
+to indicate the end of the portion to be replaced.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#lgimapy.latex.Document.end_edit" title="lgimapy.latex.Document.end_edit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Document.end_edit()</span></code></a></p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -2451,9 +3044,9 @@ of days before or after the event.</p>
 Series with datetime indexes.</li>
 <li><strong>event_dates</strong> (<em>datetime</em><em> or </em><em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – Date(s) of event(s).</li>
 <li><strong>lookback</strong> (<em>str</em>) – String representation of start relative to
-event date. Input to <a href="#id5"><span class="problematic" id="id6">:function:`floatftime`</span></a>.</li>
+event date. Input to <a href="#id9"><span class="problematic" id="id10">:function:`floatftime`</span></a>.</li>
 <li><strong>lookforward</strong> (<em>str</em>) – String representation of end relative to
-event date. Input to <a href="#id7"><span class="problematic" id="id8">:function:`floatftime`</span></a>.</li>
+event date. Input to <a href="#id11"><span class="problematic" id="id12">:function:`floatftime`</span></a>.</li>
 </ul>
 </td>
 </tr>
@@ -2764,6 +3357,28 @@ dropped.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="lgimapy.utils.nearest_date">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">nearest_date</code><span class="sig-paren">(</span><em>date</em>, <em>date_list</em>, <em>inclusive=True</em>, <em>before=True</em>, <em>after=True</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.nearest_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search list of dates for nearest date to reference.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>date</strong> (<em>datetime</em>) – Reference date to find date near.</li>
+<li><strong>date_list</strong> (<em>List</em><em>[</em><em>datetime</em><em>]</em><em></em>) – List of dates to search.</li>
+<li><strong>inclusive</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Whether to include to specified reference date in
+the searchable list.</li>
+<li><strong>before</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Whether to include dates before the reference date.</li>
+<li><strong>after</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Whether to include dates after the reference date.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="lgimapy.utils.pprint">
 <code class="descclassname">lgimapy.utils.</code><code class="descname">pprint</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.pprint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print object to screen in nice formatting</p>
@@ -2865,6 +3480,28 @@ str values as values.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>root_path</strong> – Path of root directory and joined path.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">Path</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.utils.sep_str_int">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">sep_str_int</code><span class="sig-paren">(</span><em>input_string</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.sep_str_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Efficiently separate a string and integer.
+Only finds first integer and first partial string
+in inpute string.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>string</strong> (<em>str</em>) – Input string with embedded integer.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><strong>num</strong> (<em>int</em>) – Integer from input string.</li>
+<li><strong>output_string</strong> (<em>str</em>) – String portion of input string.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
