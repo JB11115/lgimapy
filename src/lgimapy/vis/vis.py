@@ -56,7 +56,7 @@ def close(fig=None):
 
     Parameters
     ----------
-    fig: mpl.Figure
+    fig: mpl.Figure, optional
         Figure instance to close.
 
     """
@@ -102,9 +102,9 @@ def subplots(*args, **kwargs):
     Parameters
     ----------
     args:
-        Positional arguments for matplotlib.pyplot.subplots
+        Positional arguments for ``matplotlib.pyplot.subplots``
     kwargs:
-        Keyword arguments for matplotlib.pyplot.subplots
+        Keyword arguments for ``matplotlib.pyplot.subplots``
 
     Returns
     -------
@@ -356,20 +356,6 @@ def linreg():
     plt.show()
 
 
-def calculate_ticks(ax, ticks, round_to=0.1, center=False):
-    """Naive solution to aligning grids for multi y-axis plot."""
-    upperbound = np.ceil(ax.get_ybound()[1] / round_to)
-    lowerbound = np.floor(ax.get_ybound()[0] / round_to)
-    dy = upperbound - lowerbound
-    fit = np.floor(dy / (ticks - 1)) + 1
-    dy_new = (ticks - 1) * fit
-    if center:
-        offset = np.floor((dy_new - dy) / 2)
-        lowerbound = lowerbound - offset
-    values = np.linspace(lowerbound, lowerbound + dy_new, ticks)
-    return values * round_to
-
-
 def plot_double_y_axis_timeseries(
     s_left,
     s_right,
@@ -397,7 +383,7 @@ def plot_double_y_axis_timeseries(
 
     Parameters
     ----------
-    s_{left, right}: pd.Series
+    {left, right}_s: pd.Series
         Series for `left` or `right` axis.
     start: datetime, optional
         Date to begin plot.
@@ -415,7 +401,7 @@ def plot_double_y_axis_timeseries(
     xlabel: str, optional
         X-axis label.
     ytickfmt_{left, right}: str, optional
-        Format as used by `str.format()` for `left` or `right`
+        Format as used by ``str.format()`` for `left` or `right`
         y-axis.
     ylabel_{left, right}: str, optional
         Y-axis label for `left` or `right` axis.
@@ -942,67 +928,114 @@ def plot_multiple_timeseries(
     plt.tight_layout()
 
 
-def format_xaxis(ax, s, xtickfmt):
-    """Format dates on x axis if necessary."""
-    if not isinstance(s.index[0], Timestamp):
-        return
-    if xtickfmt is None:
-        day_range = (s.index[-1] - s.index[0]).days
-        if day_range > 365 * 35:
-            loc = mpl.dates.YearLocator(10)
-            date_fmt = mpl.dates.DateFormatter("%Y")
-        elif day_range > 365 * 20:
-            loc = mpl.dates.YearLocator(5)
-            date_fmt = mpl.dates.DateFormatter("%Y")
-        elif day_range > 365 * 12:
-            loc = mpl.dates.YearLocator(4)
-            date_fmt = mpl.dates.DateFormatter("%Y")
-        elif day_range > 365 * 6:
-            loc = mpl.dates.YearLocator(2)
-            date_fmt = mpl.dates.DateFormatter("%Y")
-        elif day_range > 1000:
-            loc = mpl.dates.MonthLocator(bymonth=1, bymonthday=1)
-            date_fmt = mpl.dates.DateFormatter("%Y")
-        elif day_range > 720:
-            loc = mpl.dates.MonthLocator(bymonth=(1, 7), bymonthday=1)
-            date_fmt = mpl.dates.DateFormatter("%b-%Y")
-        elif day_range > 360:
-            loc = mpl.dates.MonthLocator(bymonth=(1, 4, 7, 10), bymonthday=1)
-            date_fmt = mpl.dates.DateFormatter("%b-%Y")
-        elif day_range > 220:
-            loc = mpl.dates.MonthLocator(bymonthday=1, interval=2)
-            date_fmt = mpl.dates.DateFormatter("%b-%d")
-        elif day_range > 90:
-            loc = mpl.dates.MonthLocator(bymonthday=1)
-            date_fmt = mpl.dates.DateFormatter("%b-%d")
-        elif day_range > 45:
-            loc = mpl.dates.MonthLocator(bymonthday=(1, 15))
-            date_fmt = mpl.dates.DateFormatter("%b-%d")
-        elif day_range > 25:
-            loc = mpl.dates.MonthLocator(bymonthday=(1, 10, 20))
-            date_fmt = mpl.dates.DateFormatter("%b-%d")
-        else:
+def format_xaxis(ax, s=None, xtickfmt=None):
+    """
+    Format dates on x axis if necessary.
+
+    Parameters
+    ----------
+    ax: matplotlib Axes, optional
+        Axes in which to formate x-axis tick labels.
+    s: pd.Series, optional
+        Input x-axis values.
+    xtickfmt: str or 'auto', optional
+        If `xtickfmt` is not provided and the x-axis is a
+        datetime index, dates are formatted using custom method.
+        If ``'auto'``, ``matplotlib.dates.AutoDateLocator`` and
+        ``matplotlib.dates.ConciseDateFormatter`` are used.
+        Otherwise the value is used as the input to ``str.format()``
+        for x-axis tick labels.
+    """
+    if isinstance(s.index[0], Timestamp):
+        if xtickfmt is None:
+            day_range = (s.index[-1] - s.index[0]).days
+            if day_range > 365 * 35:
+                loc = mpl.dates.YearLocator(10)
+                date_fmt = mpl.dates.DateFormatter("%Y")
+            elif day_range > 365 * 20:
+                loc = mpl.dates.YearLocator(5)
+                date_fmt = mpl.dates.DateFormatter("%Y")
+            elif day_range > 365 * 12:
+                loc = mpl.dates.YearLocator(4)
+                date_fmt = mpl.dates.DateFormatter("%Y")
+            elif day_range > 365 * 6:
+                loc = mpl.dates.YearLocator(2)
+                date_fmt = mpl.dates.DateFormatter("%Y")
+            elif day_range > 1000:
+                loc = mpl.dates.MonthLocator(bymonth=1, bymonthday=1)
+                date_fmt = mpl.dates.DateFormatter("%Y")
+            elif day_range > 720:
+                loc = mpl.dates.MonthLocator(bymonth=(1, 7), bymonthday=1)
+                date_fmt = mpl.dates.DateFormatter("%b-%Y")
+            elif day_range > 360:
+                loc = mpl.dates.MonthLocator(
+                    bymonth=(1, 4, 7, 10), bymonthday=1
+                )
+                date_fmt = mpl.dates.DateFormatter("%b-%Y")
+            elif day_range > 220:
+                loc = mpl.dates.MonthLocator(bymonthday=1, interval=2)
+                date_fmt = mpl.dates.DateFormatter("%b-%d")
+            elif day_range > 90:
+                loc = mpl.dates.MonthLocator(bymonthday=1)
+                date_fmt = mpl.dates.DateFormatter("%b-%d")
+            elif day_range > 45:
+                loc = mpl.dates.MonthLocator(bymonthday=(1, 15))
+                date_fmt = mpl.dates.DateFormatter("%b-%d")
+            elif day_range > 25:
+                loc = mpl.dates.MonthLocator(bymonthday=(1, 10, 20))
+                date_fmt = mpl.dates.DateFormatter("%b-%d")
+            else:
+                loc = mpl.dates.AutoDateLocator(minticks=3, maxticks=9)
+                date_fmt = mpl.dates.ConciseDateFormatter(loc)
+        elif xtickfmt == "auto":
             loc = mpl.dates.AutoDateLocator(minticks=3, maxticks=9)
             date_fmt = mpl.dates.ConciseDateFormatter(loc)
-    elif xtickfmt == "auto":
-        loc = mpl.dates.AutoDateLocator(minticks=3, maxticks=9)
-        date_fmt = mpl.dates.ConciseDateFormatter(loc)
-
-    ax.xaxis.set_major_locator(loc)
-    ax.xaxis.set_major_formatter(date_fmt)
+        ax.xaxis.set_major_locator(loc)
+        ax.xaxis.set_major_formatter(date_fmt)
+    else:
+        tick = mpl.ticker.StrMethodFormatter(ytickfmt)
+        ax.yaxis.set_major_formatter(tick)
 
 
 def format_yaxis(ax, ytickfmt):
-    """Formate y axis to specified formatter"""
+    """
+    Formate y-axis tick labels to specified formatter.
+
+    Parameters
+    ----------
+    ax: matplotlib Axes, optional
+        Axes in which to format y-axis tick labels.
+    ytickfmt: str
+        Format as used by ``str.format()`` for y-axis tick labels.
+    """
     if ytickfmt is not None:
         tick = mpl.ticker.StrMethodFormatter(ytickfmt)
         ax.yaxis.set_major_formatter(tick)
 
 
-def bollinger_bands(vals, window_size, n_std):
-    """Bollinger band calculation."""
-    rolling_mean = vals.rolling(window=window_size, min_periods=1).mean()
-    rolling_std = vals.rolling(window=window_size, min_periods=1).std()
+def bollinger_bands(s, window_size, n_std):
+    """
+    Calculate Bollingeer bands .
+
+    Parameters
+    ----------
+    s: pd.Series
+        Input series to compute bands for.
+    window_size: int
+        Number of periods to use in rolling window.
+    n_std: int
+        Number of standard deviations between average
+        and upper/lower bands.
+
+    Returns
+    -------
+    upper_band: pd.Series
+        Resulting upper Bollinger band.
+    lower_band: pd.Series
+        Resulting lower Bollinger band.
+    """
+    rolling_mean = s.rolling(window=window_size, min_periods=1).mean()
+    rolling_std = s.rolling(window=window_size, min_periods=1).std()
     upper_band = rolling_mean + (rolling_std * n_std)
     lower_band = rolling_mean - (rolling_std * n_std)
     return upper_band, lower_band
@@ -1022,7 +1055,6 @@ def bollinger_bands(vals, window_size, n_std):
 
 
 def rolling_correlation():
-    # %%
     from lgimapy.data import Database, Index
     from lgimapy.bloomberg import bdh
 
@@ -1348,24 +1380,46 @@ def ebitda_by_sector():
 
 
 def make_patch_spines_invisible(ax):
-    """Make axis edges invisible."""
+    """
+    Make matplotlib Axes edges invisible.
+
+    Parameters
+    ----------
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+    """
     ax.set_frame_on(True)
     ax.patch.set_visible(False)
     for sp in ax.spines.values():
         sp.set_visible(False)
 
 
-def set_percentile_limits(series, axes, percentiles=(5, 95)):
-    """Set limits such that 5/95 percentils are equal."""
+def set_percentile_limits(a_list, axes, percentiles=(5, 95)):
+    """
+    Set y-limits on left and right axes of a double y-axis plot
+    such that the provided percentiles are at the same vertical
+    level in the plot for both axes.
+
+    Parameters
+    ----------
+    a_list: (array_like, array_like).
+        Arrays for left and right axes respectively.
+    axes: array of matplotlib Axes
+        Array of two matplob Axes objects for left
+        and right axes respectively.
+    perctiles: (float, float), default=(5, 95).
+        Percentiles to match for each input array.
+
+    """
     vals = {}
-    for s, ax_side in zip(series, ["left", "right"]):
+    for a, ax_side in zip(a_list, ["left", "right"]):
         vals[ax_side] = {
-            "min": np.min(s),
-            "max": np.max(s),
-            "pct_min": np.percentile(s, percentiles[0]),
-            "pct_max": np.percentile(s, percentiles[1]),
-            "tgt_min": 0.98 * np.min(s),
-            "tgt_max": 1.02 * np.max(s),
+            "min": np.min(a),
+            "max": np.max(a),
+            "pct_min": np.percentile(a, percentiles[0]),
+            "pct_max": np.percentile(a, percentiles[1]),
+            "tgt_min": 0.98 * np.min(a),
+            "tgt_max": 1.02 * np.max(a),
         }
     mult_offset = 0
     while (
@@ -1388,8 +1442,20 @@ def set_percentile_limits(series, axes, percentiles=(5, 95)):
 
 
 def weighted_median(a, weights):
-    df = pd.DataFrame({"a": a, "weights": weights})
-    df.sort_values("a", inplace=True)
+    """
+    Calculate the 50% weighted percentile of an array
+    for non-uniform weights.
+
+    Parameters
+    ----------
+    a: array_like
+        Input data.
+    weights: array_like
+        An array of weights the same shape as `a`. Each value in
+        `a` only contributes its associated weight towards the
+        median.
+    """
+    df = pd.DataFrame({"a": a, "weights": weights}).sort_values("a")
     cumsum = np.cumsum(df["a"])
     cutoff = np.sum(df["a"]) / 2
     return df[cumsum >= cutoff]["a"].iloc[0]
@@ -1410,6 +1476,45 @@ def plot_hist(
     figsize=(6, 4),
     **kwargs,
 ):
+    """
+    Plot histogram of input data.
+
+    Parameters
+    ----------
+    a: array_like
+        Input data.
+    bins: int or sequence of scalars, default=20
+        If `bins` is an int, it defines number of equal-width bins
+        in given range (20 by default). If bins is a sequence, it
+        defines a monotonically increasing array of bin edges.
+    weights: array_like, optional
+        An array of weights the same shape as `a`. Each value in
+        `a` only contributes its associated weight towards the
+        bin count.
+    normed: bool, default=True
+        If ``True``, the result will be a probability density
+        function such that the integral over the range is 1.
+        If ``False``, the result will be number of samples
+        in each bin.
+    mean: bool, default=False
+        If True, plot a vertical line indicating the mean
+        and include the value in the legend. Uses weighted
+        mean if `weights` is given.
+    mean_kws: dict, optional
+        Keyword arguments for ``ax.axvline`` for mean line.
+    median: bool, default=False
+        If True, plot a vertical line indicating the median
+        and include the value in the legend. Uses weighted
+        median if `weights` is given.
+    median_kws: dict, optional
+        Keyword arguments for ``ax.axvline`` for median line.
+    prec: int, default=1
+        Decimal precision for mean and median in legend.
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+    figsize: (float, float), default=(6, 4).
+        Figure size.
+    """
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
