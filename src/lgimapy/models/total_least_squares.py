@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class TLS:
@@ -41,11 +42,12 @@ class TLS:
     """
 
     def __init__(self, df, y_col):
+        self._y_col = y_col
         self.norm_df = ((df - df.mean()) / df.std()).dropna()
         self.y = self.norm_df[y_col].values
-        X_cols = [col for col in df.columns if col != y_col]
-        self.n = len(X_cols)
-        self.X = self.norm_df[X_cols].values
+        self._X_cols = [col for col in df.columns if col != y_col]
+        self.n = len(self._X_cols)
+        self.X = self.norm_df[self._X_cols].values
 
     def fit(self):
         """
@@ -73,7 +75,12 @@ class TLS:
         X_tilde = Xy_tilde[:, :n]
         X_resid = np.squeeze(X_tilde)
         y_resid = np.squeeze(Xy_tilde[:, n:])
-        resid = np.sign(y_resid) * (X_resid ** 2 + y_resid ** 2) ** 0.5
+        resid = (
+            np.sign(y_resid)
+            * X_resid
+            * y_resid
+            / (X_resid ** 2 + y_resid ** 2) ** 0.5
+        )
         self.X_resid = X_resid
         self.y_resid = y_resid
         self.resid = resid
@@ -81,3 +88,31 @@ class TLS:
         self.y_tls = np.squeeze((self.X + X_tilde) @ beta)
         self.frobenius_norm = np.linalg.norm(X_tilde, "fro")
         return self
+
+    def plot(self, highlight_last=True, ax=None, figsize=(8, 6)):
+        """
+        Plot TLS results in normalized space.
+
+        Parameters
+        ----------
+        highlight_last: bool, default=True
+            If true, highlight last data point from input DataFrame.
+        ax: matplotlib axis, default=None
+            Matplotlib axis to plot figure, if None one is created.
+        figsize: list or tuple, default=(6, 6).
+            Figure size.
+        """
+        if ax is None:
+            fig, ax = plt.subplots(1, 1, figsize=figsize)
+        ax.set_xlabel(self._X_cols[0])
+        ax.set_ylabel(self._y_col)
+
+        # Plot raw data.
+        ax.plot(self.X, self.y, "o", color="steelblue")
+        if highlight_last:
+            ax.plot(self.X[-1], self.y[-1], "o", color="firebrick")
+
+        # Plot TLS line of best fit.
+        all_x = np.concatenate([self.X.flatten(), self.y / self.beta])
+        ix = [np.argmin(all_x), np.argmax(all_x)]
+        ax.plot(all_x[ix], all_x[ix] * self.beta, lw=2, c="k", alpha=0.5)
