@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 from scipy.signal import find_peaks
 
+import lgimapy.vis as vis
+
 
 def find_drawdowns(s, threshold="auto", distance=5, prominence=3):
     """
@@ -72,3 +74,25 @@ def find_drawdowns(s, threshold="auto", distance=5, prominence=3):
                 current_peak = -np.infty
 
     return pd.DataFrame(d)
+
+
+def plot_drawdown_timeseries(s, drawdown_df, **kwargs):
+    """
+    Plot timeseries with drawdown periods shaded.
+
+    Parameters
+    ----------
+    s: pd.Series
+
+    """
+    vis.style()
+    s = s.dropna()
+
+    fig, ax = vis.subplots(figsize=(12, 6))
+    ts_kwargs = {"ytickfmt": "${x:.0f}", "xtickfmt": "auto", "ax": ax}
+    ts_kwargs.update(**kwargs)
+    vis.plot_timeseries(s, **ts_kwargs)
+    fill = [np.min(s), np.max(s)]
+    for start, end in zip(drawdown_df["start"], drawdown_df["end"]):
+        ax.fill_betweenx(fill, start, end, color="lightgrey", alpha=0.2)
+    plt.show()
