@@ -1021,10 +1021,10 @@ class Index:
             ex_rets = ex_rets[ex_rets.index > to_datetime(start_date)]
             t_rets = t_rets[t_rets.index > to_datetime(start_date)]
 
-        # Calculate implied treasy returns.
-        tsy_t_rets = t_rets - ex_rets
+        # Calculate implied risk free returns.
+        rf_rets = t_rets - ex_rets
         # Calculate total returns over period and use treasury
         # returns to back out excess returns.
         total_ret = np.prod(1 + t_rets) - 1
-        tsy_total_ret = np.prod(1 + tsy_t_rets) - 1
-        return total_ret - tsy_total_ret
+        rf_total_ret = np.prod(1 + rf_rets) - 1
+        return total_ret - rf_total_ret
