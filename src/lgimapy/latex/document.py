@@ -388,7 +388,7 @@ class Document:
         text: str
             Text to add to :attr:`Document.body`.
         """
-        self.body = "\n\n".join([self.body, text])
+        self.body = "\n\n".join([cleandoc(self.body), text])
 
     def add_background_image(
         self,
