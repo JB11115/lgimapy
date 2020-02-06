@@ -24,10 +24,10 @@ def get_position(oad=None, dts=None):
     """Return position on scale of -2 to 2 given current OAD overweight"""
     if oad is not None:
         val = oad
-        levels = [0.2, 0.1, -0.1, -0.2]
+        levels = [0.24, 0.08, -0.08, -0.24]
     elif dts is not None:
         val = dts
-        levels = [1, 0.98, 0.94, 0.92]
+        levels = [1, 0.975, 0.945, 0.92]
 
     if val > levels[0]:
         return '+2'
@@ -44,10 +44,10 @@ def get_position(oad=None, dts=None):
 # Get position of P-LD account sectors.
 pld_sectors = [
     "TELECOM",
-    "CONSUMER_CYCLICAL",
+    "CYCLICAL_FOR_CITI_SURVEY",
     "CONSUMER_NON_CYCLICAL",
     "UTILITY",
-    "INDUSTRIALS",
+    "INDUSTRIALS_FOR_CITI_SURVEY",
     "ENERGY",
     "BANKS_SR",
     "BANKS_SUB",
@@ -66,8 +66,8 @@ for sector in pld_sectors:
 
 # Get positions for overall credit.
 dts = np.sum(df['P_DTS']) / np.sum(df['BM_DTS'])
-positions['Overall High grade corp'] = get_position(dts=dts)
-positions['Overall in credit'] = get_position(dts=dts)
+positions['Overall High Grade Corp'] = get_position(dts=dts)
+positions['Overall in Credit'] = get_position(dts=dts)
 
 # Get position for ABS/CMBS.
 df = db.load_portfolio(accounts="P-MC", market_cols=True)
@@ -82,23 +82,23 @@ positions['Index/ETF Options'] = 'N/A'
 
 # Print result.
 sorted_ix = [
-    'Telcom',
-    'Consumer Cyclical',
+    'Telecom',
+    'Cyclical (Citi)',
     'Consumer Non-Cyclical',
     'Utilities',
-    'Industrials',
+    'Industrials (Citi)',
     'Energy',
     'Banks (Sr)',
     'Banks (Sub)',
-    'Emergin Markets',
+    'Emerging Markets',
     'Hybrids',
     'Insurance',
-    'Overall High grade corp',
+    'Overall High Grade Corp',
     'Overall High Yield',
     'Index/ETF Options',
     'Munis',
     'ABS/CMBS/Non-Agency RMBS',
-    'Overall in credit',
+    'Overall in Credit',
 ]
 
-print(pd.Series(positions).loc[sorted_ix])
+print(pd.Series(positions).reindex(sorted_ix))
