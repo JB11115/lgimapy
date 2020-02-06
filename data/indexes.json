@@ -376,8 +376,66 @@
         "in_stats_index": true,
         "special_rules": "Sector | Subsector | Ticker"
     },
+    "CYCLICAL_FOR_CITI_SURVEY":{
+        "name": "Cyclical (Citi)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "METALS_AND_MINING",
+            "CHEMICALS",
+            "PACKAGING",
+            "PAPER",
+            "AIRLINES",
+            "RAILROADS",
+            "TRANSPORTATION_SERVICES",
+            "CONSUMER_CYCLICAL_SERVICES",
+            "RETAILERS",
+            "AUTOMOTIVE",
+            "LEISURE",
+            "GAMING",
+            "LODGING",
+            "HOME_CONSTRUCTION",
+            "RESTAURANTS",
+            "MEDIA_ENTERTAINMENT"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
+    },
+    "INDUSTRIALS_FOR_CITI_SURVEY":{
+        "name": "Industrials (Citi)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDUSTRIAL_OTHER",
+            "ENVIRONMENTAL",
+            "DIVERSIFIED_MANUFACTURING",
+            "BUILDING_MATERIALS",
+            "AEROSPACE/DEFENSE",
+            "CONSTRUCTION_MACHINERY",
+            "TECHNOLOGY"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE",
+            "GE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
     "BASICS": {
-        "name": "Basics",
+        "name": "Industrials",
         "OAS": [
             -10,
             3000
@@ -690,7 +748,7 @@
         "in_stats_index": true
     },
     "TELECOM": {
-        "name": "Telcom",
+        "name": "Telecom",
         "OAS": [
             -10,
             3000
@@ -1282,7 +1340,7 @@
         "in_stats_index": true
     },
     "EMERGING_MARKETS": {
-        "name": "Emergin Markets",
+        "name": "Emerging Markets",
         "OAS": [
             -10,
             3000
