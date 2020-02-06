@@ -18,9 +18,6 @@ from lgimapy.bloomberg import bdh
 from lgimapy.data import Database
 from lgimapy.utils import mkdir, root, to_list
 
-# pd.plotting.register_matplotlib_converters()
-# %matplotlib qt
-# os.chdir(root("src/lgimapy/vis"))
 
 # %%
 def style(background="white", style="fivethirtyeight"):
@@ -843,7 +840,7 @@ def plot_multiple_timeseries(
     Parameters
     ----------
     s_list: pd.Dataframe or List[pd.Series].
-        DataFrame of list of series to plot.
+        DataFrame or list of series to plot.
     c_list: List[matplotlib color], optional
         List of colors for corresponding series.
     ls_list: List[matplotlib linestyles], optional
@@ -872,14 +869,17 @@ def plot_multiple_timeseries(
         to names of ``s_left`` and ``s_right`` with default parameters.
         For non-default parameters pass kwargs to ``Axes.legend()``.
     kwargs: dict, optional
-        Kwargs for matplotlib plot.
+        Kwargs for ``matplotlib.Axes.plot()``.
     """
     # Set default plot params and update with specified params.
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
 
+    # Create DataFrame from
     if isinstance(s_list, pd.DataFrame):
-        s_list = [s_list[col] for col in s_list]
+        df = s_list.copy()
+    else:
+        df = pd.concat(s_list, axis=1, sort=True)
 
     plot_kws = {"alpha": 0.8, "lw": 2}
     plot_kws.update(**kwargs)
@@ -897,20 +897,19 @@ def plot_multiple_timeseries(
     c_list = default_c_list if c_list is None else c_list
 
     if ls_list is None:
-        ls_list = [plot_kws.get("ls", "-")] * len(s_list)
+        ls_list = [plot_kws.get("ls", "-")] * len(df.columns)
     plot_kws.pop("ls", None)
 
     # Format start date for all series.
     if start is not None:
-        old_s_list = s_list.copy()
-        s_list = []
-        start_date = pd.to_datetime(start)
-        s_list = [[s.index >= start_date].copy() for s in old_s_list]
+        df = df[df.index >= start].copy()
+    if end is not None:
+        df = df[df.index <= end].copy()
 
     # Plot data and format axis.
-    for s, c, ls in zip(s_list, c_list, ls_list):
-        ax.plot(s.index, s.values, c=c, ls=ls, **plot_kws, label=s.name)
-    format_xaxis(ax, s_list[0], xtickfmt)
+    for col, c, ls in zip(df.columns, c_list, ls_list):
+        ax.plot(df.index, df[col], c=c, ls=ls, **plot_kws, label=col)
+    format_xaxis(ax, df.iloc[:, 0], xtickfmt)
     format_yaxis(ax, ytickfmt)
 
     # Add extra info.
