@@ -201,7 +201,7 @@ class Database:
         if date_delta == "TODAY":
             return today
         elif date_delta == "YESTERDAY" or date_delta == "DAILY":
-            return self.trade_dates[-2]
+            return self.nearest_date(today, inclusive=False, after=False)
         elif date_delta == "WTD":
             return self.trade_dates[
                 last_trade(today - timedelta(today.weekday() + 1)) - 1
@@ -1609,7 +1609,6 @@ class Database:
                 select cusip, max(instrumentkey) as InstrumentKey,
                     max(dateend) as DateEnd
                 from diminstrument
-                where dateend <> '9999-12-31' and cusip is not null
                 group by cusip
             ) a
             on i.instrumentkey = a.instrumentkey
@@ -1623,3 +1622,15 @@ class Database:
         if end is not None:
             s = s[s <= to_datetime(end)]
         return s
+
+
+# %%
+def main():
+    # %%
+    from lgimapy import vis
+    from lgimapy.utils import Time
+
+    db = Database()
+    db.display_all_columns()
+
+    db.load_market_data(start="1/31/2020", local=True)
