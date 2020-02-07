@@ -945,7 +945,7 @@ def format_xaxis(ax, s=None, xtickfmt=None):
         Otherwise the value is used as the input to ``str.format()``
         for x-axis tick labels.
     """
-    if isinstance(s.index[0], Timestamp):
+    if s is not None and isinstance(s.index[0], Timestamp):
         if xtickfmt is None:
             day_range = (s.index[-1] - s.index[0]).days
             if day_range > 365 * 35:
@@ -992,8 +992,8 @@ def format_xaxis(ax, s=None, xtickfmt=None):
         ax.xaxis.set_major_locator(loc)
         ax.xaxis.set_major_formatter(date_fmt)
     else:
-        tick = mpl.ticker.StrMethodFormatter(ytickfmt)
-        ax.yaxis.set_major_formatter(tick)
+        tick = mpl.ticker.StrMethodFormatter(xtickfmt)
+        ax.xaxis.set_major_formatter(tick)
 
 
 def format_yaxis(ax, ytickfmt):
@@ -1038,19 +1038,6 @@ def bollinger_bands(s, window_size, n_std):
     upper_band = rolling_mean + (rolling_std * n_std)
     lower_band = rolling_mean - (rolling_std * n_std)
     return upper_band, lower_band
-
-
-# from lgimapy.bloomberg import bdh
-# df = bdh("LULCOAS", "Index", "PX_LAST", start="1/1/2000")
-# # plot_timeseries(100 * df_temp["PX_LAST"], xtickfmt=None, start="1/1/2018")
-# plot_timeseries(
-#     100 * df_temp["PX_LAST"],
-#     xtickfmt="auto",
-#     bollinger=True,
-#     stats=True,
-#     start="1/1/2018",
-# )
-# plt.show()
 
 
 def rolling_correlation():
