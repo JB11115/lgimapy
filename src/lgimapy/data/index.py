@@ -56,7 +56,7 @@ class Index:
         if isinstance(other, Index):
             return Index(concat_index_dfs([self.df, other.df]))
         else:
-            raise TypeError(f"Right operand must be an {type(ix).__name__}.")
+            raise TypeError(f"Right operand must be an {type(self).__name__}.")
 
     def __radd__(self, other):
         """Combine mutltiple instances of :class:`Index` together."""
@@ -65,14 +65,14 @@ class Index:
         elif other == 0:
             return self
         else:
-            raise TypeError(f"Left operand must be an {type(ix).__name__}.")
+            raise TypeError(f"Left operand must be an {type(self).__name__}.")
 
     def __iadd__(self, other):
         """Combine mutltiple instances of :class:`Index` together."""
         if isinstance(other, Index):
             return Index(concat_index_dfs([self.df, other.df]))
         else:
-            raise TypeError(f"Right operand must be an {type(ix).__name__}.")
+            raise TypeError(f"Right operand must be an {type(self).__name__}.")
 
     @property
     @lru_cache(maxsize=None)
@@ -834,6 +834,41 @@ class Index:
             df["mvw_col"] = df["MarketValue"] * df[col]
             g = df[["Date", "MarketValue", "mvw_col"]].groupby("Date").sum()
             return (g["mvw_col"] / g["MarketValue"]).rename(col)
+
+    def market_value_weight_vol(self, col, window_size=20, annualized=True):
+        """
+        Market value weight the volatilities of the specified
+        column using a rolling window approach. The variance
+        of each bond in the index is computed daily and the
+        average variance is then transformed back to volatility.
+
+        Parameters
+        ----------
+        col: str
+            Column name to weight, (e.g., ``'OAS'``).
+        window_size: int, default=20
+            Number of sample periods to use in rolling window.
+        annualized: bool, default=True
+            If True annualized the resulting volatilities by
+            multiply by square root of 252.
+
+        Returns
+        -------
+        vol: pd.Series
+            Computed volatility with datetime index.
+        """
+        col_df = self.get_value_history(col)
+        mv_df = self.get_value_history("MarketValue")
+        var_df = col_df.rolling(
+            window=window_size, min_periods=window_size
+        ).var()
+        weights_df = mv_df.divide(np.sum(mv_df, axis=1).values, axis=0)
+        vol = np.sum(
+            ((var_df * weights_df ** 2) ** 0.5).dropna(how="all"), axis=1
+        )
+        if annualized:
+            vol *= 252 ** 0.5
+        return vol
 
     def find_rating_changes(self, rating_agency):
         """
