@@ -1162,6 +1162,15 @@ class Database:
         else:
             ratings = (self._ratings[rating[0]], self._ratings[rating[1]])
 
+        # Save parameters used to build index
+        input_function_kwargs = locals().copy()
+        ignored_kwargs = {"self", "name", "start", "end", "date", "rating"}
+        index_constraints = {
+            kwarg: val
+            for kwarg, val in input_function_kwargs.items()
+            if kwarg not in ignored_kwargs
+        }
+
         # Add new issue mask if required.
         if is_new_issue:
             self.df["NewIssueMask"] = new_issue_mask(self.df)
@@ -1274,7 +1283,8 @@ class Database:
         df = eval(f"self.df.loc[{subset_mask}]").drop(
             temp_cols, axis=1, errors="ignore"
         )
-        return Index(df, name)
+
+        return Index(df, name, index_constraints)
 
     @staticmethod
     def _preprocess_portfolio_data(df):
@@ -1622,15 +1632,3 @@ class Database:
         if end is not None:
             s = s[s <= to_datetime(end)]
         return s
-
-
-# %%
-def main():
-    # %%
-    from lgimapy import vis
-    from lgimapy.utils import Time
-
-    db = Database()
-    db.display_all_columns()
-
-    db.load_market_data(start="1/31/2020", local=True)
