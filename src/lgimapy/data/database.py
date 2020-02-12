@@ -22,8 +22,9 @@ from lgimapy.utils import (
     replace_multiple,
     root,
     sep_str_int,
-    to_list,
     to_datetime,
+    to_int,
+    to_list,
 )
 
 
@@ -64,10 +65,11 @@ def clean_dtypes(df):
             "BenchmarkWeight",
         ],
         "int8": [
+            "FinancialFlag",
             "Eligibility144AFlag",
+            "AnyIndexFlag",
             "USCreditReturnsFlag",
             "USCreditStatisticsFlag",
-            "AnyIndexFlag",
             "USAggReturnsFlag",
             "USAggStatisticsFlag",
             "USHYReturnsFlag",
@@ -78,6 +80,7 @@ def clean_dtypes(df):
             "ISIN",
             "Ticker",
             "Issuer",
+            "RiskEntity",
             "Sector",
             "Subsector",
             "MoodyRating",
@@ -90,7 +93,6 @@ def clean_dtypes(df):
             "CountryOfRisk",
             "CountryOfDomicile",
             "MarketOfIssue",
-            "FinancialFlag",
             "Account",
         ],
     }
@@ -175,7 +177,7 @@ class Database:
         ----------
         date_delta: str, ``{'today', 'WTD', 'MTD', 'YTD', '3d', '5y', etc}``
             Difference between reference date and target date.
-        reference_date: datetime, default=None
+        reference_date: datetime, optional
             Reference date to use, if None use most recent trade date.
         kwargs:
             Keyword arguments for :func:`nearest_date`.
@@ -313,22 +315,22 @@ class Database:
 
     def _convert_sectors_to_fin_flags(self, sectors):
         """
-        Convert list of sectors to a financial flag of 'financial',
-        'non-financial', or 'other'.
+        Convert sectors to flag indicating if they
+        are non-financial (0), financial (1), or other (2).
 
         Parameters
         ----------
-        sectors: List[str].
-            List of sectors from index DataFrame.
+        sectors: pd.Series
+            Sectors
 
         Returns
         -------
-        fin_flags: List[str].
-            List of {'financial', 'non-financial', 'other'} for
-            each input sector.
+        fin_flags: nd.array
+            Array of values indicating if sectors are non-financial (0),
+            financial (1), or other (Treasuries, Sovs, Govt owned).
         """
 
-        financials = [
+        financials = {
             "P&C",
             "LIFE",
             "APARTMENT_REITS",
@@ -340,26 +342,18 @@ class Database:
             "FINANCIAL_OTHER",
             "FINANCE_COMPANIES",
             "OFFICE_REITS",
-        ]
-
-        other = [
+        }
+        other = {
             "TREASURIES",
             "SOVEREIGN",
             "SUPRANATIONAL",
             "INDUSTRIAL_OTHER",
             "GOVERNMENT_GUARANTEE",
             "OWNED_NO_GUARANTEE",
-        ]
-
-        fin_flags = []
-        for sector in sectors:
-            if sector in financials:
-                fin_flags.append("financial")
-            elif sector in other:
-                fin_flags.append("other")
-            else:
-                fin_flags.append("non-financial")
-
+        }
+        fin_flags = np.zeros(len(sectors))
+        fin_flags[sectors.isin(financials)] = 1
+        fin_flags[sectors.isin(other)] = 2
         return fin_flags
 
     def _standardize_cusips(self, df):
@@ -458,6 +452,9 @@ class Database:
             df[date_col] = pd.to_datetime(
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
+
+        # Capitalize market of issue.
+        df["MarketOfIssue"] = df["MarketOfIssue"].str.upper()
 
         # Capitalize all sectors and map sectors to standard values.
         df["Sector"] = df["Sector"].str.upper()
@@ -623,6 +620,9 @@ class Database:
             "MTG_NON_PFANDBRIEFE",
             "PFANDBRIEFE_TRADITIONAL_HYPOTHEKEN",
             "PFANDBRIEFE_TRADITIONAL_OEFFENLICHE",
+            "PFANDBRIEFE_JUMBO_HYPOTHEKEN",
+            "PFANDBRIEFE_JUMBO_OEFFENLICHE",
+            "PSLOAN_NON_PFANDBRIEFE",
             "CONVENTIONAL_15_YR",
             "CONVENTIONAL_15_YR",
             "CONVENTIONAL_30_YR",
@@ -800,13 +800,13 @@ class Database:
 
         Parameters
         ----------
-        date: datetime, default=None
+        date: datetime, optional
             Single date to scrape.
-        start: str, datetime, default=None
+        start: str, datetime, optional
             Starting date for scrape.
-        end: str, datetime, default=None
+        end: str, datetime, optional
             Ending date for scrape.
-        cusips: List[str], default=None
+        cusips: List[str], optional
             List of cusips to specify for the load, by default load all.
         clean: bool, default=True
             If true, apply standard cleaning rules to loaded DataFrame.
@@ -915,7 +915,7 @@ class Database:
         if ret_df:
             return self.df
 
-    def _add_str_list_input(self, input_val, col_name):
+    def _add_category_input(self, input_val, col_name):
         """
         Add inputs from :meth:`Database.build_market_index` function
         with type of either str or List[str] to hash table to
@@ -930,7 +930,7 @@ class Database:
         """
         if input_val is not None:
             self._all_rules.append(col_name)
-            self._str_list_vals[col_name] = input_val
+            self._category_vals[col_name] = input_val
 
     def _add_range_input(self, input_val, col_name):
         """
@@ -963,7 +963,7 @@ class Database:
     def _add_flag_input(self, input_val, col_name):
         """
         Add inputs from :meth:`Database.build_market_index` function
-        with bool type to hash table to use when subsetting
+        with bool or int type to hash table to use when subsetting
         full DataFrame.
 
         Parameters
@@ -975,7 +975,7 @@ class Database:
         """
         if input_val is not None:
             self._all_rules.append(col_name)
-            self._flags[col_name] = input_val
+            self._flags[col_name] = int(input_val)
 
     def build_market_index(
         self,
@@ -986,6 +986,7 @@ class Database:
         rating=(None, None),
         currency=None,
         cusip=None,
+        isin=None,
         issuer=None,
         ticker=None,
         sector=None,
@@ -993,14 +994,19 @@ class Database:
         drop_treasuries=True,
         drop_municipals=False,
         maturity=(None, None),
+        issue_years=(None, None),
         original_maturity=(None, None),
-        price=(None, None),
+        clean_price=(None, None),
+        dirty_price=(None, None),
         coupon_rate=(None, None),
+        coupon_type=None,
+        market_of_issue=None,
         country_of_domicile=None,
         country_of_risk=None,
         amount_outstanding=(None, None),
-        issue_years=(None, None),
+        market_value=(None, None),
         collateral_type=None,
+        yield_to_worst=(None, None),
         OAD=(None, None),
         OAS=(None, None),
         OASD=(None, None),
@@ -1013,8 +1019,8 @@ class Database:
         in_hy_returns_index=None,
         in_any_index=None,
         is_144A=None,
-        is_new_issue=None,
         financial_flag=None,
+        is_new_issue=None,
         special_rules=None,
     ):
         """
@@ -1024,13 +1030,13 @@ class Database:
         ----------
         name: str, default=''
             Optional name for returned index.
-        date: datetime, default=None
+        date: datetime, optional
             Single date to build index.
-        start: datetime, default=None
+        start: datetime, optional
             Start date for index, if None the start date from load is used.
-        end: datetime, default=None
+        end: datetime, optional
             End date for index, if None the end date from load is used.
-        rating: str , Tuple[str, str], default=None
+        rating: str , Tuple[str, str], optional
             Bond rating/rating range for index.
 
             Examples:
@@ -1038,23 +1044,25 @@ class Database:
             * str: ``'HY'``, ``'IG'``, ``'AAA'``, ``'Aa1'``, etc.
             * Tuple[str, str]: ``('AAA', 'BB')`` uses all bonds in
               specified inclusive range.
-        currency: str, List[str], default=None
+        currency: str, List[str], optional
             Currency or list of currencies to include.
-        cusip: str, List[str]: default=None,
-            Cusip or list of cusips to include.
-        issuer: str, List[str], default=None
+        cusip: str, List[str]: optional,
+            CUSIP or list of CUSIPs to include.
+        isin: str, List[str]: optional,
+            ISIN or list of ISINs to include.
+        issuer: str, List[str], optional
             Issuer, or list of issuers to include.
-        ticker: str, List[str], default=None
+        ticker: str, List[str], optional
             Ticker or list of tickers to include in index, default is all.
-        sector: str, List[str], default=None
+        sector: str, List[str], optional
             Sector or list of sectors to include in index.
-        subsector: str, List[str], default=None
+        subsector: str, List[str], optional
             Subsector or list of subsectors to include in index.
         drop_treasuries: bool, default=True
             Whether to drop treausuries.
         drop_municipals: bool, default=False
             Whether to drop municipals.
-        maturity: Tuple[float, float], {5, 10, 20, 30}, default=None
+        maturity: Tuple[float, float], {5, 10, 20, 30}, optional
             Maturities to include, if int is specified the following ranges
             are used:
 
@@ -1064,72 +1072,94 @@ class Database:
             * 30: 25 - 31
         original_maturity: Tuple[float, float], default=(None, None).
             Range of original bond maturities to include.
-        price: Tuple[float, float]), default=(None, None).
-            Price range of bonds to include, default is all.
+        clean_price: Tuple[float, float]), default=(None, None).
+            Clean price range of bonds to include, default is all.
+        dirty_price: Tuple[float, float]), default=(None, None).
+            Dirty price range of bonds to include, default is all.
         coupon_rate: Tuple[float, float]), default=(None, None).
             Coupon rate range of bonds to include, default is all.
-        country_of_domicile: str, List[str], default=None
-            Country or list of countries of domicile to include, default is all.
-        country_of_risk: str, List[str], default=None
-            Country or list of countries wherer risk is centered to include
+        coupon_type: str or List[str], optional
+            Coupon types ``{'FIXED', 'ZERO COUPON', 'STEP CPN', etc.)``
+            to include in index, default is all.
+        market_of_issue: str, List[str], optional
+            Markets of issue to include in index, defautl is all.
+        country_of_domicile: str, List[str], optional
+            Country or list of countries of domicile to include
             in index, default is all.
+        country_of_risk: str, List[str], optional
+            Country or list of countries wherer risk is centered
+            to include in index, default is all.
         amount_outstanding: Tuple[float, float], default=(None, None).
             Range of amount outstanding to include in index (Millions).
+        market_value: Tuple[float, float], default=(None, None).
+            Range of market values to include in index (Millions).
         issue_years: Tuple[float, float], default=(None, None).
-            Range of years since issue to include in index, default is all.
-        collateral_type: str, List[str], default=None
-            Collateral type or list of types to include, default is all.
+            Range of years since issue to include in index,
+            default is all.
+        collateral_type: str, List[str], optional
+            Collateral type or list of types to include,
+            default is all.
+        yield_to_worst: Tuple[float, float], default=(None, None).
+            Range of yields (to worst) to include, default is all.
         OAD: Tuple[float, float], default=(None, None).
-            Range of option adjusted durations to include, default is all.
+            Range of option adjusted durations to include,
+            default is all.
         OAS: Tuple[float, float], default=(None, None).
-            Range of option adjusted spreads to include, default is all.
+            Range of option adjusted spreads to include,
+            default is all.
         OASD:  Tuple[float, float], default=(None, None).
-            Range of option adjusted spread durations, default is all.
+            Range of option adjusted spread durations,
+            default is all.
         liquidity_score: Tuple[float, float], default=(None, None).
             Range of liquidty scores to use, default is all.
-        in_stats_index: bool, default=None
+        in_stats_index: bool, optional
             If True, only include bonds in stats index.
             If False, only include bonds out of stats index.
             By defualt include both.
-        in_returns_index: bool, default=None
+        in_returns_index: bool, optional
             If True, only include bonds in returns index.
             If False, only include bonds out of returns index.
             By defualt include both.
-        in_agg_stats_index: bool, default=None
+        in_agg_stats_index: bool, optional
             If True, only include bonds in aggregate stats index.
             If False, only include bonds out of aggregate stats index.
             By defualt include both.
-        in_agg_returns_index: bool, default=None
+        in_agg_returns_index: bool, optional
             If True, only include bonds in aggregate returns index.
             If False, only include bonds out of aggregate returns index.
             By defualt include both.
-        in_hy_stats_index: bool, default=None
+        in_hy_stats_index: bool, optional
             If True, only include bonds in HY stats index.
             If False, only include bonds out of HY stats index.
             By defualt include both.
-        in_hy_returns_index: bool, default=None
+        in_hy_returns_index: bool, optional
             If True, only include bonds in HY returns index.
             If False, only include bonds out of HY returns index.
             By defualt include both.
-        in_any_index: bool, default=None
+        in_any_index: bool, optional
             If True, only include bonds in any index.
             If False, only include bonds not in any index.
             By defualt include both.
-        is_144A: bool, default=None
+        is_144A: bool, optional
             If True, only include 144A bonds.
             If False, only include non 144A bonds.
             By defualt include both.
-        is_new_issue: bool, default=None
+        is_new_issue: bool, optional
             If True, only include bonds in the month they were issued.
             If False, include all bonds.
             By default include all bonds.
-        financial_flag: {'financial', 'non-financial', 'other'}, default=None
-            Financial flag setting to identify fin and non-fin credits.
-        special_rules: str, List[str] default=None
-            Special rule(s) for subsetting index using bitwise operators.
-            If None, all specified inputs are applied independtently of
-            eachother as bitwise &. All rules can be stacked using paranthesis
-            to create more complex rules.
+        financial_flag: bool or ``{0, 1, 2}``, optional
+            Selection for including fins, non-fins, or other.
+
+            * 0 or ``False``: Non-financial sectors.
+            * 1 or ``True``: Financial sectors.
+            * 2: Other (Treasuries, Sovs, Govt Ownwed, etc.).
+        special_rules: str, List[str] optional
+            Special rule(s) for subsetting index using bitwise
+            operators. If None, all specified inputs are applied
+            independtently of eachother as bitwise &. All rules
+            can be stacked using paranthesis to create more
+            complex rules.
 
             Examples:
 
@@ -1166,17 +1196,32 @@ class Database:
         else:
             rating = (self._ratings[rating[0]], self._ratings[rating[1]])
 
-        # Convert all str-list inputs to lists.
+        # Convert all category constraints to lists.
         currency = to_list(currency, dtype=str)
         ticker = to_list(ticker, dtype=str)
         cusip = to_list(cusip, dtype=str)
+        isin = to_list(isin, dtype=str)
         issuer = to_list(issuer, dtype=str)
+        market_of_issue = to_list(market_of_issue, dtype=str)
         country_of_domicile = to_list(country_of_domicile, dtype=str)
         country_of_risk = to_list(country_of_risk, dtype=str)
         collateral_type = to_list(collateral_type, dtype=str)
+        coupon_type = to_list(coupon_type, dtype=str)
         financial_flag = to_list(financial_flag, dtype=str)
         sector = to_list(sector, dtype=str)
         subsector = to_list(subsector, dtype=str)
+
+        # Convert all flag constraints to int.
+        in_returns_index = to_int(in_returns_index)
+        in_stats_index = to_int(in_stats_index)
+        in_agg_returns_index = to_int(in_agg_returns_index)
+        in_agg_stats_index = to_int(in_agg_stats_index)
+        in_hy_stats_index = to_int(in_hy_stats_index)
+        in_hy_returns_index = to_int(in_hy_returns_index)
+        in_any_index = to_int(in_any_index)
+        is_144A = to_int(is_144A)
+        financial_flag = to_int(financial_flag)
+        is_new_issue = to_int(is_new_issue)
 
         # Save parameter constraints used to build index.
         argspec = getfullargspec(self.build_market_index)
@@ -1184,25 +1229,19 @@ class Database:
             arg: default
             for arg, default in zip(argspec.args[1:], argspec.defaults)
         }
-        raw_input_function_kwargs = locals().copy()
-        ignored_kwargs = {
+        user_defined_constraints = locals().copy()
+        ignored_kws = {
             "self",
             "argspec",
             "default_constraints",
-            "name",
             "start",
             "end",
             "date",
         }
-        input_function_kwargs = {
-            kwarg: val
-            for kwarg, val in raw_input_function_kwargs.items()
-            if kwarg not in ignored_kwargs
-        }
         index_constraints = {
             kwarg: val
-            for kwarg, val in input_function_kwargs.items()
-            if val != default_constraints[kwarg]
+            for kwarg, val in user_defined_constraints.items()
+            if kwarg not in ignored_kws and val != default_constraints[kwarg]
         }
 
         # Add new issue mask if required.
@@ -1210,49 +1249,65 @@ class Database:
             self.df["NewIssueMask"] = new_issue_mask(self.df)
 
         # TODO: Modify price/amount outstading s.t. they account for currency.
+        # Store category constraints.
         self._all_rules = []
-        self._str_list_vals = {}
-        self._add_str_list_input(currency, "Currency")
-        self._add_str_list_input(ticker, "Ticker")
-        self._add_str_list_input(cusip, "CUSIP")
-        self._add_str_list_input(issuer, "Issuer")
-        self._add_str_list_input(country_of_domicile, "CountryOfDomicile")
-        self._add_str_list_input(country_of_risk, "CountryOfRisk")
-        self._add_str_list_input(collateral_type, "CollateralType")
-        self._add_str_list_input(financial_flag, "FinancialFlag")
-        self._add_str_list_input(subsector, "Subsector")
+        self._category_vals = {}
+        category_constraints = {
+            "Currency": currency,
+            "CUSIP": cusip,
+            "ISIN": isin,
+            "Issuer": issuer,
+            "Ticker": ticker,
+            "Sector": sector,
+            "Subsector": subsector,
+            "MarketOfIssue": market_of_issue,
+            "CountryOfDomicile": country_of_domicile,
+            "CountryOfRisk": country_of_risk,
+            "CollateralType": collateral_type,
+            "CouponType": coupon_type,
+            "FinancialFlag": financial_flag,
+        }
+        for col, constraint in category_constraints.items():
+            self._add_category_input(constraint, col)
 
-        if sector in ["financial", "non-financial", "other"]:
-            self._add_str_list_input(sector, "FinancialFlag")
-        else:
-            self._add_str_list_input(sector, "Sector")
+        # Store flag constraints.
+        self._flags = {}
+        flag_constraints = {
+            "USCreditReturnsFlag": in_returns_index,
+            "USCreditStatisticsFlag": in_stats_index,
+            "USAggReturnsFlag": in_agg_returns_index,
+            "USAggStatisticsFlag": in_agg_stats_index,
+            "USHYStatisticsFlag": in_hy_stats_index,
+            "USHYReturnsFlag": in_hy_returns_index,
+            "AnyIndexFlag": in_any_index,
+            "Eligibility144AFlag": is_144A,
+            "FinancialFlag": financial_flag,
+            "NewIssueMask": is_new_issue,
+        }
+        for col, constraint in flag_constraints.items():
+            self._add_flag_input(constraint, col)
 
         # Make dict of values for all tuple float range inputs.
+        range_constraints = {
+            "Date": (start, end),
+            "OriginalMaturity": original_maturity,
+            "MaturityYears": maturity,
+            "IssueYears": issue_years,
+            "CleanPrice": clean_price,
+            "DirtyPrice": dirty_price,
+            "CouponRate": coupon_rate,
+            "NumericRating": rating,
+            "AmountOutstanding": amount_outstanding,
+            "MarketValue": market_value,
+            "YieldToWorst": yield_to_worst,
+            "OAD": OAD,
+            "OAS": OAS,
+            "OASD": OASD,
+            "LQA": liquidity_score,
+        }
         self._range_vals = {}
-        self._add_range_input((start, end), "Date")
-        self._add_range_input(rating, "NumericRating")
-        self._add_range_input(maturity, "MaturityYears")
-        self._add_range_input(original_maturity, "OriginalMaturity")
-        self._add_range_input(price, "DirtyPrice")
-        self._add_range_input(coupon_rate, "CouponRate")
-        self._add_range_input(amount_outstanding, "AmountOutstanding")
-        self._add_range_input(issue_years, "IssueYears")
-        self._add_range_input(liquidity_score, "LiquidityCostScore")
-        self._add_range_input(OAD, "OAD")
-        self._add_range_input(OAS, "OAS")
-        self._add_range_input(OASD, "OASD")
-
-        # Set values for including bonds based on credit flags.
-        self._flags = {}
-        self._add_flag_input(in_returns_index, "USCreditReturnsFlag")
-        self._add_flag_input(in_stats_index, "USCreditStatisticsFlag")
-        self._add_flag_input(in_agg_returns_index, "USAggReturnsFlag")
-        self._add_flag_input(in_agg_stats_index, "USAggStatisticsFlag")
-        self._add_flag_input(in_hy_stats_index, "USHYStatisticsFlag")
-        self._add_flag_input(in_hy_returns_index, "USHYReturnsFlag")
-        self._add_flag_input(in_any_index, "AnyIndexFlag")
-        self._add_flag_input(is_144A, "Eligibility144AFlag")
-        self._add_flag_input(is_new_issue, "NewIssueMask")
+        for col, constraint in range_constraints.items():
+            self._add_range_input(constraint, col)
 
         # Identify columns with special rules.
         rule_cols = []
@@ -1280,8 +1335,8 @@ class Database:
             for key in self._range_vals.keys()
         }
         str_repl = {
-            key: f'(self.df["{key}"].isin(self._str_list_vals["{key}"]))'
-            for key in self._str_list_vals.keys()
+            key: f'(self.df["{key}"].isin(self._category_vals["{key}"]))'
+            for key in self._category_vals.keys()
         }
         flag_repl = {
             key: f'(self.df["{key}"] == self._flags["{key}"])'
@@ -1366,7 +1421,6 @@ class Database:
             "DTSVar": "DTS_Diff",
             "MKT_VAL": "StrategyMarketValue",
         }
-
         df.columns = [col_map.get(col, col) for col in df.columns]
         df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d")
         return clean_dtypes(df)
@@ -1553,11 +1607,11 @@ class Database:
             Security or secuirites to load data for.
         field: str, ``{'OAS', 'Price', 'TRET', 'XSRET', 'YTW', etc.}``
             Field of data to load.
-        start: datetime, default=None.
+        start: datetime, optional.
             Inclusive start date for data.
-        end: datetime, default=None.
+        end: datetime, optional.
             Inclusive end date for data.
-        nan: ``{None, 'drop', 'ffill', 'interp'}``, default=None
+        nan: ``{None, 'drop', 'ffill', 'interp'}``, optional
             Method to use for filling missing values in loaded data.
         kwargs:
             Keyword arguments to pass to interpolating function.
@@ -1600,8 +1654,6 @@ class Database:
                 limit_direction="forward", axis=0, inplace=True, **interp_kwargs
             )
 
-        # Add market data if specified.
-
         return df
 
     @property
@@ -1637,9 +1689,9 @@ class Database:
 
         Parameters
         ----------
-        start: datetime, default=None.
+        start: datetime, optional.
             Inclusive start date for data.
-        end: datetime, default=None.
+        end: datetime, optional.
             Inclusive end date for data.
 
         Returns
