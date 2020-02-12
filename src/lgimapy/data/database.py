@@ -1314,7 +1314,6 @@ class Database:
         # and drop temporary columns.
         temp_cols = ["NewIssueMask"]
         if subset_mask_list:
-            print(subset_mask_list)
             subset_mask = " & ".join(subset_mask_list)
             df = eval(f"self.df.loc[{subset_mask}]").drop(
                 temp_cols, axis=1, errors="ignore"
