@@ -459,6 +459,13 @@ class Database:
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
 
+        # Capitalize all sectors and map sectors to standard values.
+        df["Sector"] = df["Sector"].str.upper()
+        df["Sector"] = df["Sector"].str.replace(" ", "_")
+        sector_map = {"OTHER_FINANCIAL": "FINANCIAL_OTHER"}
+        for old_val, sector in sector_map.items():
+            df.loc[df["Sector"] == old_val, "Sector"] = sector
+
         # Map coupon types to standard values.
         coupon_map = {
             "Fixed Coupon": "FIXED",
@@ -986,8 +993,8 @@ class Database:
         ticker=None,
         sector=None,
         subsector=None,
-        treasuries=False,
-        municipals=True,
+        drop_treasuries=True,
+        drop_municipals=False,
         maturity=(None, None),
         original_maturity=(None, None),
         price=(None, None),
@@ -1046,10 +1053,10 @@ class Database:
             Sector or list of sectors to include in index.
         subsector: str, List[str], default=None
             Subsector or list of subsectors to include in index.
-        treasuries: bool, default=False
-            If true return only treasures in index, else exclude.
-        municipals: bool, default=True
-            If False, remove municipal bonds from index.
+        drop_treasuries: bool, default=True
+            Whether to drop treausuries.
+        drop_municipals: bool, default=False
+            Whether to drop municipals.
         maturity: Tuple[float, float], {5, 10, 20, 30}, default=None
             Maturities to include, if int is specified the following ranges
             are used:
@@ -1161,10 +1168,11 @@ class Database:
                 ratings = (self._ratings[rating], self._ratings[rating])
         else:
             ratings = (self._ratings[rating[0]], self._ratings[rating[1]])
+        rating = ratings
 
-        # Save parameters used to build index
+        # Save parameters used to build index.
         input_function_kwargs = locals().copy()
-        ignored_kwargs = {"self", "name", "start", "end", "date", "rating"}
+        ignored_kwargs = {"self", "name", "start", "end", "date", "ratings"}
         index_constraints = {
             kwarg: val
             for kwarg, val in input_function_kwargs.items()
@@ -1265,24 +1273,27 @@ class Database:
                     f"({replace_multiple(rule, repl_dict)})"
                 )
         # Add treasury and muncipal rules.
-        if treasuries:
-            subset_mask_list.append('(self.df["Sector"]=="TREASURIES")')
-        else:
+        if drop_treasuries:
             subset_mask_list.append('(self.df["Sector"]!="TREASURIES")')
-        if not municipals:
+        if drop_municipals:
             subset_mask_list.append('(self.df["Sector"]!="LOCAL_AUTHORITIES")')
+
         # Format all other rules.
         for rule in self._all_rules:
             if rule in rule_cols:
                 continue  # already added to subset mask
             subset_mask_list.append(replace_multiple(rule, repl_dict))
 
-        # Combine formatting rules into single mask and subset DataFrame.
-        subset_mask = " & ".join(subset_mask_list)
+        # Combine formatting rules into single mask and subset DataFrame,
+        # and drop temporary columns.
         temp_cols = ["NewIssueMask"]
-        df = eval(f"self.df.loc[{subset_mask}]").drop(
-            temp_cols, axis=1, errors="ignore"
-        )
+        if subset_mask_list:
+            subset_mask = " & ".join(subset_mask_list)
+            df = eval(f"self.df.loc[{subset_mask}]").drop(
+                temp_cols, axis=1, errors="ignore"
+            )
+        else:
+            df = self.df.drop(temp_cols, axis=1, errors="ignore")
 
         return Index(df, name, index_constraints)
 
@@ -1632,3 +1643,23 @@ class Database:
         if end is not None:
             s = s[s <= to_datetime(end)]
         return s
+
+
+# %%
+def main():
+    pass
+    # %%
+    from lgimapy import vis
+    from lgimapy.utils import Time
+
+    vis.style()
+    kwargs = load_json("indexes")
+    db = Database()
+
+    db.load_market_data()
+    ix = db.build_market_index()
+    ix.sectors
+
+    df = ix.df.copy()
+
+    sorted(df["Sector"].unique())
