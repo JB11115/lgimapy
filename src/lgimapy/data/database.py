@@ -6,7 +6,7 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from functools import lru_cache, partial
 from glob import glob
-from inspect import cleandoc
+from inspect import cleandoc, getfullargspec
 
 import datetime as dt
 import numpy as np
@@ -930,10 +930,7 @@ class Database:
         """
         if input_val is not None:
             self._all_rules.append(col_name)
-            if isinstance(input_val, str):
-                self._str_list_vals[col_name] = [input_val]
-            else:
-                self._str_list_vals[col_name] = input_val
+            self._str_list_vals[col_name] = input_val
 
     def _add_range_input(self, input_val, col_name):
         """
@@ -986,7 +983,7 @@ class Database:
         date=None,
         start=None,
         end=None,
-        rating=None,
+        rating=(None, None),
         currency=None,
         cusip=None,
         issuer=None,
@@ -1156,27 +1153,56 @@ class Database:
         end = None if end is None else pd.to_datetime(end)
 
         # Convert rating to range of inclusive ratings.
-        if rating is None:
-            ratings = (None, None)
+        if rating == (None, None):
+            pass
         elif isinstance(rating, str):
             if rating == "IG":
-                ratings = (1, 10)
+                rating = (1, 10)
             elif rating == "HY":
-                ratings = (11, 21)
+                rating = (11, 21)
             else:
                 # Single rating value.
-                ratings = (self._ratings[rating], self._ratings[rating])
+                rating = (self._ratings[rating], self._ratings[rating])
         else:
-            ratings = (self._ratings[rating[0]], self._ratings[rating[1]])
-        rating = ratings
+            rating = (self._ratings[rating[0]], self._ratings[rating[1]])
 
-        # Save parameters used to build index.
-        input_function_kwargs = locals().copy()
-        ignored_kwargs = {"self", "name", "start", "end", "date", "ratings"}
+        # Convert all str-list inputs to lists.
+        currency = to_list(currency, dtype=str)
+        ticker = to_list(ticker, dtype=str)
+        cusip = to_list(cusip, dtype=str)
+        issuer = to_list(issuer, dtype=str)
+        country_of_domicile = to_list(country_of_domicile, dtype=str)
+        country_of_risk = to_list(country_of_risk, dtype=str)
+        collateral_type = to_list(collateral_type, dtype=str)
+        financial_flag = to_list(financial_flag, dtype=str)
+        subsector = to_list(subsector, dtype=str)
+
+        # Save parameter constraints used to build index.
+        argspec = getfullargspec(self.build_market_index)
+        default_constraints = {
+            arg: default
+            for arg, default in zip(argspec.args[1:], argspec.defaults)
+        }
+        raw_input_function_kwargs = locals().copy()
+        ignored_kwargs = {
+            "self",
+            "argspec",
+            "default_constraints",
+            "name",
+            "start",
+            "end",
+            "date",
+            "ratings",
+        }
+        input_function_kwargs = {
+            kwarg: val
+            for kwarg, val in raw_input_function_kwargs.items()
+            if kwarg not in ignored_kwargs
+        }
         index_constraints = {
             kwarg: val
             for kwarg, val in input_function_kwargs.items()
-            if kwarg not in ignored_kwargs
+            if val != default_constraints[kwarg]
         }
 
         # Add new issue mask if required.
@@ -1204,7 +1230,7 @@ class Database:
         # Make dict of values for all tuple float range inputs.
         self._range_vals = {}
         self._add_range_input((start, end), "Date")
-        self._add_range_input(ratings, "NumericRating")
+        self._add_range_input(rating, "NumericRating")
         self._add_range_input(maturity, "MaturityYears")
         self._add_range_input(original_maturity, "OriginalMaturity")
         self._add_range_input(price, "DirtyPrice")
@@ -1657,9 +1683,6 @@ def main():
     db = Database()
 
     db.load_market_data()
-    ix = db.build_market_index()
-    ix.sectors
-
-    df = ix.df.copy()
-
-    sorted(df["Sector"].unique())
+    ix = db.build_market_index(rating="AAA")
+    len(ix.df)
+    ix.constraints
