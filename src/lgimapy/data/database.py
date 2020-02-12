@@ -1175,6 +1175,7 @@ class Database:
         country_of_risk = to_list(country_of_risk, dtype=str)
         collateral_type = to_list(collateral_type, dtype=str)
         financial_flag = to_list(financial_flag, dtype=str)
+        sector = to_list(sector, dtype=str)
         subsector = to_list(subsector, dtype=str)
 
         # Save parameter constraints used to build index.
@@ -1192,7 +1193,6 @@ class Database:
             "start",
             "end",
             "date",
-            "ratings",
         }
         input_function_kwargs = {
             kwarg: val
@@ -1314,6 +1314,7 @@ class Database:
         # and drop temporary columns.
         temp_cols = ["NewIssueMask"]
         if subset_mask_list:
+            print(subset_mask_list)
             subset_mask = " & ".join(subset_mask_list)
             df = eval(f"self.df.loc[{subset_mask}]").drop(
                 temp_cols, axis=1, errors="ignore"
@@ -1669,20 +1670,3 @@ class Database:
         if end is not None:
             s = s[s <= to_datetime(end)]
         return s
-
-
-# %%
-def main():
-    pass
-    # %%
-    from lgimapy import vis
-    from lgimapy.utils import Time
-
-    vis.style()
-    kwargs = load_json("indexes")
-    db = Database()
-
-    db.load_market_data()
-    ix = db.build_market_index(rating="AAA")
-    len(ix.df)
-    ix.constraints
