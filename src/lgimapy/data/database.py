@@ -1265,7 +1265,6 @@ class Database:
             "country_of_risk": ("CountryOfRisk", country_of_risk),
             "collateral_type": ("CollateralType", collateral_type),
             "coupon_type": ("CouponType", coupon_type),
-            "financial_flag": ("FinancialFlag", financial_flag),
         }
         for col, constraint in category_constraints.values():
             self._add_category_input(constraint, col)
