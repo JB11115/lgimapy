@@ -25,6 +25,7 @@ from lgimapy.utils import (
     to_datetime,
     to_int,
     to_list,
+    to_set,
 )
 
 
@@ -930,7 +931,7 @@ class Database:
         """
         if input_val is not None:
             self._all_rules.append(col_name)
-            self._category_vals[col_name] = input_val
+            self._category_vals[col_name] = set(input_val)
 
     def _add_range_input(self, input_val, col_name):
         """
@@ -1197,19 +1198,18 @@ class Database:
             rating = (self._ratings[rating[0]], self._ratings[rating[1]])
 
         # Convert all category constraints to lists.
-        currency = to_list(currency, dtype=str)
-        ticker = to_list(ticker, dtype=str)
-        cusip = to_list(cusip, dtype=str)
-        isin = to_list(isin, dtype=str)
-        issuer = to_list(issuer, dtype=str)
-        market_of_issue = to_list(market_of_issue, dtype=str)
-        country_of_domicile = to_list(country_of_domicile, dtype=str)
-        country_of_risk = to_list(country_of_risk, dtype=str)
-        collateral_type = to_list(collateral_type, dtype=str)
-        coupon_type = to_list(coupon_type, dtype=str)
-        financial_flag = to_list(financial_flag, dtype=str)
-        sector = to_list(sector, dtype=str)
-        subsector = to_list(subsector, dtype=str)
+        currency = to_set(currency, dtype=str)
+        ticker = to_set(ticker, dtype=str)
+        cusip = to_set(cusip, dtype=str)
+        isin = to_set(isin, dtype=str)
+        issuer = to_set(issuer, dtype=str)
+        market_of_issue = to_set(market_of_issue, dtype=str)
+        country_of_domicile = to_set(country_of_domicile, dtype=str)
+        country_of_risk = to_set(country_of_risk, dtype=str)
+        collateral_type = to_set(collateral_type, dtype=str)
+        coupon_type = to_set(coupon_type, dtype=str)
+        sector = to_set(sector, dtype=str)
+        subsector = to_set(subsector, dtype=str)
 
         # Convert all flag constraints to int.
         in_returns_index = to_int(in_returns_index)
@@ -1253,60 +1253,60 @@ class Database:
         self._all_rules = []
         self._category_vals = {}
         category_constraints = {
-            "Currency": currency,
-            "CUSIP": cusip,
-            "ISIN": isin,
-            "Issuer": issuer,
-            "Ticker": ticker,
-            "Sector": sector,
-            "Subsector": subsector,
-            "MarketOfIssue": market_of_issue,
-            "CountryOfDomicile": country_of_domicile,
-            "CountryOfRisk": country_of_risk,
-            "CollateralType": collateral_type,
-            "CouponType": coupon_type,
-            "FinancialFlag": financial_flag,
+            "currency": ("Currency", currency),
+            "cusip": ("CUSIP", cusip),
+            "isin": ("ISIN", isin),
+            "issuer": ("Issuer", issuer),
+            "ticker": ("Ticker", ticker),
+            "sector": ("Sector", sector),
+            "subsector": ("Subsector", subsector),
+            "market_of_issue": ("MarketOfIssue", market_of_issue),
+            "country_of_domicile": ("CountryOfDomicile", country_of_domicile),
+            "country_of_risk": ("CountryOfRisk", country_of_risk),
+            "collateral_type": ("CollateralType", collateral_type),
+            "coupon_type": ("CouponType", coupon_type),
+            "financial_flag": ("FinancialFlag", financial_flag),
         }
-        for col, constraint in category_constraints.items():
+        for col, constraint in category_constraints.values():
             self._add_category_input(constraint, col)
 
         # Store flag constraints.
         self._flags = {}
         flag_constraints = {
-            "USCreditReturnsFlag": in_returns_index,
-            "USCreditStatisticsFlag": in_stats_index,
-            "USAggReturnsFlag": in_agg_returns_index,
-            "USAggStatisticsFlag": in_agg_stats_index,
-            "USHYStatisticsFlag": in_hy_stats_index,
-            "USHYReturnsFlag": in_hy_returns_index,
-            "AnyIndexFlag": in_any_index,
-            "Eligibility144AFlag": is_144A,
-            "FinancialFlag": financial_flag,
-            "NewIssueMask": is_new_issue,
+            "in_returns_index": ("USCreditReturnsFlag", in_returns_index),
+            "in_stats_index": ("USCreditStatisticsFlag", in_stats_index),
+            "in_agg_returns_index": ("USAggReturnsFlag", in_agg_returns_index),
+            "in_agg_stats_index": ("USAggStatisticsFlag", in_agg_stats_index),
+            "in_hy_stats_index": ("USHYStatisticsFlag", in_hy_stats_index),
+            "in_hy_returns_index": ("USHYReturnsFlag", in_hy_returns_index),
+            "in_any_index": ("AnyIndexFlag", in_any_index),
+            "is_144A": ("Eligibility144AFlag", is_144A),
+            "financial_flag": ("FinancialFlag", financial_flag),
+            "is_new_issue": ("NewIssueMask", is_new_issue),
         }
-        for col, constraint in flag_constraints.items():
+        for col, constraint in flag_constraints.values():
             self._add_flag_input(constraint, col)
 
-        # Make dict of values for all tuple float range inputs.
+        # Store range constraints.
         range_constraints = {
-            "Date": (start, end),
-            "OriginalMaturity": original_maturity,
-            "MaturityYears": maturity,
-            "IssueYears": issue_years,
-            "CleanPrice": clean_price,
-            "DirtyPrice": dirty_price,
-            "CouponRate": coupon_rate,
-            "NumericRating": rating,
-            "AmountOutstanding": amount_outstanding,
-            "MarketValue": market_value,
-            "YieldToWorst": yield_to_worst,
-            "OAD": OAD,
-            "OAS": OAS,
-            "OASD": OASD,
-            "LQA": liquidity_score,
+            "date": ("Date", (start, end)),
+            "original_maturity": ("OriginalMaturity", original_maturity),
+            "maturity": ("MaturityYears", maturity),
+            "issue_years": ("IssueYears", issue_years),
+            "clean_price": ("CleanPrice", clean_price),
+            "dirty_price": ("DirtyPrice", dirty_price),
+            "coupon_rate": ("CouponRate", coupon_rate),
+            "rating": ("NumericRating", rating),
+            "amount_outstanding": ("AmountOutstanding", amount_outstanding),
+            "market_value": ("MarketValue", market_value),
+            "yield_to_worst": ("YieldToWorst", yield_to_worst),
+            "OAD": ("OAD", OAD),
+            "OAS": ("OAS", OAS),
+            "OASD": ("OASD", OASD),
+            "liquidity_score": ("LQA", liquidity_score),
         }
         self._range_vals = {}
-        for col, constraint in range_constraints.items():
+        for col, constraint in range_constraints.values():
             self._add_range_input(constraint, col)
 
         # Identify columns with special rules.
@@ -1334,7 +1334,7 @@ class Database:
             )
             for key in self._range_vals.keys()
         }
-        str_repl = {
+        cat_repl = {
             key: f'(self.df["{key}"].isin(self._category_vals["{key}"]))'
             for key in self._category_vals.keys()
         }
@@ -1342,7 +1342,7 @@ class Database:
             key: f'(self.df["{key}"] == self._flags["{key}"])'
             for key in self._flags
         }
-        repl_dict = {**range_repl, **str_repl, **flag_repl, "~(": "(~"}
+        repl_dict = {**range_repl, **cat_repl, **flag_repl, "~(": "(~"}
 
         # Format special rules.
         subset_mask_list = []
