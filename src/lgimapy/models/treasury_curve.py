@@ -846,7 +846,9 @@ def update_treasury_curve_dates(dates=None, verbose=True):
             continue
 
         db.load_market_data(date=date)
-        treasury_ix = db.build_market_index(treasuries=True)
+        treasury_ix = db.build_market_index(
+            drop_treasuries=False, sector="TREASURIES"
+        )
         tcb = TreasuryCurveBuilder(treasury_ix)
         tcb.fit(verbose=int(verbose), threshold=12)
         tcb.plot()
@@ -887,12 +889,16 @@ def update_specific_date(specified_date, plot=True, **kwargs):
 
     # Fit curve for both days.
     db.load_market_data(date=specified_date)
-    tcb = TreasuryCurveBuilder(db.build_market_index(treasuries=True))
+    tcb = TreasuryCurveBuilder(
+        db.build_market_index(drop_treasuries=False, sector="TREASURIES")
+    )
     tcb.fit(verbose=1)
     tcb.save()
 
     db.load_market_data(date=next_date)
-    tcb = TreasuryCurveBuilder(db.build_market_index(treasuries=True))
+    tcb = TreasuryCurveBuilder(
+        db.build_market_index(drop_treasuries=False, sector="TREASURIES")
+    )
     tcb.fit(verbose=1)
     tcb.save()
 
