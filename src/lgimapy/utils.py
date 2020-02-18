@@ -154,16 +154,16 @@ def mkdir(directory):
         pass
 
 
-def to_list(obj, dtype=None):
+def to_list(obj, dtype=None, sort=False):
     """
-    Convert single object to list if it is not already
-    a list-like object.
+    Convert object to ``list`` if it is not already
+    a ``list`` or ``None``.
 
     Parameters
     ----------
     obj:
         Object to convert to list if required.
-    dtype: type
+    dtype: type, optional
         Data type of object to check against/ data type
         of object in output list. If None the dtype is checked
         against ```list``` and ```tuple``` and converted to
@@ -171,24 +171,72 @@ def to_list(obj, dtype=None):
 
     Returns
     -------
-    list-like:
-        List-like version of input object.
+    list:
+        ``list`` conversion of input object.
     """
+    if obj is None:
+        return None
+
     if dtype is not None:
         # Compare to specific dtype.
         if isinstance(obj, dtype):
             if dtype == str:
-                return [obj]
+                list_obj = [obj]
             else:
-                return list(obj)
+                list_obj = list(obj)
         else:
-            return obj
+            list_obj = to_list(obj)
     else:
-        # Compare to list and tuple only.
-        if type(obj) in [list, tuple]:
-            return obj
-        else:
-            return list(obj)
+        list_obj = list(obj)
+
+    return sorted(list_obj) if sort else list_obj
+
+
+def to_set(obj, dtype=None):
+    """
+    Convert single object to ``set`` if it is not already
+    a ``set`` or ``None``.
+
+    Parameters
+    ----------
+    obj:
+        Object to convert to ``set``.
+    dtype: type, optional
+        Data type of object to check against/ data type
+        of object in output list. If None the dtype is checked
+        against.
+
+    Returns
+    -------
+    set:
+        ``set`` conversion of input object.
+    """
+    if obj is None:
+        return None
+    elif isinstance(obj, set):
+        return obj
+    else:
+        return set(to_list(obj, dtype))
+
+
+def to_int(obj, dtype=None):
+    """
+    Convert object to ``int`` if it is not ``None``.
+
+    Parameters
+    ----------
+    obj:
+        Object to convert to ``int`` if required.
+
+    Returns
+    -------
+    int:
+        ``int`` conversion of input object.
+    """
+    if obj is not None:
+        return int(obj)
+    else:
+        return None
 
 
 def to_datetime(date):
