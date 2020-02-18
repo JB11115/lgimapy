@@ -1,17 +1,20 @@
 import warnings
 from bisect import bisect_left
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from functools import lru_cache
 from inspect import getfullargspec
 
 import numpy as np
 import pandas as pd
+from oslo_concurrency import lockutils
 
 from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import Bond, concat_index_dfs, new_issue_mask, TreasuryCurve
 from lgimapy.utils import (
     check_all_equal,
+    dump_json,
     load_json,
+    mkdir,
     replace_multiple,
     root,
     to_int,
@@ -20,6 +23,34 @@ from lgimapy.utils import (
 )
 
 # %%
+def get_unique_fid(fid_map):
+    """
+    Generate a unique filename given map of keys
+    to filenames.
+
+    Parameters
+    ----------
+    fid_map: dict
+        Mapping of keys to filename values.
+
+    Returns
+    -------
+    fid: str
+        Unique filename not in input filename map.
+    """
+
+    def generate_random_fid():
+        """str: Generate random filename."""
+        n_digits_in_fid = 18
+        max_val = int(10 ** n_digits_in_fid - 1)
+        fid_val = np.random.randint(0, max_val, dtype="int64")
+        fid = f"{str(fid_val).zfill(n_digits_in_fid)}.csv"
+        return fid
+
+    while True:
+        fid = generate_random_fid()
+        if fid not in fid_map:
+            return fid
 
 
 class Index:
@@ -47,7 +78,7 @@ class Index:
     def __init__(self, index_df, name="", constraints=None):
         self.df = index_df.set_index("CUSIP", drop=False)
         self.name = name
-        self.constraints = constraints
+        self._constraints = constraints
         # Initialize cache for storing daily DataFrames.
         self._day_cache = {}
         self._day_cache_key = "_".join(self.df.columns)
@@ -154,6 +185,13 @@ class Index:
     def _ratings(self):
         """Dict[str: int]: Ratings map from letters to numeric."""
         return load_json("ratings")
+
+    @property
+    def constraints(self):
+        """Dict of constraints used to construct index."""
+        return OrderedDict(
+            sorted(self._constraints.items(), key=lambda k: k[0])
+        )
 
     def copy(self):
         """Create copy of current :class:`Index`."""
@@ -479,19 +517,18 @@ class Index:
             rating = (self._ratings[rating[0]], self._ratings[rating[1]])
 
         # Convert all category constraints to lists.
-        currency = to_list(currency, dtype=str)
-        ticker = to_list(ticker, dtype=str)
-        cusip = to_list(cusip, dtype=str)
-        isin = to_list(isin, dtype=str)
-        issuer = to_list(issuer, dtype=str)
-        market_of_issue = to_list(market_of_issue, dtype=str)
-        country_of_domicile = to_list(country_of_domicile, dtype=str)
-        country_of_risk = to_list(country_of_risk, dtype=str)
-        collateral_type = to_list(collateral_type, dtype=str)
-        coupon_type = to_list(coupon_type, dtype=str)
-        financial_flag = to_list(financial_flag, dtype=str)
-        sector = to_list(sector, dtype=str)
-        subsector = to_list(subsector, dtype=str)
+        currency = to_list(currency, dtype=str, sort=True)
+        ticker = to_list(ticker, dtype=str, sort=True)
+        cusip = to_list(cusip, dtype=str, sort=True)
+        isin = to_list(isin, dtype=str, sort=True)
+        issuer = to_list(issuer, dtype=str, sort=True)
+        market_of_issue = to_list(market_of_issue, dtype=str, sort=True)
+        country_of_domicile = to_list(country_of_domicile, dtype=str, sort=True)
+        country_of_risk = to_list(country_of_risk, dtype=str, sort=True)
+        collateral_type = to_list(collateral_type, dtype=str, sort=True)
+        coupon_type = to_list(coupon_type, dtype=str, sort=True)
+        sector = to_list(sector, dtype=str, sort=True)
+        subsector = to_list(subsector, dtype=str, sort=True)
 
         # Convert all flag constraints to int.
         in_returns_index = to_int(in_returns_index)
@@ -520,81 +557,133 @@ class Index:
             "end",
             "date",
         }
-        subset_index_constraints = {
+        subset_constraints = {
             kwarg: val
             for kwarg, val in user_defined_constraints.items()
             if kwarg not in ignored_kws and val != default_constraints[kwarg]
         }
-        # Store parameters used to build current index,
-        # updated with parameters changed for subset.
-        # TODO: check for overlapping subset args
-        # which may override
-        index_constraints = {**self.constraints, **subset_index_constraints}
 
         # Add new issue mask if required.
         if is_new_issue:
             self.df["NewIssueMask"] = new_issue_mask(self.df)
 
         # TODO: Modify price/amount outstading s.t. they account for currency.
-        # Make dict of values for all str inputs.
+        # Store category constraints.
         self._all_rules = []
         self._category_vals = {}
         category_constraints = {
-            "Currency": currency,
-            "CUSIP": cusip,
-            "ISIN": isin,
-            "Issuer": issuer,
-            "Ticker": ticker,
-            "Sector": sector,
-            "Subsector": subsector,
-            "MarketOfIssue": market_of_issue,
-            "CountryOfDomicile": country_of_domicile,
-            "CountryOfRisk": country_of_risk,
-            "CollateralType": collateral_type,
-            "CouponType": coupon_type,
-            "FinancialFlag": financial_flag,
+            "currency": ("Currency", currency),
+            "cusip": ("CUSIP", cusip),
+            "isin": ("ISIN", isin),
+            "issuer": ("Issuer", issuer),
+            "ticker": ("Ticker", ticker),
+            "sector": ("Sector", sector),
+            "subsector": ("Subsector", subsector),
+            "market_of_issue": ("MarketOfIssue", market_of_issue),
+            "country_of_domicile": ("CountryOfDomicile", country_of_domicile),
+            "country_of_risk": ("CountryOfRisk", country_of_risk),
+            "collateral_type": ("CollateralType", collateral_type),
+            "coupon_type": ("CouponType", coupon_type),
         }
-        for col, constraint in category_constraints.items():
+        for col, constraint in category_constraints.values():
             self._add_category_input(constraint, col)
 
         # Store flag constraints.
         self._flags = {}
         flag_constraints = {
-            "USCreditReturnsFlag": in_returns_index,
-            "USCreditStatisticsFlag": in_stats_index,
-            "USAggReturnsFlag": in_agg_returns_index,
-            "USAggStatisticsFlag": in_agg_stats_index,
-            "USHYStatisticsFlag": in_hy_stats_index,
-            "USHYReturnsFlag": in_hy_returns_index,
-            "AnyIndexFlag": in_any_index,
-            "Eligibility144AFlag": is_144A,
-            "FinancialFlag": financial_flag,
-            "NewIssueMask": is_new_issue,
+            "in_returns_index": ("USCreditReturnsFlag", in_returns_index),
+            "in_stats_index": ("USCreditStatisticsFlag", in_stats_index),
+            "in_agg_returns_index": ("USAggReturnsFlag", in_agg_returns_index),
+            "in_agg_stats_index": ("USAggStatisticsFlag", in_agg_stats_index),
+            "in_hy_stats_index": ("USHYStatisticsFlag", in_hy_stats_index),
+            "in_hy_returns_index": ("USHYReturnsFlag", in_hy_returns_index),
+            "in_any_index": ("AnyIndexFlag", in_any_index),
+            "is_144A": ("Eligibility144AFlag", is_144A),
+            "financial_flag": ("FinancialFlag", financial_flag),
+            "is_new_issue": ("NewIssueMask", is_new_issue),
         }
-        for col, constraint in flag_constraints.items():
+        for col, constraint in flag_constraints.values():
             self._add_flag_input(constraint, col)
 
-        # Make dict of values for all tuple float range inputs.
+        # Store range constraints.
         range_constraints = {
-            "Date": (start, end),
-            "OriginalMaturity": original_maturity,
-            "MaturityYears": maturity,
-            "IssueYears": issue_years,
-            "CleanPrice": clean_price,
-            "DirtyPrice": dirty_price,
-            "CouponRate": coupon_rate,
-            "NumericRating": rating,
-            "AmountOutstanding": amount_outstanding,
-            "MarketValue": market_value,
-            "YieldToWorst": yield_to_worst,
-            "OAD": OAD,
-            "OAS": OAS,
-            "OASD": OASD,
-            "LQA": liquidity_score,
+            "date": ("Date", (start, end)),
+            "original_maturity": ("OriginalMaturity", original_maturity),
+            "maturity": ("MaturityYears", maturity),
+            "issue_years": ("IssueYears", issue_years),
+            "clean_price": ("CleanPrice", clean_price),
+            "dirty_price": ("DirtyPrice", dirty_price),
+            "coupon_rate": ("CouponRate", coupon_rate),
+            "rating": ("NumericRating", rating),
+            "amount_outstanding": ("AmountOutstanding", amount_outstanding),
+            "market_value": ("MarketValue", market_value),
+            "yield_to_worst": ("YieldToWorst", yield_to_worst),
+            "OAD": ("OAD", OAD),
+            "OAS": ("OAS", OAS),
+            "OASD": ("OASD", OASD),
+            "liquidity_score": ("LQA", liquidity_score),
         }
         self._range_vals = {}
-        for col, constraint in range_constraints.items():
+        for col, constraint in range_constraints.values():
             self._add_range_input(constraint, col)
+
+        # Store parameters used to build current index updated
+        # with parameters added/modified for subset.
+        cat_error_msg = (
+            "The constraint provided for `{}` is not within "
+            "current index constraints."
+        )
+        flag_error_msg = (
+            "The constraint provided for `{}` does not match the "
+            "current index constraint."
+        )
+        not_imp_msg = (
+            "The constraint provided for `{}` does not match the "
+            "current index constraint, which has not been safely tested."
+        )
+        subset_index_constraints = self.constraints.copy()
+        for constraint, subset_val in subset_constraints.items():
+            if constraint not in self.constraints:
+                # Add new constraint.
+                subset_index_constraints[constraint] = subset_val
+                continue
+
+            # If constraint exists in both index and subset:
+            # Update constraint to most stringent
+            # combination of current index and subset.
+            index_val = self.constraints[constraint]
+            if constraint in category_constraints:
+                # Take intersection of two constraints.
+                intersection = to_list(
+                    set(index_val) & set(subset_val), sort=True
+                )
+                if intersection:
+                    subset_index_constraints[constraint] = intersection
+                else:
+                    raise ValueError(cat_error_msg.format(constraint))
+            elif constraint in flag_constraints:
+                # Ensure flag values are the same.
+                if subset_val != index_val:
+                    raise ValueError(flag_error_msg.format(constraint))
+            elif constraint in range_constraints:
+                # Find the max of the minimums.
+                if index_val[0] is None:
+                    min_con = subset_val[0]
+                elif subset_val[0] is None:
+                    min_con = index_val[0]
+                else:
+                    min_con = max(index_val[0], subset_val[0])
+                # Find the min of the maximums.
+                if index_val[1] is None:
+                    max_con = subset_val[1]
+                elif subset_val[1] is None:
+                    max_con = index_val[1]
+                else:
+                    max_con = min(index_val[1], subset_val[1])
+                subset_index_constraints[constraint] = (min_con, max_con)
+            else:
+                # Hopefully this never happens.
+                raise NotImplementedError(not_imp_msg.format(constraint))
 
         # Identify columns with special rules.
         rule_cols = []
@@ -621,7 +710,7 @@ class Index:
             )
             for key in self._range_vals.keys()
         }
-        str_repl = {
+        cat_repl = {
             key: f'(self.df["{key}"].isin(self._category_vals["{key}"]))'
             for key in self._category_vals.keys()
         }
@@ -629,7 +718,7 @@ class Index:
             key: f'(self.df["{key}"] == self._flags["{key}"])'
             for key in self._flags
         }
-        repl_dict = {**range_repl, **str_repl, **flag_repl, "~(": "(~"}
+        repl_dict = {**range_repl, **cat_repl, **flag_repl, "~(": "(~"}
 
         # Format special rules.
         subset_mask_list = []
@@ -664,7 +753,7 @@ class Index:
         else:
             df = self.df.drop(temp_cols, axis=1, errors="ignore")
 
-        return Index(df, name, index_constraints)
+        return Index(df, name, subset_index_constraints)
 
     def _add_category_input(self, input_val, col_name):
         """
@@ -681,7 +770,7 @@ class Index:
         """
         if input_val is not None:
             self._all_rules.append(col_name)
-            self._category_vals[col_name] = input_val
+            self._category_vals[col_name] = set(input_val)
 
     def _add_range_input(self, input_val, col_name):
         """
@@ -835,6 +924,61 @@ class Index:
 
         return pd.DataFrame(hist_d, index=dates)
 
+    @lockutils.synchronized(
+        "synthetic_difference_history",
+        external=True,
+        lock_path=root("data/synthetic_difference/file_maps"),
+    )
+    def _synthetic_difference_saved_history(self, col):
+        """
+        Get saved difference history if it exists.
+
+        Parameters
+        ----------
+        col: str
+            Column to perform synthetic difference history on.
+
+        Returns
+        -------
+        fid: str
+            Filename where calculated history is to be saved.
+        history: dict
+            Datetime key and respective synthetic
+            difference values.
+        """
+        key = "|".join([f"{k}: {v}" for k, v in self.constraints.items()])
+        json_dir = root("data/synthetic_difference/file_maps")
+        history_dir = root("data/synthetic_difference/history")
+        mkdir(json_dir)
+        mkdir(history_dir)
+        json_fid = f"synthetic_difference/file_maps/{col}"
+        fid_map = load_json(json_fid, empty_on_error=True)
+        try:
+            # Find fid if key exists in file.
+            filename = fid_map[key]
+        except KeyError:
+            # Get a unique fid, update the fid mappping file,
+            # and return an empty history dict.
+            filename = get_unique_fid(fid_map)
+            fid_map[key] = filename
+            dump_json(fid_map, json_fid)
+            fid = history_dir / filename
+            history = {}
+            return fid, history
+        else:
+            fid = history_dir / filename
+            history = (
+                pd.read_csv(
+                    fid,
+                    index_col=0,
+                    parse_dates=True,
+                    infer_datetime_format=True,
+                )
+                .iloc[:, 0]
+                .to_dict()
+            )
+            return fid, history
+
     def get_synthetic_differenced_history(self, col, dropna=False):
         """
         Save the difference history of a column.
@@ -854,11 +998,27 @@ class Index:
             Series of sythetically differenced market value
             weighting for specified column.
         """
+        fid, saved_history = self._synthetic_difference_saved_history(col)
         dates = self.dates[1:]
         a = np.zeros(len(dates))
         cols = ["MarketValue", col]
         warnings.simplefilter("ignore", category=RuntimeWarning)
         for i, date in enumerate(dates):
+            # Check if date exists in saved history.
+            try:
+                a[i] = saved_history[date]
+            except KeyError:
+                pass
+            else:
+                if date == dates[-1]:
+                    pass
+                else:
+                    continue
+
+            # Date does not exist in saved history.
+            # Calculate the differenced history for
+            # bonds which existed for both current and
+            # previous days.
             if dropna:
                 df = self.synthetic_day(date).dropna(subset=cols)
                 prev_df = self.day(self.dates[i]).dropna(subset=cols)
@@ -872,8 +1032,15 @@ class Index:
                 np.sum(prev_df["MarketValue"] * prev_df[col])
                 / np.sum(prev_df["MarketValue"])
             )
+            saved_history[date] = a[i]
+
         warnings.simplefilter("default", category=RuntimeWarning)
 
+        # Save synthetic difference history to file.
+        new_history = pd.DataFrame(pd.Series(saved_history))
+        new_history.to_csv(fid)
+
+        # pd.DataFrame(calculated_s).to_csv(fid)
         # Add the the cumulative synthetic differences to the current
         # value backwards in time to yield the synthetic history
         # of the specified column.
@@ -1006,7 +1173,6 @@ class Index:
 
         # Get rating history for all cusips.
         rating_df = self.get_value_history(new_col)
-        print(rating_df.iloc[:10, :10])
         change_cusips = []
         for cusip in rating_df.columns:
             if not check_all_equal(list(rating_df[cusip].dropna())):
