@@ -136,15 +136,19 @@
         "PRICE": "MOVE Index"
     },
     "JPYAUD": {
+        "NAME": "JPYAUD",
         "PRICE": "JPYAUD Curncy"
     },
     "USD_TW": {
+        "NAME": "USD Trade Weighted",
         "PRICE": "USTWBROA Index"
     },
     "EURUSD": {
+        "NAME": "EURUSD",
         "PRICE": "EURUSD Curncy"
     },
     "CHFGBP": {
+        "NAME": "CHFGBP",
         "PRICE": "CHFGBP Curncy"
     },
     "OIL": {
@@ -186,103 +190,103 @@
         "PRICE": "SPX Index",
         "TRET": "SPXT Index",
         "PE_RATIO": "SPX Index|BEST_PE_RATIO",
-        "PB_RATIO": "SPX Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "SPX Index|PX_TO_BOOK_RATIO"
     },
     "SP500_FINS": {
         "NAME": "Financials",
         "PRICE": "S5FINL Index",
         "PE_RATIO": "S5FINL Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5FINL Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5FINL Index|PX_TO_BOOK_RATIO"
     },
     "SP500_STAP": {
         "NAME": "Cons. Staple",
         "PRICE": "S5CONS Index",
         "PE_RATIO": "S5CONS Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5CONS Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5CONS Index|PX_TO_BOOK_RATIO"
     },
     "SP500_INFO": {
         "NAME": "Technology",
         "PRICE": "S5INFT Index",
         "PE_RATIO": "S5INFT Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5INFT Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5INFT Index|PX_TO_BOOK_RATIO"
     },
     "SP500_ENER": {
         "NAME": "Energy",
         "PRICE": "S5ENRS Index",
         "PE_RATIO": "S5ENRS Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5ENRS Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5ENRS Index|PX_TO_BOOK_RATIO"
     },
     "SP500_HEAL": {
         "NAME": "Healthcare",
         "PRICE": "S5HLTH Index",
         "PE_RATIO": "S5HLTH Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5HLTH Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5HLTH Index|PX_TO_BOOK_RATIO"
     },
     "SP500_UTIL": {
         "NAME": "Utilities",
         "PRICE": "S5UTIL Index",
         "PE_RATIO": "S5UTIL Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5UTIL Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5UTIL Index|PX_TO_BOOK_RATIO"
     },
     "SP500_INDU": {
         "NAME": "Industrials",
         "PRICE": "S5INDU Index",
         "PE_RATIO": "S5INDU Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5INDU Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5INDU Index|PX_TO_BOOK_RATIO"
     },
     "SP500_DISC": {
         "NAME": "Cons. Disc.",
         "PRICE": "S5COND Index",
         "PE_RATIO": "S5COND Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5COND Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5COND Index|PX_TO_BOOK_RATIO"
     },
     "SP500_TELE": {
         "NAME": "Telecom",
         "PRICE": "S5TELS Index",
         "PE_RATIO": "S5TELS Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5TELS Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5TELS Index|PX_TO_BOOK_RATIO"
     },
     "SP500_MATS": {
         "NAME": "Materials",
         "PRICE": "S5MATR Index",
         "PE_RATIO": "S5MATR Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5MATR Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5MATR Index|PX_TO_BOOK_RATIO"
     },
     "SP500_REAL": {
         "NAME": "Real Estate",
         "PRICE": "S5RLST Index",
         "PE_RATIO": "S5RLST Index|BEST_PE_RATIO",
-        "PB_RATIO": "S5RLST Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "S5RLST Index|PX_TO_BOOK_RATIO"
     },
     "SP500_LOWV": {
         "NAME": "Low Vol",
         "PRICE": "SP5LVI Index",
         "PE_RATIO": "SP5LVI Index|BEST_PE_RATIO",
-        "PB_RATIO": "SP5LVI Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "SP5LVI Index|PX_TO_BOOK_RATIO"
     },
     "SP500_HIGHV": {
         "NAME": "High Vol",
         "PRICE": "SP5HBI Index",
         "PE_RATIO": "SP5HBI Index|BEST_PE_RATIO",
-        "PB_RATIO": "SP5HBI Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "SP5HBI Index|PX_TO_BOOK_RATIO"
     },
     "SP500_GROW": {
         "NAME": "Growth",
         "PRICE": "SGX Index",
         "PE_RATIO": "SGX Index|BEST_PE_RATIO",
-        "PB_RATIO": "SGX Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "SGX Index|PX_TO_BOOK_RATIO"
     },
     "SP500_VALU": {
         "NAME": "Value",
         "PRICE": "SVX Index",
         "PE_RATIO": "SVX Index|BEST_PE_RATIO",
-        "PB_RATIO": "SVX Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "SVX Index|PX_TO_BOOK_RATIO"
     },
     "SP500_MOM": {
         "NAME": "Momentum",
         "PRICE": "SP500MUP Index",
         "PE_RATIO": "SP500MUP Index|BEST_PE_RATIO",
-        "PB_RATIO": "SP500MUP Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "SP500MUP Index|PX_TO_BOOK_RATIO"
     },
     "SP500_CONSERVATIVE": {
         "NAME": "Conservative",
@@ -293,22 +297,23 @@
         "PRICE": "SPXMRA Index"
     },
     "RUSSELL_1000": {
+        "NAME": "Russell 1000",
         "PRICE": "RIY Index",
         "PE_RATIO": "RIY Index|BEST_PE_RATIO",
-        "PB_RATIO": "RIY Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "RIY Index|PX_TO_BOOK_RATIO"
     },
     "RUSSELL_2000": {
         "NAME": "Russell 2000",
         "PRICE": "RTY Index",
         "TRET": "RU20INTR Index",
         "PE_RATIO": "RTY Index|BEST_PE_RATIO",
-        "PB_RATIO": "RTY Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "RTY Index|PX_TO_BOOK_RATIO"
     },
     "RUSSELL_3000": {
         "NAME": "Russell 3000",
         "PRICE": "RAY Index",
         "PE_RATIO": "RAY Index|BEST_PE_RATIO",
-        "PB_RATIO": "RAY Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "RAY Index|PX_TO_BOOK_RATIO"
     },
     "TOPIX": {
         "NAME": "TOPIX",
@@ -320,21 +325,21 @@
         "PRICE": "MXWD Index",
         "TRET": "NDUEACWF Index",
         "PE_RATIO": "MXWD Index|BEST_PE_RATIO",
-        "PB_RATIO": "MXWD Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "MXWD Index|PX_TO_BOOK_RATIO"
     },
     "MSCI_EU": {
         "NAME": "MSCI Europe",
         "PRICE": "MSER Index",
         "TRET": "NDDUE15 Index",
         "PE_RATIO": "MSER Index|BEST_PE_RATIO",
-        "PB_RATIO": "MSER Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "MSER Index|PX_TO_BOOK_RATIO"
     },
     "MSCI_EM": {
         "NAME": "MSCI EM",
         "PRICE": "MXEF Index",
         "TRET": "NDUEEGF Index",
         "PE_RATIO": "MXEF Index|BEST_PE_RATIO",
-        "PB_RATIO": "MXEF Index|BEST_PX_BPS_RATIO"
+        "PB_RATIO": "MXEF Index|PX_TO_BOOK_RATIO"
     },
     "GSCI": {
         "NAME": "GSCI",
@@ -498,37 +503,42 @@
         }
     },
     "EU_IG": {
-        "NAME": "EU Credit",
+        "NAME": "EU IG Credit",
         "OAS": "LECROAS Index",
         "TRET": "LECRTREU Index",
         "XSRET": "LECRER Index",
         "YTW": "LECRYW Index"
     },
     "EU_IG_1-3": {
+        "NAME": "EU IG Credit 1-3 yr",
         "OAS": "LECEOAS Index",
         "TRET": "LECETRUU Index",
         "XSRET": "LECEER Index",
         "YTW": "LECEYW Index"
     },
     "EU_IG_3-5": {
+        "NAME": "EU IG Credit 3-5 yr",
         "OAS": "LEC3OAS Index",
         "TRET": "LEC3TREU Index",
         "XSRET": "LEC3ER Index",
         "YTW": "LEC3YW Index"
     },
     "EU_IG_5-7": {
+        "NAME": "EU IG Credit 5-7 yr",
         "OAS": "LEC5OAS Index",
         "TRET": "LEC5TREU Index",
         "XSRET": "LEC5ER Index",
         "YTW": "LEC5YW Index"
     },
     "EU_IG_7-10": {
+        "NAME": "EU IG Credit 7-10 yr",
         "OAS": "LEC7OAS Index",
         "TRET": "LEC7TREU Index",
         "XSRET": "LEC7ER Index",
         "YTW": "LEC7YW Index"
     },
     "EU_IG_10+": {
+        "NAME": "EU IG Long Credit",
         "OAS": "LEC0OAS Index",
         "TRET": "LEC0TREU Index",
         "XSRET": "LEC0ER Index",
@@ -549,73 +559,85 @@
         "YTW": "LECPYW Index"
     },
     "EU_AA": {
+        "NAME": "EU AA",
         "OAS": "LEC8OAS Index",
         "TRET": "LEC8TREU Index",
         "XSRET": "LEC8ER Index",
         "YTW": "LEC8YW Index"
     },
     "EU_A": {
+        "NAME": "EU A",
         "OAS": "LEC9OAS Index",
         "TRET": "LEC9TREU Index",
         "XSRET": "LEC9ER Index",
         "YTW": "LEC9YW Index"
     },
     "EU_BBB": {
+        "NAME": "EU BBB",
         "OAS": "LECBOAS Index",
         "TRET": "LECBTREU Index",
         "XSRET": "LECBER Index",
         "YTW": "LECBYW Index"
     },
     "EU_BB": {
+        "NAME": "EU BB",
         "OAS": "LP07OAS Index",
         "TRET": "LP07TREU Index",
         "XSRET": "LP07ER Index",
         "YTW": "LP07YW Index"
     },
     "EU_B": {
+        "NAME": "EU B",
         "OAS": "LHYBOAS Index",
         "TRET": "LHYBTREU Index",
         "XSRET": "LHYBER Index",
         "YTW": "LHYBYW Index"
     },
     "EU_CCC": {
+        "NAME": "EU CCC",
         "OAS": "BEYHOAS Index",
         "TRET": "BEYHTREU Index",
         "XSRET": "BEYHER Index",
         "YTW": "BEYHYW Index"
     },
     "GBP_IG": {
-        "NAME": "GBP IG",
+        "NAME": "GBP IG Credit",
         "OAS": "LC84OAS Index",
         "XSRET": "LC84ER Index",
         "YTW": "LC84YW Index"
     },
     "GBP_IG_1-3": {
+        "NAME": "GBP IG Credit 1-3 yr",
         "OAS": "LF62OAS Index",
         "XSRET": "LF62ER Index",
         "YTW": "LF62YW Index"
     },
     "GBP_IG_3-5": {
+        "NAME": "GBP IG Credit 3-5 yr",
         "OAS": "LF63OAS Index",
         "XSRET": "LF63ER Index",
         "YTW": "LF63YW Index"
     },
     "GBP_IG_5-7": {
+        "NAME": "GBP IG Credit 5-7 yr",
         "OAS": "LF64OAS Index",
         "XSRET": "LF64ER Index",
         "YTW": "LF64YW Index"
     },
     "GBP_IG_7-10": {
+        "NAME": "GBP IG Credit 7-10 yr",
         "OAS": "LF65OAS Index",
         "XSRET": "LF65ER Index",
         "YTW": "LF65YW Index"
     },
     "GBP_IG_10-15": {
+        "NAME": "GBP IG Credit 10-15 yr",
         "OAS": "LF66OAS Index",
         "XSRET": "LF66ER Index",
         "YTW": "LF66YW Index"
     },
     "GBP_IG_15+": {
+        "NAME": "GBP IG Credit 15+ yr",
         "OAS": "LF67OAS Index",
         "XSRET": "LF67ER Index",
         "YTW": "LF67YW Index"
@@ -628,21 +650,25 @@
         "YTW": "LC61YW Index"
     },
     "GBP_AAA": {
+        "NAME": "GBP AAA",
         "OAS": "LF79OAS Index",
         "XSRET": "LF79ER Index",
         "YTW": "LF79YW Index"
     },
     "GBP_AA": {
+        "NAME": "GBP AA",
         "OAS": "LF80OAS Index",
         "XSRET": "LF80ER Index",
         "YTW": "LF80YW Index"
     },
     "GBP_A": {
+        "NAME": "GBP A",
         "OAS": "LF81OAS Index",
         "XSRET": "LF81ER Index",
         "YTW": "LF81YW Index"
     },
     "GBP_BBB": {
+        "NAME": "GBP BBB",
         "OAS": "LF82OAS Index",
         "XSRET": "LF82ER Index",
         "YTW": "LF82YW Index"
@@ -683,66 +709,77 @@
         "YTW": "BESQYW Index"
     },
     "EM_IG_QUASISOV": {
+        "NAME": "EM IG Quasi-Sov",
         "OAS": "BQIGOAS Index",
         "TRET": "BQIGTRUU Index",
         "XSRET": "BQIGER Index",
         "YTW": "BQIGYW Index"
     },
     "EM_HY_QUASISOV": {
+        "NAME": "EM HY Quasi-Sov",
         "OAS": "BQHYOAS Index",
         "TRET": "BQHYTRUU Index",
         "XSRET": "BQHYER Index",
         "YTW": "BQHYYW Index"
     },
-    "EM_LATAM": {
+    "EM_LATAM_SOV": {
+        "NAME": "EM LatAm Sov",
         "OAS": "BSSSOAS Index",
         "TRET": "BSSSTRUU Index",
         "XSRET": "BSSSER Index",
         "YTW": "BSSSYW Index"
     },
     "EM_LATAM_QUASISOV": {
+        "NAME": "EM LatAm Quasi-Sov",
         "OAS": "BQAMOAS Index",
         "TRET": "BQAMTRUU Index",
         "XSRET": "BQAMER Index",
         "YTW": "BQAMYW Index"
     },
     "EM_LATAM_CORP": {
+        "NAME": "EM LatAm Corp",
         "OAS": "BUCROAS Index",
         "TRET": "BUCRTRUU Index",
         "XSRET": "BUCRER Index",
         "YTW": "BUCRYW Index"
     },
     "EM_ASIA_SOV": {
+        "NAME": "EM Asia Sov",
         "OAS": "BSSAOAS Index",
         "TRET": "BSSATRUU Index",
         "XSRET": "BSSAER Index",
         "YTW": "BSSAYW Index"
     },
     "EM_ASIA_QUASISOV": {
+        "NAME": "EM Asia Quasi-Sov",
         "OAS": "BQASOAS Index",
         "TRET": "BQASTRUU Index",
         "XSRET": "BQASER Index",
         "YTW": "BQASYW Index"
     },
     "EM_ASIA_CORP": {
+        "NAME": "EM Asia Corp",
         "OAS": "BUCSOAS Index",
         "TRET": "BUCSTRUU Index",
         "XSRET": "BUCSER Index",
         "YTW": "BUCSYW Index"
     },
     "EM_EMEA_SOV": {
+        "NAME": "EM EMEA Sov",
         "OAS": "BSSEOAS Index",
         "TRET": "BSSETRUU Index",
         "XSRET": "BSSEER Index",
         "YTW": "BSSEYW Index"
     },
     "EM_EMEA_QUASISOV": {
+        "NAME": "EM EMEA Quasi-Sov",
         "OAS": "BQEMOAS Index",
         "TRET": "BQEMTRUU Index",
         "XSRET": "BQEMER Index",
         "YTW": "BQEMYW Index"
     },
     "EM_EMEA_CORP": {
+        "NAME": "EM EMEA Corp",
         "OAS": "BUCMOAS Index",
         "TRET": "BUCMTRUU Index",
         "XSRET": "BUCMER Index",

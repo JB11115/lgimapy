@@ -102,7 +102,7 @@
             "BBB+",
             "BBB-"
         ],
-        "financial_flag": "non-financial",
+        "financial_flag": false,
         "in_stats_index": true,
         "ticker": [
             "T",
