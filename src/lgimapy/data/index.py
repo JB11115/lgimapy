@@ -195,7 +195,7 @@ class Index:
 
     def copy(self):
         """Create copy of current :class:`Index`."""
-        return Index(self.df.copy())
+        return Index(self.df.copy(), constraints=self.constraints)
 
     def total_value(self, synthetic=False):
         """float: Total value of index in $M."""
