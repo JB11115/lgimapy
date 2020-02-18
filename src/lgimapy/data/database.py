@@ -25,7 +25,6 @@ from lgimapy.utils import (
     to_datetime,
     to_int,
     to_list,
-    to_set,
 )
 
 
@@ -1198,18 +1197,18 @@ class Database:
             rating = (self._ratings[rating[0]], self._ratings[rating[1]])
 
         # Convert all category constraints to lists.
-        currency = to_set(currency, dtype=str)
-        ticker = to_set(ticker, dtype=str)
-        cusip = to_set(cusip, dtype=str)
-        isin = to_set(isin, dtype=str)
-        issuer = to_set(issuer, dtype=str)
-        market_of_issue = to_set(market_of_issue, dtype=str)
-        country_of_domicile = to_set(country_of_domicile, dtype=str)
-        country_of_risk = to_set(country_of_risk, dtype=str)
-        collateral_type = to_set(collateral_type, dtype=str)
-        coupon_type = to_set(coupon_type, dtype=str)
-        sector = to_set(sector, dtype=str)
-        subsector = to_set(subsector, dtype=str)
+        currency = to_list(currency, dtype=str, sort=True)
+        ticker = to_list(ticker, dtype=str, sort=True)
+        cusip = to_list(cusip, dtype=str, sort=True)
+        isin = to_list(isin, dtype=str, sort=True)
+        issuer = to_list(issuer, dtype=str, sort=True)
+        market_of_issue = to_list(market_of_issue, dtype=str, sort=True)
+        country_of_domicile = to_list(country_of_domicile, dtype=str, sort=True)
+        country_of_risk = to_list(country_of_risk, dtype=str, sort=True)
+        collateral_type = to_list(collateral_type, dtype=str, sort=True)
+        coupon_type = to_list(coupon_type, dtype=str, sort=True)
+        sector = to_list(sector, dtype=str, sort=True)
+        subsector = to_list(subsector, dtype=str, sort=True)
 
         # Convert all flag constraints to int.
         in_returns_index = to_int(in_returns_index)
@@ -1720,3 +1719,34 @@ class Database:
         if end is not None:
             s = s[s <= to_datetime(end)]
         return s
+
+    # %%
+    def main():
+        pass
+        # %%
+        to_list(["b", "a"], sort=True)
+        to_list([], sort=True)
+
+        from fasteners import InterProcessLock
+        from lgimapy import vis
+        from lgimapy.utils import Time, load_json, dump_json
+
+        vis.style()
+        kwargs = load_json("indexes")
+        db = Database()
+
+        db.load_market_data(local=False)
+        ix = db.build_market_index(financial_flag=2)
+
+        len(ix.df)
+
+        # %%
+        n_digits_in_fid = 18
+        max_val = int(10 ** n_digits_in_fid - 1)
+        fid_val = np.random.randint(0, max_val, int(1e6), dtype="int64")
+        pad_vals = [str(v).zfill(n_digits_in_fid) for v in fid_val]
+        d = {v: v for v in pad_vals}
+        dump_json(d, "temp")
+
+        load = load_json("temp")
+        dump_json(load, "temp")
