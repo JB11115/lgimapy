@@ -17,7 +17,7 @@ def build_movers_sheets():
 
     warnings.filterwarnings("error")
     fid = "X:/Jason/Projects/Index Analysis/data_test{}.csv"
-    tights_date = "7/26/2019"
+    tights_date = "12/31/2019"
 
     # Find date for month to date.
     today = dt.date.today()
@@ -53,6 +53,7 @@ def build_movers_sheets():
         k: db.load_market_data(date=v, local=True, ret_df=True)
         for k, v in dates.items()
     }
+
     index_chg_dfs = {
         n: spread_diff(raw_dfs[n], raw_dfs["yesterday"]) for n in df_names
     }
@@ -88,7 +89,6 @@ def build_movers_sheets():
             db.load_market_data(data=index_chg_dfs[name])
             df = db.build_market_index(
                 rating="IG",
-                municipals=True,
                 maturity=(mat_range[0], mat_range[1]),
                 issue_years=(0, max_issue),
                 currency="USD",
@@ -100,10 +100,8 @@ def build_movers_sheets():
                     df["Ticker"], df["Issuer"], df["CollateralType"]
                 )
             ]
-            df["IsFinancial"] = (df["FinancialFlag"] == "financial").astype(int)
-            df["IsNonFinancial"] = (
-                df["FinancialFlag"] == "non-financial"
-            ).astype(int)
+            df["IsFinancial"] = (df["FinancialFlag"] == 1).astype(int)
+            df["IsNonFinancial"] = (df["FinancialFlag"] == 0).astype(int)
             df["BloombergSector"] = df["Subsector"]
             index_dfs[name][mat] = aggregate_issuers(df)[sorted_cols]
 
