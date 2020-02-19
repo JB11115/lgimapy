@@ -967,16 +967,19 @@ class Index:
             return fid, history
         else:
             fid = history_dir / filename
-            history = (
-                pd.read_csv(
-                    fid,
-                    index_col=0,
-                    parse_dates=True,
-                    infer_datetime_format=True,
+            try:
+                history = (
+                    pd.read_csv(
+                        fid,
+                        index_col=0,
+                        parse_dates=True,
+                        infer_datetime_format=True,
+                    )
+                    .iloc[:, 0]
+                    .to_dict()
                 )
-                .iloc[:, 0]
-                .to_dict()
-            )
+            except FileNotFoundError:
+                history = {}
             return fid, history
 
     def get_synthetic_differenced_history(self, col, dropna=False):
