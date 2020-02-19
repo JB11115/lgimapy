@@ -1,9 +1,6 @@
 from time import sleep
 
-from lgimapy.daily_scripts import (
-    build_movers_sheets,
-    build_long_credit_snapshot,
-)
+from lgimapy.daily_scripts import build_movers_sheets, make_credit_snapshots
 from lgimapy.data import (
     Database,
     update_bloomberg_data,
@@ -36,8 +33,8 @@ def main():
     print("Updated Dealer Inventory\n")
     build_movers_sheets()
     print("Index Mover Report Complete\n")
-    build_long_credit_snapshot()
-    print("Long Credit Snaphsot Complete\n")
+    make_credit_snapshots()
+    print("Credit Snaphsots Complete\n")
 
 
 def check_datamart_quality(dates):
