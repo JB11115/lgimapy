@@ -92,7 +92,7 @@
         ],
         "in_stats_index": true
     },
-    "BBB_LARGEST_ISSUERS": {
+    "BBB_LARGEST_ISSUERS_10+": {
         "name": "BBB Top 30",
         "OAS": [
             -10,
@@ -241,6 +241,31 @@
             3000
         ],
         "in_stats_index": true
+    },
+    "STATS_US_IG": {
+        "name": "US Market Credit Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_stats_index": true
+    },
+    "STATS_US_IG_10+": {
+        "name": "US Long Credit Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "maturity": [10, null],
+        "in_stats_index": true
+    },
+    "STATS_HY": {
+        "name": "US HY Credit Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_hy_stats_index": true
     },
     "RETURNS_all": {
         "name": "US Returns Index",
@@ -435,7 +460,7 @@
         "special_rules": "(Sector | Ticker)"
     },
     "BASICS": {
-        "name": "Industrials",
+        "name": "Basics",
         "OAS": [
             -10,
             3000
