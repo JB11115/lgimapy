@@ -1,3 +1,4 @@
+import os
 from datetime import datetime as dt
 from shutil import copy
 
@@ -26,6 +27,7 @@ def main():
     update_macro_indicators(fid)
     doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
     doc.save()
+    os.remove(dst)
 
 
 if __name__ == "__main__":
