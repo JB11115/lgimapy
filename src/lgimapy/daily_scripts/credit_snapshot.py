@@ -83,11 +83,11 @@ def build_credit_snapshot(index):
     actual_date = dt.today()
     config = SnapshotConfig(index)
 
-    # fid = f"{actual_date.strftime('%Y-%m-%d')}_Long_Credit_Snapshot"
     fid = f"{actual_date.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
-    csv_path = root("data/long_credit_snapshot")
-    pdf_path = root("reports/long_credit_snapshot")
+    csv_path = root("data/credit_snapshots")
+    pdf_path = root("reports/credit_snapshots")
     mkdir(csv_path)
+    mkdir(pdf_path)
 
     # Define sectors for each table.
     # Subsectors are indicated with a leading `~`.
