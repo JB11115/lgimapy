@@ -241,7 +241,7 @@ def update_hy_ig_ratios(fig_dir, ix_d):
 
 def update_bbb_a_ratios(fig_dir, ix_d):
     """Update plot for BBB/A nonfin ratio for 10y and 30y bonds."""
-    ix_nonfin = ix_d["mc"].subset(financial_flag="non-financial")
+    ix_nonfin = ix_d["mc"].subset(financial_flag=0)
     ixs = {
         "30_A": ix_nonfin.subset(rating=("A+", "A-"), maturity=(25, 32)),
         "30_BBB": ix_nonfin.subset(rating=("BBB+", "BBB-"), maturity=(25, 32)),
