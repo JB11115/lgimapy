@@ -37,7 +37,7 @@
             
   <div class="section" id="lgimapy-lgima-s-powerful-python-analysis-package">
 <h1>lgimapy: LGIMA’s powerful Python analysis package<a class="headerlink" href="#lgimapy-lgima-s-powerful-python-analysis-package" title="Permalink to this headline">¶</a></h1>
-<p><strong>Date</strong>: Feb 05, 2020 <strong>Version</strong>: 0.0.1</p>
+<p><strong>Date</strong>: Feb 18, 2020 <strong>Version</strong>: 0.0.1</p>
 <div class="toctree-wrapper compound">
 </div>
 <div class="section" id="module-lgimapy.data">
@@ -609,7 +609,7 @@ date is used.</li>
 
 <dl class="class">
 <dt id="lgimapy.data.Index">
-<em class="property">class </em><code class="descclassname">lgimapy.data.</code><code class="descname">Index</code><span class="sig-paren">(</span><em>index_df</em>, <em>name=''</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">lgimapy.data.</code><code class="descname">Index</code><span class="sig-paren">(</span><em>index_df</em>, <em>name=''</em>, <em>constraints=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for indexes built by <a class="reference internal" href="#lgimapy.data.Database" title="lgimapy.data.Database"><code class="xref py py-class docutils literal notranslate"><span class="pre">Database</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -618,6 +618,9 @@ date is used.</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>index_df</strong> (<em>pd.DataForame</em>) – Index DataFrame from <a class="reference internal" href="#lgimapy.data.Database.build_market_index" title="lgimapy.data.Database.build_market_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Database.build_market_index()</span></code></a>.</li>
 <li><strong>name</strong> (<em>str</em><em>, </em><em>default=''</em>) – Optional name of index.</li>
+<li><strong>constraints</strong> (<em>dict</em><em>, </em><em>optional</em>) – Key: value pairs of the constraints used in either
+<a class="reference internal" href="#lgimapy.data.Database.build_market_index" title="lgimapy.data.Database.build_market_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Database.build_market_index()</span></code></a> or
+<a class="reference internal" href="#lgimapy.data.Index.subset" title="lgimapy.data.Index.subset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Index.subset()</span></code></a> to create current <a class="reference internal" href="#lgimapy.data.Index" title="lgimapy.data.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a>.</li>
 </ul>
 </td>
 </tr>
@@ -626,7 +629,8 @@ date is used.</li>
 <dl class="attribute">
 <dt id="lgimapy.data.Index.df">
 <code class="descname">df</code><a class="headerlink" href="#lgimapy.data.Index.df" title="Permalink to this definition">¶</a></dt>
-<dd><p>Full Index DataFrame.</p>
+<dd><p>DataFrame with each row containing a bond in
+the <a class="reference internal" href="#lgimapy.data.Index" title="lgimapy.data.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -721,6 +725,12 @@ the original maturity of another tenor (e.g., remove
 for all cusips in index, adjusting for coupon delivery
 and reinvestment.</p>
 <p>Appends results as new column <cite>TRet</cite> in <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="lgimapy.data.Index.constraints">
+<code class="descname">constraints</code><a class="headerlink" href="#lgimapy.data.Index.constraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dict of constraints used to construct index.</p>
 </dd></dl>
 
 <dl class="method">
@@ -861,8 +871,8 @@ weighting for specified column.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>col</strong> (<em>str</em>) – Column from <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a> to build history for (e.g., ‘OAS’).</li>
-<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Start date for value history.</li>
-<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – End date for value history.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Start date for value history.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>optional</em>) – End date for value history.</li>
 <li><strong>inclusive_end_date</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True include end date in returned DataFrame.
 If False do not include end date.</li>
 <li><strong>synthethic</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, use synthethic day data.</li>
@@ -918,6 +928,35 @@ index market value.</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="lgimapy.data.Index.market_value_weight_vol">
+<code class="descname">market_value_weight_vol</code><span class="sig-paren">(</span><em>col</em>, <em>window_size=20</em>, <em>annualized=True</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.market_value_weight_vol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Market value weight the volatilities of the specified
+column using a rolling window approach. The variance
+of each bond in the index is computed daily and the
+average variance is then transformed back to volatility.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>col</strong> (<em>str</em>) – Column name to weight, (e.g., <code class="docutils literal notranslate"><span class="pre">'OAS'</span></code>).</li>
+<li><strong>window_size</strong> (<em>int</em><em>, </em><em>default=20</em>) – Number of sample periods to use in rolling window.</li>
+<li><strong>annualized</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If True annualized the resulting volatilities by
+multiply by square root of 252.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>vol</strong> – Computed volatility with datetime index.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.Series</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="lgimapy.data.Index.sectors">
 <code class="descname">sectors</code><a class="headerlink" href="#lgimapy.data.Index.sectors" title="Permalink to this definition">¶</a></dt>
@@ -948,7 +987,7 @@ index market value.</p>
 
 <dl class="method">
 <dt id="lgimapy.data.Index.subset">
-<code class="descname">subset</code><span class="sig-paren">(</span><em>name=None</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>original_maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.subset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subset</code><span class="sig-paren">(</span><em>name=''</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=(None</em>, <em>None)</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>isin=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>drop_treasuries=True</em>, <em>drop_municipals=False</em>, <em>maturity=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>original_maturity=(None</em>, <em>None)</em>, <em>clean_price=(None</em>, <em>None)</em>, <em>dirty_price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>coupon_type=None</em>, <em>market_of_issue=None</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>market_value=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>yield_to_worst=(None</em>, <em>None)</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>financial_flag=None</em>, <em>is_new_issue=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Index.subset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subset <a class="reference internal" href="#lgimapy.data.Index" title="lgimapy.data.Index"><code class="xref py py-class docutils literal notranslate"><span class="pre">Index</span></code></a> with customized rules from
 <a class="reference internal" href="#lgimapy.data.Index.df" title="lgimapy.data.Index.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Index.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -957,10 +996,10 @@ index market value.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>name</strong> (<em>str</em><em>, </em><em>default=''</em>) – Optional name for returned index.</li>
-<li><strong>date</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Single date to subset new index.</li>
-<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Start date for index.</li>
-<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – End date for index.</li>
-<li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – <p>Bond rating/rating range for index.</p>
+<li><strong>date</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Single date to build index.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Start date for index, if None the start date from load is used.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>optional</em>) – End date for index, if None the end date from load is used.</li>
+<li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – <p>Bond rating/rating range for index.</p>
 <p>Examples:</p>
 <ul>
 <li>str: <code class="docutils literal notranslate"><span class="pre">'HY'</span></code>, <code class="docutils literal notranslate"><span class="pre">'IG'</span></code>, <code class="docutils literal notranslate"><span class="pre">'AAA'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Aa1'</span></code>, etc.</li>
@@ -968,15 +1007,16 @@ index market value.</p>
 specified inclusive range.</li>
 </ul>
 </li>
-<li><strong>currency</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Currency or list of currencies to include.</li>
-<li><strong>cusip</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>: default=None</em><em>,</em>) – Cusip or list of cusips to include.</li>
-<li><strong>issuer</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Issuer, or list of issuers to include.</li>
-<li><strong>ticker</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Ticker or list of tickers to include in index, default is all.</li>
-<li><strong>sector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Sector or list of sectors to include in index.</li>
-<li><strong>subsector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Subsector or list of subsectors to include in index.</li>
-<li><strong>treasuries</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If true return only treasures in index, else exclude.</li>
-<li><strong>municipals</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If False, remove municipal bonds from index.</li>
-<li><strong>maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>{5</em><em>, </em><em>10</em><em>, </em><em>20</em><em>, </em><em>30}</em><em>, </em><em>default=None</em>) – <p>Maturities to include, if int is specified the following ranges
+<li><strong>currency</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Currency or list of currencies to include.</li>
+<li><strong>cusip</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>: optional</em><em>,</em>) – CUSIP or list of CUSIPs to include.</li>
+<li><strong>isin</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>: optional</em><em>,</em>) – ISIN or list of ISINs to include.</li>
+<li><strong>issuer</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Issuer, or list of issuers to include.</li>
+<li><strong>ticker</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Ticker or list of tickers to include in index, default is all.</li>
+<li><strong>sector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Sector or list of sectors to include in index.</li>
+<li><strong>subsector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Subsector or list of subsectors to include in index.</li>
+<li><strong>drop_treasuries</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Whether to drop treausuries.</li>
+<li><strong>drop_municipals</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Whether to drop municipals.</li>
+<li><strong>maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>{5</em><em>, </em><em>10</em><em>, </em><em>20</em><em>, </em><em>30}</em><em>, </em><em>optional</em>) – <p>Maturities to include, if int is specified the following ranges
 are used:</p>
 <ul>
 <li>5: 4-6</li>
@@ -986,51 +1026,69 @@ are used:</p>
 </ul>
 </li>
 <li><strong>original_maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of original bond maturities to include.</li>
-<li><strong>price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Price range of bonds to include, default is all.</li>
+<li><strong>clean_price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Clean price range of bonds to include, default is all.</li>
+<li><strong>dirty_price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Dirty price range of bonds to include, default is all.</li>
 <li><strong>coupon_rate</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Coupon rate range of bonds to include, default is all.</li>
-<li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries of domicile to
-include, default is all.</li>
-<li><strong>country_of_risk</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries wherer risk is centered to
-include in index, default is all.</li>
+<li><strong>coupon_type</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Coupon types <code class="docutils literal notranslate"><span class="pre">{'FIXED',</span> <span class="pre">'ZERO</span> <span class="pre">COUPON',</span> <span class="pre">'STEP</span> <span class="pre">CPN',</span> <span class="pre">etc.)</span></code>
+to include in index, default is all.</li>
+<li><strong>market_of_issue</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Markets of issue to include in index, defautl is all.</li>
+<li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Country or list of countries of domicile to include
+in index, default is all.</li>
+<li><strong>country_of_risk</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Country or list of countries wherer risk is centered
+to include in index, default is all.</li>
 <li><strong>amount_outstanding</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of amount outstanding to include in index (Millions).</li>
-<li><strong>issue_years</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of years since issue to include in index, default is all.</li>
-<li><strong>collateral_type</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Collateral type or list of types to include, default is all.</li>
-<li><strong>OAD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted durations to include, default is all.</li>
-<li><strong>OAS</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spreads to include, default is all.</li>
-<li><strong>OASD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spread durations, default is all.</li>
+<li><strong>market_value</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of market values to include in index (Millions).</li>
+<li><strong>issue_years</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of years since issue to include in index,
+default is all.</li>
+<li><strong>collateral_type</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Collateral type or list of types to include,
+default is all.</li>
+<li><strong>yield_to_worst</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of yields (to worst) to include, default is all.</li>
+<li><strong>OAD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted durations to include,
+default is all.</li>
+<li><strong>OAS</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spreads to include,
+default is all.</li>
+<li><strong>OASD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spread durations,
+default is all.</li>
 <li><strong>liquidity_score</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of liquidty scores to use, default is all.</li>
-<li><strong>in_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in stats index.
+<li><strong>in_stats_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in stats index.
 If False, only include bonds out of stats index.
 By defualt include both.</li>
-<li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in returns index.
+<li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in returns index.
 If False, only include bonds out of returns index.
 By defualt include both.</li>
-<li><strong>in_agg_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate stats index.
+<li><strong>in_agg_stats_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in aggregate stats index.
 If False, only include bonds out of aggregate stats index.
 By defualt include both.</li>
-<li><strong>in_agg_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate returns index.
+<li><strong>in_agg_returns_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in aggregate returns index.
 If False, only include bonds out of aggregate returns index.
 By defualt include both.</li>
-<li><strong>in_hy_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY stats index.
+<li><strong>in_hy_stats_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in HY stats index.
 If False, only include bonds out of HY stats index.
 By defualt include both.</li>
-<li><strong>in_hy_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY returns index.
+<li><strong>in_hy_returns_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in HY returns index.
 If False, only include bonds out of HY returns index.
 By defualt include both.</li>
-<li><strong>in_any_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in any index.
+<li><strong>in_any_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in any index.
 If False, only include bonds not in any index.
 By defualt include both.</li>
-<li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include 144A bonds.
+<li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include 144A bonds.
 If False, only include non 144A bonds.
 By defualt include both.</li>
-<li><strong>is_new_issue</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in the month they were issued.
+<li><strong>is_new_issue</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in the month they were issued.
 If False, include all bonds.
 By default include all bonds.</li>
-<li><strong>financial_flag</strong> (<em>{'financial'</em><em>, </em><em>'non-financial'</em><em>, </em><em>'other'}</em><em>, </em><em>default=None</em>) – Financial flag setting to identify fin and non-fin credits.</li>
-<li><strong>special_rules</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>] </em><em>default=None</em>) – <p>Special rule(s) for subsetting index using bitwise operators.
-If None, all specified inputs are applied independtently
-of eachother as bitwise &amp;. All rules can be stacked using
-paranthesis to create more complex rules.</p>
+<li><strong>financial_flag</strong> (bool or <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">1,</span> <span class="pre">2}</span></code>, optional) – <p>Selection for including fins, non-fins, or other.</p>
+<ul>
+<li>0 or <code class="docutils literal notranslate"><span class="pre">False</span></code>: Non-financial sectors.</li>
+<li>1 or <code class="docutils literal notranslate"><span class="pre">True</span></code>: Financial sectors.</li>
+<li>2: Other (Treasuries, Sovs, Govt Ownwed, etc.).</li>
+</ul>
+</li>
+<li><strong>special_rules</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>] </em><em>optional</em>) – <p>Special rule(s) for subsetting index using bitwise
+operators. If None, all specified inputs are applied
+independtently of eachother as bitwise &amp;. All rules
+can be stacked using paranthesis to create more
+complex rules.</p>
 <p>Examples:</p>
 <ul>
 <li>Include specified sectors or subsectors:
@@ -1160,7 +1218,7 @@ of a DataFrame.</li>
 
 <dl class="method">
 <dt id="lgimapy.data.Database.build_market_index">
-<code class="descname">build_market_index</code><span class="sig-paren">(</span><em>name=''</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=None</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>treasuries=False</em>, <em>municipals=True</em>, <em>maturity=(None</em>, <em>None)</em>, <em>original_maturity=(None</em>, <em>None)</em>, <em>price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>is_new_issue=None</em>, <em>financial_flag=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.build_market_index" title="Permalink to this definition">¶</a></dt>
+<code class="descname">build_market_index</code><span class="sig-paren">(</span><em>name=''</em>, <em>date=None</em>, <em>start=None</em>, <em>end=None</em>, <em>rating=(None</em>, <em>None)</em>, <em>currency=None</em>, <em>cusip=None</em>, <em>isin=None</em>, <em>issuer=None</em>, <em>ticker=None</em>, <em>sector=None</em>, <em>subsector=None</em>, <em>drop_treasuries=True</em>, <em>drop_municipals=False</em>, <em>maturity=(None</em>, <em>None)</em>, <em>issue_years=(None</em>, <em>None)</em>, <em>original_maturity=(None</em>, <em>None)</em>, <em>clean_price=(None</em>, <em>None)</em>, <em>dirty_price=(None</em>, <em>None)</em>, <em>coupon_rate=(None</em>, <em>None)</em>, <em>coupon_type=None</em>, <em>market_of_issue=None</em>, <em>country_of_domicile=None</em>, <em>country_of_risk=None</em>, <em>amount_outstanding=(None</em>, <em>None)</em>, <em>market_value=(None</em>, <em>None)</em>, <em>collateral_type=None</em>, <em>yield_to_worst=(None</em>, <em>None)</em>, <em>OAD=(None</em>, <em>None)</em>, <em>OAS=(None</em>, <em>None)</em>, <em>OASD=(None</em>, <em>None)</em>, <em>liquidity_score=(None</em>, <em>None)</em>, <em>in_stats_index=None</em>, <em>in_returns_index=None</em>, <em>in_agg_stats_index=None</em>, <em>in_agg_returns_index=None</em>, <em>in_hy_stats_index=None</em>, <em>in_hy_returns_index=None</em>, <em>in_any_index=None</em>, <em>is_144A=None</em>, <em>financial_flag=None</em>, <em>is_new_issue=None</em>, <em>special_rules=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.data.Database.build_market_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build index with customized rules from <a class="reference internal" href="#lgimapy.data.Database.df" title="lgimapy.data.Database.df"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Database.df</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1168,10 +1226,10 @@ of a DataFrame.</li>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>name</strong> (<em>str</em><em>, </em><em>default=''</em>) – Optional name for returned index.</li>
-<li><strong>date</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Single date to build index.</li>
-<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Start date for index, if None the start date from load is used.</li>
-<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – End date for index, if None the end date from load is used.</li>
-<li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – <p>Bond rating/rating range for index.</p>
+<li><strong>date</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Single date to build index.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Start date for index, if None the start date from load is used.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>optional</em>) – End date for index, if None the end date from load is used.</li>
+<li><strong>rating</strong> (<em>str</em><em> , </em><em>Tuple</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em><em>, </em><em>optional</em>) – <p>Bond rating/rating range for index.</p>
 <p>Examples:</p>
 <ul>
 <li>str: <code class="docutils literal notranslate"><span class="pre">'HY'</span></code>, <code class="docutils literal notranslate"><span class="pre">'IG'</span></code>, <code class="docutils literal notranslate"><span class="pre">'AAA'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Aa1'</span></code>, etc.</li>
@@ -1179,15 +1237,16 @@ of a DataFrame.</li>
 specified inclusive range.</li>
 </ul>
 </li>
-<li><strong>currency</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Currency or list of currencies to include.</li>
-<li><strong>cusip</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>: default=None</em><em>,</em>) – Cusip or list of cusips to include.</li>
-<li><strong>issuer</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Issuer, or list of issuers to include.</li>
-<li><strong>ticker</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Ticker or list of tickers to include in index, default is all.</li>
-<li><strong>sector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Sector or list of sectors to include in index.</li>
-<li><strong>subsector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Subsector or list of subsectors to include in index.</li>
-<li><strong>treasuries</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If true return only treasures in index, else exclude.</li>
-<li><strong>municipals</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If False, remove municipal bonds from index.</li>
-<li><strong>maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>{5</em><em>, </em><em>10</em><em>, </em><em>20</em><em>, </em><em>30}</em><em>, </em><em>default=None</em>) – <p>Maturities to include, if int is specified the following ranges
+<li><strong>currency</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Currency or list of currencies to include.</li>
+<li><strong>cusip</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>: optional</em><em>,</em>) – CUSIP or list of CUSIPs to include.</li>
+<li><strong>isin</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>: optional</em><em>,</em>) – ISIN or list of ISINs to include.</li>
+<li><strong>issuer</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Issuer, or list of issuers to include.</li>
+<li><strong>ticker</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Ticker or list of tickers to include in index, default is all.</li>
+<li><strong>sector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Sector or list of sectors to include in index.</li>
+<li><strong>subsector</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Subsector or list of subsectors to include in index.</li>
+<li><strong>drop_treasuries</strong> (<em>bool</em><em>, </em><em>default=True</em>) – Whether to drop treausuries.</li>
+<li><strong>drop_municipals</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Whether to drop municipals.</li>
+<li><strong>maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>{5</em><em>, </em><em>10</em><em>, </em><em>20</em><em>, </em><em>30}</em><em>, </em><em>optional</em>) – <p>Maturities to include, if int is specified the following ranges
 are used:</p>
 <ul>
 <li>5: 4-6</li>
@@ -1197,50 +1256,69 @@ are used:</p>
 </ul>
 </li>
 <li><strong>original_maturity</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of original bond maturities to include.</li>
-<li><strong>price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Price range of bonds to include, default is all.</li>
+<li><strong>clean_price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Clean price range of bonds to include, default is all.</li>
+<li><strong>dirty_price</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Dirty price range of bonds to include, default is all.</li>
 <li><strong>coupon_rate</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Coupon rate range of bonds to include, default is all.</li>
-<li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries of domicile to include, default is all.</li>
-<li><strong>country_of_risk</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Country or list of countries wherer risk is centered to include
+<li><strong>coupon_type</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Coupon types <code class="docutils literal notranslate"><span class="pre">{'FIXED',</span> <span class="pre">'ZERO</span> <span class="pre">COUPON',</span> <span class="pre">'STEP</span> <span class="pre">CPN',</span> <span class="pre">etc.)</span></code>
+to include in index, default is all.</li>
+<li><strong>market_of_issue</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Markets of issue to include in index, defautl is all.</li>
+<li><strong>country_of_domicile</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Country or list of countries of domicile to include
 in index, default is all.</li>
+<li><strong>country_of_risk</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Country or list of countries wherer risk is centered
+to include in index, default is all.</li>
 <li><strong>amount_outstanding</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of amount outstanding to include in index (Millions).</li>
-<li><strong>issue_years</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of years since issue to include in index, default is all.</li>
-<li><strong>collateral_type</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – Collateral type or list of types to include, default is all.</li>
-<li><strong>OAD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted durations to include, default is all.</li>
-<li><strong>OAS</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spreads to include, default is all.</li>
-<li><strong>OASD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spread durations, default is all.</li>
+<li><strong>market_value</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of market values to include in index (Millions).</li>
+<li><strong>issue_years</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of years since issue to include in index,
+default is all.</li>
+<li><strong>collateral_type</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – Collateral type or list of types to include,
+default is all.</li>
+<li><strong>yield_to_worst</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of yields (to worst) to include, default is all.</li>
+<li><strong>OAD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted durations to include,
+default is all.</li>
+<li><strong>OAS</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spreads to include,
+default is all.</li>
+<li><strong>OASD</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of option adjusted spread durations,
+default is all.</li>
 <li><strong>liquidity_score</strong> (<em>Tuple</em><em>[</em><em>float</em><em>, </em><em>float</em><em>]</em><em>, </em><em>default=</em><em>(</em><em>None</em><em>, </em><em>None</em><em>)</em><em></em>) – Range of liquidty scores to use, default is all.</li>
-<li><strong>in_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in stats index.
+<li><strong>in_stats_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in stats index.
 If False, only include bonds out of stats index.
 By defualt include both.</li>
-<li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in returns index.
+<li><strong>in_returns_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in returns index.
 If False, only include bonds out of returns index.
 By defualt include both.</li>
-<li><strong>in_agg_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate stats index.
+<li><strong>in_agg_stats_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in aggregate stats index.
 If False, only include bonds out of aggregate stats index.
 By defualt include both.</li>
-<li><strong>in_agg_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in aggregate returns index.
+<li><strong>in_agg_returns_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in aggregate returns index.
 If False, only include bonds out of aggregate returns index.
 By defualt include both.</li>
-<li><strong>in_hy_stats_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY stats index.
+<li><strong>in_hy_stats_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in HY stats index.
 If False, only include bonds out of HY stats index.
 By defualt include both.</li>
-<li><strong>in_hy_returns_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in HY returns index.
+<li><strong>in_hy_returns_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in HY returns index.
 If False, only include bonds out of HY returns index.
 By defualt include both.</li>
-<li><strong>in_any_index</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in any index.
+<li><strong>in_any_index</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in any index.
 If False, only include bonds not in any index.
 By defualt include both.</li>
-<li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include 144A bonds.
+<li><strong>is_144A</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include 144A bonds.
 If False, only include non 144A bonds.
 By defualt include both.</li>
-<li><strong>is_new_issue</strong> (<em>bool</em><em>, </em><em>default=None</em>) – If True, only include bonds in the month they were issued.
+<li><strong>is_new_issue</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, only include bonds in the month they were issued.
 If False, include all bonds.
 By default include all bonds.</li>
-<li><strong>financial_flag</strong> (<em>{'financial'</em><em>, </em><em>'non-financial'</em><em>, </em><em>'other'}</em><em>, </em><em>default=None</em>) – Financial flag setting to identify fin and non-fin credits.</li>
-<li><strong>special_rules</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>] </em><em>default=None</em>) – <p>Special rule(s) for subsetting index using bitwise operators.
-If None, all specified inputs are applied independtently of
-eachother as bitwise &amp;. All rules can be stacked using paranthesis
-to create more complex rules.</p>
+<li><strong>financial_flag</strong> (bool or <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">1,</span> <span class="pre">2}</span></code>, optional) – <p>Selection for including fins, non-fins, or other.</p>
+<ul>
+<li>0 or <code class="docutils literal notranslate"><span class="pre">False</span></code>: Non-financial sectors.</li>
+<li>1 or <code class="docutils literal notranslate"><span class="pre">True</span></code>: Financial sectors.</li>
+<li>2: Other (Treasuries, Sovs, Govt Ownwed, etc.).</li>
+</ul>
+</li>
+<li><strong>special_rules</strong> (<em>str</em><em>, </em><em>List</em><em>[</em><em>str</em><em>] </em><em>optional</em>) – <p>Special rule(s) for subsetting index using bitwise
+operators. If None, all specified inputs are applied
+independtently of eachother as bitwise &amp;. All rules
+can be stacked using paranthesis to create more
+complex rules.</p>
 <p>Examples:</p>
 <ul>
 <li>Include specified sectors or subsectors:
@@ -1275,7 +1353,7 @@ sectors) xor specified maturities:
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>date_delta</strong> (str, <code class="docutils literal notranslate"><span class="pre">{'today',</span> <span class="pre">'WTD',</span> <span class="pre">'MTD',</span> <span class="pre">'YTD',</span> <span class="pre">'3d',</span> <span class="pre">'5y',</span> <span class="pre">etc}</span></code>) – Difference between reference date and target date.</li>
-<li><strong>reference_date</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Reference date to use, if None use most recent trade date.</li>
+<li><strong>reference_date</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Reference date to use, if None use most recent trade date.</li>
 <li><strong>kwargs</strong> – Keyword arguments for <a class="reference internal" href="#lgimapy.data.Database.nearest_date" title="lgimapy.data.Database.nearest_date"><code class="xref py py-func docutils literal notranslate"><span class="pre">nearest_date()</span></code></a>.</li>
 </ul>
 </td>
@@ -1325,9 +1403,9 @@ sectors) xor specified maturities:
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>securities</strong> (<em>str</em><em> or </em><em>List</em><em>[</em><em>str</em><em>]</em><em></em>) – Security or secuirites to load data for.</li>
 <li><strong>field</strong> (str, <code class="docutils literal notranslate"><span class="pre">{'OAS',</span> <span class="pre">'Price',</span> <span class="pre">'TRET',</span> <span class="pre">'XSRET',</span> <span class="pre">'YTW',</span> <span class="pre">etc.}</span></code>) – Field of data to load.</li>
-<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive start date for data.</li>
-<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive end date for data.</li>
-<li><strong>nan</strong> (<code class="docutils literal notranslate"><span class="pre">{None,</span> <span class="pre">'drop',</span> <span class="pre">'ffill',</span> <span class="pre">'interp'}</span></code>, default=None) – Method to use for filling missing values in loaded data.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional.</em>) – Inclusive start date for data.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>optional.</em>) – Inclusive end date for data.</li>
+<li><strong>nan</strong> (<code class="docutils literal notranslate"><span class="pre">{None,</span> <span class="pre">'drop',</span> <span class="pre">'ffill',</span> <span class="pre">'interp'}</span></code>, optional) – Method to use for filling missing values in loaded data.</li>
 <li><strong>kwargs</strong> – <p>Keyword arguments to pass to interpolating function.</p>
 <ul>
 <li><dl class="first docutils">
@@ -1361,8 +1439,8 @@ processed missing data.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>start</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive start date for data.</li>
-<li><strong>end</strong> (<em>datetime</em><em>, </em><em>default=None.</em>) – Inclusive end date for data.</li>
+<li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional.</em>) – Inclusive start date for data.</li>
+<li><strong>end</strong> (<em>datetime</em><em>, </em><em>optional.</em>) – Inclusive end date for data.</li>
 </ul>
 </td>
 </tr>
@@ -1393,10 +1471,10 @@ be prompted to provide the numeric value, and the
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>date</strong> (<em>datetime</em><em>, </em><em>default=None</em>) – Single date to scrape.</li>
-<li><strong>start</strong> (<em>str</em><em>, </em><em>datetime</em><em>, </em><em>default=None</em>) – Starting date for scrape.</li>
-<li><strong>end</strong> (<em>str</em><em>, </em><em>datetime</em><em>, </em><em>default=None</em>) – Ending date for scrape.</li>
-<li><strong>cusips</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>default=None</em>) – List of cusips to specify for the load, by default load all.</li>
+<li><strong>date</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Single date to scrape.</li>
+<li><strong>start</strong> (<em>str</em><em>, </em><em>datetime</em><em>, </em><em>optional</em>) – Starting date for scrape.</li>
+<li><strong>end</strong> (<em>str</em><em>, </em><em>datetime</em><em>, </em><em>optional</em>) – Ending date for scrape.</li>
+<li><strong>cusips</strong> (<em>List</em><em>[</em><em>str</em><em>]</em><em>, </em><em>optional</em>) – List of cusips to specify for the load, by default load all.</li>
 <li><strong>clean</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If true, apply standard cleaning rules to loaded DataFrame.</li>
 <li><strong>ret_df</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, return loaded DataFrame.</li>
 <li><strong>local</strong> (<em>bool</em><em>, </em><em>default=False</em>) – Load index from local feather file.</li>
@@ -2153,7 +2231,7 @@ for any cusip which is unsuccesful.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fig</strong> (<em>mpl.Figure</em>) – Figure instance to close.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fig</strong> (<em>mpl.Figure</em><em>, </em><em>optional</em>) – Figure instance to close.</td>
 </tr>
 </tbody>
 </table>
@@ -2191,8 +2269,8 @@ for any cusip which is unsuccesful.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>args</strong> – Positional arguments for matplotlib.pyplot.subplots</li>
-<li><strong>kwargs</strong> – Keyword arguments for matplotlib.pyplot.subplots</li>
+<li><strong>args</strong> – Positional arguments for <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot.subplots</span></code></li>
+<li><strong>kwargs</strong> – Keyword arguments for <code class="docutils literal notranslate"><span class="pre">matplotlib.pyplot.subplots</span></code></li>
 </ul>
 </td>
 </tr>
@@ -2365,7 +2443,7 @@ colors from line plots.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>s_list</strong> (<em>pd.Dataframe</em><em> or </em><em>List</em><em>[</em><em>pd.Series</em><em>]</em><em></em>) – DataFrame of list of series to plot.</li>
+<li><strong>s_list</strong> (<em>pd.Dataframe</em><em> or </em><em>List</em><em>[</em><em>pd.Series</em><em>]</em><em></em>) – DataFrame or list of series to plot.</li>
 <li><strong>c_list</strong> (<em>List</em><em>[</em><em>matplotlib color</em><em>]</em><em>, </em><em>optional</em>) – List of colors for corresponding series.</li>
 <li><strong>ls_list</strong> (<em>List</em><em>[</em><em>matplotlib linestyles</em><em>]</em><em>, </em><em>optional</em>) – List of linestyles for corresponding sereis.</li>
 <li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to begin plot.</li>
@@ -2381,7 +2459,7 @@ AutoDateLocator and ConciseDateFormatter.</li>
 <li><strong>legend</strong> (<em>bool</em><em> or </em><em>dict</em><em>, </em><em>default=False</em>) – If False, hide legend. If True, show legend defaulting
 to names of <code class="docutils literal notranslate"><span class="pre">s_left</span></code> and <code class="docutils literal notranslate"><span class="pre">s_right</span></code> with default parameters.
 For non-default parameters pass kwargs to <code class="docutils literal notranslate"><span class="pre">Axes.legend()</span></code>.</li>
-<li><strong>kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Kwargs for matplotlib plot.</li>
+<li><strong>kwargs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Kwargs for <code class="docutils literal notranslate"><span class="pre">matplotlib.Axes.plot()</span></code>.</li>
 </ul>
 </td>
 </tr>
@@ -2398,7 +2476,7 @@ For non-default parameters pass kwargs to <code class="docutils literal notransl
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>right}</strong> (<em>ylabel_{left</em><em>,</em>) – Series for <cite>left</cite> or <cite>right</cite> axis.</li>
+<li><strong>right}_s</strong> (<em>{left</em><em>,</em>) – Series for <cite>left</cite> or <cite>right</cite> axis.</li>
 <li><strong>start</strong> (<em>datetime</em><em>, </em><em>optional</em>) – Date to begin plot.</li>
 <li><strong>datetime</strong><strong>, </strong><strong>optional</strong> (<em>end</em><em>,</em>) – Date to end plot.</li>
 <li><strong>invert_right_axis</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True invert right axis.</li>
@@ -2407,7 +2485,7 @@ For non-default parameters pass kwargs to <code class="docutils literal notransl
 <li><strong>xtickfmt</strong> (<cite>{‘auto’, None}</cite>, optional) – Format for x tick labels. If <cite>auto</cite> use matplotlib’s
 AutoDateLocator and ConciseDateFormatter.</li>
 <li><strong>xlabel</strong> (<em>str</em><em>, </em><em>optional</em>) – X-axis label.</li>
-<li><strong>right}</strong> – Format as used by <cite>str.format()</cite> for <cite>left</cite> or <cite>right</cite>
+<li><strong>right}</strong> (<em>ylabel_{left</em><em>,</em>) – Format as used by <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> for <cite>left</cite> or <cite>right</cite>
 y-axis.</li>
 <li><strong>right}</strong> – Y-axis label for <cite>left</cite> or <cite>right</cite> axis.</li>
 <li><strong>title</strong> (<em>str</em><em>, </em><em>optional</em>) – Plot title.</li>
@@ -2464,20 +2542,104 @@ colors from line plots.</li>
 
 <dl class="function">
 <dt id="lgimapy.vis.format_xaxis">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">format_xaxis</code><span class="sig-paren">(</span><em>ax</em>, <em>s</em>, <em>xtickfmt</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.format_xaxis" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">format_xaxis</code><span class="sig-paren">(</span><em>ax</em>, <em>s=None</em>, <em>xtickfmt=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.format_xaxis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Format dates on x axis if necessary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to formate x-axis tick labels.</li>
+<li><strong>s</strong> (<em>pd.Series</em><em>, </em><em>optional</em>) – Input x-axis values.</li>
+<li><strong>xtickfmt</strong> (<em>str</em><em> or </em><em>'auto'</em><em>, </em><em>optional</em>) – If <cite>xtickfmt</cite> is not provided and the x-axis is a
+datetime index, dates are formatted using custom method.
+If <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>, <code class="docutils literal notranslate"><span class="pre">matplotlib.dates.AutoDateLocator</span></code> and
+<code class="docutils literal notranslate"><span class="pre">matplotlib.dates.ConciseDateFormatter</span></code> are used.
+Otherwise the value is used as the input to <code class="docutils literal notranslate"><span class="pre">str.format()</span></code>
+for x-axis tick labels.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="lgimapy.vis.format_yaxis">
 <code class="descclassname">lgimapy.vis.</code><code class="descname">format_yaxis</code><span class="sig-paren">(</span><em>ax</em>, <em>ytickfmt</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.format_yaxis" title="Permalink to this definition">¶</a></dt>
-<dd><p>Formate y axis to specified formatter</p>
+<dd><p>Formate y-axis tick labels to specified formatter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to format y-axis tick labels.</li>
+<li><strong>ytickfmt</strong> (<em>str</em>) – Format as used by <code class="docutils literal notranslate"><span class="pre">str.format()</span></code> for y-axis tick labels.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="lgimapy.vis.set_percentile_limits">
-<code class="descclassname">lgimapy.vis.</code><code class="descname">set_percentile_limits</code><span class="sig-paren">(</span><em>series</em>, <em>axes</em>, <em>percentiles=(5</em>, <em>95)</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.set_percentile_limits" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set limits such that 5/95 percentils are equal.</p>
+<code class="descclassname">lgimapy.vis.</code><code class="descname">set_percentile_limits</code><span class="sig-paren">(</span><em>a_list</em>, <em>axes</em>, <em>percentiles=(5</em>, <em>95)</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.set_percentile_limits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set y-limits on left and right axes of a double y-axis plot
+such that the provided percentiles are at the same vertical
+level in the plot for both axes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>a_list</strong> (<em>(</em><em>array_like</em><em>, </em><em>array_like</em><em>)</em><em></em>) – Arrays for left and right axes respectively.</li>
+<li><strong>axes</strong> (<em>array of matplotlib Axes</em>) – Array of two matplob Axes objects for left
+and right axes respectively.</li>
+<li><strong>perctiles</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>5</em><em>, </em><em>95</em><em>)</em><em></em>) – Percentiles to match for each input array.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.vis.plot_hist">
+<code class="descclassname">lgimapy.vis.</code><code class="descname">plot_hist</code><span class="sig-paren">(</span><em>a</em>, <em>bins=20</em>, <em>bin_width=1</em>, <em>weights=None</em>, <em>normed=True</em>, <em>mean=False</em>, <em>mean_kws=None</em>, <em>median=False</em>, <em>median_kws=None</em>, <em>prec=1</em>, <em>ax=None</em>, <em>figsize=(6</em>, <em>4)</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.vis.plot_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot histogram of input data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>a</strong> (<em>array_like</em>) – Input data.</li>
+<li><strong>bins</strong> (<em>int</em><em> or </em><em>sequence of scalars</em><em>, </em><em>default=20</em>) – If <cite>bins</cite> is an int, it defines number of equal-width bins
+in given range (20 by default). If bins is a sequence, it
+defines a monotonically increasing array of bin edges.</li>
+<li><strong>weights</strong> (<em>array_like</em><em>, </em><em>optional</em>) – An array of weights the same shape as <cite>a</cite>. Each value in
+<cite>a</cite> only contributes its associated weight towards the
+bin count.</li>
+<li><strong>normed</strong> (<em>bool</em><em>, </em><em>default=True</em>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the result will be a probability density
+function such that the integral over the range is 1.
+If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the result will be number of samples
+in each bin.</li>
+<li><strong>mean</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, plot a vertical line indicating the mean
+and include the value in the legend. Uses weighted
+mean if <cite>weights</cite> is given.</li>
+<li><strong>mean_kws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Keyword arguments for <code class="docutils literal notranslate"><span class="pre">ax.axvline</span></code> for mean line.</li>
+<li><strong>median</strong> (<em>bool</em><em>, </em><em>default=False</em>) – If True, plot a vertical line indicating the median
+and include the value in the legend. Uses weighted
+median if <cite>weights</cite> is given.</li>
+<li><strong>median_kws</strong> (<em>dict</em><em>, </em><em>optional</em>) – Keyword arguments for <code class="docutils literal notranslate"><span class="pre">ax.axvline</span></code> for median line.</li>
+<li><strong>prec</strong> (<em>int</em><em>, </em><em>default=1</em>) – Decimal precision for mean and median in legend.</li>
+<li><strong>ax</strong> (<em>matplotlib Axes</em><em>, </em><em>optional</em>) – Axes in which to draw plot, otherwise activate Axes.</li>
+<li><strong>figsize</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em><em>, </em><em>default=</em><em>(</em><em>6</em><em>, </em><em>4</em><em>)</em><em></em>) – Figure size.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -3532,27 +3694,72 @@ in inpute string.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="lgimapy.utils.to_int">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">to_int</code><span class="sig-paren">(</span><em>obj</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.to_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert object to <code class="docutils literal notranslate"><span class="pre">int</span></code> if it is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – Object to convert to <code class="docutils literal notranslate"><span class="pre">int</span></code> if required.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">int</span></code> conversion of input object.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="lgimapy.utils.to_list">
-<code class="descclassname">lgimapy.utils.</code><code class="descname">to_list</code><span class="sig-paren">(</span><em>obj</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.to_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert single object to list if it is not already
-a list-like object.</p>
+<code class="descclassname">lgimapy.utils.</code><code class="descname">to_list</code><span class="sig-paren">(</span><em>obj</em>, <em>dtype=None</em>, <em>sort=False</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.to_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert object to <code class="docutils literal notranslate"><span class="pre">list</span></code> if it is not already
+a <code class="docutils literal notranslate"><span class="pre">list</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>obj</strong> – Object to convert to list if required.</li>
-<li><strong>dtype</strong> (<em>type</em>) – Data type of object to check against/ data type
+<li><strong>dtype</strong> (<em>type</em><em>, </em><em>optional</em>) – Data type of object to check against/ data type
 of object in output list. If None the dtype is checked
 against <code class="docutils literal notranslate"><span class="pre">`list`</span></code> and <code class="docutils literal notranslate"><span class="pre">`tuple`</span></code> and converted to
 <code class="docutils literal notranslate"><span class="pre">`list`</span></code> if it is neither.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List-like version of input object.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal notranslate"><span class="pre">list</span></code> conversion of input object.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list-like</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="lgimapy.utils.to_set">
+<code class="descclassname">lgimapy.utils.</code><code class="descname">to_set</code><span class="sig-paren">(</span><em>obj</em>, <em>dtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#lgimapy.utils.to_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert single object to <code class="docutils literal notranslate"><span class="pre">set</span></code> if it is not already
+a <code class="docutils literal notranslate"><span class="pre">set</span></code> or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> – Object to convert to <code class="docutils literal notranslate"><span class="pre">set</span></code>.</li>
+<li><strong>dtype</strong> (<em>type</em><em>, </em><em>optional</em>) – Data type of object to check against/ data type
+of object in output list. If None the dtype is checked
+against.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><code class="docutils literal notranslate"><span class="pre">set</span></code> conversion of input object.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">set</p>
 </td>
 </tr>
 </tbody>

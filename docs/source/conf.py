@@ -19,11 +19,11 @@ sys.setrecursionlimit(1500)
 # -- Project information -----------------------------------------------------
 
 project = "lgimapy"
-copyright = "2019, Jason R. Becker"
+copyright = "2020, Jason R. Becker"
 author = "Jason R. Becker"
 
 # The full version, including alpha/beta/rc tags
-release = "0.0.1"
+release = "0.1.0"
 
 
 # -- General configuration ---------------------------------------------------
