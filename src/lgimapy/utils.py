@@ -16,6 +16,8 @@ import pandas as pd
 import pkg_resources
 from tabulate import tabulate
 
+# %%
+
 
 def root(join_path=None):
     """
@@ -152,6 +154,39 @@ def mkdir(directory):
         os.makedirs(directory)
     except OSError:
         pass
+
+
+def squeeze(x):
+    """
+    Squeeze 1 dimensional DataFrame into a Series,
+    and Series on length 1 into scalars.
+
+    Parameters
+    ----------
+    x: pd.DataFrame or pd.Series
+        Input data structure to be squeezed.
+
+    Returns
+    -------
+    pd.DataFrame, pd.Series, or scalar
+        `x` squeezed to lowest dimension.
+    """
+    if isinstance(x, pd.DataFrame):
+        m, n = x.shape
+        if n == 1:
+            if m == 1:
+                return x.iloc[0, 0]
+            else:
+                return x.iloc[:, 0]
+        else:
+            return x
+    elif isinstance(x, pd.Series):
+        if len(x) == 1:
+            return x.iloc[0]
+        else:
+            return x
+    else:
+        raise NotImplementedError(f"{type(x)} is not supported")
 
 
 def to_list(obj, dtype=None, sort=False):
