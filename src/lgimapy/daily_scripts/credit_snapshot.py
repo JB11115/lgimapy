@@ -8,7 +8,8 @@ from functools import partial
 import numpy as np
 import pandas as pd
 
-from lgimapy.data import Database
+from lgimapy.bloomberg import get_bloomberg_subsector
+from lgimapy.data import Database, Index
 from lgimapy.latex import Document, latex_table
 from lgimapy.utils import load_json, mkdir, root, Time
 
@@ -17,9 +18,12 @@ from lgimapy.utils import load_json, mkdir, root, Time
 
 def make_credit_snapshots():
     """Build credit snapshots and sitch them together."""
+    date = None
     indexes = ["US_IG", "US_IG_10+"]
     for index in indexes:
-        build_credit_snapshot(index)
+        build_credit_snapshot(
+            index, date=date, include_portfolio_positions=True
+        )
 
 
 class SnapshotConfig:
@@ -39,23 +43,41 @@ class SnapshotConfig:
         }[self.index]
 
     @property
+    def rep_account(self):
+        return {"US_IG": "P-MC", "US_IG_10+": "P-LD", "US_HY": None}[self.index]
+
+    @property
     def market_sectors(self):
         return {
             "US_IG": [
                 "STATS_US_IG",
-                "~AAA",
-                "~AA",
-                "~A",
-                "~BBB",
-                # "~BBB_LARGEST_ISSUERS",
+                "AAA",
+                "AA",
+                "A",
+                # "~A_FIN",
+                # "~A_NON_FIN_TOP_30",
+                # "~A_NON_FIN_EX_TOP_30",
+                # "~A_NON_CORP",
+                "BBB",
+                "~BBB_FIN",
+                "~BBB_NON_FIN_TOP_30",
+                "~BBB_NON_FIN_EX_TOP_30",
+                "~BBB_NON_CORP",
             ],
             "US_IG_10+": [
                 "STATS_US_IG_10+",
-                "~AAA",
-                "~AA",
-                "~A",
-                "~BBB",
-                "~BBB_LARGEST_ISSUERS_10+",
+                "AAA",
+                "AA",
+                "A",
+                # "~A_FIN",
+                # "~A_NON_FIN_TOP_30_10+",
+                # "~A_NON_FIN_EX_TOP_30_10+",
+                # "~A_NON_CORP",
+                "BBB",
+                "~BBB_FIN",
+                "~BBB_NON_FIN_TOP_30_10+",
+                "~BBB_NON_FIN_EX_TOP_30_10+",
+                "~BBB_NON_CORP",
             ],
             "US_HY": ["STATS_HY", "~BB", "~B", "~CCC"],
         }[self.index]
@@ -69,7 +91,7 @@ class SnapshotConfig:
         }[self.index]
 
 
-def build_credit_snapshot(index):
+def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
     """
     Create snapshot for respective index.
 
@@ -77,10 +99,12 @@ def build_credit_snapshot(index):
     ----------
     index: ``{'US_IG_10+', 'US_IG', 'US_HY'}``
         Index to build snapshot for.
+    include_portfolio_positions: bool
+        If ``True`` include a column for current portfolio
+        positions in resepective index.
     """
     # Define filename and directories to save data.
-    # actual_date = pd.to_datetime("12/31/2019")
-    actual_date = dt.today()
+    actual_date = dt.today() if date is None else pd.to_datetime(date)
     config = SnapshotConfig(index)
 
     fid = f"{actual_date.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
@@ -148,8 +172,7 @@ def build_credit_snapshot(index):
     # Find dates for daily, week, month, and year to date calculations.
     # Store dates not to be used in table with a `~` before them.
     db = Database()
-    today = db.date("today")
-    # today = actual_date
+    today = db.date("today") if date is None else actual_date
     dates_dict = {
         "~today": today,
         "~6m": db.date("6m", today),
@@ -173,20 +196,24 @@ def build_credit_snapshot(index):
         for sector in all_sectors
     }
 
-    # Get current market value of the entrie long credit index.
+    # Get current market value of the entire long credit index.
     bm_name = config.market_sectors[0]
     full_ix_today = ix_dict[bm_name].subset(date=today)
     ix_mv = full_ix_today.total_value()[0]
     ix_xsrets = ix_dict[bm_name].market_value_weight("XSRet")
     ix_xsrets_6m = ix_xsrets[ix_xsrets.index > dates_dict["~6m"]]
 
-    # Create DataFrame of snapshot values with each sector as a row.
-    # Use multiprocessing to speed up computation.
+    # Get current state of portfolio.
+    if include_portfolio_positions:
+        rep_account = db.load_portfolio(account=config.rep_account, date=today)
+    else:
+        rep_account = None
+
     pool = mp.Pool(processes=mp.cpu_count() - 2)
     results = [
         pool.apply_async(
             get_snapshot_values,
-            args=(ix_dict[sector], dates_dict, ix_mv, ix_xsrets),
+            args=(ix_dict[sector], dates_dict, ix_mv, ix_xsrets, rep_account),
         )
         for sector in all_sectors
     ]
@@ -222,16 +249,24 @@ def build_credit_snapshot(index):
         page_numbers=False,
         ignore_bottom_margin=True,
     )
-    doc.add_background_image("umbrella", scale=1.1, vshift=2.2, alpha=0.04)
+    doc.add_background_image("umbrella", scale=1.1, vshift=1, alpha=0.04)
     # doc.add_background_image("xmas_tree", scale=1.1, vshift=2, alpha=0.08)
     sector_list = [config.market_sectors, sectors]
     for sector_subset, cap in zip(sector_list, captions):
-        doc.add_table(make_table(table_df, sector_subset, cap, kwargs))
+        doc.add_table(
+            make_table(
+                table_df,
+                sector_subset,
+                cap,
+                kwargs,
+                include_portfolio_positions,
+            )
+        )
     doc.save()
     # %%
 
 
-def make_table(full_df, sectors, caption, ix_kwargs):
+def make_table(full_df, sectors, caption, ix_kwargs, include_overweights):
     """
     Subset full DataFrame to specific sectors and build
     LaTeX formatted table.
@@ -250,6 +285,8 @@ def make_table(full_df, sectors, caption, ix_kwargs):
     }
     df.drop("color", axis=1, inplace=True)
     df.drop("z", axis=1, inplace=True)
+    if not include_overweights:
+        df.drop("Over*Weight", axis=1, inplace=True)
 
     # Add indent to index column for subsectors.
     final_ix = []
@@ -277,6 +314,8 @@ def make_table(full_df, sectors, caption, ix_kwargs):
     ]
 
     midrule_locs = [
+        "AAA",
+        "BBB",
         "Basics",
         "Capital Goods",
         "Communications",
@@ -322,12 +361,16 @@ def make_table(full_df, sectors, caption, ix_kwargs):
         "6m*Max": "0f",
         "6m*%tile": "0f",
     }
+    col_fmt = "l|cc|cc|cc|cc|cc|c|c|c|ccl"
+    if include_overweights:
+        col_fmt = f"{col_fmt}|c"
+        prec["Over*Weight"] = "2f"
 
     table = latex_table(
         df,
         caption=caption,
         font_size="footnotesize",
-        col_fmt="l|cc|cc|cc|cc|cc|c|c|c|ccl",
+        col_fmt=col_fmt,
         prec=prec,
         midrule_locs=midrule_locs,
         specialrule_locs=major_sectors,
@@ -342,7 +385,7 @@ def make_table(full_df, sectors, caption, ix_kwargs):
     return table
 
 
-def get_snapshot_values(ix, dates, index_mv, index_xsrets):
+def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
     """
     Get single row from IG snapshot table for
     specified sector.
@@ -355,6 +398,11 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets):
         Dict of pertinent dates for constructing row.
     index_mv: float
         Current total IG Long Credit Index market value.
+    index_xsrets: pd.Series
+        Excess return series for index.
+    portfolio: :class:`Index`
+        Current state of representative account portfolio
+        as an :class:`Index`.
 
     Returns
     -------
@@ -380,6 +428,7 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets):
         d["6m*Max"] = np.nan
         d["6m*%tile"] = 0
         d["z"] = None
+        d["Over*Weight"] = np.nan
         return pd.DataFrame(d, index=[ix.name])
 
     # Get current state of the index and 6 month OAS/XSRet history.
@@ -412,9 +461,70 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets):
     d["6m*%tile"] = 100 * oas_6m.rank(pct=True)[-1]
     d["z"] = z
     d["color"] = "blue" if z > 2 else "red" if z < -2 else None
+
+    # Determine current portfolio overweight.
+    if portfolio is not None:
+        # Find all CUSIPs that fit current sector, whether they
+        # are index eligible or not.
+        unused_constraints = {"in_stats_index", "maturity", "name"}
+        constraints = {
+            k: v
+            for k, v in ix.constraints.items()
+            if k not in unused_constraints
+        }
+        sector_portfolio = portfolio.subset(**constraints)
+        d["Over*Weight"] = np.sum(sector_portfolio.df["OAD_Diff"])
+
+    else:
+        d["Over*Weight"] = np.nan
+
     return pd.DataFrame(d, index=[ix.name])
+
+
+def convert_sectors_to_fin_flags(sectors):
+    """
+    Convert sectors to flag indicating if they
+    are non-financial (0), financial (1), or other (2).
+
+    Parameters
+    ----------
+    sectors: pd.Series
+        Sectors
+
+    Returns
+    -------
+    fin_flags: nd.array
+        Array of values indicating if sectors are non-financial (0),
+        financial (1), or other (Treasuries, Sovs, Govt owned).
+    """
+
+    financials = {
+        "P&C",
+        "LIFE",
+        "APARTMENT_REITS",
+        "BANKING",
+        "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+        "RETAIL_REITS",
+        "HEALTHCARE_REITS",
+        "OTHER_REITS",
+        "FINANCIAL_OTHER",
+        "FINANCE_COMPANIES",
+        "OFFICE_REITS",
+    }
+    other = {
+        "TREASURIES",
+        "SOVEREIGN",
+        "SUPRANATIONAL",
+        "INDUSTRIAL_OTHER",
+        "GOVERNMENT_GUARANTEE",
+        "OWNED_NO_GUARANTEE",
+    }
+    fin_flags = np.zeros(len(sectors))
+    fin_flags[sectors.isin(financials)] = 1
+    fin_flags[sectors.isin(other)] = 2
+    return fin_flags
 
 
 if __name__ == "__main__":
     with Time():
-        make_snapshots()
+        make_credit_snapshots()
