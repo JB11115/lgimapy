@@ -13,6 +13,7 @@ from lgimapy.vis.vis import (
     plot_triple_y_axis_timeseries,
     format_xaxis,
     format_yaxis,
+    set_n_ticks,
     set_percentile_limits,
     plot_hist,
 )
@@ -32,6 +33,7 @@ __all__ = [
     "plot_triple_y_axis_timeseries",
     "format_xaxis",
     "format_yaxis",
+    "set_n_ticks",
     "set_percentile_limits",
     "plot_hist",
 ]
