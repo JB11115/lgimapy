@@ -35,6 +35,7 @@ def get_bloomberg_subsector(cusips):
     # Find any cusips which are not in saved file.
     fid = "cusip_bloomberg_subsectors"
     subsectors = load_json(fid, empty_on_error=True)
+    subsectors[np.nan] = np.nan
     missing = []
     for c in list(set(cusips)):
         if c not in subsectors:
@@ -44,6 +45,7 @@ def get_bloomberg_subsector(cusips):
     if missing:
         scrape_bloomberg_subsectors(missing)
         subsectors = load_json(fid)
+        subsectors[np.nan] = np.nan
 
     return [subsectors[c] for c in cusips]
 
