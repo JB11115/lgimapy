@@ -40,7 +40,7 @@ def update_market_review(fid):
             "1Y %tile": "0f",
         },
         div_bar_col=["$\\Delta$ 1M (%)", "$\\Delta$ YTD (%)"],
-        div_bar_kwargs={"cmin": "firebrick", "cmax": "steelblue"},
+        div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
         col_style={"1Y %tile": "\pctbar"},
     )
 
@@ -57,7 +57,7 @@ def update_market_review(fid):
             "1Y %tile": "0f",
         },
         div_bar_col=["$\\Delta$ 1M (%)", "$\\Delta$ YTD (%)"],
-        div_bar_kwargs={"cmin": "firebrick", "cmax": "steelblue"},
+        div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
         col_style={"1Y %tile": "\pctbar"},
     )
     doc.end_edit()
@@ -75,14 +75,14 @@ def update_market_review(fid):
         caption="\\large Credit \\normalfont - Spread (bp)",
         table_notes=notes,
         col_fmt="lrclrr",
-        midrule_locs=db.bbg_names(["EU_CORP", "EM_SOV", "CDX_IG"]),
+        midrule_locs=db.bbg_names(["EU_IG", "EM_SOV", "CDX_IG"]),
         prec={
             "$\\Delta$ 1M (%)": "1%",
             "$\\Delta$ YTD (%)": "1%",
             "5Y %tile": "0f",
         },
         div_bar_col=["$\\Delta$ 1M (%)", "$\\Delta$ YTD (%)"],
-        div_bar_kwargs={"cmin": "steelblue", "cmax": "firebrick"},
+        div_bar_kws={"cmin": "steelblue", "cmax": "firebrick"},
         col_style={"5Y %tile": "\pctbar"},
     )
 
@@ -99,7 +99,7 @@ def update_market_review(fid):
             "5Y %tile": "0f",
         },
         div_bar_col=["$\\Delta$ 1M (bp)", "$\\Delta$ YTD (bp)"],
-        div_bar_kwargs={"cmin": "steelblue", "cmax": "firebrick"},
+        div_bar_kws={"cmin": "steelblue", "cmax": "firebrick"},
         col_style={"5Y %tile": "\pctbar"},
     )
     doc.end_edit()
@@ -114,7 +114,7 @@ def update_market_review(fid):
         col_fmt="lrr",
         prec={"$\\Delta$ 1M (%)": "2%", "$\\Delta$ YTD (%)": "2%"},
         div_bar_col=["$\\Delta$ 1M (%)", "$\\Delta$ YTD (%)"],
-        div_bar_kwargs={"cmin": "firebrick", "cmax": "steelblue"},
+        div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
     )
     doc.end_edit()
     doc.start_edit("credit_excess_returns")
@@ -125,7 +125,7 @@ def update_market_review(fid):
         col_fmt="lrr",
         prec={"$\\Delta$ 1M (bp)": "0f", "$\\Delta$ YTD (bp)": "0f"},
         div_bar_col=["$\\Delta$ 1M (bp)", "$\\Delta$ YTD (bp)"],
-        div_bar_kwargs={"cmin": "firebrick", "cmax": "steelblue"},
+        div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
     )
     doc.end_edit()
     doc.save_tex()
