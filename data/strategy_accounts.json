@@ -179,6 +179,24 @@
         "WTWLD",
         "XRXLD"
     ],
+    "BNM - US Long A+ Credit": [
+        "AGRBNM",
+        "COOPBBNM",
+        "COOPSBNM",
+        "ELUXBNM",
+        "FWFHBNM",
+        "FWFNBNM",
+        "GENBNM",
+        "GMANBNM",
+        "HARMBNM",
+        "HBDBNM",
+        "MBRF",
+        "NVSBNM",
+        "SESLBNM",
+        "SEULBNM",
+        "TRNBNM",
+        "TRNBNM"
+    ],
     "US Government": [
         "AHGOVI"
     ],
@@ -242,6 +260,7 @@
     "US High Yield": [
         "BETUSHY",
         "GHYHPXV",
+        "GHYKVT",
         "GHYPLM",
         "GHYUSA",
         "HITHY",
@@ -353,22 +372,6 @@
         "GENMIC",
         "SIC"
     ],
-    "BNM - US Long A+ Credit": [
-        "COOPBBNM",
-        "COOPSBNM",
-        "ELUXBNM",
-        "FWFHBNM",
-        "FWFNBNM",
-        "GENBNM",
-        "GMANBNM",
-        "HARMBNM",
-        "HBDBNM",
-        "NVSBNM",
-        "SESLBNM",
-        "SEULBNM",
-        "TRNBNM",
-        "TRNBNM"
-    ],
     "Barclays-Russell LDI Custom - DE": [
         "DUKE-RS",
         "DUKE-RS"
@@ -414,10 +417,6 @@
     "Absolute Return - LIB150": [
         "LIB150"
     ],
-    "US Corporate 10+ Yr >500MM Ex Insur": [
-        "MBRF",
-        "RBUBNM"
-    ],
     "Custom Management No Benchmark - MDLZSTRP": [
         "MDLZSTRP"
     ],
@@ -441,6 +440,9 @@
         "RBSBNM",
         "UL1BNM",
         "UL2BNM"
+    ],
+    "US Corporate 10+ Yr >500MM Ex Insur": [
+        "RBUBNM"
     ],
     "Custom RBS": [
         "RDTNLD1"

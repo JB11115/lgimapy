@@ -92,8 +92,246 @@
         ],
         "in_stats_index": true
     },
-    "BBB_LARGEST_ISSUERS_10+": {
-        "name": "BBB Top 30",
+    "A_FIN": {
+        "name": "A Financial",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": true,
+        "in_stats_index": true
+    },
+    "A_NON_CORP": {
+        "name": "A Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": 2,
+        "in_stats_index": true
+    },
+    "A_NON_FIN_EX_TOP_30_10+": {
+        "name": "A Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DUK",
+            "UNH",
+            "BRKHEC",
+            "INTC",
+            "DIS",
+            "PFE",
+            "HD",
+            "BMY",
+            "BNSF",
+            "AMZN",
+            "PEP",
+            "EXC",
+            "GILD",
+            "ED",
+            "EIX",
+            "D",
+            "IBM",
+            "XEL",
+            "ABT",
+            "MRK",
+            "UPS",
+            "COP",
+            "LMT",
+            "AEP",
+            "SO",
+            "PM",
+            "ONCRTX",
+            "AMXLMM",
+            "TGT"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_TOP_30_10+": {
+        "name": "A Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DUK",
+            "UNH",
+            "BRKHEC",
+            "INTC",
+            "DIS",
+            "PFE",
+            "HD",
+            "BMY",
+            "BNSF",
+            "AMZN",
+            "PEP",
+            "EXC",
+            "GILD",
+            "ED",
+            "EIX",
+            "D",
+            "IBM",
+            "XEL",
+            "ABT",
+            "MRK",
+            "UPS",
+            "COP",
+            "LMT",
+            "AEP",
+            "SO",
+            "PM",
+            "ONCRTX",
+            "AMXLMM",
+            "TGT"
+        ]
+    },
+    "A_NON_FIN_EX_TOP_30": {
+        "name": "A Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "BMY",
+            "UNH",
+            "INTC",
+            "DIS",
+            "IBM",
+            "PFE",
+            "PEP",
+            "DUK",
+            "HD",
+            "BRKHEC",
+            "BPLN",
+            "AMZN",
+            "GILD",
+            "BNSF",
+            "DE",
+            "CAT",
+            "MRK",
+            "EXC",
+            "GSK",
+            "PM",
+            "UPS",
+            "KO",
+            "D",
+            "EIX",
+            "ABT",
+            "QCOM",
+            "MMM",
+            "ED",
+            "GD"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_TOP_30": {
+        "name": "A Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "BMY",
+            "UNH",
+            "INTC",
+            "DIS",
+            "IBM",
+            "PFE",
+            "PEP",
+            "DUK",
+            "HD",
+            "BRKHEC",
+            "BPLN",
+            "AMZN",
+            "GILD",
+            "BNSF",
+            "DE",
+            "CAT",
+            "MRK",
+            "EXC",
+            "GSK",
+            "PM",
+            "UPS",
+            "KO",
+            "D",
+            "EIX",
+            "ABT",
+            "QCOM",
+            "MMM",
+            "ED",
+            "GD"
+        ]
+    },
+    "BBB_FIN": {
+        "name": "BBB Financial",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": true,
+        "in_stats_index": true
+    },
+    "BBB_NON_CORP": {
+        "name": "BBB Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": 2,
+        "in_stats_index": true
+    },
+    "BBB_NON_FIN_EX_TOP_30_10+": {
+        "name": "BBB Non-Fin ex Top 30",
         "OAS": [
             -10,
             3000
@@ -110,32 +348,207 @@
             "ABIBB",
             "ABBV",
             "CVS",
-            "KMI",
             "CHTR",
-            "EPD",
-            "ETP",
             "UTX",
-            "VOD",
-            "KHC",
-            "UNP",
-            "GE",
             "AMGN",
-            "OXY",
-            "CSX",
+            "EPD",
+            "KMI",
+            "ETP",
+            "UNP",
+            "VOD",
+            "GE",
+            "CI",
+            "MCD",
+            "MO",
             "TELEFO",
             "TWC",
-            "TRPCN",
-            "MO",
-            "MCD",
+            "CSX",
             "BATSLN",
-            "CI",
+            "TRPCN",
+            "ANTM",
+            "NOC",
             "FDX",
+            "VIAC",
+            "BA",
+            "AZN",
+            "WMB",
+            "LOW",
+            "GM"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_TOP_30_10+": {
+        "name": "BBB Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "VZ",
+            "ABIBB",
+            "ABBV",
+            "CVS",
+            "CHTR",
+            "UTX",
+            "AMGN",
+            "EPD",
+            "KMI",
+            "ETP",
+            "UNP",
+            "VOD",
+            "GE",
+            "CI",
+            "MCD",
+            "MO",
+            "TELEFO",
+            "TWC",
+            "CSX",
+            "BATSLN",
+            "TRPCN",
+            "ANTM",
+            "NOC",
+            "FDX",
+            "VIAC",
+            "BA",
+            "AZN",
+            "WMB",
+            "LOW",
+            "GM"
+        ]
+    },
+    "BBB_NON_FIN_EX_TOP_30": {
+        "name": "BBB Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "VZ",
+            "ABIBB",
+            "ABBV",
+            "CVS",
+            "UTX",
             "GM",
+            "CHTR",
+            "ETP",
+            "CI",
+            "AMGN",
+            "UNP",
+            "BATSLN",
+            "AVGO",
+            "EPD",
+            "KMI",
+            "MO",
+            "DELL",
+            "VOD",
+            "MCD",
+            "GE",
             "ANTM",
             "WMB",
-            "HAL",
-            "SO",
-            "SUCN"
+            "CSX",
+            "VIAC",
+            "TACHEM",
+            "AMT",
+            "BA",
+            "LOW",
+            "NOC",
+            "HCA"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_TOP_30": {
+        "name": "BBB Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "VZ",
+            "ABIBB",
+            "ABBV",
+            "CVS",
+            "UTX",
+            "GM",
+            "CHTR",
+            "ETP",
+            "CI",
+            "AMGN",
+            "UNP",
+            "BATSLN",
+            "AVGO",
+            "EPD",
+            "KMI",
+            "MO",
+            "DELL",
+            "VOD",
+            "MCD",
+            "GE",
+            "ANTM",
+            "WMB",
+            "CSX",
+            "VIAC",
+            "TACHEM",
+            "AMT",
+            "BA",
+            "LOW",
+            "NOC",
+            "HCA"
+        ]
+    },
+    "COVID_19_SENSATIVE": {
+        "name": "Covid-19 Sensative",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_stats_index": true,
+        "ticker": [
+            "AAPL",
+            "APD",
+            "BKNG",
+            "CAT",
+            "CMI",
+            "CVX",
+            "DE",
+            "EMR",
+            "EXPE",
+            "GLW",
+            "GM",
+            "HES",
+            "LVS",
+            "MCD",
+            "MU",
+            "NKE",
+            "PXD",
+            "QCOM",
+            "RCL",
+            "SBUX",
+            "SUCN",
+            "TPR",
+            "TXN",
+            "WMT",
+            "XOM"
         ]
     },
     "IG_most_trade_exposed": {
@@ -256,7 +669,10 @@
             -10,
             3000
         ],
-        "maturity": [10, null],
+        "maturity": [
+            10,
+            null
+        ],
         "in_stats_index": true
     },
     "STATS_HY": {
@@ -401,7 +817,7 @@
         "in_stats_index": true,
         "special_rules": "Sector | Subsector | Ticker"
     },
-    "CYCLICAL_FOR_CITI_SURVEY":{
+    "CYCLICAL_FOR_CITI_SURVEY": {
         "name": "Cyclical (Citi)",
         "OAS": [
             -10,
@@ -434,7 +850,7 @@
         "in_stats_index": true,
         "special_rules": "~Ticker"
     },
-    "INDUSTRIALS_FOR_CITI_SURVEY":{
+    "INDUSTRIALS_FOR_CITI_SURVEY": {
         "name": "Industrials (Citi)",
         "OAS": [
             -10,
@@ -1046,6 +1462,10 @@
         "sector": [
             "FINANCE_COMPANIES"
         ],
+        "ticker": [
+            "GE"
+        ],
+        "special_rules": "~Ticker",
         "in_stats_index": true
     },
     "FINANCIAL_OTHER": {
