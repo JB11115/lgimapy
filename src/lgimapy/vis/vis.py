@@ -15,7 +15,8 @@ from pandas._libs.tslibs.timestamps import Timestamp
 from tqdm import tqdm
 
 from lgimapy.bloomberg import bdh
-from lgimapy.data import Database
+
+# from lgimapy.data import Database
 from lgimapy.utils import mkdir, root, to_list
 
 
@@ -373,6 +374,7 @@ def plot_double_y_axis_timeseries(
     plot_kws_left=None,
     plot_kws_right=None,
     color_yticks=True,
+    ret_axes=False,
     **kwargs,
 ):
     """
@@ -430,7 +432,16 @@ def plot_double_y_axis_timeseries(
     else:
         ax_left = ax
     ax_right = ax_left.twinx()
+
+    # Make spine visible for right axis.
+    make_patch_spines_invisible(ax_left)
+    make_patch_spines_invisible(ax_right)
     ax_right.grid(False)
+    ax_right.spines["right"].set_position(("axes", 1.05))
+    ax_right.spines["right"].set_visible(True)
+    ax_right.spines["right"].set_linewidth(1.5)
+    ax_right.spines["right"].set_color("lightgrey")
+    ax_right.tick_params(right="on", length=5)
 
     # Update kwargs and plot.
     kwargs_left = {
@@ -481,7 +492,8 @@ def plot_double_y_axis_timeseries(
     if invert_right_axis:
         ax_right.set_ylim(*ax_right.get_ybound()[::-1])
     plt.tight_layout()
-    help(sns.regplot)
+    if ret_axes:
+        return ax_left, ax_right
 
 
 def plot_triple_y_axis_timeseries(
@@ -511,6 +523,7 @@ def plot_triple_y_axis_timeseries(
     plot_kws_right_inner=None,
     plot_kws_right_outer=None,
     color_yticks=True,
+    ret_axes=False,
     **kwargs,
 ):
     """
@@ -659,8 +672,11 @@ def plot_triple_y_axis_timeseries(
     if invert_right_outer_axis:
         ax_right_outer.set_ylim(*ax_right_outer.get_ybound()[::-1])
     plt.tight_layout()
+    if ret_axes:
+        return ax_left, ax_right_inner, ax_right_outer
 
 
+# %%
 def plot_timeseries(
     s,
     start=None,
@@ -669,7 +685,10 @@ def plot_timeseries(
     stats=False,
     bollinger=False,
     mean_line=False,
+    median_line=False,
     pct_lines=False,
+    end_point=True,
+    end_point_kws=None,
     ax=None,
     figsize=(8, 6),
     ytickfmt=None,
@@ -771,6 +790,15 @@ def plot_timeseries(
             color="firebrick",
             label=f"Mean: {avg:.{n}{f}}",
         )
+    if median_line:
+        avg = np.median(s)
+        ax.axhline(
+            avg,
+            ls="--",
+            lw=1.5,
+            color="firebrick",
+            label=f"Median: {avg:.{n}{f}}",
+        )
 
     if pct_lines:
         pct_line_kwargs = {"ls": "--", "lw": 1.5, "color": "dimgrey"}
@@ -798,10 +826,19 @@ def plot_timeseries(
     s = s[(s.index >= start) & (s.index <= end)].copy()
     ax.plot(s.index, s.values, **plot_kws)
 
+    # Plot end point.
+    end_point_kwargs = {"color": plot_kws["color"]}
+    if end_point_kws is not None:
+        end_point_kwargs.update(**end_point_kws)
+    if end_point:
+        ax.scatter(s.index[-1], s.values[-1], **end_point_kwargs)
+
     # Apply custom formatting on x and y-axis if specified.
     format_yaxis(ax, ytickfmt)
     format_xaxis(ax, s, xtickfmt)
-    ax.set_xlim(start, end)
+    # Add 3% margin to end point.
+    end_with_buffer = start + 1.03 * (s.index[-1] - s.index[0])
+    ax.set_xlim(start, end_with_buffer)
 
     # Add extra info.
     if title is not None:
@@ -815,6 +852,7 @@ def plot_timeseries(
             ax.legend(**legend)
         else:
             ax.legend()
+    # ax.margins(x=0.02, y=0.05)
     plt.tight_layout()
 
 
@@ -1002,7 +1040,7 @@ def format_yaxis(ax, ytickfmt):
 
     Parameters
     ----------
-    ax: matplotlib Axes, optional
+    ax: matplotlib Axes
         Axes in which to format y-axis tick labels.
     ytickfmt: str
         Format as used by ``str.format()`` for y-axis tick labels.
@@ -1010,6 +1048,27 @@ def format_yaxis(ax, ytickfmt):
     if ytickfmt is not None:
         tick = mpl.ticker.StrMethodFormatter(ytickfmt)
         ax.yaxis.set_major_formatter(tick)
+
+
+def set_n_ticks(ax, n_ticks, axis="y"):
+    """
+    Set number major of ticks for a given axis.
+
+    Parameters
+    ----------
+    ax: matplotlib Axes
+        Axes in which to format y-axis tick labels.
+    n_ticks: int
+        Number of ticks to constrain axis to.
+    axis: ``{'x', 'y'}``, default='y'
+        The axis to apply the changes on.
+    """
+    if axis == "y":
+        ax.yaxis.set_major_locator(plt.MaxNLocator(n_ticks))
+    elif axis == "x":
+        ax.xaxis.set_major_locator(plt.MaxNLocator(n_ticks))
+    else:
+        raise ValueError("axis must be either 'x' or 'y'.")
 
 
 def bollinger_bands(s, window_size, n_std):
@@ -1551,3 +1610,33 @@ def plot_hist(
 
     if mean or median:
         ax.legend()
+
+
+def tights_move():
+    fid = "X:/Jason/Projects/Index Analysis/data_test1.csv"
+    df = pd.read_csv(fid, index_col=0)
+
+    db = Database()
+    db.load_market_data(local=True)
+    ix = db.build_market_index(in_stats_index=True)
+    mv = ix.df.groupby("Ticker", observed=True).sum()["MarketValue"]
+
+    df["Rating"] = np.nan
+    df.loc[
+        (df["NumericRating"] > 0) & (df["NumericRating"] < 8), "Rating"
+    ] = "A"
+    df.loc[
+        (df["NumericRating"] > 7) & (df["NumericRating"] < 11), "Rating"
+    ] = "BBB"
+    df = df.dropna(subset=["NumericRating"]).set_index("Ticker")
+    df = df.join(mv)
+
+    list(df)
+    df["$\Delta$ OAS"] = df["OAS_change"]
+
+    # %%
+    fig, ax = subplots(figsize=(10, 6))
+    sns.scatterplot(
+        x="MarketValue", y="OAS_change", hue="Rating", ax=ax, data=df
+    )
+    plt.show()
