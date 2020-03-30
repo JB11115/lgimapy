@@ -75,8 +75,6 @@ __pycache__/
 data/coupons/
 data/feathers/
 data/
-data/treasury_curve_krd_params.csv
-data/treasury_curves.csv
+reports/
 src/lgimapy/notebooks/
 src/lgimapy.egg-info/
-reports/long_credit_snapshot/
