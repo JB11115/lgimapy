@@ -28,25 +28,18 @@ def combine_error_table(vals, errs, prec=3, latex_format=True):
     df: pd.DataFrame
         DataFrame of values +/- errors.
     """
-
-    def build_error_column(val, err, latex_format, prec):
-        """Combine single column of values & errors with specifed separator."""
-        v_e = []
-        for i, (v, e) in enumerate(zip(val, err)):
-            if latex_format:
-                v_e.append(f"{v:.{prec}f} $\pm$ {abs(e):.{prec}f}")
-            else:
-                v_e.append(f"{v:.{prec}f} ± {abs(e):.{prec}f}")
-        return np.asarray(v_e)
-
     if vals.size != errs.size:
         raise ValueError(
             f"vals size {vals.size} does not match errs {err.size}"
         )
-    df = pd.DataFrame(index=vals.index)
 
+    df = pd.DataFrame(index=vals.index)
+    pm = "$\pm$" if latex_format else "±"
     for col in vals.columns:
-        df[col] = build_error_column(vals[col], errs[col], latex_format, prec)
+        df[col] = [
+            f"{val:.{prec}f} {pm} {abs(error):.{prec}f}"
+            for val, error in zip(vals[col], errs[col])
+        ]
     return df
 
 
@@ -217,30 +210,34 @@ def latex_diverging_bars(
     return divergent_bars
 
 
+# %%
 def latex_table(
     df,
     caption=None,
     table_notes=None,
     col_fmt=None,
     prec=3,
+    align="center",
     adjust=False,
     hide_index=False,
     add_blank_column=False,
+    indent_subindexes=False,
     int_vals=False,
     nan_value="-",
     font_size=None,
     midrule_locs=None,
     specialrule_locs=None,
-    greeks=True,
+    greeks=False,
     multi_row_header=False,
     loc_style=None,
     row_color=None,
     row_font=None,
     col_style=None,
     gradient_cell_col=None,
-    gradient_cell_kwargs=None,
+    gradient_cell_kws=None,
     div_bar_col=None,
-    div_bar_kwargs=None,
+    div_bar_kws=None,
+    center_div_bar_header=True,
     alternating_colors=(None, None),
 ):
     r"""
@@ -263,7 +260,8 @@ def latex_table(
         keys with respective string formatting as values.
 
         * ```prec={col1: ':.1f', col2: ':,.0f', col3: ':.0%'}```
-
+    align: ``{'center', 'left', 'right'}``, default='center'
+        How to horizontally align table.
     adjust: bool, default=False
         If True, fit table to page width, especially usefull for
         tables with many columns.
@@ -271,6 +269,8 @@ def latex_table(
         If True, hide index from printing in LaTeX.
     add_blank_column: bool, default=False
         If True, append a blank column to the right side of the table.
+    indent_subindexes: bool, default=False
+        If ``True``, indent index values beginning with ``~``.
     int_vals: bool, default=True
         If True, remove decimal places for number where
         all trailing values are 0 (e.g., 3.00 --> 3).
@@ -285,7 +285,7 @@ def latex_table(
         Index or list of index values to place a midrule line above.
     specialrule_locs: str or List[str], default=None
         Index or list of index values to place a midrule line above.
-    greeks: bool, default=True
+    greeks: bool, default=False
         If True, convert all instances of greek letters to LaTeX syntax.
     multi_row_header: bool, default=False
         if True, use \\thead to make header column multiple lines.
@@ -316,23 +316,25 @@ def latex_table(
     gradient_cell_col: str or List[str], default=None
         Columns(s) to apply background cell color gradient to based
         on column values.
-    gradient_cell_kwargs: Dict, default=None
+    gradient_cell_kws: Dict, default=None
         Keyword arguments for columns to apply cell gradients on.
         If all columns have the same arguments simply specify
-        ``gradient_cell_kwargs=`Dict[**kwargs]``.  To customize
+        ``gradient_cell_kws=`Dict[**kwargs]``.  To customize
         arguments by column specify
-        ``gradient_cell_kwargs=`Dict[col: Dict[**col_kwargs]``
+        ``gradient_cell_kws=`Dict[col: Dict[**col_kwargs]``
         for each column.
     div_bar_col: str or List[str], default=None
         Columns(s) to apply divergent bar plots to based
         on column values.
-    div_bar_kwargs: Dict, default=None
+    div_bar_kws: Dict, default=None
         Keyword arguments for columns to apply divergent bar plots on.
         If all columns have the same arguments simply specify
-        ``div_bar_kwargs=`Dict[**kwargs]``.  To customize
+        ``div_bar_kws=`Dict[**kwargs]``.  To customize
         arguments by column specify
-        ``div_bar_kwargs=`Dict[col: Dict[**col_kwargs]``
+        ``div_bar_kws=`Dict[col: Dict[**col_kwargs]``
         for each column.
+    center_div_bar_header: bool, default=True
+        If ``True`` automatically center the header for div bar columns.
     alternating_colors: Tuple(str), default=(None, None).
         Color 1 and Color 2 for for alternating row colors.
 
@@ -365,23 +367,24 @@ def latex_table(
 
     # Collect gradient values if needed.
     if gradient_cell_col is not None:
-        gradient_cell_cols = to_list(gradient_cell_col, str)
-        if gradient_cell_kwargs is None:
+        gradient_cell_cols = to_list(gradient_cell_col, dtype=str)
+        if gradient_cell_kws is None:
             # Use default kwargs for making gradients for all columns.
             gradient_cells = {
                 col: latex_color_gradient(df[col]) for col in gradient_cell_cols
             }
         else:
-            if isinstance(list(gradient_cell_kwargs.values())[0], dict):
+            if isinstance(list(gradient_cell_kws.values())[0], dict):
                 # Use column specific kwargs for each columns' gradients.
-                gradient_cells = {
-                    col: latex_color_gradient(df[col], **kwargs)
-                    for col, kwargs in gradient_cell_cols
-                }
+                gradient_cells = {}
+                for col, kws in gradient_cell_kws.items():
+                    kwargs = {"vals": df[col]}
+                    kwargs.update(**kws)
+                    gradient_cells[col] = latex_color_gradient(**kwargs)
             else:
                 # Use single set of kwargs for all column's gradients.
                 gradient_cells = {
-                    col: latex_color_gradient(df[col], **gradient_cell_kwargs)
+                    col: latex_color_gradient(df[col], **gradient_cell_kws)
                     for col in gradient_cell_cols
                 }
     else:
@@ -390,22 +393,22 @@ def latex_table(
     # Collect diverging bar values if needed.
     if div_bar_col is not None:
         div_bar_cols = to_list(div_bar_col, str)
-        if div_bar_kwargs is None:
+        if div_bar_kws is None:
             # Use default kwargs for making divergent bars for all columns.
             div_bars = {
                 col: latex_diverging_bars(df[col]) for col in div_bar_cols
             }
         else:
-            if isinstance(list(div_bar_kwargs.values())[0], dict):
+            if isinstance(list(div_bar_kws.values())[0], dict):
                 # Use column specific kwargs for each columns' div bars.
                 div_bars = {
                     col: latex_diverging_bars(df[col], **kwargs)
-                    for col, kwargs in div_bar_cols
+                    for col, kwargs in div_bar_kws.items()
                 }
             else:
                 # Use single set of kwargs for all column's div bars.
                 div_bars = {
-                    col: latex_diverging_bars(df[col], **div_bar_kwargs)
+                    col: latex_diverging_bars(df[col], **div_bar_kws)
                     for col in div_bar_cols
                 }
     else:
@@ -442,7 +445,15 @@ def latex_table(
         c1 = "" if c1 is None else c1
         c2 = "" if c2 is None else c2
         fout += f"\\rowcolors{{1}}{{{c1}}}{{{c2}}}\n"
-    fout += "\centering\n"
+    if align == "center":
+        fout += "\\centering\n"
+    elif align == "left":
+        fout += "\\raggedright\n"
+    elif align == "right":
+        fout += "\\raggedleft\n"
+    else:
+        raise ValueError("`align` must be 'center', 'left', or 'right'")
+
     if adjust:
         fout += "\\begin{adjustbox}{width =\\textwidth}\n"
 
@@ -481,10 +492,35 @@ def latex_table(
                 for bar, val in zip(bars, df[col].values)
             ]
         # Center column titles.
-        col_map = {
-            col: f"\\multicolumn{{1}}{{c}}{{{col}}}" for col in div_bars.keys()
-        }
-        df.rename(columns=col_map, inplace=True)
+        if center_div_bar_header:
+            col_map = {
+                col: f"\\multicolumn{{1}}{{c}}{{{col}}}"
+                for col in div_bars.keys()
+            }
+            df.rename(columns=col_map, inplace=True)
+
+    # Add indent to index column for sub-indexes if requried.
+    if indent_subindexes:
+        og_ix = list(df.index)
+        final_ix = []
+        for i, ix in enumerate(og_ix):
+            if ix.startswith("~"):
+                try:
+                    if og_ix[i + 1].startswith("~"):
+                        final_ix.append("\hspace{1mm} $\\vdash$ " + ix[1:])
+                    else:
+                        final_ix.append("\hspace{1mm} $\lefthalfcup$ " + ix[1:])
+                except IndexError:
+                    # Last item in table, must be halfcup.
+                    final_ix.append("\hspace{1mm} $\lefthalfcup$ " + ix[1:])
+            else:
+                final_ix.append(ix)
+        df.index = final_ix
+        # Save a map of old to new index values.
+        ix_map = {og: final for og, final in zip(og_ix, final_ix)}
+    else:
+        # Init empty map of old to new index values.
+        ix_map = {}
 
     # Replace improperly formatted values in table.
     repl = {
@@ -528,6 +564,7 @@ def latex_table(
         fmt_str = "\midrule \n"
         midrule_locs = to_list(midrule_locs, str)
         for loc in midrule_locs:
+            loc = ix_map.get(loc, loc)
             if hide_index:
                 n = 0
                 body = fout[fout.find("\\midrule\n") :][9:]
@@ -537,7 +574,7 @@ def latex_table(
                 if loc == "header":
                     match = "\n{}"
                 else:
-                    match = f"\n{loc}"
+                    match = f"\n{loc} "
             ix = fout.find(match)
             if ix != -1:
                 fout = fmt_str.join((fout[: ix + n], fout[ix + n :]))
@@ -547,11 +584,12 @@ def latex_table(
         fmt_str = "\specialrule{2.5pt}{1pt}{1pt} \n"
         specialrule_locs = to_list(specialrule_locs, str)
         for loc in specialrule_locs:
+            loc = ix_map.get(loc, loc)
             if loc == "header":
                 match = "\n{}"
                 n = 1
             else:
-                match = f"\n{loc}"
+                match = f"\n{loc} "
                 n = 1
             ix = fout.find(match)
             if ix != -1:
@@ -563,11 +601,12 @@ def latex_table(
             fmt_str = f"\\rowfont{{{row_fmt}}} \n"
             rows = to_list(rows, str)
             for loc in rows:
+                loc = ix_map.get(loc, loc)
                 if loc == "header":
                     match = "\n{}"
                     n = 1
                 else:
-                    match = f"\n{loc}"
+                    match = f"\n{loc} "
                     n = 1
                 ix = fout.find(match)
                 if ix != -1:
@@ -579,11 +618,12 @@ def latex_table(
             fmt_str = f"\\rowcolor{{{color}}} \n"
             rows = to_list(rows, str)
             for loc in rows:
+                loc = ix_map.get(loc, loc)
                 if loc == "header":
                     match = "\n{}"
                     n = 1
                 else:
-                    match = f"\n{loc}"
+                    match = f"\n{loc} "
                     n = 1
                 ix = fout.find(match)
                 if ix != -1:
