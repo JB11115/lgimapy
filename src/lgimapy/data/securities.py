@@ -20,6 +20,7 @@ from lgimapy.utils import load_json, root
 
 plt.style.use("fivethirtyeight")
 
+
 # %%
 class Bond:
     """
@@ -34,7 +35,7 @@ class Bond:
 
     def __init__(self, s):
         self.s = s
-        self.__dict__.update({k: v for k, v in zip(s.index, s.values)})
+        self.__dict__.update(s.to_dict())
 
     def __repr__(self):
         return (
@@ -155,18 +156,6 @@ class Bond:
     def next_coupon_date(self):
         """datetime: Date of next coupon."""
         return self.cash_flows.index[0]
-
-    # @property
-    # @lru_cache(maxsize=None)
-    # def cash_flows(self):
-    #     """
-    #     ndarray:
-    #         Memoized cash flows to be acquired on
-    #         :attr:`Bond.coupon_dates`.
-    #     """
-    #     cash_flows = self.CouponRate / 2 + np.zeros(len(self.coupon_dates))
-    #     cash_flows[-1] += 100
-    #     return cash_flows
 
     def _ytm_func(self, y, price=None):
         """float: Yield to maturity error function for solver."""
@@ -485,21 +474,12 @@ class TreasuryCurve:
     @property
     @lru_cache(maxsize=None)
     def _curves_df(self):
-        return self._load("treasury_curves")
+        return pd.read_parquet(root("data/treasury_curves.parquet"))
 
     @property
     @lru_cache(maxsize=None)
     def _params_df(self):
-        return self._load("treasury_curve_krd_params")
-
-    def _load(self, fid):
-        """Load data as DataFrame."""
-        return pd.read_csv(
-            root(f"data/{fid}.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )
+        return pd.read_parquet(root("data/treasury_curve_krd_params.parquet"))
 
     def set_date(self, date):
         """Set default date."""
@@ -647,49 +627,11 @@ class TreasuryCurve:
 def main():
     from lgimapy.data import Database
     from lgimapy.utils import Time
-    import matplotlib.pyplot as plt
-
-    plt.style.use("fivethirtyeight")
-    # %matplotlib qt
 
     # %%
-    indexes = load_json("indexes")
-    kwargs = indexes["IG_SIFI_banks"]
-    kwargs["rating"] = ("BBB+", "BBB-")
-
     db = Database()
-    db.load_market_data(start="9/1/2018", local=True)
-    db.load_market_data(start="8/1/2019", local=True)
-    self = Index(db.build_market_index().df)
-
-    # %%
-
-    d = defaultdict(list)
-
-    for ix in bad:
-        cur = self.df.loc[accrued_df.columns[ix], "Currency"].dropna()[0]
-        d[cur].append(ix)
-
-    for key, vals in d.items():
-        if key == "USD":
-            continue
-        print(key)
-        for val in vals:
-            print("    ", accrued_df.columns[val])
-
-    old_sum = np.sum(accrued_mask)
-    old_sum
-    new_sum = np.sum(accrued_diff)
-    new_sum
-
-    self.get_cusip_history("465139RP0")
-
-    accrued_df = self.get_value_history("AccruedInterest")[cols]
-
-    accrued[:, ix]
-
-    # %%
-    db.load_market_data(date="1/5/2011")
-    ix = db.build_market_index(in_stats_index=True)
-
-    ix.df[["CUSIP", "AmountOutstanding"]]
+    db.load_market_data(local=True)
+    ix = db.build_market_index(rating="AAA")
+    bond = ix.bonds[0]
+    bond.MaturityDate
+    bond.OAD
