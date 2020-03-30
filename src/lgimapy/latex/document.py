@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import sys
 from inspect import cleandoc
@@ -194,8 +195,10 @@ class Document:
         font_size=12,
         margin=None,
         margin_unit="cm",
+        bookmarks=False,
         page_numbers=False,
         ignore_bottom_margin=False,
+        bar_size=10,
     ):
         """
         Add preamble with custom specifications.
@@ -217,6 +220,10 @@ class Document:
             *``margin={'top': 1, 'bottom': 0.5, 'left': 0.3, 'right': 0.3}``
         margin_unit: str, default='cm'
             Unit for margin size(s).
+        bookmarks: bool, default=False,
+            If ``True`` automatically create bookmarks for chapters,
+            sections, and subsections. Open the bookmark toolbar
+            by default in PDF readers.
         page_numbers: bool, default=False
             If True include centered page numbers in the footer.
         ignore_bottom_margin: bool, default=False
@@ -235,6 +242,7 @@ class Document:
             )
 
         # Format other options.
+        bookmarks = "\\usepackage[open]{{bookmark}}" if bookmarks else ""
         orient = {"portrait": "", "landscape": ", landscape"}[orientation]
         page_numbers = "" if page_numbers else "\\pagenumbering{gobble}"
         ignore_bmargin = (
@@ -282,6 +290,7 @@ class Document:
             \\documentclass[{font_size}pt]{{article}}
             \\usepackage[{margin}{orient}]{{geometry}}
             \\usepackage[table]{{xcolor}}
+            {bookmarks}
             \\usepackage{{
                 {use_packages}
             }}
@@ -289,7 +298,16 @@ class Document:
 
             \\backgroundsetup{{contents={{}}}}
 
+            %% Define default caption settings for figures and tables.
             \\captionsetup{{
+                justification=raggedright,
+                singlelinecheck=false,
+                font={{footnotesize, bf}},
+                aboveskip=0pt,
+                belowskip=0pt,
+                labelformat=empty
+            }}
+            \\captionsetup[subfigure]{{
                 justification=raggedright,
                 singlelinecheck=false,
                 font={{footnotesize, bf}},
@@ -318,16 +336,18 @@ class Document:
             \\definecolor{{lightgray}}{{gray}}{{0.9}}
             \\definecolor{{steelblue}}{{HTML}}{{0C70D5}}
             \\definecolor{{firebrick}}{{HTML}}{{E85650}}
+            \\definecolor{{orchid}}{{HTML}}{{9A2BE6}}
+            \\definecolor{{orange}}{{HTML}}{{E69A2B}}
 
             %% Define function for perctile bars in tables.
             \\newlength{{\\barw}}
             \\setlength{{\\barw}}{{0.15mm}}
             \\def\\pctbar#1{{%%
-            	{{\\color{{gray}}\\rule{{#1\\barw}}{{10pt}}}} #1\%}}
+            	{{\\color{{gray}}\\rule{{#1\\barw}}{{{bar_size}pt}}}} #1\%}}
 
             %% Define function for divergent bars in tables.
             \\def\\bar#1#2{{%
-            	\\color{{#2}}\\rule{{#1\\barw}}{{10pt}}
+            	\\color{{#2}}\\rule{{#1\\barw}}{{{bar_size}pt}}
             }}
 
             \\def\\divbar#1#2{{%
@@ -490,6 +510,25 @@ class Document:
         fig = latex_figure(fids, **kwargs)
         self.body = "\n\n".join((self.body, fig))
 
+    def add_pagebreak(self):
+        """Add a pagebreak."""
+        self.add_text("\\pagebreak")
+
+    def set_variable(self, var_name, var_val):
+        """
+        Set a value for a variable in LaTeX file denoted
+        by ``~{VARIABLE_NAME}~`` in LaTeX file.
+
+        Parameters
+        ----------
+        var_name: str
+            Name of variable in LaTeX file.
+        var_val: str or scalar
+            Value to set variable equal to.
+        """
+        regex = f"~{{{var_name}}}~"
+        self.body = re.sub(regex, str(var_val), self.body)
+
     @property
     def doc(self):
         """
@@ -511,6 +550,21 @@ class Document:
             ]
         )
 
+    def _delete_temp_files(self, fid):
+        """
+        Delete temporary files created during LaTeX rendering.
+
+        Parameters
+        ----------
+        fid: str
+            Filename with path of saved .pdf file.
+        """
+        for extension in ["aux", "log", "out"]:
+            try:
+                os.remove(f"{fid}.{extension}")
+            except FileNotFoundError:
+                continue
+
     def save_tex(self):
         """Save .tex file of current document."""
         if self._currently_open_edit:
@@ -527,35 +581,39 @@ class Document:
         with open(f"{fid}.tex", "w") as f:
             f.write(self.doc)
 
-    def save(self, save_tex=False):
+    def save(self, fid=None, save_tex=False):
         """
         Save `.tex` file and compile to `.pdf`.
 
         Parameters
         ----------
+        fid: str, optional
+            Filename to save PDF.
         save_tex: bool, default=False
             If True, save `.tex` as well as `.pdf`.
         """
+        fid = self.fid if fid is None else fid
+
         if self._currently_open_edit:
             raise OpenEditError("Cannot save before current edit is completed.")
 
         # Clean file path and move to proper directory.
         if self.path:
             os.chdir(self.path)
-            fid = self.path.joinpath(self.fid)
+            full_fid = self.path.joinpath(fid)
         else:
-            fid = self.fid
+            full_fid = fid
 
         # Save tex file.
         doc = self.doc
-        with open(f"{fid}.tex", "w") as f:
+        with open(f"{full_fid}.tex", "w") as f:
             f.write(doc)
 
         # Documents with transparent images must be compiled twice.
         n = 2 if "\\transparent" in doc else 1
         for _ in range(n):
             subprocess.check_call(
-                ["pdflatex", f"{self.fid}.tex", "-interaction=nonstopmode"],
+                ["pdflatex", f"{fid}.tex", "-interaction=nonstopmode"],
                 shell=False,
                 stderr=subprocess.STDOUT,
                 stdout=subprocess.DEVNULL,
@@ -563,7 +621,18 @@ class Document:
 
         # Clean up temporary files.
         if not save_tex and not self._loaded_file:
-            os.remove(f"{fid}.tex")
-        os.remove(f"{fid}.aux")
-        os.remove(f"{fid}.log")
-        os.remove(f"{fid}.out")
+            os.remove(f"{full_fid}.tex")
+        self._delete_temp_files(full_fid)
+
+    def save_as(self, fid, save_tex=False):
+        """
+        Save `.tex` to new file and compile to `.pdf`.
+
+        Parameters
+        ----------
+        fid: str, optional
+            Filename to save PDF.
+        save_tex: bool, default=False
+            If True, save `.tex` as well as `.pdf`.
+        """
+        self.save(fid, save_tex)
