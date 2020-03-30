@@ -5,11 +5,16 @@ from lgimapy.data import (
     Database,
     update_bloomberg_data,
     update_feathers,
+    update_account_market_values,
+    update_treasury_oad_values,
     update_fed_funds,
     update_trade_dates,
     update_dealer_inventory,
+    save_lgima_sectors,
 )
 from lgimapy.models import update_treasury_curve_dates
+
+# %%
 
 
 def main():
@@ -27,6 +32,12 @@ def main():
     print()
     update_trade_dates(trade_dates)
     print()
+    save_lgima_sectors(trade_dates[-1])
+    print("Updated LGIMA sectors\n")
+    update_treasury_oad_values()
+    print("Updated On-the-run Treasury OADs\n")
+    update_account_market_values()
+    print("Updated Account Market Values\n")
     update_bloomberg_data()
     print("Updated Bloomberg Data\n")
     update_dealer_inventory()
@@ -63,7 +74,7 @@ def check_datamart_quality(dates):
             print("Datamart Quality Confirmed")
             break
         else:
-            print(f"Currently only {n_bonds} populated, waiting...")
+            print(f"Currently only {n_bonds:,.0f} populated, waiting...")
             sleep(30)
             db.load_market_data(date=date)
             ix = db.build_market_index()
