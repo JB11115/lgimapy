@@ -10,6 +10,9 @@ from lgimapy.data import Database
 from lgimapy.utils import mkdir, root
 
 
+# %%
+
+
 def create_feather(fid, all_trade_dates):
     """
     Create feather files for all months in database.
@@ -22,19 +25,18 @@ def create_feather(fid, all_trade_dates):
         List of all dates available in DataMart.
     """
     db = Database()
-    dates = np.array(db.trade_dates)
 
     # Find start and end date for feather.
     year, month = (int(d) for d in fid.split("_"))
     next_month = month + 1 if month != 12 else 1
     next_year = year if month != 12 else year + 1
     try:
-        end_date = dates[
-            dates >= pd.to_datetime(f"{next_month}/1/{next_year}")
-        ][0]
+        start = pd.to_datetime(f"{next_month}/1/{next_year}")
+        end_date = db.trade_dates(start=start)[0]
     except IndexError:
         end_date = all_trade_dates[-1]
-    start_date = dates[dates < pd.to_datetime(f"{month}/1/{year}")][-1]
+    ex_end = pd.to_datetime(f"{month}/1/{year}")
+    start_date = db.trade_dates(exclusive_end=ex_end)[-1]
 
     # Load index, compute MTD excess returns, and save feather.
     db.load_market_data(start=start_date, end=end_date)
@@ -59,7 +61,6 @@ def find_missing_feathers(all_trade_dates):
         List of feather files which are not saved in the
         data directory.
     """
-
     # Compare saved feather files to all feathers that should exist.
     saved_feathers = [
         f.name.strip(".feather")
@@ -69,7 +70,7 @@ def find_missing_feathers(all_trade_dates):
         mkdir(root("data/feathers"))
 
     all_feathers = pd.date_range(
-        "2/1/1998", Database().trade_dates[-1], freq="MS"
+        "2/1/1998", Database().date("today"), freq="MS"
     ).strftime("%Y_%m")
     missing_feathers = [f for f in all_feathers if f not in saved_feathers]
 
