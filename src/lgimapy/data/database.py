@@ -14,7 +14,13 @@ import pandas as pd
 import pyodbc
 
 from lgimapy.bloomberg import get_bloomberg_subsector
-from lgimapy.data import concat_index_dfs, Index, new_issue_mask
+from lgimapy.data import (
+    concat_index_dfs,
+    Index,
+    new_issue_mask,
+    Account,
+    Strategy,
+)
 from lgimapy.utils import (
     dump_json,
     load_json,
@@ -27,6 +33,7 @@ from lgimapy.utils import (
     to_list,
 )
 
+from lgimapy.bloomberg import bdp
 
 # %%
 def clean_dtypes(df):
@@ -108,6 +115,50 @@ def clean_dtypes(df):
     return df.astype(dtype_dict)
 
 
+def convert_sectors_to_fin_flags(sectors):
+    """
+    Convert sectors to flag indicating if they
+    are non-financial (0), financial (1), or other (2).
+
+    Parameters
+    ----------
+    sectors: pd.Series
+        Sectors
+
+    Returns
+    -------
+    fin_flags: nd.array
+        Array of values indicating if sectors are non-financial (0),
+        financial (1), or other (Treasuries, Sovs, Govt owned).
+    """
+
+    financials = {
+        "P&C",
+        "LIFE",
+        "APARTMENT_REITS",
+        "BANKING",
+        "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+        "RETAIL_REITS",
+        "HEALTHCARE_REITS",
+        "OTHER_REITS",
+        "FINANCIAL_OTHER",
+        "FINANCE_COMPANIES",
+        "OFFICE_REITS",
+    }
+    other = {
+        "TREASURIES",
+        "SOVEREIGN",
+        "SUPRANATIONAL",
+        "INDUSTRIAL_OTHER",
+        "GOVERNMENT_GUARANTEE",
+        "OWNED_NO_GUARANTEE",
+    }
+    fin_flags = np.zeros(len(sectors))
+    fin_flags[sectors.isin(financials)] = 1
+    fin_flags[sectors.isin(other)] = 2
+    return fin_flags
+
+
 class Database:
     """
     Class to pull and clean index data from SQL database.
@@ -144,11 +195,41 @@ class Database:
         """List[datetime]: Memoized list of all dates in DataBase."""
         return list(self._trade_date_df.index)
 
-    @property
-    @lru_cache(maxsize=None)
-    def trade_dates(self):
-        """List[datetime]: Memoized list of trade dates."""
+    def trade_dates(
+        self, start=None, end=None, exclusive_start=None, exclusive_end=None
+    ):
+        """
+        List of trade dates in database.
+
+        Parameters
+        ----------
+        start: datetime, optional
+            Inclusive starting date for trade dates.
+        end: datetime, optional
+            Inclusive end date for trade dates.
+        exclusive_start: datetime, optional
+            Exclusive starting date for trade dates.
+        exclusive_end: datetime, optional
+            Exclusive end date for trade dates.
+
+        Returns
+        -------
+        List[datetime]:
+            Trade dates in specified range.
+        """
         trade_dates = self._trade_date_df[self._trade_date_df["holiday"] == 0]
+        if start is not None:
+            trade_dates = trade_dates[trade_dates.index >= to_datetime(start)]
+        if exclusive_start is not None:
+            trade_dates = trade_dates[
+                trade_dates.index > to_datetime(exclusive_start)
+            ]
+        if end is not None:
+            trade_dates = trade_dates[trade_dates.index <= to_datetime(end)]
+        if exclusive_end is not None:
+            trade_dates = trade_dates[
+                trade_dates.index < to_datetime(exclusive_end)
+            ]
         return list(trade_dates.index)
 
     @property
@@ -192,26 +273,30 @@ class Database:
         :func:`nearest_date`
         """
         date_delta = date_delta.upper()
+
+        if date_delta == "PORTFOLIO_START":
+            return pd.to_datetime("8/9/2018")
+
         # Use today as reference date if none is provided,
         # otherwise find closes trading date to reference date.
         if reference_date is None:
-            today = self.trade_dates[-1]
+            today = self.trade_dates()[-1]
         else:
             today = self.nearest_date(reference_date, **kwargs)
 
-        last_trade = partial(bisect_left, self.trade_dates)
+        last_trade = partial(bisect_left, self.trade_dates())
         if date_delta == "TODAY":
             return today
         elif date_delta == "YESTERDAY" or date_delta == "DAILY":
             return self.nearest_date(today, inclusive=False, after=False)
         elif date_delta == "WTD":
-            return self.trade_dates[
+            return self.trade_dates()[
                 last_trade(today - timedelta(today.weekday() + 1)) - 1
             ]
         elif date_delta == "MTD":
-            return self.trade_dates[last_trade(today.replace(day=1)) - 1]
+            return self.trade_dates()[last_trade(today.replace(day=1)) - 1]
         elif date_delta == "YTD":
-            return self.trade_dates[
+            return self.trade_dates()[
                 last_trade(today.replace(month=1, day=1)) - 1
             ]
         else:
@@ -238,6 +323,24 @@ class Database:
                 return self.nearest_date(
                     today - relativedelta(**dt_kwargs), **kwargs
                 )
+
+    def account_values(self):
+        query = f"""
+            SELECT AV.DateKey, AV.MarketValue, DA.BloombergID
+            FROM dbo.AccountValue AV
+            JOIN dbo.DimAccount DA ON AV.AccountKey = DA.AccountKey
+            """
+        df = pd.read_sql(query, self._conn)
+        df["DateKey"] = pd.to_datetime(df["DateKey"], format="%Y%m%d")
+        return (
+            pd.pivot_table(
+                df,
+                values="MarketValue",
+                columns=["BloombergID"],
+                index="DateKey",
+            )
+            / 1e6
+        ).round(6)
 
     @property
     @lru_cache(maxsize=None)
@@ -311,50 +414,7 @@ class Database:
         --------
         :func:`nearest_date`
         """
-        return nearest_date(date, self.trade_dates, **kwargs)
-
-    def _convert_sectors_to_fin_flags(self, sectors):
-        """
-        Convert sectors to flag indicating if they
-        are non-financial (0), financial (1), or other (2).
-
-        Parameters
-        ----------
-        sectors: pd.Series
-            Sectors
-
-        Returns
-        -------
-        fin_flags: nd.array
-            Array of values indicating if sectors are non-financial (0),
-            financial (1), or other (Treasuries, Sovs, Govt owned).
-        """
-
-        financials = {
-            "P&C",
-            "LIFE",
-            "APARTMENT_REITS",
-            "BANKING",
-            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-            "RETAIL_REITS",
-            "HEALTHCARE_REITS",
-            "OTHER_REITS",
-            "FINANCIAL_OTHER",
-            "FINANCE_COMPANIES",
-            "OFFICE_REITS",
-        }
-        other = {
-            "TREASURIES",
-            "SOVEREIGN",
-            "SUPRANATIONAL",
-            "INDUSTRIAL_OTHER",
-            "GOVERNMENT_GUARANTEE",
-            "OWNED_NO_GUARANTEE",
-        }
-        fin_flags = np.zeros(len(sectors))
-        fin_flags[sectors.isin(financials)] = 1
-        fin_flags[sectors.isin(other)] = 2
-        return fin_flags
+        return nearest_date(date, self.trade_dates(), **kwargs)
 
     def _standardize_cusips(self, df):
         """
@@ -441,7 +501,7 @@ class Database:
         """
         # Fix bad column names.
         col_map = {"IndustryClassification4": "Sector", "Price": "CleanPrice"}
-        df.columns = [col_map.get(col, col) for col in df.columns]
+        df.rename(columns=col_map, inplace=True)
 
         # Make flag columns -1 for nonexistent data to
         # mitigate memory usage by allwoing int dtype.
@@ -520,6 +580,12 @@ class Database:
 
         # Fill NaNs for rating categories.
         df[cols] = df[cols].fillna("NR")
+
+        # Add financial flag column.
+        df["FinancialFlag"] = convert_sectors_to_fin_flags(df["Sector"])
+
+        # Add bloomberg subsector.
+        df["Subsector"] = get_bloomberg_subsector(df["CUSIP"].values)
         return clean_dtypes(df)
 
     def _get_numeric_ratings(self, df, cols):
@@ -609,14 +675,19 @@ class Database:
             "HYBRID VARIABLE",
             "DEFAULTED",
         }
-        calltypes = {"NONCALL", "MKWHOLE", "CALL/NR", "CALL/RF", "EUROCAL"}
+        calltypes = {
+            "NONCALL",
+            "MKWHOLE",
+            "CALL/NR",
+            "CALL/RF",
+            "EUROCAL",
+            np.nan,
+        }
         bad_sectors = {
             "STRANDED_UTILITY",
             "GOVERNMENT_SPONSORED",
             "CAR_LOAN",
-            "NON_AGENCY_CMBS",
             "CREDIT_CARD",
-            "AGENCY_CMBS",
             "MTG_NON_PFANDBRIEFE",
             "PFANDBRIEFE_TRADITIONAL_HYPOTHEKEN",
             "PFANDBRIEFE_TRADITIONAL_OEFFENLICHE",
@@ -709,12 +780,6 @@ class Database:
             np.round(df["MaturityYears"] + df["IssueYears"])
         ).astype(int)
 
-        # Add financial flag column.
-        df["FinancialFlag"] = self._convert_sectors_to_fin_flags(df["Sector"])
-
-        # Add bloomberg subsector.
-        df["Subsector"] = get_bloomberg_subsector(df["CUSIP"].values)
-
         # Calculate dirty price.
         df.eval("DirtyPrice = CleanPrice + AccruedInterest", inplace=True)
 
@@ -783,6 +848,7 @@ class Database:
         clean=True,
         ret_df=False,
         local=False,
+        local_file_fmt="feather",
         data=None,
     ):
         """
@@ -834,16 +900,22 @@ class Database:
 
         # Load local feather files if specified.
         if local:
-            # Find correct feather files to load.
-            fmt = "%Y_%m.feather"
-            s = self.trade_dates[-1] if start is None else to_datetime(start)
+            # Find correct local files to load.
+            fmt = f"%Y_%m.{local_file_fmt}"
+            s = self.trade_dates()[-1] if start is None else to_datetime(start)
             start_month = pd.to_datetime(f"{s.month}/1/{s.year}")
-            end = self.trade_dates[-1] if end is None else end
-            feathers = pd.date_range(start_month, end, freq="MS").strftime(fmt)
-            fids = [root(f"data/feathers/{f}") for f in feathers]
+            end = self.trade_dates()[-1] if end is None else end
+            files = pd.date_range(start_month, end, freq="MS").strftime(fmt)
+            fids = [root(f"data/{local_file_fmt}s/{f}") for f in files]
 
             # Load feather files as DataFrames and subset to correct dates.
-            self.df = concat_index_dfs([pd.read_feather(f) for f in fids])
+            read_func = {
+                "feather": pd.read_feather,
+                "parquet": pd.read_parquet,
+            }[local_file_fmt]
+            self.df = clean_dtypes(
+                concat_index_dfs([read_func(f) for f in fids])
+            )
             self.df = self.df[
                 (self.df["Date"] >= to_datetime(s))
                 & (self.df["Date"] <= to_datetime(end))
@@ -856,7 +928,7 @@ class Database:
 
         # Use day count if start is integer.
         if isinstance(start, int):
-            start = self.trade_dates[-start].strftime("%m/%d/%Y")
+            start = self.trade_dates()[-start].strftime("%m/%d/%Y")
             end = start
         else:
             # Format input dates for SQL query.
@@ -868,7 +940,7 @@ class Database:
             end = None if end is None else to_datetime(end).strftime("%m/%d/%Y")
 
         # Perform SQL query.
-        yesterday = self.trade_dates[-1].strftime("%m/%d/%Y")
+        yesterday = self.trade_dates()[-1].strftime("%m/%d/%Y")
         sql = "exec [LGIMADatamart].[dbo].[sp_AFI_Get_SecurityAnalytics] {}"
         if start is None and end is None:
             query = sql.format(f"'{yesterday}', '{yesterday}'")
@@ -883,7 +955,6 @@ class Database:
 
         # Load data into a DataFrame form SQL in chunks to
         # reduce memory usage, cleaning them on the fly.
-
         df_chunk = pd.read_sql(query, self._conn, chunksize=50_000)
         chunk_list = []
         for chunk in df_chunk:
@@ -1194,7 +1265,10 @@ class Database:
                 # Single rating value.
                 rating = (self._ratings[rating], self._ratings[rating])
         else:
-            rating = (self._ratings[rating[0]], self._ratings[rating[1]])
+            rating = (
+                self._ratings[str(rating[0])],
+                self._ratings[str(rating[1])],
+            )
 
         # Convert all category constraints to lists.
         currency = to_list(currency, dtype=str, sort=True)
@@ -1376,8 +1450,7 @@ class Database:
 
         return Index(df, name, index_constraints)
 
-    @staticmethod
-    def _preprocess_portfolio_data(df):
+    def _preprocess_portfolio_data(self, df):
         """
         Convert dtypes for columns from SQL Portfolio DataFrame
         and correct column names.
@@ -1392,8 +1465,16 @@ class Database:
         pd.DataFrame
             DataFrame with correct column dtypes and names.
         """
+        # Drop bonds with no CUSIP.
+        # These are placeholders for potential future
+        # Money market accounts
+        df = df[~df["CUSIP"].isna()].copy()
+
         # Fix bad column names.
         col_map = {
+            "Maturity": "MaturityDate",
+            "Seniority": "CollateralType",
+            "Country": "CountryOfRisk",
             "PMV": "P_Weight",
             "PMV INDEX": "BM_Weight",
             "PMV VAR": "Weight_Diff",
@@ -1420,32 +1501,89 @@ class Database:
             "MKT_VAL": "StrategyMarketValue",
         }
         df.columns = [col_map.get(col, col) for col in df.columns]
-        df["Date"] = pd.to_datetime(df["Date"], format="%Y-%m-%d")
-        return clean_dtypes(df)
+
+        # Map collateral types to standard values.
+        equiv_ranks = {
+            "UNSECURED": ["BONDS", "SR UNSECURED", "NOTES", "COMPANY GUARNT"],
+            "SECURED": ["SR SECURED"],
+            "1ST MORTGAGE": ["1ST REF MORT", "GENL REF MORT"],
+        }
+        for key, val in equiv_ranks.items():
+            df.loc[df["CollateralType"].isin(val), "CollateralType"] = key
+
+        # Fix Charter having the old Time Warner Cable ticker.
+        df.loc[df["Ticker"] == "TWC", "Ticker"] = "CHTR"
+
+        # Convert date columns to datetime dtype.
+        for col in ["Date", "MaturityDate"]:
+            df[col] = pd.to_datetime(
+                df[col], format="%Y-%m-%d", errors="coerce"
+            )
+
+        # Add commonly used columns.
+        df["NumericRating"] = df["Idx_Rtg"].map(self._ratings)
+        df["FinancialFlag"] = convert_sectors_to_fin_flags(df["Sector"])
+        df["Subsector"] = get_bloomberg_subsector(df["CUSIP"])
+        day = "timedelta64[D]"
+        df["MaturityYears"] = (df["MaturityDate"] - df["Date"]).astype(
+            day
+        ) / 365
+        return clean_dtypes(df).drop_duplicates(
+            subset=["Date", "CUSIP", "Account"]
+        )
 
     def load_portfolio(
         self,
         date=None,
         start=None,
         end=None,
-        accounts=None,
+        name=None,
+        account=None,
         strategy=None,
         manager=None,
         universe="returns",
         drop_cash=True,
         drop_treasuries=True,
-        market_cols=None,
+        market_cols=True,
+        ret_df=False,
+        get_mv=False,
     ):
         """
-        Load market data from SQL server. If end is not specified
+        Load portfolio data from SQL server. If end is not specified
         data is scraped through previous day. If neither start nor
         end are given only the data from previous day is scraped.
-        Optionally load from local compressed format for increased
-        performance or feed a DataFrame directly.
+
+        Parameters
+        ----------
+        date: datetime, optional
+            Single date to scrape.
+        start: datetime, optional
+            Starting date for scrape.
+        end: datetime, optional
+            Ending date for scrape.
+        name: str, optional
+            Name for returned portfolio.
+        account: str or List[str], optional
+            Account(s) to include in scrape.
+        strategy: str or List[str], optional
+            Strategy(s) to include in scrape.
+        manager: str or List[str], optional
+            Manager(s) to include in scrape.
+        universe: ``{'stats', 'returns'}``, default='returns'
+            Benchmark universe to compare current holdings to.
+        market_cols: str, List[str], or bool, default=True
+            Column(s) of CUSIP level market data
+            (e.g., OAS, TRet, XSRet) to include in returned result.
+            If ``True``, return all available market columns.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Portfolio history over specified date range.
         """
         # Format dates for SQL call.
         fmt = "%Y%m%d"
-        current_date = self.trade_dates[-1].strftime(fmt)
+        current_date = self.trade_dates()[-1].strftime(fmt)
         if date is not None:
             start = end = date
         start = (
@@ -1454,26 +1592,17 @@ class Database:
         end = current_date if end is None else to_datetime(end).strftime(fmt)
 
         # Convert inputs for SQL call.
-        if accounts is None:
-            accounts = "NULL"
+        if account is None:
+            account = "NULL"
         else:
-            acnts = to_list(accounts, dtype=str)
-            accounts = f"'{','.join(acnts) if len(acnts) > 1 else acnts[0]}'"
+            acnts = to_list(account, dtype=str)
+            account = f"'{','.join(acnts) if len(acnts) > 1 else acnts[0]}'"
 
         strategy = "NULL" if strategy is None else f"'{strategy}'"
         manager = "NULL" if manager is None else f"'{manager}'"
         universe = {"stats": "statistics"}.get(universe.lower(), universe)
         universe = f"'{universe.title()}'"
-        inputs = [
-            start,
-            strategy,
-            accounts,
-            manager,
-            "NULL",
-            universe,
-            "1",
-            end,
-        ]
+        inputs = [start, strategy, account, manager, "NULL", universe, "1", end]
 
         # Build SQL calls using stored procedure.
         sql_base = f"exec LGIMADatamart.[dbo].[sp_AFI_GetPortfolioAnalytics] "
@@ -1482,28 +1611,13 @@ class Database:
         sql_both = ", ".join(inputs)
 
         # # Query SQL.
-        # bm_df = pd.read_sql(sql_base + sql_benchmark, self._conn)
-        # p_df = pd.read_sql(sql_base + sql_portfolio, self._conn)
         df = pd.read_sql(sql_base + sql_both, self._conn)
         df = self._preprocess_portfolio_data(df)
         if not len(df):
             raise ValueError("No data for specified date.")
 
-        # Fix dtypes.
-        df["Date"] = pd.to_datetime(df["Date"])
-
-        # Drop cash and treasuries if needed.
-        bad_sectors = []
-        if drop_cash:
-            bad_sectors.append("CASH")
-        if drop_treasuries:
-            bad_sectors.append("TREASURIES")
-        if bad_sectors:
-            df = df[~df["Sector"].isin(set(bad_sectors))].copy()
-
         if market_cols is None:
-            return df.sort_values(["Date", "Ticker"])
-
+            df.sort_values(["Date", "Account", "Ticker"], inplace=True)
         else:
             # Get market data, loading if required.
             if (
@@ -1512,7 +1626,9 @@ class Database:
                 or to_datetime(end) > self._loaded_dates[-1]
             ):
                 self.load_market_data(start=start, end=end, local=True)
-            market_df = self.build_market_index(start=start, end=end).df
+            market_df = self.build_market_index(
+                start=start, end=end, drop_treasuries=False
+            ).df
 
             # Subset columns to append to portfolio data.
             if market_cols is True:
@@ -1523,12 +1639,42 @@ class Database:
             market_cols.extend(ix)
 
             # Combine market data to portfolio data.
-            return (
+            df = (
                 df.set_index(ix)
                 .join(market_df[market_cols].set_index(ix), on=ix)
                 .reset_index()
-                .sort_values(["Date", "Ticker"])
+                .sort_values(["Date", "Account", "Ticker"])
             )
+
+        # Return correct class.
+        if start == end:
+            date = pd.to_datetime(start).strftime("%Y-%m-%d")
+            lgima_sectors = load_json(f"lgima_sector_maps/{date}")
+            df["LGIMASector"] = df["CUSIP"].map(lgima_sectors)
+            lgima_top_sectors = load_json(f"lgima_top_level_sector_maps/{date}")
+            df["LGIMATopLevelSector"] = df["CUSIP"].map(lgima_top_sectors)
+
+        if get_mv:
+            missing_ix = df["AmountOutstanding"].isna()
+            cusips = set(df.loc[missing_ix, "CUSIP"])
+            mv = bdp(cusips, "Corp", "AMT_OUTSTANDING").squeeze() / 1e6
+            cusip_mv = df.loc[missing_ix, "CUSIP"].map(mv.to_dict())
+            df.loc[missing_ix, "AmountOutstanding"] = cusip_mv
+
+        if ret_df:
+            return df
+        if start == end:
+            if strategy != "NULL":
+                return Strategy(df, name=strategy.strip("'"), date=start)
+            elif account != "NULL":
+                if len(acnts) == 1:
+                    return Account(df, account.strip("'"), date=start)
+                else:
+                    return Strategy(df, account, date=start)
+            else:
+                return df
+        else:
+            return df
 
     def update_portfolio_account_data(self):
         # Load SQL table.
@@ -1720,33 +1866,32 @@ class Database:
             s = s[s <= to_datetime(end)]
         return s
 
+    def strategy_fid(self, strategy):
+        repl = {" ": "_", "/": "_", "%": "pct"}
+        return replace_multiple(strategy, repl)
+
+    def ticker_overweights(self, strategy, ticker, start=None, end=None):
+        tickers = to_list(ticker, str)
+        fid = f"{self.strategy_fid(strategy)}_tickers.parquet"
+        dir_name = root("data/strategy_overweights")
+        df = pd.read_parquet(dir_name / fid)
+        if start:
+            df = df[df.index >= to_datetime(start)]
+        if end:
+            df = df[df.index <= to_datetime(end)]
+        return df[tickers].squeeze()
+
     # %%
     def main():
         pass
         # %%
-        to_list(["b", "a"], sort=True)
-        to_list([], sort=True)
-
-        from fasteners import InterProcessLock
         from lgimapy import vis
         from lgimapy.utils import Time, load_json, dump_json
+        from lgimapy.bloomberg import bdp
+
+        self = Database()
 
         vis.style()
-        kwargs = load_json("indexes")
-        db = Database()
-
-        db.load_market_data(local=False)
-        ix = db.build_market_index(financial_flag=2)
-
-        len(ix.df)
-
-        # %%
-        n_digits_in_fid = 18
-        max_val = int(10 ** n_digits_in_fid - 1)
-        fid_val = np.random.randint(0, max_val, int(1e6), dtype="int64")
-        pad_vals = [str(v).zfill(n_digits_in_fid) for v in fid_val]
-        d = {v: v for v in pad_vals}
-        dump_json(d, "temp")
-
-        load = load_json("temp")
-        dump_json(load, "temp")
+        strat = "US Credit"
+        df = self.ticker_overweights(strat, ["F", "OXY", "KHC"])
+        vis.show()
