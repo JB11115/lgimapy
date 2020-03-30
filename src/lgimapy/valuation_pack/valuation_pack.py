@@ -26,8 +26,8 @@ def main():
     update_market_review(fid)
     update_macro_indicators(fid)
     doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
-    doc.save()
-    os.remove(dst)
+    doc.save(save_tex=True)
+    # os.remove(dst)
 
 
 if __name__ == "__main__":
