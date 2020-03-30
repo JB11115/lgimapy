@@ -32,7 +32,7 @@ def update_macro_indicators(fid, plot=True):
         adjust=True,
         col_fmt="lcr",
         gradient_cell_col="Deviation",
-        gradient_cell_kwargs={"vmin": -4, "vmax": 4},
+        gradient_cell_kws={"vmin": -4, "vmax": 4},
     )
     doc.add_text("\\vskip1em")
     doc.add_table(
@@ -41,7 +41,7 @@ def update_macro_indicators(fid, plot=True):
         adjust=True,
         col_fmt="lcr",
         gradient_cell_col="Deviation",
-        gradient_cell_kwargs={"vmin": -4, "vmax": 4},
+        gradient_cell_kws={"vmin": -4, "vmax": 4},
     )
     doc.end_edit()
     doc.save_tex()
