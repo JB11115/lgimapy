@@ -82,7 +82,7 @@ class TreasuryCurveBuilder:
             self.date = ix.dates[0]
             self._all_bonds = self._preprocess_bonds()
         else:
-            # Load parameters from csv file.
+            # Load parameters from parquet file.
             self.date = pd.to_datetime(date)
             self.curve = self._curves_df.loc[self.date, :]
 
@@ -93,7 +93,7 @@ class TreasuryCurveBuilder:
         else:
             if self._trade_dates:
                 # File exists.
-                dates = list(Database().trade_dates)
+                dates = list(Database().trade_dates())
                 yesterday = dates[dates.index(self.date) - 1]
                 self._yesterday_curve = TreasuryCurve(date=yesterday)
             else:
@@ -133,12 +133,7 @@ class TreasuryCurveBuilder:
         return a blank DataFrame.
         """
         try:
-            return pd.read_csv(
-                root(f"data/{fid}.csv"),
-                index_col=0,
-                parse_dates=True,
-                infer_datetime_format=True,
-            )
+            return pd.read_parquet(root(f"data/{fid}.parquet"))
         except FileNotFoundError:
             return pd.DataFrame()
 
@@ -510,9 +505,9 @@ class TreasuryCurveBuilder:
 
     def save(self):
         """
-        Save treasury curve values to `data/treasury_curves.csv`
+        Save treasury curve values to `data/treasury_curves.parquet`
         and save key rate durations, coupons, and total returns to
-        `data/treasury_curve_krd_params.csv`.
+        `data/treasury_curve_krd_params.parquet`.
         """
         # Get treasury curve parameters.
         warnings.simplefilter(action="ignore", category=RuntimeWarning)
@@ -527,7 +522,7 @@ class TreasuryCurveBuilder:
 
         # Create single row to append to curves DataFrame.
         new_row = pd.DataFrame(self.curve).T
-        fid = root("data/treasury_curves.csv")
+        fid = root("data/treasury_curves.parquet")
         if len(self._curves_df):
             # File exists, append to it and sort.
             df = self._curves_df.copy()
@@ -537,16 +532,17 @@ class TreasuryCurveBuilder:
             if df.index[-1] != np.max(df.index):
                 # Date added is not last date in file, sort file.
                 df.sort_index(inplace=True)
-            df.to_csv(fid)
+            df.columns = df.columns.astype(str)
+            df.to_parquet(fid)
         else:
-            # Create csv with first row.
-            new_row.to_csv(fid)
+            # Create parquet with first row.
+            new_row.to_parquet(fid)
 
         # Create single row to append to KRD params DataFrame.
         row_vals = np.concatenate([krds, coupons, trets])
         cols = [*self._KRD_cols, *self._coupon_cols, *self._tret_cols]
         new_row = pd.DataFrame(row_vals, index=cols, columns=[self.date]).T
-        fid = root("data/treasury_curve_krd_params.csv")
+        fid = root("data/treasury_curve_krd_params.parquet")
         if len(self._params_df):
             # File exists, append to it and sort.
             df = self._params_df.copy()
@@ -555,10 +551,10 @@ class TreasuryCurveBuilder:
             if df.index[-1] != np.max(df.index):
                 # Date added is not last date in file, sort file.
                 df.sort_index(inplace=True)
-            df[cols].to_csv(fid)
+            df[cols].to_parquet(fid)
         else:
-            # Create csv with first row.
-            new_row.to_csv(fid)
+            # Create parquet with first row.
+            new_row.to_parquet(fid)
 
         # Save figure.
         fig_dir = root("data/treasury_curves")
@@ -808,7 +804,7 @@ class TreasuryCurveBuilder:
 
 def update_treasury_curve_dates(dates=None, verbose=True):
     """
-    Update `.data/treasury_curve_params.csv` file
+    Update `.data/treasury_curve_params.parquet` file
     with most recent data.
 
     Parameters
@@ -884,8 +880,8 @@ def update_specific_date(specified_date, plot=True, **kwargs):
 
     # Find date and next date.
     month, day, year = (int(x) for x in specified_date.split("/"))
-    date_ix = list(tc.trade_dates).index(pd.to_datetime(specified_date))
-    next_date = tc.trade_dates[date_ix + 1]
+    date_ix = list(tc.trade_dates()).index(pd.to_datetime(specified_date))
+    next_date = tc.trade_dates()[date_ix + 1]
 
     # Fit curve for both days.
     db.load_market_data(date=specified_date)
@@ -908,8 +904,7 @@ def update_specific_date(specified_date, plot=True, **kwargs):
         next_year = year + 1 if month == 12 else year
         start = pd.to_datetime(f"{month}/1/{year}")
         end = pd.to_datetime(f"{next_month}/1/{next_year}")
-        dates = tc.trade_dates
-        dates = [d for d in dates if start <= d < end]
+        dates = tc.trade_dates(start=start, exclusive_end=end)
 
         t = np.linspace(0, 30, 400)
         sns.set_palette("viridis_r", len(dates))
