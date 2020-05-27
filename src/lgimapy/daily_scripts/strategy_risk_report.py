@@ -28,6 +28,9 @@ def main():
     ).sort_values(ascending=False)
     # strat_df.head(10)
 
+    universe = "stats"
+    universe = "returns"
+
     strategies = [
         "US Long Credit",
         "US Long Corporate",
@@ -55,6 +58,8 @@ def main():
     ]
     # %%
     fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
+    if universe == "stats":
+        fid = f"{fid}_stats"
     # fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q1_2020"
     doc = Document(fid, path=pdf_path, fig_dir=True)
     doc.add_preamble(margin=1, bookmarks=True, bar_size=7)
@@ -63,7 +68,9 @@ def main():
 
     for strategy in tqdm(strategies):
         res.append(
-            get_single_latex_risk_page(strategy, date, prev_date, pdf_path)
+            get_single_latex_risk_page(
+                strategy, date, prev_date, pdf_path, universe
+            )
         )
 
     df = (
@@ -94,7 +101,7 @@ def main():
 
 
 def get_single_latex_risk_page(
-    strategy, date, prev_date, pdf_path, n_table_rows=10
+    strategy, date, prev_date, pdf_path, universe="returns", n_table_rows=10
 ):
 
     GC_strategies = {
@@ -106,8 +113,12 @@ def get_single_latex_risk_page(
     is_GC_strategy = strategy in GC_strategies
 
     db = Database()
-    curr_strat = db.load_portfolio(strategy=strategy, date=date)
-    prev_strat = db.load_portfolio(strategy=strategy, date=prev_date)
+    curr_strat = db.load_portfolio(
+        strategy=strategy, date=date, universe=universe
+    )
+    prev_strat = db.load_portfolio(
+        strategy=strategy, date=prev_date, universe=universe
+    )
     date_fmt = date.strftime("%#m/%#d")
     prev_date_fmt = prev_date.strftime("%#m/%#d")
 
