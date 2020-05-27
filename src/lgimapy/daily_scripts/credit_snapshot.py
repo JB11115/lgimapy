@@ -16,14 +16,38 @@ from lgimapy.utils import load_json, mkdir, root, Time
 # %%
 
 
-def make_credit_snapshots():
+def make_credit_snapshots(date=None):
     """Build credit snapshots and sitch them together."""
-    date = None
     indexes = ["US_IG", "US_IG_10+"]
     for index in indexes:
         build_credit_snapshot(
             index, date=date, include_portfolio_positions=True
         )
+
+
+def update_credit_snapshots():
+    """
+    Create all .csv files for past month if they do
+    not exist.
+    """
+    db = Database()
+    trade_dates = db.trade_dates(start=db.date("1m"))
+    indexes = ["US_IG", "US_IG_10+"]
+    for index in indexes:
+        # Find dates with missing .csv files for index.
+        fid = SnapshotConfig(index).fid
+        saved_fids = root("data/credit_snapshots").glob(f"*_{fid}*.csv")
+        saved_dates = [fid.stem.split("_")[0] for fid in saved_fids]
+        missing_dates = [
+            date
+            for date in trade_dates
+            if date.strftime("%Y-%m-%d") not in saved_dates
+        ]
+        # Build .csv file for each missing date.
+        for date in missing_dates:
+            build_credit_snapshot(
+                index, date=date, include_portfolio_positions=True, pdf=False
+            )
 
 
 class SnapshotConfig:
@@ -91,7 +115,9 @@ class SnapshotConfig:
         }[self.index]
 
 
-def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
+def build_credit_snapshot(
+    index, date=None, pdf=True, include_portfolio_positions=True
+):
     """
     Create snapshot for respective index.
 
@@ -99,15 +125,21 @@ def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
     ----------
     index: ``{'US_IG_10+', 'US_IG', 'US_HY'}``
         Index to build snapshot for.
+    date: datetime, optional
+        Date of close to build snapshot for, by default the
+        most recent trade date.
+    pdf: bool, default=True
+        Whether to save a pdf.
     include_portfolio_positions: bool
         If ``True`` include a column for current portfolio
         positions in resepective index.
     """
     # Define filename and directories to save data.
-    actual_date = dt.today() if date is None else pd.to_datetime(date)
+    db = Database()
+    today = db.date("today") if date is None else pd.to_datetime(date)
     config = SnapshotConfig(index)
 
-    fid = f"{actual_date.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
+    fid = f"{today.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
     csv_path = root("data/credit_snapshots")
     pdf_path = root("reports/credit_snapshots")
     mkdir(csv_path)
@@ -152,7 +184,6 @@ def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
         "~US_REGIONAL_BANKS",
         "~YANKEE_BANKS",
         "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-        "FINANCE_COMPANIES",
         "LIFE",
         "P&C",
         "REITS",
@@ -171,8 +202,6 @@ def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
 
     # Find dates for daily, week, month, and year to date calculations.
     # Store dates not to be used in table with a `~` before them.
-    db = Database()
-    today = db.date("today") if date is None else actual_date
     dates_dict = {
         "~today": today,
         "~6m": db.date("6m", today),
@@ -222,6 +251,9 @@ def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
     table_df.to_csv(csv_path / f"{fid}.csv")
     table_df = pd.read_csv(csv_path / f"{fid}.csv", index_col=0)
 
+    if not pdf:
+        return
+
     # Make table captions.
     dates_fmt = [f"Close: {dates_dict['~today'].strftime('%m/%d/%Y')}"]
     dates_fmt += [
@@ -241,7 +273,6 @@ def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
         f"IG Sectors  \hspace{{9.2cm}} \\normalfont{{{colors_key}}}",
     ]
 
-    # %%
     # Create daily snapshot tables and save to pdf.
     doc = Document(fid, path=pdf_path)
     doc.add_preamble(
@@ -263,7 +294,6 @@ def build_credit_snapshot(index, date=None, include_portfolio_positions=True):
             )
         )
     doc.save()
-    # %%
 
 
 def make_table(full_df, sectors, caption, ix_kwargs, include_overweights):
@@ -327,7 +357,6 @@ def make_table(full_df, sectors, caption, ix_kwargs, include_overweights):
         "Transportation",
         "Banks",
         "Brokers/Asset Mngr",
-        "Fin. Companies",
         "Life",
         "REITs",
         "Gov Owned, No Guar",
@@ -526,5 +555,8 @@ def convert_sectors_to_fin_flags(sectors):
 
 
 if __name__ == "__main__":
+    # date = "3/31/2020"
+    date = None
     with Time():
         make_credit_snapshots()
+        update_credit_snapshots()
