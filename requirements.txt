@@ -5,8 +5,8 @@ Babel==2.7.0
 backcall==0.1.0
 black==19.3b0
 bleach==3.1.0
-blpapi==3.13.1
-Bottleneck==1.2.1
+# blpapi==3.13.1
+# Bottleneck==1.2.1
 certifi==2019.6.16
 cffi==1.12.3
 chardet==3.0.4
@@ -45,7 +45,7 @@ joblib==0.13.2
 jupyter-client==5.3.1
 jupyter-core==4.5.0
 kiwisolver==1.1.0
--e git+https://gogs.btprod.openshift.inv.adroot.lgim.com/JB11115/lgimapy.git@eff29505f3a8c65da2027ac3fffbb8919cc246e5#egg=lgimapy
+# -e git+https://gogs.btprod.openshift.inv.adroot.lgim.com/JB11115/lgimapy.git@eff29505f3a8c65da2027ac3fffbb8919cc246e5#egg=lgimapy
 MarkupSafe==1.1.1
 matplotlib==3.1.1
 mkl==2019.0
@@ -79,7 +79,7 @@ prompt-toolkit==2.0.9
 purepng==0.2.0
 pyarrow==0.13.0
 PyAutoGUI==0.9.48
-pybbg==1.0.0
+# pybbg==1.0.0
 pycparser==2.19
 PyGetWindow==0.0.7
 Pygments==2.2.0
@@ -105,7 +105,7 @@ rinoh-typeface-texgyrecursor==0.1.1
 rinoh-typeface-texgyreheros==0.1.1
 rinoh-typeface-texgyrepagella==0.1.1
 rinohtype==0.3.1
-rpy2==2.9.3
+# rpy2==2.9.3
 scikit-learn==0.21.3
 scipy==1.2.1
 scs==2.1.0
