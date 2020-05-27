@@ -141,7 +141,7 @@
     },
     "USD_TW": {
         "NAME": "USD Trade Weighted",
-        "PRICE": "USTWBROA Index"
+        "PRICE": "USTWBGD Index"
     },
     "EURUSD": {
         "NAME": "EURUSD",
@@ -512,7 +512,7 @@
     "EU_IG_1-3": {
         "NAME": "EU IG Credit 1-3 yr",
         "OAS": "LECEOAS Index",
-        "TRET": "LECETRUU Index",
+        "TRET": "LECETREU Index",
         "XSRET": "LECEER Index",
         "YTW": "LECEYW Index"
     },
@@ -645,7 +645,7 @@
     "GBP_CORP": {
         "NAME": "GBP Corp",
         "OAS": "LC61OAS Index",
-        "TRET": "LC61TRUU Index",
+        "TRET": "LC61TRGU Index",
         "XSRET": "LC61ER Index",
         "YTW": "LC61YW Index"
     },
