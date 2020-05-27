@@ -74,7 +74,6 @@ __pycache__/
 ##############
 data/coupons/
 data/feathers/
-data/
 latex/
 reports/
 src/lgimapy/notebooks/
