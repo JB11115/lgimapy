@@ -251,12 +251,15 @@ def update_bbb_a_ratios(fig_dir, ix_d):
         ),
     }
     df = pd.concat(
-        [ix.market_value_weight("OAS").rename(key) for key, ix in ixs.items()],
+        [ix.market_value_median("OAS").rename(key) for key, ix in ixs.items()],
         axis=1,
         sort=True,
     ).dropna(how="any")
     df["10 yr"] = df["10_BBB"] / df["10_A"]
     df["30 yr"] = df["30_BBB"] / df["30_A"]
+
+    # df.to_csv('Nonfin_BBB_A_rato.csv')
+
     # Plot
     fig, ax_left = vis.subplots(figsize=(9, 6))
     ax_right = ax_left.twinx()
@@ -286,7 +289,7 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     vis.set_percentile_limits([df["10 yr"], df["30 yr"]], [ax_left, ax_right])
     ax_right.legend()
     plt.tight_layout()
-    vis.savefig(fig_dir / "BBB_A_nonfin_ratio")
+    vis.savefig(fig_dir / "BBB_A_nonfin_ratio_ex_energy")
     vis.close()
 
 
