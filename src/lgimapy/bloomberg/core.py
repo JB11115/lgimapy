@@ -9,6 +9,53 @@ import pybbg
 from lgimapy.utils import to_list
 
 
+class BBGInputConverter:
+    """
+    Convert inputs from ``lgimapy`` to be used
+    by ``pybbg`` library.
+    """
+
+    def __init__(self, securities, yellow_key, fields, start=None, end=None):
+        self.securities = to_list(securities, dtype=str)
+        self.yellow_key = yellow_key
+        self.fields = to_list(fields, dtype=str)
+
+        self._datefmt = "%Y%m%d"
+        self._start = start
+        self._end = end
+
+    @property
+    def start(self):
+        return (
+            None
+            if self._start is None
+            else pd.to_datetime(self._start).strftime(self._datefmt)
+        )
+
+    @property
+    def end(self):
+        return (
+            dt.today().strftime(self._datefmt)
+            if self._end is None
+            else pd.to_datetime(self._end).strftime(self._datefmt)
+        )
+
+    @property
+    def tickers(self):
+        if isinstance(self.yellow_key, str):
+            return [
+                f"{security} {self.yellow_key}" for security in self.securities
+            ]
+        elif isinstance(self.yellow_key, Iterable):
+            return [
+                f"{s} {yk}" for s, yk in zip(self.securities, self.yellow_key)
+            ]
+        else:
+            raise ValueError(
+                f"{type(self.yellow_key)} is not valid for `yellow_key`."
+            )
+
+
 def bdh(securities, yellow_key, fields, start, end=None, ovrd=None):
     """
     Retrieve Bloomberg Data History (BDH) query results.
@@ -41,32 +88,22 @@ def bdh(securities, yellow_key, fields, start, end=None, ovrd=None):
         * If both multiple fields and securities are provided,
             a multi-index header column is used.
     """
-    # Convert inputs for pybbg.
-    securities = to_list(securities, dtype=str)
-    fields = to_list(fields, dtype=str)
-    if isinstance(yellow_key, str):
-        tickers = [f"{security} {yellow_key}" for security in securities]
-    elif isinstance(yellow_key, Iterable):
-        tickers = [f"{s} {yk}" for s, yk in zip(securities, yellow_key)]
-    else:
-        raise ValueError(f"{type(yellow_key)} is not valid for `yellow_key`.")
-
-    start = pd.to_datetime(start).strftime("%Y%m%d")
-    end = dt.today() if end is None else pd.to_datetime(end)
-    end = end.strftime("%Y%m%d")
+    args = BBGInputConverter(securities, yellow_key, fields, start, end)
 
     # Scrape from Bloomberg.
     warnings.simplefilter(action="ignore", category=UserWarning)
     bbg = pybbg.Pybbg()
-    df = bbg.bdh(tickers, fields, start, end, overrides=ovrd)
+    df = bbg.bdh(
+        args.tickers, args.fields, args.start, args.end, overrides=ovrd
+    )
     bbg.session.stop()
     warnings.simplefilter(action="default", category=UserWarning)
 
     # Format DataFrame.
-    if len(securities) == 1:
-        df.columns = fields
-    elif len(fields) == 1:
-        df.columns = securities
+    if len(args.securities) == 1:
+        df.columns = args.fields
+    elif len(args.fields) == 1:
+        df.columns = args.securities
     return df
 
 
@@ -90,26 +127,18 @@ def bdp(securities, yellow_key, fields, ovrd=None):
     df: pd.DataFrame
         DataFrame with security index and field columns.
     """
-    # Convert inputs for pybbg.
-    securities = to_list(securities, dtype=str)
-    fields = to_list(fields, dtype=str)
-    if isinstance(yellow_key, str):
-        tickers = [f"{security} {yellow_key}" for security in securities]
-    elif isinstance(yellow_key, Iterable):
-        tickers = [f"{s} {yk}" for s, yk in zip(securities, yellow_key)]
-    else:
-        raise ValueError(f"{type(yellow_key)} is not valid for `yellow_key`.")
+    args = BBGInputConverter(securities, yellow_key, fields)
 
     # Scrape from Bloomberg.
     warnings.simplefilter(action="ignore", category=UserWarning)
     bbg = pybbg.Pybbg()
-    df = bbg.bdp(tickers, fields, overrides=ovrd).T
+    df = bbg.bdp(args.tickers, args.fields, overrides=ovrd).T
     bbg.session.stop()
     warnings.simplefilter(action="default", category=UserWarning)
 
     # Format DataFrame.
-    df.index = [re.sub(f"\ {yellow_key}$", "", ix) for ix in df.index]
-    return df.reindex(securities)
+    df.index = [re.sub(f"\ {args.yellow_key}$", "", ix) for ix in df.index]
+    return df.reindex(args.securities)
 
 
 def bds(security, yellow_key, field, ovrd=None):
