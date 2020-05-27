@@ -1476,6 +1476,8 @@ def set_percentile_limits(a_list, axes, percentiles=(5, 95)):
         < vals["right"]["tgt_max"]
     ):
         mult_offset += 0.001
+        if mult_offset > 1:
+            raise RuntimeError("Limits could not be found.")
     axes[0].set_ylim(
         (1 - mult_offset) * vals["left"]["pct_min"],
         (1 + mult_offset) * vals["left"]["pct_max"],
@@ -1516,7 +1518,7 @@ def plot_hist(
     mean_kws=None,
     median=False,
     median_kws=None,
-    prec=1,
+    prec=0,
     ax=None,
     figsize=(6, 4),
     **kwargs,
@@ -1574,7 +1576,7 @@ def plot_hist(
     plot_kws.update(**kwargs)
     ax.bar(edges[:-1], res, width=(bin_width * bw), **plot_kws)
     if normed:
-        tick = mpl.ticker.StrMethodFormatter("{x:.0%}")
+        tick = mpl.ticker.StrMethodFormatter(f"{{x:.{prec}%}}")
         ax.yaxis.set_major_formatter(tick)
 
     # Add mean/median lines.
