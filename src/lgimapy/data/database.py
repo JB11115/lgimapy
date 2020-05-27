@@ -36,6 +36,8 @@ from lgimapy.utils import (
 from lgimapy.bloomberg import bdp
 
 # %%
+
+
 def clean_dtypes(df):
     """pd.DataFrame: Convert dtypes columns to proper dtype."""
     reverse_dtype_dict = {
@@ -275,7 +277,9 @@ class Database:
         date_delta = date_delta.upper()
 
         if date_delta == "PORTFOLIO_START":
-            return pd.to_datetime("8/9/2018")
+            return pd.to_datetime("9/1/2018")
+        if date_delta == "MARKET_START":
+            return pd.to_datetime("2/2/1998")
 
         # Use today as reference date if none is provided,
         # otherwise find closes trading date to reference date.
@@ -293,6 +297,18 @@ class Database:
             return self.trade_dates()[
                 last_trade(today - timedelta(today.weekday() + 1)) - 1
             ]
+        elif date_delta == "MONTH_START":
+            return self.trade_dates()[last_trade(today.replace(day=1))]
+        elif date_delta == "NEXT_MONTH_START":
+            # Find first trade date that is on or after the 1st
+            # of the next month.
+            next_month = 1 if today.month == 12 else today.month + 1
+            next_year = today.year + 1 if today.month == 12 else today.year
+            next_month_start = pd.to_datetime(f"{next_month}/1/{next_year}")
+            return self.nearest_date(next_month_start, before=False)
+        elif date_delta == "MONTH_END":
+            next_month = self.date("NEXT_MONTH_START", reference_date=today)
+            return self.date("MTD", reference_date=next_month)
         elif date_delta == "MTD":
             return self.trade_dates()[last_trade(today.replace(day=1)) - 1]
         elif date_delta == "YTD":
@@ -389,6 +405,17 @@ class Database:
                 format="%Y%m%d",
             )
         )
+
+    @property
+    @lru_cache(maxsize=None)
+    def _numeric_to_letter_ratings(self):
+        """Dict[int, str]: Numeric rating to letter map."""
+        rating_dict = load_json("numeric_to_SP_ratings")
+        # Convert input keys to int.
+        return {int(k): v for k, v in rating_dict.items()}
+
+    def convert_numeric_ratings(self, ratings):
+        return ratings.map(self._numeric_to_letter_ratings)
 
     def display_all_columns(self):
         """Set DataFrames to display all columnns in IPython."""
@@ -1528,6 +1555,11 @@ class Database:
         df["MaturityYears"] = (df["MaturityDate"] - df["Date"]).astype(
             day
         ) / 365
+
+        # Drop bonds without maturity dates (perpetuals).
+        is_cash = df["Sector"] == "CASH"
+        has_maturity_date = ~df["MaturityDate"].isna()
+        df = df[is_cash | has_maturity_date].copy()
         return clean_dtypes(df).drop_duplicates(
             subset=["Date", "CUSIP", "Account"]
         )
@@ -1660,6 +1692,7 @@ class Database:
             mv = bdp(cusips, "Corp", "AMT_OUTSTANDING").squeeze() / 1e6
             cusip_mv = df.loc[missing_ix, "CUSIP"].map(mv.to_dict())
             df.loc[missing_ix, "AmountOutstanding"] = cusip_mv
+            df["MarketValue"] = df["AmountOutstanding"] * df["DirtyPrice"] / 100
 
         if ret_df:
             return df
@@ -1885,13 +1918,46 @@ class Database:
     def main():
         pass
         # %%
+        from collections import defaultdict
         from lgimapy import vis
         from lgimapy.utils import Time, load_json, dump_json
         from lgimapy.bloomberg import bdp
 
         self = Database()
 
-        vis.style()
-        strat = "US Credit"
-        df = self.ticker_overweights(strat, ["F", "OXY", "KHC"])
-        vis.show()
+        self.load_market_data(local=True)
+        ix = self.build_market_index(in_stats_index=True)
+        ratings = ix.df["NumericRating"]
+        self.convert_numeric_ratings(ratings)
+
+        # %%
+        db = Database()
+        db.load_market_data(start="12/27/2019")
+        ix = db.build_market_index(
+            drop_treasuries=False,
+            sector=[
+                "OWNED_NO_GUARANTEE",
+                "GOVERNMENT_GUARANTEE",
+                "SOVEREIGN",
+                "TREASURIES",
+            ],
+        )
+        ix.compute_excess_returns()
+        cols = [
+            "CUSIP",
+            "ISIN",
+            "Date",
+            "Issuer",
+            "Sector",
+            "OAD",
+            "OAS",
+            "OASD",
+            "YieldToWorst",
+            "TRet",
+            "XSRet",
+        ]
+        df = ix.df[cols]
+        df.tail()
+        df.to_csv("Miyuan_treasuries.csv")
+
+        df
