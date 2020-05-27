@@ -820,7 +820,6 @@ def update_treasury_curve_dates(dates=None, verbose=True):
     start = pd.to_datetime("1/2/1998")
     end = None
 
-    verbose = True
     # Get list of previously scraped dates if it exists.
     try:
         scraped_dates = TreasuryCurve().trade_dates
@@ -880,8 +879,7 @@ def update_specific_date(specified_date, plot=True, **kwargs):
 
     # Find date and next date.
     month, day, year = (int(x) for x in specified_date.split("/"))
-    date_ix = list(tc.trade_dates()).index(pd.to_datetime(specified_date))
-    next_date = tc.trade_dates()[date_ix + 1]
+    next_date = db.trade_dates(start=specified_date)[1]
 
     # Fit curve for both days.
     db.load_market_data(date=specified_date)
@@ -945,7 +943,7 @@ def update_specific_date(specified_date, plot=True, **kwargs):
 def main():
     # %%
 
-    update_treasury_curve_dates()
+    # update_treasury_curve_dates()
 
     bad_dates = [
         "10/31/2005",
@@ -979,8 +977,9 @@ def main():
         "3/16/2009",
         "12/3/2009",
     ]
-    # for date in bad_dates:
-    #     update_specific_date(date)
+    for date in bad_dates:
+        print(date)
+        update_specific_date(date, plot=False)
 
 
 if __name__ == "__main__":
