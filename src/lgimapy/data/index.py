@@ -456,6 +456,20 @@ class Index(BondBasket):
         )
         return pd.Series(synthetic_history, index=self.dates, name=col)
 
+    def subset_current_universe(self):
+        """"
+        Return an index consisting only of bonds which exist
+        on the most current day in the index, (e.g., drop all
+        bonds that have matured or fallen out of the index).
+
+        Returns
+        -------
+        :class:`Index`:
+            Index of most current constituents.
+        """
+        current_cusips = self.day(self.dates[-1], as_index=True).cusips
+        return self.subset(cusip=current_cusips)
+
     def get_cusip_history(self, cusip):
         """
         Get full history for specified cusip.
@@ -834,19 +848,5 @@ def main():
     db = Database()
     db.display_all_columns()
     # %%
-    db.load_market_data(local=True, start=db.date("ytd"))
-    bbb = Index(
-        db.build_market_index(in_stats_index=True, rating=("BBB-", "BBB+")).df
-    )
-    a = Index(
-        db.build_market_index(in_stats_index=True, rating=("A-", "A+")).df
-    )
-    a.market_value_median("OAS")
-    df = pd.concat(
-        [
-            a.market_value_median("OAS").rename("A"),
-            bbb.market_value_median("OAS").rename("BBB"),
-        ],
-        axis=1,
-        sort=True,
-    )
+
+    db.load_market_data(local=True, start="1/1/2020")
