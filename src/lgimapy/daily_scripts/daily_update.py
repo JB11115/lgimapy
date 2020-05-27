@@ -1,6 +1,10 @@
 from time import sleep
 
-from lgimapy.daily_scripts import build_movers_sheets, make_credit_snapshots
+from lgimapy.daily_scripts import (
+    build_movers_sheets,
+    make_credit_snapshots,
+    update_credit_snapshots,
+)
 from lgimapy.data import (
     Database,
     update_bloomberg_data,
@@ -10,9 +14,12 @@ from lgimapy.data import (
     update_fed_funds,
     update_trade_dates,
     update_dealer_inventory,
-    save_lgima_sectors,
+    update_lgima_sectors,
+    update_nonfin_spreads,
+    update_rating_changes,
+    update_strategy_overweights,
 )
-from lgimapy.models import update_treasury_curve_dates
+from lgimapy.models.treasury_curve import update_treasury_curve_dates
 
 # %%
 
@@ -32,7 +39,7 @@ def main():
     print()
     update_trade_dates(trade_dates)
     print()
-    save_lgima_sectors(trade_dates[-1])
+    update_lgima_sectors()
     print("Updated LGIMA sectors\n")
     update_treasury_oad_values()
     print("Updated On-the-run Treasury OADs\n")
@@ -45,7 +52,14 @@ def main():
     build_movers_sheets()
     print("Index Mover Report Complete\n")
     make_credit_snapshots()
+    update_credit_snapshots()
     print("Credit Snaphsots Complete\n")
+    update_nonfin_spreads()
+    print("Updated Nonfin Sub-Rating Spreads\n")
+    update_rating_changes()
+    print("Updated Rating Changes\n")
+    update_strategy_overweights()
+    print("Updated Strategy Overweights\n")
 
 
 def check_datamart_quality(dates):
