@@ -17,14 +17,12 @@ def load_data(fid):
 
 
 def update_strategy_overweights():
-    # strategies = ["US Credit", "US Long Credit"]
-    strategies = ["US Long Credit"]
+    strategies = ["US Credit", "US Long Credit"]
     # Find tickers to scrape.
     db = Database()
     fid_dir = root("data/strategy_overweights")
     mkdir(fid_dir)
     for date in tqdm(db.trade_dates(start=db.date("PORTFOLIO_START"))[::-1]):
-        print(date)
         for strategy in strategies:
             # See if data exists for current date and strategy.
             # If it does move on, else compute results and append.
@@ -42,6 +40,9 @@ def update_strategy_overweights():
 
             # Garbage collect to reduce memory issues.
             del strat
+            del old_df
+            del date_df
+            del updated_df
             gc.collect()
 
 
