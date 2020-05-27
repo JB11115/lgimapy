@@ -53,7 +53,7 @@ def main():
     print("Index Mover Report Complete\n")
     make_credit_snapshots()
     update_credit_snapshots()
-    print("Credit Snaphsots Complete\n")
+    print("Credit Snaphshots Complete\n")
     update_nonfin_spreads()
     print("Updated Nonfin Sub-Rating Spreads\n")
     update_rating_changes()
