@@ -11,12 +11,11 @@ def main():
     # %%
     db = Database()
     date = db.date("today")
+    # date = db.date("MTD")
     prev_date = db.date("1w")
-    # date = pd.to_datetime("2/10/2020")
-    # prev_date = db.date("1w", reference_date=date)
+    # prev_date = db.date("YTD")
     pdf_path = root("reports/strategy_risk")
 
-    strategy = "US Long Credit"
     strategy = "US Long Credit"
     strategy = "US Long Corporate"
     strategy = "US Credit"
@@ -56,7 +55,8 @@ def main():
     ]
     # %%
     fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
-    doc = Document(fid, path=pdf_path)
+    # fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q1_2020"
+    doc = Document(fid, path=pdf_path, fig_dir=True)
     doc.add_preamble(margin=1, bookmarks=True, bar_size=7)
     res = []
     from tqdm import tqdm
@@ -108,13 +108,21 @@ def get_single_latex_risk_page(
     db = Database()
     curr_strat = db.load_portfolio(strategy=strategy, date=date)
     prev_strat = db.load_portfolio(strategy=strategy, date=prev_date)
-    date_fmt = date.strftime("%m/%d")
-    prev_date_fmt = prev_date.strftime("%m/%d")
+    date_fmt = date.strftime("%#m/%#d")
+    prev_date_fmt = prev_date.strftime("%#m/%#d")
 
     # Build overview table.
     default_properties = ["dts_pct", "dts_abs", "credit_pct"]
     if is_GC_strategy:
-        properties = ["dts_pct", "dts_abs", "dts_gc", "credit_pct"]
+        properties = [
+            "dts_pct",
+            "dts_abs",
+            "dts_gc",
+            "credit_pct",
+            "curve_duration(5)",
+            "curve_duration(7)",
+            "curve_duration(10)",
+        ]
     else:
         properties = ["dts_pct", "dts_abs", "credit_pct"]
 
