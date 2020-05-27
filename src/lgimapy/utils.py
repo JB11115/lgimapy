@@ -2,6 +2,7 @@ import os
 import json
 import pprint as pp
 import re
+import sys
 from bisect import bisect_left, bisect_right
 from collections import defaultdict, OrderedDict
 from datetime import timedelta
@@ -38,6 +39,29 @@ def root(join_path=None):
         return root_path
     else:
         return root_path.joinpath(join_path)
+
+
+# def root(join_path=None):
+#     """
+#     Return path from root directory of the project.
+#
+#     Parameters
+#     ----------
+#     join_path: str, Path, default=None
+#         Path to join to root directoyr of project.
+#
+#     Returns
+#     -------
+#     root_path: Path
+#         Path of root directory and joined path.
+#     """
+#     root_path = Path(pkg_resources.get_distribution("lgimapy").location).parent
+#     if join_path is None:
+#         return root_path
+#     elif join_path[:5] == "data/":
+#         return Path("/domino/datasets/local/lgimapy").joinpath(join_path[5:])
+#     else:
+#         return root_path.joinpath(join_path)
 
 
 def load_json(filename, empty_on_error=False):
@@ -802,9 +826,3 @@ class EventDistance:
         a = np.full(self._n, np.NaN)
         a[ix_mask] = s.values
         return a
-
-
-date_list = pd.date_range("1/1/2000", "1/1/2020", freq="M")
-date = "3/5/2019"
-
-# %%
