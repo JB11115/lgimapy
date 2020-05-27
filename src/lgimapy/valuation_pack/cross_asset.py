@@ -34,11 +34,7 @@ def update_market_review(fid):
         caption="\\large Equities \\normalfont - Price (\$)",
         col_fmt="lrclrr",
         midrule_locs=[db.bbg_names("SP500_DISC"), "Big / Small"],
-        prec={
-            "$\\Delta$ 1M (%)": "1%",
-            "$\\Delta$ YTD (%)": "1%",
-            "1Y %tile": "0f",
-        },
+        prec={"$\\Delta$ 1M (%)": "1%", "$\\Delta$ YTD (%)": "1%", "1Y %tile": "0f",},
         div_bar_col=["$\\Delta$ 1M (%)", "$\\Delta$ YTD (%)"],
         div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
         col_style={"1Y %tile": "\pctbar"},
@@ -51,11 +47,7 @@ def update_market_review(fid):
         caption="\\large Commodities \\normalfont - Price (\$)",
         col_fmt="lrclrr",
         midrule_locs=db.bbg_names("OIL"),
-        prec={
-            "$\\Delta$ 1M (%)": "1%",
-            "$\\Delta$ YTD (%)": "1%",
-            "1Y %tile": "0f",
-        },
+        prec={"$\\Delta$ 1M (%)": "1%", "$\\Delta$ YTD (%)": "1%", "1Y %tile": "0f",},
         div_bar_col=["$\\Delta$ 1M (%)", "$\\Delta$ YTD (%)"],
         div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
         col_style={"1Y %tile": "\pctbar"},
@@ -76,11 +68,7 @@ def update_market_review(fid):
         table_notes=notes,
         col_fmt="lrclrr",
         midrule_locs=db.bbg_names(["EU_IG", "EM_SOV", "CDX_IG"]),
-        prec={
-            "$\\Delta$ 1M (%)": "1%",
-            "$\\Delta$ YTD (%)": "1%",
-            "5Y %tile": "0f",
-        },
+        prec={"$\\Delta$ 1M (%)": "1%", "$\\Delta$ YTD (%)": "1%", "5Y %tile": "0f",},
         div_bar_col=["$\\Delta$ 1M (%)", "$\\Delta$ YTD (%)"],
         div_bar_kws={"cmin": "steelblue", "cmax": "firebrick"},
         col_style={"5Y %tile": "\pctbar"},
@@ -93,11 +81,7 @@ def update_market_review(fid):
         caption="\\large Rates \\normalfont - Yield (\%)",
         col_fmt="lrclrr",
         midrule_locs=db.bbg_names(["BUND_10Y", "JGB_10Y", "UK_10Y"]),
-        prec={
-            "$\\Delta$ 1M (bp)": "0f",
-            "$\\Delta$ YTD (bp)": "0f",
-            "5Y %tile": "0f",
-        },
+        prec={"$\\Delta$ 1M (bp)": "0f", "$\\Delta$ YTD (bp)": "0f", "5Y %tile": "0f",},
         div_bar_col=["$\\Delta$ 1M (bp)", "$\\Delta$ YTD (bp)"],
         div_bar_kws={"cmin": "steelblue", "cmax": "firebrick"},
         col_style={"5Y %tile": "\pctbar"},
@@ -144,9 +128,7 @@ def calculate_market_review_tables():
     eq_names = {col: db.bbg_names(col) for col in df_sec.columns}
 
     # Build ratio columns.
-    df_ratios = db.load_bbg_data(
-        sec["equity_ratios"], "pb_ratio", start=db.date("2y")
-    )
+    df_ratios = db.load_bbg_data(sec["equity_ratios"], "pb_ratio", start=db.date("2y"))
     df_ratios["Big / Small"] = df_ratios.eval("SP500 / RUSSELL_2000")
     df_ratios["Growth / Value"] = df_ratios.eval("SP500_GROW / SP500_VALU")
     df_ratios["Momentum / S&P 500"] = df_ratios.eval("SP500_MOM / SP500")
@@ -166,9 +148,7 @@ def calculate_market_review_tables():
         else:
             d["Last"].append(f"{s[-1]:,.2f}")
             d["1Y Range"].append(f"({np.min(s):.2f}, {np.max(s):.2f})")
-        last_year = s[
-            s.index >= nearest_date(db.date("1Y"), s.index, after=False)
-        ]
+        last_year = s[s.index >= nearest_date(db.date("1Y"), s.index, after=False)]
         d["1Y %tile"].append(100 * last_year.rank(pct=True)[-1])
         for date in ["1M", "YTD"]:
             start_date = nearest_date(db.date(date), s.index, after=False)
@@ -176,8 +156,7 @@ def calculate_market_review_tables():
             delta = (s[-1] - start_val) / start_val
             d[f"$\\Delta$ {date} (%)"].append(delta)
 
-    df = pd.DataFrame(d).set_index("Name", drop=True)
-    del df.index.name
+    df = pd.DataFrame(d).set_index("Name", drop=True).rename_axis(None)
     dfs["equities"] = df.copy()
 
     # Commodities.
@@ -188,9 +167,7 @@ def calculate_market_review_tables():
         d["Name"].append(db.bbg_names(col))
         d["Last"].append(f"{s[-1]:,.0f}")
         d["1Y Range"].append(f"({np.min(s):.0f}, {np.max(s):.0f})")
-        last_year = s[
-            s.index >= nearest_date(db.date("1Y"), s.index, after=False)
-        ]
+        last_year = s[s.index >= nearest_date(db.date("1Y"), s.index, after=False)]
         d["1Y %tile"].append(100 * last_year.rank(pct=True)[-1])
         for date in ["1M", "YTD"]:
             start_date = nearest_date(db.date(date), s.index, after=False)
@@ -198,8 +175,7 @@ def calculate_market_review_tables():
             delta = (s[-1] - start_val) / start_val
             d[f"$\\Delta$ {date} (%)"].append(delta)
 
-    df = pd.DataFrame(d).set_index("Name", drop=True)
-    del df.index.name
+    df = pd.DataFrame(d).set_index("Name", drop=True).rename_axis(None)
     dfs["commodities"] = df.copy()
 
     # Credit.
@@ -210,9 +186,7 @@ def calculate_market_review_tables():
         d["Name"].append(db.bbg_names(col))
         d["Last"].append(f"{s[-1]:,.0f}")
         d["5Y Range"].append(f"({np.min(s):.0f}, {np.max(s):.0f})")
-        last_year = s[
-            s.index >= nearest_date(db.date("5Y"), s.index, after=False)
-        ]
+        last_year = s[s.index >= nearest_date(db.date("5Y"), s.index, after=False)]
         d["5Y %tile"].append(100 * last_year.rank(pct=True)[-1])
         for date in ["1M", "YTD"]:
             start_date = nearest_date(db.date(date), s.index, after=False)
@@ -220,8 +194,7 @@ def calculate_market_review_tables():
             delta = (s[-1] - start_val) / start_val
             d[f"$\\Delta$ {date} (%)"].append(delta)
 
-    df = pd.DataFrame(d).set_index("Name", drop=True)
-    del df.index.name
+    df = pd.DataFrame(d).set_index("Name", drop=True).rename_axis(None)
     dfs["credit"] = df.copy()
 
     # Rates.
@@ -232,9 +205,7 @@ def calculate_market_review_tables():
         d["Name"].append(db.bbg_names(col))
         d["Last"].append(f"{s[-1]:.2%}")
         d["5Y Range"].append(f"({np.min(s):.2%}, {np.max(s):.2%})")
-        last_year = s[
-            s.index >= nearest_date(db.date("5Y"), s.index, after=False)
-        ]
+        last_year = s[s.index >= nearest_date(db.date("5Y"), s.index, after=False)]
         d["5Y %tile"].append(100 * last_year.rank(pct=True)[-1])
         for date in ["1M", "YTD"]:
             start_date = nearest_date(db.date(date), s.index, after=False)
@@ -242,8 +213,7 @@ def calculate_market_review_tables():
             delta = (s[-1] - start_val) * 1e4
             d[f"$\\Delta$ {date} (bp)"].append(delta)
 
-    df = pd.DataFrame(d).set_index("Name", drop=True)
-    del df.index.name
+    df = pd.DataFrame(d).set_index("Name", drop=True).rename_axis(None)
     dfs["rates"] = df.copy()
 
     return dfs
@@ -271,8 +241,7 @@ def calculate_credit_return_tables():
             delta = (s[-1] - start_val) / start_val
             d[f"$\\Delta$ {date} (%)"].append(delta)
 
-    df = pd.DataFrame(d).set_index("Name", drop=True)
-    del df.index.name
+    df = pd.DataFrame(d).set_index("Name", drop=True).rename_axis(None)
     dfs["tret"] = df.sort_values("$\\Delta$ 1M (%)", ascending=False)
 
     # Excess returns.
@@ -291,8 +260,7 @@ def calculate_credit_return_tables():
             )
             d[f"$\\Delta$ {date} (bp)"].append(xsret)
 
-    df = pd.DataFrame(d).set_index("Name", drop=True)
-    del df.index.name
+    df = pd.DataFrame(d).set_index("Name", drop=True).rename_axis(None)
     dfs["xsret"] = df.sort_values("$\\Delta$ 1M (bp)", ascending=False)
 
     return dfs
@@ -306,9 +274,7 @@ def aggregate_excess_returns(xsret, tret, start, end=None, derivative=False):
 
     if derivative:
         xsret_s = xsret.dropna()
-        start_date = nearest_date(
-            start, xsret_s.index, inclusive=False, after=False
-        )
+        start_date = nearest_date(start, xsret_s.index, inclusive=False, after=False)
         start_val = xsret_s.loc[start_date]
         cur_val = xsret_s[-1] if end is None else xsret_s.loc[end]
         return 1e4 * (cur_val / start_val - 1)
