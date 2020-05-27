@@ -383,10 +383,11 @@ def latex_table(
                     gradient_cells[col] = latex_color_gradient(**kwargs)
             else:
                 # Use single set of kwargs for all column's gradients.
-                gradient_cells = {
-                    col: latex_color_gradient(df[col], **gradient_cell_kws)
-                    for col in gradient_cell_cols
-                }
+                gradient_cells = {}
+                for col in gradient_cell_cols:
+                    kwargs = {"vals": df[col]}
+                    kwargs.update(**gradient_cell_kws)
+                    gradient_cells[col] = latex_color_gradient(**kwargs)
     else:
         gradient_cells = None
 
