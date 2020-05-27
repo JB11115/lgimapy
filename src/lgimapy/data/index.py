@@ -7,6 +7,7 @@ from inspect import getfullargspec
 import numpy as np
 import pandas as pd
 from oslo_concurrency import lockutils
+from statsmodels.stats.weightstats import DescrStatsW
 
 from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import (
@@ -15,6 +16,8 @@ from lgimapy.data import (
     new_issue_mask,
     TreasuryCurve,
 )
+
+from lgimapy.models import weighted_percentile
 from lgimapy.utils import (
     check_all_equal,
     dump_json,
@@ -509,6 +512,85 @@ class Index(BondBasket):
             g = df[["Date", "MarketValue", "mvw_col"]].groupby("Date").sum()
             return (g["mvw_col"] / g["MarketValue"]).rename(col)
 
+    def RSD(self, col):
+        """
+        Daily relateiv standard deviation for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to perform RSD on.
+
+        Returns
+        -------
+        pd.Series:
+            Daily RSD with datetime index.
+        """
+        cols = ["Date", "MarketValue", col]
+
+        def daily_rsd(df):
+            """RSD for single day."""
+            weighted_stats = DescrStatsW(
+                df[col], weights=df["MarketValue"], ddof=1
+            )
+            return weighted_stats.std / weighted_stats.mean
+
+        return self.df[cols].groupby("Date").apply(daily_rsd)
+
+    def QCD(self, col):
+        """
+        Daily relative standard deviation for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to perform QCD on.
+
+        Returns
+        -------
+        pd.Series:
+            Daily QCD with datetime index.
+        """
+        cols = ["Date", "MarketValue", col]
+
+        def daily_qcd(df):
+            """QCD for single day."""
+            Q1, Q3 = weighted_percentile(
+                df[col], weights=df["MarketValue"], q=[25, 75]
+            )
+            return (Q3 - Q1) / (Q3 + Q1)
+
+        return self.df[cols].groupby("Date").apply(daily_qcd)
+
+    def OAS(self):
+        """
+        pd.Series:
+            Daily market value weighted OAS with datetime index.
+        """
+        return self.market_value_weight("OAS")
+
+    def market_value_median(self, col):
+        """
+        Daily market value weighted median specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to perform QCD on.
+
+        Returns
+        -------
+        pd.Series:
+            Daily median with datetime index.
+        """
+        cols = ["Date", "MarketValue", col]
+
+        def daily_median(df):
+            """Median for single day."""
+            return weighted_percentile(df[col], weights=df["MarketValue"], q=50)
+
+        return self.df[cols].groupby("Date").apply(daily_median)
+
     def market_value_weight_vol(self, col, window_size=20, annualized=False):
         """
         Market value weight the volatilities of the specified
@@ -749,22 +831,22 @@ def main():
     import matplotlib.pyplot as plt
 
     vis.style()
-    # %matplotlib qt
     db = Database()
     db.display_all_columns()
     # %%
-    db.load_market_data(local=True)
-
-    bb = BondBasket(db.df, None, None)
-
-    bb_2 = bb.subset(ticker="D")
-
-    bb_2.issuers
-
-    ix = db.build_market_index(in_stats_index=True, rating=("BBB+", "BBB-"))
-
-    ix.constraints
-
-    ix_2 = ix.subset(sector="BANKING")
-    ix_2
-    ix_2.constraints
+    db.load_market_data(local=True, start=db.date("ytd"))
+    bbb = Index(
+        db.build_market_index(in_stats_index=True, rating=("BBB-", "BBB+")).df
+    )
+    a = Index(
+        db.build_market_index(in_stats_index=True, rating=("A-", "A+")).df
+    )
+    a.market_value_median("OAS")
+    df = pd.concat(
+        [
+            a.market_value_median("OAS").rename("A"),
+            bbb.market_value_median("OAS").rename("BBB"),
+        ],
+        axis=1,
+        sort=True,
+    )
