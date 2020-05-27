@@ -197,7 +197,7 @@ def update_hy_ig_ratios(fig_dir, ix_d):
         ["US_HY", "CDX_IG", "CDX_HY"], "OAS", start=db.date("5y")
     )
     ix_mc = ix_d["mc"].subset(start=db.date("5y"))
-    oas = ix_mc.market_value_weight("OAS").rename("US_IG")
+    oas = ix_mc.market_value_median("OAS").rename("US_IG")
     df = pd.concat([bbg_df, oas], axis=1, sort=True).dropna(how="any")
     df["HY/IG Cash"] = df["US_HY"] / df["US_IG"]
     df["HY/IG CDX"] = df["CDX_HY"] / df["CDX_IG"]
