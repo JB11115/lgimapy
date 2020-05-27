@@ -22,8 +22,10 @@ def update_volatility_indicators():
     vis.style()
     path = root("latex/valuation_pack/fig")
     sector_df, history_dict = get_sector_vol_data()
+    sector_df
     plot_sector_spread_vs_vol(sector_df, path=path)
     plot_regression_timeseries_results(history_dict, path=path)
+    plot_maturity_bucket_spread_vs_vol()
 
 
 def diagonal_deviation(x, y, threshold):
@@ -43,7 +45,6 @@ def diagonal_deviation(x, y, threshold):
     return (deviation - np.mean(deviation)) / np.std(deviation)
 
 
-# %%
 def get_sector_vol_data():
     """
     Get historical sector volatility and spread data, and a
@@ -86,7 +87,7 @@ def get_sector_vol_data():
         "UNIVERSITY",
     ]
     db = Database()
-    db.load_market_data(start=db.date("1.2y"), end="4/25/2019", local=True)
+    db.load_market_data(start=db.date("1.2y"), local=True)
 
     ratings = {"A": ("AAA", "A-"), "BBB": ("BBB+", "BBB-")}
     kwargs = load_json("indexes")
@@ -112,6 +113,9 @@ def get_sector_vol_data():
                 # Not enough days to create volatility.
                 continue
 
+            # Calculate current values of each sector.
+            curr_ix_sector = ix_sector.day(ix.dates[-1], as_index=True)
+
             # Store historical results.
             history_d["vol"].append(vol.rename(f"{ix_sector.name}|{rating}"))
             history_d["oas"].append(oas.rename(f"{ix_sector.name}|{rating}"))
@@ -122,13 +126,15 @@ def get_sector_vol_data():
             d["rating"].append(rating)
             d["vol"].append(vol[-1])
             d["oas"].append(oas[-1])
+            d["oad"].append(curr_ix_sector.market_value_weight("OAD").iloc[-1])
+            d["XSRet"].append(
+                1e4
+                * ix_sector.aggregate_excess_returns(start_date=db.date("YTD"))
+            )
             d["market_val"].append(ix_sector.total_value()[-1])
     warnings.simplefilter(action="default", category=FutureWarning)
 
     return pd.DataFrame(d), history_d
-
-
-# %%
 
 
 def plot_sector_spread_vs_vol(df, path):
@@ -185,6 +191,7 @@ def plot_sector_spread_vs_vol(df, path):
             va="bottom",
             fontsize=8,
         )
+    ax.set_title("Sector Volatility Snapshot", fontweight="bold")
     ax.set_xlabel("Daily Spread Volatility (bp)")
     ax.set_ylabel("OAS (bp)")
     ax.legend(loc=2, bbox_to_anchor=(1.02, 1), prop={"size": 10})
@@ -211,22 +218,27 @@ def plot_regression_timeseries_results(history_dict, path):
     vol = vol_df.values
     oas = oas_df.values
     i = 0
+    n_lookback_days = 20
     warnings.simplefilter(action="ignore", category=RuntimeWarning)
+
     for i in range(n):
         # Peform regression for current date.
-        x, y = vol[i, :], oas[i, :]
+        i_start = max(0, i - n_lookback_days)
+        x = vol[i_start : i + 1, :].ravel()
+        y = oas[i_start : i + 1, :].ravel()
+        # x, y = vol[i, :], oas[i, :]
         mask = ~(np.isnan(y) | np.isnan(x))  # remove nans
         reg_res = sm.RLM(
             y[mask], sm.add_constant(x[mask]), M=sm.robust.norms.Hampel()
         ).fit()
-        reg_res.summary()
-        reg_res.scale
+        # reg_res.summary()
         alpha_a[i], beta_a[i] = reg_res.params
         scale_a[i] = reg_res.scale
 
         # Compute deviation from regression line for each sector.
-        y_resid = y - (x * beta_a[i] + alpha_a[i])
-        x_resid = x - (y - alpha_a[i]) / beta_a[i]
+        y_resid = (y - (x * beta_a[i] + alpha_a[i]))[-m:]
+        x_resid = (x - (y - alpha_a[i]) / beta_a[i])[-m:]
+
         deviation_a[i, :] = (
             np.sign(y_resid)
             * np.abs(x_resid * y_resid)
@@ -239,9 +251,19 @@ def plot_regression_timeseries_results(history_dict, path):
     scale = pd.Series(scale_a, index=dates, name="$\\beta$")
 
     dev_df = pd.DataFrame(deviation_a, index=dates, columns=cols)
-    dev_df -= np.mean(dev_df)
-    dev_df /= np.std(dev_df)
 
+    def zscore(df, window, min_periods=0):
+        roll = df.rolling(window=window, min_periods=min_periods)
+        mean = roll.mean().shift(1)
+        std = roll.std(ddof=0).shift(1)
+        z_score_df = (df - mean) / std
+        # Remove days with no values.
+        start = max(2, min_periods)
+        return z_score_df.iloc[start:, :]  # remove days with no values
+
+    z_score_df = zscore(dev_df, window=300, min_periods=60)
+
+    # %%
     # Plot alpha and beta timeseries.
     # vis.plot_double_y_axis_timeseries(
     #     alpha,
@@ -255,41 +277,45 @@ def plot_regression_timeseries_results(history_dict, path):
     #     figsize=(8, 6),
     #     xtickfmt="auto",
     # )
-    # %%
-    vis.plot_triple_y_axis_timeseries(
-        alpha,
+    vis.plot_timeseries(
         beta,
-        scale,
-        ylabel_left="$\\alpha$",
-        ylabel_right_inner="$\\beta$",
-        ylabel_right_outer="Scale",
-        plot_kws_left={"color": "darkgoldenrod"},
-        plot_kws_right_inner={"color": "navy"},
-        plot_kws_right_outer={"color": "darkorchid"},
-        alpha=0.7,
-        lw=2,
-        figsize=(8, 6),
+        title="Compensation for Volatility",
+        ylabel="bp increase in OAS per\nbp increase in Daily Spread Vol",
         xtickfmt="auto",
+        color="navy",
+        lw=4,
     )
-    # vis.savefig(f"sector_vol_regression_params", path=path)
-    # vis.close()
-    vis.show()
+    # vis.show()
+    vis.savefig(f"sector_vol_beta", path=path)
+    vis.close()
     # %%
 
     # Plot sectors timeseries through time.
-    n_out = 3
-    current_dev = dev_df.iloc[-1, :].sort_values()
+    n_out = 4
+    current_dev = z_score_df.iloc[-1, :].sort_values()
     ix = current_dev.index
     outliers = list(ix[:n_out]) + list(ix[-n_out:])
-    sns.set_palette("husl", n_out * 2)
+
     fig, ax = vis.subplots(figsize=(15, 8))
-    for col in dev_df.columns:
-        ax.plot(dev_df[col], c="lightgrey", lw=1, alpha=0.7, label="_nolegend_")
-    for col in reversed(outliers):
-        ax.plot(dev_df[col], lw=2.5, alpha=0.9, label=col)
-    vis.format_xaxis(ax, s=dev_df.index)
+    for col in z_score_df.columns:
+        ax.plot(
+            z_score_df[col], c="lightgrey", lw=1, alpha=0.7, label="_nolegend_"
+        )
+    colors = sns.color_palette("husl", n_out * 2).as_hex()
+    for sector, color in zip(reversed(outliers), colors):
+        vis.plot_timeseries(
+            z_score_df[sector],
+            lw=2.5,
+            color=color,
+            alpha=0.9,
+            label=f"{sector.replace('|', ' (')})",
+            ax=ax,
+        )
+    vis.format_xaxis(ax, s=z_score_df, xtickfmt="auto")
+    ax.set_title("Sector Volatility Compensation Timeseries", fontweight="bold")
     ax.set_ylabel("Deviation Z-score")
-    ax.legend(loc=2, bbox_to_anchor=(1, 1))
+    ax.legend(loc="upper left", fancybox=True, shadow=True)
+    # vis.show()
     vis.savefig(f"sector_vol_timeseries", path=path)
     vis.close()
 
@@ -299,6 +325,7 @@ def plot_maturity_bucket_spread_vs_vol():
     Plot current spread vs volatility subset by maturity bucket,
     rating, and fin/non-fin/non-corp.
     """
+    # %%
     db = Database()
     db.load_market_data(start=db.date("2m"), local=True)
 
@@ -337,7 +364,7 @@ def plot_maturity_bucket_spread_vs_vol():
 
     # %%
 
-    fig, ax = vis.subplots(figsize=(8, 5))
+    fig, ax = vis.subplots(figsize=(8, 7.5))
     sns.scatterplot(
         x="vol",
         y="oas",
@@ -351,8 +378,59 @@ def plot_maturity_bucket_spread_vs_vol():
         data=df,
         ax=ax,
     )
+    ax.set_title("Maturity Bucket Volatility", fontweight="bold")
     ax.set_xlabel("Daily Spread Volatility (bp)")
     ax.set_ylabel("OAS (bp)")
     ax.legend(loc=2, bbox_to_anchor=(1.02, 1), prop={"size": 10})
     vis.savefig("maturity_bucket_spread_vs_vol", path=path)
     vis.close()
+
+
+def plot_sector_xsret_vs_oad(sector_df):
+    """
+    Plot YTD excess returns vs duration for each sector.
+    """
+    # %%
+
+    df = sector_df.copy()
+
+    # %%
+
+    df["\nMarket Value ($B)"] = (df["market_val"] / 1e3).astype(int)
+    df["\nRating"] = df["rating"]
+    df[" "] = df["top_level_sector"]  # no label in legend
+
+    fig, ax = vis.subplots(figsize=(10, 6))
+
+    # Plot robust regression results.
+    sns.regplot(
+        x=df["vol"],
+        y=df["oad"],
+        robust=True,
+        color="k",
+        line_kws={"lw": 2, "alpha": 0.5},
+        scatter_kws={"alpha": 0},
+        n_boot=1000,
+        ci=95,
+        ax=ax,
+    )
+
+    # Plot scatter points.
+    sns.scatterplot(
+        x="vol",
+        y="oas",
+        hue=" ",
+        style="\nRating",
+        size="\nMarket Value ($B)",
+        sizes=(40, 200),
+        alpha=0.7,
+        palette="dark",
+        data=df,
+        markers=["D", "o"],
+        ax=ax,
+    )
+    ax.set_title("Sector Excess Returns", fontweight="bold")
+    ax.set_xlabel("YTD Excess Returns (bp)")
+    ax.set_ylabel("OAD (yrs)")
+    ax.legend(loc=2, bbox_to_anchor=(1.02, 1), prop={"size": 10})
+    vis.show()
