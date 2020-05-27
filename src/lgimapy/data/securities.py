@@ -292,7 +292,6 @@ class TBond(Bond):
         """
         # Get temporary next coupon date.
         cash_flows = self.all_cash_flows
-        self.cusip
         next_coupons = cash_flows[cash_flows.index > self.Date]
         next_coupon_date = next_coupons.index[0]
 
