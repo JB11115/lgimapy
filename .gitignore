@@ -74,7 +74,8 @@ __pycache__/
 ##############
 data/coupons/
 data/feathers/
-latex/
+/data/
+/latex/
 reports/
 src/lgimapy/notebooks/
 src/lgimapy.egg-info/
