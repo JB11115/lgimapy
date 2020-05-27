@@ -30,6 +30,17 @@ class Portfolio:
         df = pd.read_csv(snapshot_fid, index_col=0)
         return df.loc["A", "Close*OAS"]
 
+    @property
+    @lru_cache(maxsize=None)
+    def _otr_tsy_s(self):
+        fid = root("data/OTR_treasury_OAD_values.parquet")
+        s = pd.read_parquet(fid).loc[self.date]
+        s.index = s.index.astype(int)
+        return s
+
+    def otr_tsy_oad(self, maturity):
+        return self._otr_tsy_s.loc[maturity]
+
     def plot_tsy_weights(self, ax=None, figsize=(8, 4)):
         """
         Plot yield curve.
@@ -143,8 +154,14 @@ class Account(BondBasket, Portfolio):
     def credit_pct(self):
         return np.sum(self.df["P_Weight"])
 
+    def bm_credit_pct(self):
+        return np.sum(self.df["BM_Weight"])
+
     def tsy_pct(self):
         return np.sum(self.tsy_df["P_Weight"])
+
+    def bm_tsy_pct(self):
+        return np.sum(self.tsy_df["BM_Weight"])
 
     def oad(self):
         return np.sum(self.df["OAD_Diff"])
@@ -226,18 +243,51 @@ class Account(BondBasket, Portfolio):
 
     @property
     @lru_cache(maxsize=None)
-    def curve_measure(self, pivot, weights=(0.7, 0.3)):
-        if np.sum(weights) != 1:
-            raise ValueError("Sum of `weights` must equal 1.")
-        oad = self._otr_treasury_oad()
-
-    @property
-    @lru_cache(maxsize=None)
     def _otr_treasury_oad(self):
         fid = root("data/OTR_treasury_OAD_values.parquet")
         oad_s = pd.read_parquet(fid).loc[self.date]
         oad_s.index = s.index.astype(int)
         return oad_s
+
+    def curve_duration(self, pivot_maturity, weights=(0.7, 0.3)):
+        if np.sum(weights) != 1:
+            raise ValueError("Sum of `weights` must equal 1.")
+
+        # Get current on-the-run durations for treasuries.
+        tsy_2yr = self.otr_tsy_oad(2)
+        tsy_30yr = self.otr_tsy_oad(30)
+        tsy_pivot = self.otr_tsy_oad(pivot_maturity)
+
+        # Subset bonds to columns required for model and
+        # get % of market value for each bond in portfolio
+        cols = ["CUSIP", "OAD", "Weight_Diff"]
+        df = pd.concat([self.df[cols], self.tsy_df[cols]], sort=False)
+
+        # Get 2s/pivot contriubtion.
+        df_leq_2 = df[df["OAD"] <= tsy_2yr]
+        df_2_pivot = df[(tsy_2yr < df["OAD"]) & (df["OAD"] <= tsy_pivot)]
+        contrib_leq_2 = np.sum(df_leq_2["OAD"] * df_leq_2["Weight_Diff"])
+        contrib_2_pivot = np.sum(
+            (tsy_pivot - df_2_pivot["OAD"])
+            / (tsy_pivot - tsy_2yr)
+            * df_2_pivot["OAD"]
+            * df_2_pivot["Weight_Diff"]
+        )
+
+        # Get pivot/30s contriubtion.
+        df_geq_30 = df[df["OAD"] >= tsy_30yr]
+        df_pivot_30 = df[(tsy_pivot < df["OAD"]) & (df["OAD"] < tsy_30yr)]
+        contrib_geq_30 = np.sum(df_geq_30["OAD"] * df_geq_30["Weight_Diff"])
+        contrib_pivot_30 = np.sum(
+            (df_pivot_30["OAD"] - tsy_pivot)
+            / (tsy_30yr - tsy_pivot)
+            * df_pivot_30["OAD"]
+            * df_pivot_30["Weight_Diff"]
+        )
+
+        return (weights[0] * (contrib_leq_2 + contrib_2_pivot)) - (
+            weights[1] * (contrib_geq_30 + contrib_pivot_30)
+        )
 
 
 class Strategy(BondBasket, Portfolio):
@@ -338,7 +388,12 @@ class Strategy(BondBasket, Portfolio):
         if properties is None:
             properties = default_properties
         elif properties == ["GC"]:
-            gc_properties = ["dts_gc"]
+            gc_properties = [
+                "dts_gc",
+                "curve_duration(5)",
+                "curve_duration(7)",
+                "curve_duration(10)",
+            ]
             properties = default_properties + gc_properties
 
         account_funs = {
@@ -349,6 +404,9 @@ class Strategy(BondBasket, Portfolio):
             "cash_pct": self.account_cash_pct(),
             "tsy_pct": self.account_tsy_pct(),
             "tsy_oad": self.account_tsy_oad(),
+            "curve_duration(5)": self.account_curve_duration(5),
+            "curve_duration(7)": self.account_curve_duration(7),
+            "curve_duration(10)": self.account_curve_duration(10),
             "market_value": self.account_market_values,
         }
         strategy_funs = {
@@ -359,6 +417,9 @@ class Strategy(BondBasket, Portfolio):
             "cash_pct": self.cash_pct(),
             "tsy_pct": self.tsy_pct(),
             "tsy_oad": self.tsy_oad(),
+            "curve_duration(5)": self.curve_duration(5),
+            "curve_duration(7)": self.curve_duration(7),
+            "curve_duration(10)": self.curve_duration(10),
             "market_value": self.market_value,
         }
         column_names = {
@@ -369,6 +430,9 @@ class Strategy(BondBasket, Portfolio):
             "cash_pct": "Cash (%)",
             "tsy_pct": "Tsy (%)",
             "tsy_oad": "Tsy OAD",
+            "curve_duration(5)": "Curve Dur (5yr)",
+            "curve_duration(7)": "Curve Dur (7yr)",
+            "curve_duration(10)": "Curve Dur (10yr)",
             "market_value": "Market Value",
         }
         if fun_type == "account":
@@ -387,6 +451,9 @@ class Strategy(BondBasket, Portfolio):
             "cash_pct": "1%",
             "tsy_pct": "1%",
             "tsy_oad": "1f",
+            "curve_duration(5)": "3f",
+            "curve_duration(7)": "3f",
+            "curve_duration(10)": "3f",
             "market_value": "0f",
         }
         return [fmt[prop] for prop in to_list(properties, str)]
@@ -447,6 +514,15 @@ class Strategy(BondBasket, Portfolio):
         return self.account_value_weight(self.account_credit_pct())
 
     @lru_cache(maxsize=None)
+    def account_bm_credit_pct(self):
+        name = "Credit (%)"
+        return self.calculate_account_values(lambda x: x.bm_credit_pct(), name)
+
+    @lru_cache(maxsize=None)
+    def bm_credit_pct(self):
+        return self.account_value_weight(self.account_bm_credit_pct())
+
+    @lru_cache(maxsize=None)
     def account_tsy_pct(self):
         name = "Tsy (%)"
         return self.calculate_account_values(lambda x: x.tsy_pct(), name)
@@ -463,6 +539,16 @@ class Strategy(BondBasket, Portfolio):
     @lru_cache(maxsize=None)
     def tsy_oad(self):
         return self.account_value_weight(self.account_tsy_oad())
+
+    def account_curve_duration(self, pivot_maturity, weights=(0.7, 0.3)):
+        return self.calculate_account_values(
+            lambda x: x.curve_duration(pivot_maturity, weights)
+        ).rename(f"Curve Dur ({pivot_maturity}yr)")
+
+    def curve_duration(self, pivot_maturity, weights=(0.7, 0.3)):
+        return self.account_value_weight(
+            self.account_curve_duration(pivot_maturity, weights)
+        )
 
     def ticker_overweights(self, by="OAD"):
         return (
@@ -557,48 +643,51 @@ class Strategy(BondBasket, Portfolio):
 def main():
     pass
     # %%
+    from collections import defaultdict
+    from tqdm import tqdm
     from lgimapy.data import Database
-    from lgimapy.utils import Time
+    from lgimapy.utils import Time, load_json
 
     db = Database()
     db.display_all_columns()
-    date = db.date("today")
-    date = pd.to_datetime("2/24/2020")
-    date = db.date("1w", reference_date=date)
-    # date = "2/24/2020"
-    act_name = "AILGC"
-    act_name = "P-LD"
-    act_df = db.load_portfolio(
-        account=act_name, date=date, market_cols=True, ret_df=True
-    )
-    strat_name = "US Long Credit"
-    strat_df = db.load_portfolio(
-        strategy=strat_name, date=date, market_cols=True, ret_df=True
-    )
 
     # %%
-    self = Account(act_df, act_name, date)
+    date = db.date("today")
 
-    len(self.df)
-    df = self.bond_overweights()
+    # date = pd.to_datetime("2/24/2020")
+    # date = db.date("1w", reference_date=date)
+    # date = "2/24/2020"
+    # act_name = "LGAS-CB"
+    act_name = "AEELA"
+    # act_name = "NFLLA"
+    # act_name = "SEIC"
+    # act_name = "LIB150"
+    act_name = "USBGC"
+    act_df = db.load_portfolio(
+        account=act_name,
+        date=date,
+        market_cols=True,
+        ret_df=True,
+        # universe="stats",
+    )
+    acnt = Account(act_df, name=act_name, date=date)
+    strat_name = "US Credit"
+    strat_name = "US Long Credit"
+    strat_name = "US Credit Plus"
+    strat_name = "US Long Government/Credit"
+    # %%
+    stats_strat_df = db.load_portfolio(
+        strategy=strat_name,
+        date=date,
+        market_cols=True,
+        ret_df=True,
+        universe="stats",
+    )
+    ret_strat_df = db.load_portfolio(
+        strategy=strat_name, date=date, market_cols=True, ret_df=True,
+    )
+    stats_strat = Strategy(stats_strat_df, name=strat_name, date=date)
+    ret_strat = Strategy(ret_strat_df, name=strat_name, date=date)
 
-    len(df)
-    len(set(df.index))
-
-    self = Strategy(strat_df, act_name, date)
-
-    self.account_bond_overweights()
-
-    len(self.df)
-    len(self.df["CUSIP"])
-    len(self.df["CUSIP"].unique())
-    self.df
-
-    len(self.df.drop_duplicates())
-    self.date
-
-    self.df = self.df.drop_duplicates(subset=["Date", "CUSIP", "Account"])
-
-    self.bon
-
-    self.account_bond_overweights()
+    ret_strat.bm_credit_pct()
+    stats_strat.bm_credit_pct()
