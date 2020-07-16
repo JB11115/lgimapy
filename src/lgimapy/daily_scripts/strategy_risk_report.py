@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 import lgimapy.vis as vis
 from lgimapy.data import Database
@@ -10,15 +11,18 @@ from lgimapy.utils import load_json, root, replace_multiple
 def main():
     # %%
     db = Database()
+    db.update_portfolio_account_data()
     date = db.date("today")
     # date = db.date("MTD")
     prev_date = db.date("1w")
+    # prev_date = pd.to_datetime("7/2/2020")
+
     # prev_date = db.date("YTD")
     pdf_path = root("reports/strategy_risk")
 
     strategy = "US Long Credit"
     strategy = "US Long Corporate"
-    strategy = "US Credit"
+    strategy = "US Intermediate Credit"
 
     n_table_rows = 10
 
@@ -28,11 +32,12 @@ def main():
     ).sort_values(ascending=False)
     # strat_df.head(10)
 
-    universe = "stats"
+    # universe = "stats"
     universe = "returns"
 
     strategies = [
         "US Long Credit",
+        "US Long Credit Plus",
         "US Long Corporate",
         "US Long Corp 2% Cap",
         "US Long Credit Ex Emerging Market",
@@ -64,7 +69,6 @@ def main():
     doc = Document(fid, path=pdf_path, fig_dir=True)
     doc.add_preamble(margin=1, bookmarks=True, bar_size=7)
     res = []
-    from tqdm import tqdm
 
     for strategy in tqdm(strategies):
         res.append(
@@ -81,6 +85,8 @@ def main():
     summary = pd.concat(df["summary"].values, axis=1, sort=False).T
     summary.index = [ix.replace("_", " ") for ix in summary.index]
     summary.index.rename("Strategy", inplace=True)
+    if len(summary.columns) > 10:
+        summary = summary[list(summary)[:10]]
     doc.add_section("Summary")
     doc.add_table(
         summary.reset_index(),
@@ -219,6 +225,9 @@ def get_single_latex_risk_page(
 
     # Build bond change in overweight table.
     n = n_table_rows
+    curr_strat.bond_overweights().rename("curr")
+    prev_strat.bond_overweights().rename("prev")
+
     bond_ow_df = pd.concat(
         [
             curr_strat.bond_overweights().rename("curr"),
@@ -314,7 +323,7 @@ def get_single_latex_risk_page(
         curr_strat.tsy_oad() - prev_strat.tsy_oad()
     )
     summary["Tsy (%)*Total"] = curr_strat.tsy_pct()
-    summary["Tsy (%)*$\\leq$5y"] = tsy_weights.loc[[2, 3, 5]].sum()
+    summary["Tsy (%)*$\\leq$ 5y"] = tsy_weights.loc[[2, 3, 5]].sum()
     summary["Tsy (%)*7y"] = tsy_weights.loc[7]
     summary["Tsy (%)*10y"] = tsy_weights.loc[10]
     summary["Tsy (%)*30y"] = tsy_weights.loc[30]
@@ -409,6 +418,8 @@ def get_single_latex_risk_page(
     # page.save_as("test", save_tex=True)
     return strategy, summary, page.body[16:]
 
+
+# %%
 
 if __name__ == "__main__":
     main()
