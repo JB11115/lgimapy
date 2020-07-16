@@ -596,7 +596,11 @@
             "C",
             "GS",
             "MS",
-            "WFC"
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
         ],
         "collateral_type": [
             "LIMITD GUARANTEE"
@@ -619,7 +623,11 @@
             "C",
             "GS",
             "MS",
-            "WFC"
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
         ],
         "collateral_type": [
             "UNSECURED"
@@ -641,7 +649,11 @@
             "C",
             "GS",
             "MS",
-            "WFC"
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
         ],
         "collateral_type": [
             "SUBORDINATED"
