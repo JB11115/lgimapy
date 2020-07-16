@@ -401,6 +401,8 @@ class Index(BondBasket):
             Series of sythetically differenced market value
             weighting for specified column.
         """
+        self._get_prev_market_value_history()
+
         fid, saved_history = self._synthetic_difference_saved_history(col)
         dates = self.dates[1:]
         a = np.zeros(len(dates))
@@ -430,7 +432,8 @@ class Index(BondBasket):
                 prev_df = self.day(self.dates[i])
             prev_df = prev_df[prev_df.index.isin(df.index)]
             a[i] = (
-                np.sum(df["MarketValue"] * df[col]) / np.sum(df["MarketValue"])
+                np.sum(df["PrevMarketValue"] * df[col])
+                / np.sum(df["PrevMarketValue"])
             ) - (
                 np.sum(prev_df["MarketValue"] * prev_df[col])
                 / np.sum(prev_df["MarketValue"])
@@ -491,7 +494,7 @@ class Index(BondBasket):
             ]
         )
 
-    def market_value_weight(self, col, low_memory=False):
+    def market_value_weight(self, col, weight="MarketValue"):
         """
         Market value weight a specified column vs entire
         index market value.
@@ -499,32 +502,19 @@ class Index(BondBasket):
         Parameters
         ----------
         col: str
-            Column name to weight, (e.g., 'OAS').
-        low_memory: bool, default=False
-            If True, perform all operations inplace on :attr:`Index.df`.
+            Column name to find weighted average for.
+        weight: str, default="MarketValue"
+            Column to use as weights.
 
         Returns
         -------
         pd.Series:
             Series of market value weighting for specified column.
         """
-        if low_memory:
-            # Perform entire operation inplace to save memory.
-            return (
-                (
-                    self.df[["Date", "MarketValue", col]]
-                    .eval(f"mvw_col=MarketValue*{col}")
-                    .groupby("Date")
-                    .sum()
-                )
-                .eval("mvw_col/MarketValue")
-                .rename(col)
-            )
-        else:
-            df = self.df[["Date", "MarketValue", col]].copy()
-            df["mvw_col"] = df["MarketValue"] * df[col]
-            g = df[["Date", "MarketValue", "mvw_col"]].groupby("Date").sum()
-            return (g["mvw_col"] / g["MarketValue"]).rename(col)
+        df = self.df[["Date", weight, col]].copy()
+        df["mvw_col"] = df[weight] * df[col]
+        g = df[["Date", weight, "mvw_col"]].groupby("Date").sum()
+        return (g["mvw_col"] / g[weight]).rename(col)
 
     def RSD(self, col):
         """
@@ -704,6 +694,32 @@ class Index(BondBasket):
         """:class:`TreasuryCurve`:  Treasury curves."""
         return TreasuryCurve()
 
+    def _get_prev_market_value_history(self):
+        """
+        Add previous market value as column as
+        `PrevMarketValue` in :attr:`Index.df`.
+        """
+        # Stop if column is column is already present.
+        if "PrevMarketValue" in list(self.df):
+            return
+
+        # Build dict of cusip/date pairs to prev market value.
+        prev_mv_map = {}
+        dates = self.dates
+        for i, curr_date in enumerate(dates[1:]):
+            prev_date = dates[i]
+            prev_mv_i = pd.DataFrame(
+                self.df.loc[self.df["Date"] == prev_date, "MarketValue"]
+            ).squeeze()
+            for cusip, val in prev_mv_i.items():
+                prev_mv_map[(cusip, curr_date)] = val
+
+        # Build column of previous market values and join to `self.df`.
+        prev_mv = np.full(len(self.df), np.NaN)
+        for i, key in enumerate(self.df["Date"].items()):
+            prev_mv[i] = prev_mv_map.get(key, np.NaN)
+        self.df["PrevMarketValue"] = prev_mv.astype("float32")
+
     def compute_total_returns(self):
         """
         Vectorized implementation for computing total returns
@@ -799,6 +815,39 @@ class Index(BondBasket):
             ex_rets = df["TRet"].values - tsy_trets
             self.df.loc[self.df["Date"] == date, "XSRet"] = ex_rets
 
+    def accumulate_individual_excess_returns(self, start_date=None):
+        """
+        Accumulate excess returns for each cusip since start date.
+
+        Parameters
+        ----------
+        start_date: datetime
+            Date to start aggregating returns.
+
+        Returns
+        -------
+        pd.Series
+            The accumlated excess return of each bond indexed
+            by it cusip.
+        """
+        self._get_prev_market_value_history()
+        self.compute_excess_returns()
+
+        # Find excess and total returns in date range.
+        xs_ret_df = self.get_value_history("XSRet")
+        t_ret_df = self.get_value_history("TRet")
+        if start_date is not None:
+            xs_ret_df = xs_ret_df[xs_ret_df.index > to_datetime(start_date)]
+            t_ret_df = t_ret_df[t_ret_df.index > to_datetime(start_date)]
+
+        # Calculate implied risk free returns.
+        rf_ret_df = t_ret_df - xs_ret_df
+        # Calculate total returns over period and use treasury
+        # returns to back out excess returns.
+        total_ret = np.prod(1 + t_ret_df) - 1
+        rf_total_ret = np.prod(1 + rf_ret_df) - 1
+        return (total_ret - rf_total_ret).rename("XSRet")
+
     def aggregate_excess_returns(self, start_date=None):
         """
         Aggregate excess returns since start date.
@@ -807,31 +856,52 @@ class Index(BondBasket):
         ----------
         start_date: datetime
             Date to start aggregating returns.
-        col_name: str
-            Column name to store aggregate returns.
 
         Returns
         -------
-        float or pd.Seires
-            Aggregated excess returns for either full index
-            or individual cusips.
+        float:
+            Aggregated excess returns for full index.
         """
+        self._get_prev_market_value_history()
         self.compute_excess_returns()
 
         # Find excess and total returns in date range.
-        ex_rets = self.market_value_weight("XSRet")
-        t_rets = self.market_value_weight("TRet")
+        xs_rets = self.market_value_weight("XSRet", weight="PrevMarketValue")
+        t_rets = self.market_value_weight("TRet", weight="PrevMarketValue")
         if start_date is not None:
-            ex_rets = ex_rets[ex_rets.index > to_datetime(start_date)]
+            xs_rets = xs_rets[xs_rets.index > to_datetime(start_date)]
             t_rets = t_rets[t_rets.index > to_datetime(start_date)]
 
         # Calculate implied risk free returns.
-        rf_rets = t_rets - ex_rets
+        rf_rets = t_rets - xs_rets
         # Calculate total returns over period and use treasury
         # returns to back out excess returns.
         total_ret = np.prod(1 + t_rets) - 1
         rf_total_ret = np.prod(1 + rf_rets) - 1
         return total_ret - rf_total_ret
+
+    def _fill_missing_columns_with_bbg_data(self):
+        """
+        Fill columns with missing data (pre-Oct 2018)
+        will data scraped form bloomberg.
+        """
+        cols = [
+            # 'PaymentRank',
+            "CollateralType",
+            "Issuer",
+            "CountryOfRisk",
+            "CountryOfDomicile",
+            "Currency",
+            "MarketOfIssue",
+        ]
+        self.df["CollateralType"].replace("No Collateral", np.NaN, inplace=True)
+        for col in cols:
+            bbg_d = load_json(f"bbg_jsons/{col}")
+            new_cats = set(bbg_d.values()) - set(self.df[col].cat.categories)
+            # Add new values as categories than fill missing
+            # data using bloomberg data.
+            self.df[col] = self.df[col].cat.add_categories(new_cats)
+            self.df[col] = self.df[col].fillna(self.df["CUSIP"].map(bbg_d))
 
 
 # %%
@@ -844,9 +914,10 @@ def main():
     from datetime import timedelta
     import matplotlib.pyplot as plt
 
-    vis.style()
-    db = Database()
-    db.display_all_columns()
+    # vis.style()
+    # db = Database()
+    # db.display_all_columns()
+    # db.load_market_data(date='3/5/2009')
     # %%
 
-    db.load_market_data(local=True, start="1/1/2020")
+    self = Index(db.build_market_index().df)
