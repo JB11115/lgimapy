@@ -3,6 +3,7 @@ from datetime import datetime as dt
 from shutil import copy
 
 from lgimapy import vis
+from lgimapy.data import Database
 from lgimapy.latex import Document
 from lgimapy.utils import root, Time
 
@@ -10,6 +11,7 @@ from cover_page import update_cover_page
 from cross_asset import update_market_review
 from equilibium_pca_model import update_equilibrium_model
 from macro_indicators import update_macro_indicators
+from sector_vol import update_volatility_indicators
 
 # %%
 def main():
@@ -22,10 +24,13 @@ def main():
 
     vis.style()
     doc = Document(fid, path="valuation_pack", fig_dir=True)
-    update_cover_page(fid)
+    db = Database()
+    db.load_market_data(local=True, start=db.date("5y"))
+    update_cover_page(fid, db)
     update_market_review(fid)
     update_macro_indicators(fid)
     update_equilibrium_model(fid)
+    update_volatility_indicators(fid, db)
     doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
     doc.save(save_tex=True)
     os.remove(dst)
