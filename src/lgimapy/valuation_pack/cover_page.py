@@ -15,15 +15,15 @@ from lgimapy.utils import root
 
 
 # %%
-def update_cover_page(fid):
+def update_cover_page(fid, db):
     """Create cover page for strategy meeting."""
     # Load market data and store indexes that will be re-used in memory.
     vis.style()
     fig_dir = root("latex/valuation_pack/fig")
-    db = Database()
-    db.load_market_data(local=True, start=db.date("5y"))
 
     ix_d = {}
+    db = Database()
+    db.load_market_data(local=True, start=db.date("5y"))
     ix_d["mc"] = db.build_market_index(in_stats_index=True)
     ix_d["lc"] = db.build_market_index(in_stats_index=True, maturity=(10, None))
     ix_d["10y"] = db.build_market_index(in_stats_index=True, maturity=(8, 12))
@@ -241,6 +241,18 @@ def update_hy_ig_ratios(fig_dir, ix_d):
 
 def update_bbb_a_ratios(fig_dir, ix_d):
     """Update plot for BBB/A nonfin ratio for 10y and 30y bonds."""
+    # %%
+    # energy_sectors = [
+    #     "INDEPENDENT",
+    #     "REFINING",
+    #     "OIL_FIELD_SERVICES",
+    #     "INTEGRATED",
+    #     "MIDSTREAM",
+    # ]
+    # ix_nonfin = ix_d["mc"].subset(
+    #     financial_flag=0, sector=energy_sectors, special_rules="~Sector"
+    # )
+    ix_nonfin = ix_d["mc"].subset(financial_flag=0, start="5/1/2020")
     ix_nonfin = ix_d["mc"].subset(financial_flag=0)
     ixs = {
         "30_A": ix_nonfin.subset(rating=("A+", "A-"), maturity=(25, 32)),
@@ -258,7 +270,7 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     df["10 yr"] = df["10_BBB"] / df["10_A"]
     df["30 yr"] = df["30_BBB"] / df["30_A"]
 
-    # df.to_csv('Nonfin_BBB_A_rato.csv')
+    # %%
 
     # Plot
     fig, ax_left = vis.subplots(figsize=(9, 6))
@@ -289,8 +301,11 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     vis.set_percentile_limits([df["10 yr"], df["30 yr"]], [ax_left, ax_right])
     ax_right.legend()
     plt.tight_layout()
-    vis.savefig(fig_dir / "BBB_A_nonfin_ratio_ex_energy")
+    vis.savefig(fig_dir / "BBB_A_nonfin_ratio")
     vis.close()
+
+
+# %%
 
 
 def strategy_scores_plot(df, ax, cmap):
@@ -306,12 +321,12 @@ def strategy_scores_plot(df, ax, cmap):
         ax=ax,
     )
     ax.xaxis.tick_top()
-    ax.set_xticklabels([f"{col:+.0f}" for col in df.columns], fontsize=10)
+    ax.set_xticklabels("-3 -2 -1 0 +1 +2 +3".split(), fontsize=10)
     ax.set_yticklabels(df.index, fontsize=10)
-    b, t = ax.get_ylim()
-    ax.set_ylim(b + 0.5, t - 0.5)
-    y_loc = mpl.ticker.FixedLocator(np.arange(t, b + 1))
-    ax.yaxis.set_major_locator(y_loc)
+    # b, t = ax.get_ylim()
+    # ax.set_ylim(b + 0.5, t - 0.5)
+    # y_loc = mpl.ticker.FixedLocator(np.arange(t, b + 1))
+    # ax.yaxis.set_major_locator(y_loc)
 
 
 def update_strategy_scores(fid, fig_dir):
