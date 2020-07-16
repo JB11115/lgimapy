@@ -67,6 +67,7 @@ def groupby(df, cols):
         "P_AssetValue": np.sum,
         "BM_AssetValue": np.sum,
         "P_Weight": np.sum,
+        "BM_Weight": np.sum,
         "Weight_Diff": np.sum,
         "OASD_Diff": np.sum,
         "OAS_Diff": np.sum,
@@ -179,7 +180,9 @@ class BondBasket:
     @property
     def constraints(self):
         """Dict of constraints used to construct index."""
-        return OrderedDict(sorted(self._constraints.items(), key=lambda k: k[0]))
+        return OrderedDict(
+            sorted(self._constraints.items(), key=lambda k: k[0])
+        )
 
     @property
     def ticker_df(self):
@@ -455,7 +458,8 @@ class BondBasket:
         # Save parameter constraints used to build index.
         argspec = getfullargspec(self.subset)
         default_constraints = {
-            arg: default for arg, default in zip(argspec.args[1:], argspec.defaults)
+            arg: default
+            for arg, default in zip(argspec.args[1:], argspec.defaults)
         }
         user_defined_constraints = locals().copy()
         ignored_kws = {
@@ -567,7 +571,9 @@ class BondBasket:
             index_val = self.constraints[constraint]
             if constraint in category_constraints:
                 # Take intersection of two constraints.
-                intersection = to_list(set(index_val) & set(subset_val), sort=True)
+                intersection = to_list(
+                    set(index_val) & set(subset_val), sort=True
+                )
                 if intersection:
                     subset_index_constraints[constraint] = intersection
                 else:
@@ -626,7 +632,8 @@ class BondBasket:
             for key in self._category_vals.keys()
         }
         flag_repl = {
-            key: f'(self.df["{key}"] == self._flags["{key}"])' for key in self._flags
+            key: f'(self.df["{key}"] == self._flags["{key}"])'
+            for key in self._flags
         }
         repl_dict = {**range_repl, **cat_repl, **flag_repl, "~(": "(~"}
 
@@ -636,7 +643,9 @@ class BondBasket:
             if isinstance(special_rules, str):
                 special_rules = [special_rules]  # make list
             for rule in special_rules:
-                subset_mask_list.append(f"({replace_multiple(rule, repl_dict)})")
+                subset_mask_list.append(
+                    f"({replace_multiple(rule, repl_dict)})"
+                )
 
         # Add treasury and muncipal rules.
         if drop_treasuries:
