@@ -35,9 +35,9 @@ def main():
     print("Updated Fed Funds\n")
     update_treasury_curve_dates()
 
-    update_feathers()
-    print()
     update_trade_dates(trade_dates)
+    print()
+    update_feathers()
     print()
     update_lgima_sectors()
     print("Updated LGIMA sectors\n")
