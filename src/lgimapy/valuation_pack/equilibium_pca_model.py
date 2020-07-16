@@ -59,20 +59,16 @@ def update_equilibrium_model(fid):
         gradient_cell_col="Current less Model * 1yr Z-score",
         gradient_cell_kws={
             "vals": equilibrium_table["cur_resid_sign"],
-            # "vmin": -3,
-            # "vmax": 3,
             "cmax": "orange",
             "cmin": "orchid",
         },
         multi_row_header=True,
     )
     doc.end_edit()
-    doc.save(save_tex=True)
+    doc.save_tex()
     # %%
     # save the risk indicators and pca factors
     # save_data(df_risk, df_pca)
-
-    return
 
 
 def format_table(df):
