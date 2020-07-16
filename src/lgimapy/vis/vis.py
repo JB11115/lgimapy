@@ -1514,6 +1514,7 @@ def plot_hist(
     bin_width=1,
     weights=None,
     normed=True,
+    cumulative=False,
     mean=False,
     mean_kws=None,
     median=False,
@@ -1543,6 +1544,8 @@ def plot_hist(
         function such that the integral over the range is 1.
         If ``False``, the result will be number of samples
         in each bin.
+    cumulative: bool, default=False
+        If ``True``, the result will be a CDF.
     mean: bool, default=False
         If True, plot a vertical line indicating the mean
         and include the value in the legend. Uses weighted
@@ -1570,6 +1573,8 @@ def plot_hist(
     bw = edges[1] - edges[0]
     if normed:
         res *= bw
+    if cumulative:
+        res = np.cumsum(res)
 
     # Update plot arguments.
     plot_kws = {"color": "steelblue", "alpha": 0.7, "label": "_nolegend_"}
@@ -1604,7 +1609,7 @@ def plot_hist(
             "color": "firebrick",
             "ls": "--",
             "lw": 1.5,
-            "label": f"Mean: {median_val:.{prec}f}",
+            "label": f"Median: {median_val:.{prec}f}",
         }
         if median_kws is not None:
             median_kwargs.update(median_kws)
