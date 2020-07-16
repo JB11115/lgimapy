@@ -198,6 +198,7 @@ class Document:
         bookmarks=False,
         page_numbers=False,
         ignore_bottom_margin=False,
+        table_caption_justification="l",
         bar_size=10,
     ):
         """
@@ -250,6 +251,13 @@ class Document:
             if ignore_bottom_margin
             else ""
         )
+        tcj = {
+            "l": "raggedright",
+            "r": "raggedleft",
+            "c": "centering",
+            "j": "justified",
+        }[table_caption_justification.lower()]
+
         default_packages = [
             "amsmath",
             "amsthm",
@@ -300,7 +308,7 @@ class Document:
 
             %% Define default caption settings for figures and tables.
             \\captionsetup{{
-                justification=raggedright,
+                justification={tcj},
                 singlelinecheck=false,
                 font={{footnotesize, bf}},
                 aboveskip=0pt,
@@ -338,12 +346,15 @@ class Document:
             \\definecolor{{firebrick}}{{HTML}}{{E85650}}
             \\definecolor{{orchid}}{{HTML}}{{9A2BE6}}
             \\definecolor{{orange}}{{HTML}}{{E69A2B}}
+            \\definecolor{{babyblue}}{{HTML}}{{85C7DB}}
+            \\definecolor{{salmon}}{{HTML}}{{DB8585}}
+            \\definecolor{{eggplant}}{{HTML}}{{815a71}}
 
             %% Define function for perctile bars in tables.
             \\newlength{{\\barw}}
             \\setlength{{\\barw}}{{0.15mm}}
-            \\def\\pctbar#1{{%%
-            	{{\\color{{gray}}\\rule{{#1\\barw}}{{{bar_size}pt}}}} #1\%}}
+            \\def\\pctbar#1#2{{%%
+            	{{\\color{{gray}}\\rule{{#2\\barw}}{{#1pt}}}} #2\%}}
 
             %% Define function for divergent bars in tables.
             \\def\\bar#1#2{{%
