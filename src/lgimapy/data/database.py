@@ -69,6 +69,7 @@ def clean_dtypes(df):
             "IssueYears",
             "DirtyPrice",
             "MarketValue",
+            "PrevMarketValue",
             "Quantity",
             "AccountWeight",
             "BenchmarkWeight",
@@ -146,14 +147,27 @@ def convert_sectors_to_fin_flags(sectors):
         "FINANCIAL_OTHER",
         "FINANCE_COMPANIES",
         "OFFICE_REITS",
+        "SIFI_BANKS_SR",
+        "SIFI_BANKS_SUB",
+        "YANKEE_BANKS",
+        "REITS",
+        "US_REGIONAL_BANKS",
     }
     other = {
         "TREASURIES",
+        "LOCAL_AUTHORITIES",
         "SOVEREIGN",
         "SUPRANATIONAL",
         "INDUSTRIAL_OTHER",
         "GOVERNMENT_GUARANTEE",
         "OWNED_NO_GUARANTEE",
+        "HOSPITALS",
+        "MUNIS",
+        "UNIVERSITY",
+        "UTILITY",
+        "UTILITY_OTHER",
+        "NATURAL_GAS",
+        "ELECTRIC",
     }
     fin_flags = np.zeros(len(sectors))
     fin_flags[sectors.isin(financials)] = 1
@@ -189,6 +203,8 @@ class Database:
             f"SERVER=XWNUSSQL0{n}\\{server.upper()};"
             "DATABASE=LGIMADatamart;"
             "Trusted_Connection=yes;"
+            "UID=inv\JB11115;"
+            "PWD=$Jrb1236463716;"
         )
 
     @property
@@ -390,24 +406,6 @@ class Database:
 
     @property
     @lru_cache(maxsize=None)
-    def _manager_to_accounts(self):
-        """Dict[str: str]: Respective accounts for each PM."""
-        return load_json("manager_accounts")
-
-    def load_trade_dates(self):
-        """List[datetime]: Dates with credit data."""
-        dates_sql = "select distinct effectivedatekey from \
-            dbo.InstrumentAnalytics order by effectivedatekey"
-
-        return list(
-            pd.to_datetime(
-                pd.read_sql(dates_sql, self._conn).values.ravel(),
-                format="%Y%m%d",
-            )
-        )
-
-    @property
-    @lru_cache(maxsize=None)
     def _numeric_to_letter_ratings(self):
         """Dict[int, str]: Numeric rating to letter map."""
         rating_dict = load_json("numeric_to_SP_ratings")
@@ -540,11 +538,11 @@ class Database:
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
 
-        # Capitalize market of issue.
-        df["MarketOfIssue"] = df["MarketOfIssue"].str.upper()
+        # Capitalize market of issue, sector, and issuer.
+        for col in ["MarketOfIssue", "Sector", "Issuer"]:
+            df[col] = df[col].str.upper()
 
-        # Capitalize all sectors and map sectors to standard values.
-        df["Sector"] = df["Sector"].str.upper()
+        # Map sectors to standard values.
         df["Sector"] = df["Sector"].str.replace(" ", "_")
         sector_map = {"OTHER_FINANCIAL": "FINANCIAL_OTHER"}
         for old_val, sector in sector_map.items():
@@ -1925,39 +1923,10 @@ class Database:
 
         self = Database()
 
-        self.load_market_data(local=True)
-        ix = self.build_market_index(in_stats_index=True)
-        ratings = ix.df["NumericRating"]
-        self.convert_numeric_ratings(ratings)
-
+        self.load_market_data(local=True, date="7/14/2020")
         # %%
-        db = Database()
-        db.load_market_data(start="12/27/2019")
-        ix = db.build_market_index(
-            drop_treasuries=False,
-            sector=[
-                "OWNED_NO_GUARANTEE",
-                "GOVERNMENT_GUARANTEE",
-                "SOVEREIGN",
-                "TREASURIES",
-            ],
-        )
-        ix.compute_excess_returns()
-        cols = [
-            "CUSIP",
-            "ISIN",
-            "Date",
-            "Issuer",
-            "Sector",
-            "OAD",
-            "OAS",
-            "OASD",
-            "YieldToWorst",
-            "TRet",
-            "XSRet",
-        ]
-        df = ix.df[cols]
-        df.tail()
-        df.to_csv("Miyuan_treasuries.csv")
-
-        df
+        date = db.trade_dates(start="5/1/2020")[0]
+        # self.load_market_data(local=True, date='7/14/2020')
+        self.load_market_data(date=date, local=True)
+        ix = self.build_market_index()
+        ix.df[["CollateralType", "Issuer", "Currency"]].head()
