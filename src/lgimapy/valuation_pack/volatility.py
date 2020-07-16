@@ -30,7 +30,11 @@ def update_voltility_model():
     pred = res.predict(sms.add_constant(df[x_vars]))
 
     fig, axes = vis.subplots(
-        2, 1, figsize=(9, 6), sharex=True, gridspec_kw={"height_ratios": [4, 1]}
+        2,
+        1,
+        figsize=(9, 4.5),
+        sharex=True,
+        gridspec_kw={"height_ratios": [2, 1]},
     )
     vis.plot_multiple_timeseries(
         [y.rename(db.bbg_names(y_var)), pred.rename("Vol Model")],
@@ -41,8 +45,21 @@ def update_voltility_model():
         ylabel="OAS (bp)",
         ax=axes[0],
     )
-    axes[1].fill_between(y.index, 0, (y - pred), color="grey", alpha=0.7)
-    axes[1].set_ylabel("Difference (bp)")
+    axes[0].legend(fancybox=True, shadow=True)
+    axes[1].fill_between(
+        y.index,
+        0,
+        (y - pred),
+        color="grey",
+        alpha=0.7,
+        label=f"Current: {(y-pred)[-1]:.0f} bp",
+    )
+    axes[1].legend(loc="upper left", fancybox=True, shadow=True)
+    axes[1].set_ylabel("Resid (bp)")
+    axes[1].set_ylim((-55, 55))
+    axes[1].set_yticks([-50, -25, 0, 25, 50])
+
+    # vis.show()
     vis.savefig(root("latex/valuation_pack/fig/long_credit_vol_model"))
     warnings.simplefilter(action="default", category=FutureWarning)
 
@@ -109,5 +126,4 @@ def combos(iterable):
 
 
 if __name__ == "__main__":
-    # %matplotlib qt
     update_voltility_model()
