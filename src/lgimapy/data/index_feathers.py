@@ -11,6 +11,7 @@ from lgimapy.utils import mkdir, root
 
 
 # %%
+fid = "2020_05"
 
 
 def create_feather(fid, all_trade_dates):
@@ -38,10 +39,20 @@ def create_feather(fid, all_trade_dates):
     ex_end = pd.to_datetime(f"{month}/1/{year}")
     start_date = db.trade_dates(exclusive_end=ex_end)[-1]
 
-    # Load index, compute MTD excess returns, and save feather.
+    # Load index and drop holidays.
     db.load_market_data(start=start_date, end=end_date)
     ix = db.build_market_index()
+    ix.df = ix.df[ix.df["Date"].isin(db.trade_dates())]
+
+    # Fill missing data with bloomberg data pre Oct-2018.
+    if start_date < pd.to_datetime("11/1/2018"):
+        ix._fill_missing_columns_with_bbg_data()
+    # Add previous market value column.
+    ix._get_prev_market_value_history()
+    # Compute MTD total and excess returns.
     ix.compute_excess_returns()
+
+    # Save feather file.
     df = ix.subset(start=f"{month}/1/{year}").df.reset_index(drop=True)
     df.to_feather(root(f"data/feathers/{fid}.feather"))
 
@@ -82,11 +93,12 @@ def find_missing_feathers(all_trade_dates):
     while True:
         try:
             db.load_market_data(start=start, local=True)
-        except ArrowIOError as e:
-            missing = str(e).split(".feather")[0].rsplit("feathers\\", 1)[1]
+        except (FileNotFoundError, ArrowIOError) as e:
+            missing = str(e).split(".feather")[0].rsplit("feathers/", 1)[1]
             create_feather(missing, all_trade_dates)
         else:
             break
+
     ix = db.build_market_index()
     saved_dates = ix.dates
     # Compare to all dates in database to find missing dates.
@@ -131,4 +143,6 @@ def update_feathers(dates=None):
 
 
 if __name__ == "__main__":
+    dates = None
+    all_trade_dates = dates
     update_feathers()
