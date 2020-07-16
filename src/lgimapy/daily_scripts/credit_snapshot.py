@@ -68,7 +68,9 @@ class SnapshotConfig:
 
     @property
     def rep_account(self):
-        return {"US_IG": "P-MC", "US_IG_10+": "P-LD", "US_HY": None}[self.index]
+        return {"US_IG": "CITMC", "US_IG_10+": "P-LD", "US_HY": None}[
+            self.index
+        ]
 
     @property
     def market_sectors(self):
@@ -555,8 +557,7 @@ def convert_sectors_to_fin_flags(sectors):
 
 
 if __name__ == "__main__":
-    # date = "3/31/2020"
-    date = None
+    date = "6/29/2020"
     with Time():
-        make_credit_snapshots()
-        update_credit_snapshots()
+        make_credit_snapshots(date)
+        # update_credit_snapshots()
