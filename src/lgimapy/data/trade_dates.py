@@ -26,11 +26,12 @@ def update_trade_dates(dates=None):
         )
     except FileNotFoundError:
         # No file, find all holidays.
-        holidays = find_holidays(trade_dates)
+        start = pd.to_datetime("1/2/1998")
+        holidays = find_holidays(trade_dates, start_date=start)
     else:
-        # Succesfully loaded file, find holidays since last holiday.
+        # Succesfully loaded file, find holidays since last save.
         saved_holidays = list(saved_df[saved_df["holiday"] == 1].index)
-        new_holidays = find_holidays(trade_dates, start_date=saved_holidays[-1])
+        new_holidays = find_holidays(trade_dates, start_date=saved_df.index[-3])
         holidays = list(set(saved_holidays + new_holidays))
         if new_holidays:
             # Print new holidays to the screen.
@@ -41,21 +42,19 @@ def update_trade_dates(dates=None):
     # Set boolean value to 1 for holidays and save to .csv file.
     df.loc[df.index.isin(holidays), "holiday"] = 1
     df.to_csv(fid)
-    print("Updated Trade Dates")
+    print("Updated trade dates.")
 
 
 def find_holidays(trade_dates, start_date=None):
     """List[datetime]: Find all holidays after given start date."""
     db = Database()
     last_date = trade_dates[-1]
-    start_date = "1/1/2004" if start_date is None else start_date
-    start_date = pd.to_datetime(start_date)
     holidays = []
     for year in range(start_date.year, last_date.year + 1):
         # Load either full year or correct portion of the year.
         start = f"12/31/{year-1}" if year != start_date.year else start_date
         end = f"1/5/{year+1}" if year != last_date.year else last_date
-        db.load_market_data(start=start, end=end, local=True)
+        db.load_market_data(start=start, end=end)
         ix = db.build_market_index(in_returns_index=True)
 
         # Find days where price, duration, and spread don't change
