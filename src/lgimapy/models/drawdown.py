@@ -10,7 +10,7 @@ import lgimapy.vis as vis
 def find_drawdowns(s, threshold="auto", distance=5, prominence=3):
     """
     Find drawdowns for a given series. For spreads, simply make the
-    input seris negative.
+    input series negative.
 
     Parameters
     ----------
