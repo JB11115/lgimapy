@@ -19,8 +19,8 @@ from lgimapy.utils import root
 def update_macro_indicators(fid, plot=True):
     # Get tables for cash and CDX.
     cash_table, cdx_table = calculate_macro_indicators(plot=plot)
-    cash_cap = "US Market Credit vs Indicators"
-    cdx_cap = "CDX IG vs Indicators"
+    cash_cap = "US Market Credit vs Macro Indicators"
+    cdx_cap = "CDX IG vs Macro Indicators"
 
     # Open valuation pack document and update macro indicator page
     # with generated tables.
