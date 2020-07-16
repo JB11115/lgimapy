@@ -215,9 +215,11 @@ def latex_table(
     df,
     caption=None,
     table_notes=None,
+    table_notes_justification="j",
     col_fmt=None,
     prec=3,
     align="center",
+    max_width=120,
     adjust=False,
     hide_index=False,
     add_blank_column=False,
@@ -237,6 +239,8 @@ def latex_table(
     gradient_cell_kws=None,
     div_bar_col=None,
     div_bar_kws=None,
+    arrow_col=None,
+    arrow_kws=None,
     center_div_bar_header=True,
     alternating_colors=(None, None),
 ):
@@ -252,6 +256,9 @@ def latex_table(
         Caption for table.
     table_notes: str, default=None
         Notes to place below table.
+    table_notes_justification: ``{'l', 'c'}``, default='l'
+        Justification for table notes text. ``'l'`` is for
+        justify left, 'c'`` is for center.
     col_fmt: str, default=None
         Column format for latex, (e.g., 'lrc').
     prec: int or Dict[str: str], default=3
@@ -265,13 +272,15 @@ def latex_table(
     adjust: bool, default=False
         If True, fit table to page width, especially usefull for
         tables with many columns.
+    max_width: int, default=120
+        Maximum character count for a single cell.
     hide_index: bool, default=False
         If True, hide index from printing in LaTeX.
     add_blank_column: bool, default=False
         If True, append a blank column to the right side of the table.
     indent_subindexes: bool, default=False
         If ``True``, indent index values beginning with ``~``.
-    int_vals: bool, default=True
+    int_vals: bool, default=False
         If True, remove decimal places for number where
         all trailing values are 0 (e.g., 3.00 --> 3).
     nan_value: str, default='-'
@@ -279,8 +288,8 @@ def latex_table(
         For blank, use ```" "```.
     font_size: str, default=None
         Font size for tables.
-        {'tiny', 'scriptsize', 'footnotesize', 'small', 'normalsize',
-        'large', 'Large', 'LARGE', 'huge', 'Huge'}.
+        ``{'tiny', 'scriptsize', 'footnotesize', 'small', 'normalsize',
+        'large', 'Large', 'LARGE', 'huge', 'Huge'}``.
     midrule_locs: str or List[str], default=None
         Index or list of index values to place a midrule line above.
     specialrule_locs: str or List[str], default=None
@@ -290,19 +299,20 @@ def latex_table(
     multi_row_header: bool, default=False
         if True, use \\thead to make header column multiple lines.
         Expects ```*``` as separator between lines in header column.
-    loc_style: Dict[Tuple[Tuple[int]]: str], default=None
+    loc_style: Dict[Tuple[int] or Tuple[Tuple[int]]: str], default=None
         Special styling for specific locations.
-        Input is expexted as dict with tuple of iloc tuples for
+        Input is expected as dict with tuple of iloc tuples for
         DataFrame elements to apply the style to as keys and respective
         LaTeX formatting as values.
 
-        * Bold: ```loc_style={'\textbf': [(0, 0), (1, 3), (4, 6)]}```
-        * Red Font: ```loc_style={'\color{red}': [(0, 1), (1, 5)]}```
+        * Bold: ```loc_style={((0, 0), (1, 3), (4, 6')): \\textbf'}```:
+        * Red Font: ```loc_style={((0, 1), (1, 5)): '\\color{red}'}```
+        * Blue Cell: ```loc_style={(5, 6): '\\cellcolor{blue}'}
     row_font: Dict[str: str].
         Special styling for a specific row.
         Input is expected as a dict with row names as keys and
         respective LaTeX formatting as value.
-    row_color: Dict[str: str].
+    row_color: Dict[str or Tuple[str]: str].
         Background colors for specific rows.
         Input is expected as a dict with row names as keys and
         respective colors as values.
@@ -311,7 +321,8 @@ def latex_table(
         Input is expexted as dict with column names as keys
         and respective LaTeX formatting as values.
 
-        * Bar Plot: ```[col: \pctbar]```
+        * Bar plot: ```[col: \pctbar]```
+        * Bar plot with font size of 5: ```[col: \pctbar{5}]```
         * Bold: ```[col: \textbf]```
     gradient_cell_col: str or List[str], default=None
         Columns(s) to apply background cell color gradient to based
@@ -332,6 +343,16 @@ def latex_table(
         ``div_bar_kws=`Dict[**kwargs]``.  To customize
         arguments by column specify
         ``div_bar_kws=`Dict[col: Dict[**col_kwargs]``
+        for each column.
+    arrow_col: str or List[str], default=None
+        Columns(s) to apply arrows to based
+        on column values.
+    arrow_kws: Dict, default=None
+        Keyword arguments for columns to apply arrows to.
+        If all columns have the same arguments simply specify
+        ``gradient_cell_kws=`Dict[**kwargs]``.  To customize
+        arguments by column specify
+        ``gradient_cell_kws=`Dict[col: Dict[**col_kwargs]``
         for each column.
     center_div_bar_header: bool, default=True
         If ``True`` automatically center the header for div bar columns.
@@ -354,6 +375,9 @@ def latex_table(
         * xcolor: Change font color of table values.
     """
     df = df.copy()
+
+    # Increase width of columns for up to 120 characters.
+    pd.set_option("display.max_colwidth", max_width)
 
     # Format columns.
     n_cols = len(df.columns)
@@ -390,6 +414,30 @@ def latex_table(
                     gradient_cells[col] = latex_color_gradient(**kwargs)
     else:
         gradient_cells = None
+
+    # Collect arrow values if needed.
+    if arrow_col is not None:
+        arrow_cols = to_list(arrow_col, dtype=str)
+        if arrow_kws is None:
+            # Use default kwargs for making gradients for all columns.
+            arrows = {col: latex_color_gradient(df[col]) for col in arrow_cols}
+        else:
+            if isinstance(list(arrow_kws.values())[0], dict):
+                # Use column specific kwargs for each columns' gradients.
+                arrows = {}
+                for col, kws in arrow_kws.items():
+                    kwargs = {"vals": df[col]}
+                    kwargs.update(**kws)
+                    arrows[col] = latex_color_gradient(**kwargs)
+            else:
+                # Use single set of kwargs for all column's gradients.
+                arrows = {}
+                for col in arrow_cols:
+                    kwargs = {"vals": df[col]}
+                    kwargs.update(**arrow_kws)
+                    arrows[col] = latex_color_gradient(**kwargs)
+    else:
+        arrows = None
 
     # Collect diverging bar values if needed.
     if div_bar_col is not None:
@@ -474,6 +522,8 @@ def latex_table(
     # Apply column formatting if required.
     if col_style is not None:
         for col, fmt in col_style.items():
+            # Add default font size for percentile bars.
+            fmt = fmt + "{10}" if fmt in {"\pctbar", "\\pctbar"} else fmt
             df[col] = [f"{fmt}{{{v}}}" for v in df[col]]
 
     # Apply column gradient coloring if required.
@@ -483,6 +533,28 @@ def latex_table(
                 "\\cellcolor{} {}".format(color, val)
                 for color, val in zip(colors, df[col].values)
             ]
+
+    # Apply column arrows coloring if required.
+    if arrows is not None:
+        for col, colors in arrows.items():
+            new_col = []
+            cell = (
+                "\\cellcolor{{white}} \\color{}{{\\{}arrow}} "
+                "\\color{{black}} {}"
+            )
+            for color, val in zip(colors, df[col].values):
+                try:
+                    float_val = float(val)
+                except ValueError:
+                    new_col.append(f"\\cellcolor{{white}} {val}")
+                if float_val > 0:
+                    new_col.append(cell.format(color, "UP", val))
+                elif float_val < 0:
+                    new_col.append(cell.format(color, "DOWN", val))
+                else:
+                    new_col.append(f"\\cellcolor{{white}} {val}")
+
+            df[col] = new_col
 
     # Create divergent bar plots if required.
     if div_bars is not None:
@@ -538,11 +610,13 @@ def latex_table(
         "\\begin{tabular}": "\\begin{tabu} to \linewidth",
         "\end{tabular}": "\end{tabu}",
     }
-    latex_fmt = partial(replace_multiple, repl_dict=repl)
 
     if int_vals:
-        int_repl = {f".{'0' * i} ": "  " + " " * i for i in range(1, 10)}
-        repl = {**repl, **int_repl}
+        for i in range(1, 10):
+            repl[f".{'0' * i} "] = "  " + " " * i
+            repl[f".{'0' * i}}}"] = "}" + " " * i
+
+    latex_fmt = partial(replace_multiple, repl_dict=repl)
 
     # Create multi-row header if specified.
     if multi_row_header:
@@ -638,7 +712,18 @@ def latex_table(
     if adjust:
         fout += "\end{adjustbox}\n"
     if table_notes is not None:
-        fout += f"{{\\justify {table_notes} \\par}}"
+        justification = {"l": "justify", "j": "justify", "c": "center"}[
+            table_notes_justification
+        ]
+        fout += f"{{\\{justification} {table_notes} \\par}}"
         fout += "\n"
     fout += "\end{table}"
     return fout
+
+
+# from lgimapy.utils import root
+#
+# table_df = pd.read_csv(root("src/lgimapy/valuation_pack/temp.csv"), index_col=0)
+#
+# df = latex_table(table_df, arrow_col="xsret_change")
+# print(df.to_latex())
