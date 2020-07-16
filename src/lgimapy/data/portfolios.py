@@ -662,19 +662,19 @@ def main():
     # act_name = "NFLLA"
     # act_name = "SEIC"
     # act_name = "LIB150"
-    act_name = "USBGC"
+    act_name = "P-LD"
     act_df = db.load_portfolio(
         account=act_name,
         date=date,
         market_cols=True,
         ret_df=True,
-        # universe="stats",
+        universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
-    strat_name = "US Credit"
+    # strat_name = "US Credit"
     strat_name = "US Long Credit"
-    strat_name = "US Credit Plus"
-    strat_name = "US Long Government/Credit"
+    # strat_name = "US Credit Plus"
+    # strat_name = "US Long Government/Credit"
     # %%
     stats_strat_df = db.load_portfolio(
         strategy=strat_name,
@@ -683,11 +683,5 @@ def main():
         ret_df=True,
         universe="stats",
     )
-    ret_strat_df = db.load_portfolio(
-        strategy=strat_name, date=date, market_cols=True, ret_df=True,
-    )
-    stats_strat = Strategy(stats_strat_df, name=strat_name, date=date)
-    ret_strat = Strategy(ret_strat_df, name=strat_name, date=date)
-
-    ret_strat.bm_credit_pct()
-    stats_strat.bm_credit_pct()
+    stats_strat_df
+    # %%
