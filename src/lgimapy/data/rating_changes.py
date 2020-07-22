@@ -9,7 +9,6 @@ from lgimapy.utils import root
 # %%
 def update_rating_changes():
     fid = root("data/rating_changes.csv")
-
     db = Database()
     saved_df, last_saved_date = read_saved_data(fid)
     dates = db.trade_dates(start=last_saved_date)
@@ -33,7 +32,11 @@ def update_rating_changes():
         pd.Series(dtype="float64"), ignore_index=True
     )
     updated_df.iloc[-1, 1] = curr_date
-    updated_df.to_csv(fid)
+    updated_df.to_csv(fid)  # .csv for solutions team
+
+    # Save parquet for use in lgimapy
+    df_parquet = clean_rating_dtypes(updated_df.iloc[:-1])
+    df_parquet.to_parquet(fid.parent / f"{fid.stem}.parquet")
 
 
 def read_saved_data(fid):
@@ -145,5 +148,48 @@ def get_rating_changes(df, db):
     return rating_change_df[df_columns]
 
 
+def clean_rating_dtypes(df):
+    """Convert dtypes of ratings DataFrame for saving."""
+    reverse_dtype_dict = {
+        "Int8": [
+            "USCreditReturnsFlag",
+            "USHYReturnsFlag",
+            "FinancialFlag",
+            "NumericRating_PREV",
+            "NumericRating_NEW",
+            "NumericRating_CHANGE",
+            "MoodyRating_PREV",
+            "MoodyRating_NEW",
+            "MoodyRating_CHANGE",
+            "SPRating_PREV",
+            "SPRating_NEW",
+            "SPRating_CHANGE",
+            "FitchRating_PREV",
+            "FitchRating_NEW",
+            "FitchRating_CHANGE",
+        ],
+        "float32": ["MaturityYears", "MarketValue",],
+        "category": [
+            "CUSIP",
+            "ISIN",
+            "Ticker",
+            "Issuer",
+            "Sector",
+            "Subsector",
+        ],
+    }
+    # Build col:dtype dict and apply to input DataFrame.
+    df_columns = set(df.columns)
+    dtype_dict = {}
+    for dtype, col_names in reverse_dtype_dict.items():
+        for col in col_names:
+            if col in df_columns:
+                dtype_dict[col] = dtype
+            else:
+                continue
+    return df.astype(dtype_dict)
+
+
+# %%
 if __name__ == "__main__":
     update_rating_changes()
