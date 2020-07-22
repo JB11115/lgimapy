@@ -123,7 +123,7 @@ def format_table(df):
 
     # Format index names.
     new_index = Database().bbg_names(df.index)
-    bold_names = {"US Market Credit", "US Long Credit"}
+    bold_names = {"US Market Credit", "US Long Credit", "US HY"}
     new_index = [
         f"\\textbf{{{ix}}}" if ix in bold_names else ix for ix in new_index
     ]
