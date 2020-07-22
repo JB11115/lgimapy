@@ -1912,21 +1912,21 @@ class Database:
             df = df[df.index <= to_datetime(end)]
         return df[tickers].squeeze()
 
+
+# %%
+def main():
+    pass
     # %%
-    def main():
-        pass
-        # %%
-        from collections import defaultdict
-        from lgimapy import vis
-        from lgimapy.utils import Time, load_json, dump_json
-        from lgimapy.bloomberg import bdp
+    from collections import defaultdict
+    from lgimapy import vis
+    from lgimapy.utils import Time, load_json, dump_json
+    from lgimapy.bloomberg import bdp
 
-        self = Database()
+    self = Database()
 
-        self.load_market_data(local=True, date="7/14/2020")
-        # %%
-        date = db.trade_dates(start="5/1/2020")[0]
-        # self.load_market_data(local=True, date='7/14/2020')
-        self.load_market_data(date=date, local=True)
-        ix = self.build_market_index()
-        ix.df[["CollateralType", "Issuer", "Currency"]].head()
+    self.load_market_data(local=True, date="7/14/2020")
+    # %%
+    date = db.trade_dates(start="3/1/1998")[0]
+    # self.load_market_data(local=True, date='7/14/2020')
+    self.load_market_data(date=date, local=True)
+    ix = self.build_market_index()
