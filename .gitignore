@@ -50,6 +50,14 @@ $RECYCLE.BIN/
 ###############
 venv/
 
+# domino files
+#############
+.domino/
+.dominoresults
+.idea/
+dominostats.json
+
+
 # Python files #
 ################
 __pycache__/
