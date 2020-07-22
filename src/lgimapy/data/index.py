@@ -382,7 +382,13 @@ class Index(BondBasket):
                 history = {}
             return fid, history
 
-    def get_synthetic_differenced_history(self, col, dropna=False):
+    def get_synthetic_differenced_history(
+        self,
+        col,
+        col2="PrevMarketValue",
+        dropna=False,
+        force_calculations=False,
+    ):
         """
         Save the difference history of a column.
 
@@ -404,6 +410,8 @@ class Index(BondBasket):
         self._get_prev_market_value_history()
 
         fid, saved_history = self._synthetic_difference_saved_history(col)
+        if force_calculations:
+            saved_history = {}
         dates = self.dates[1:]
         a = np.zeros(len(dates))
         cols = ["MarketValue", col]
@@ -431,10 +439,7 @@ class Index(BondBasket):
                 df = self.synthetic_day(date)
                 prev_df = self.day(self.dates[i])
             prev_df = prev_df[prev_df.index.isin(df.index)]
-            a[i] = (
-                np.sum(df["PrevMarketValue"] * df[col])
-                / np.sum(df["PrevMarketValue"])
-            ) - (
+            a[i] = (np.sum(df[col2] * df[col]) / np.sum(df[col2])) - (
                 np.sum(prev_df["MarketValue"] * prev_df[col])
                 / np.sum(prev_df["MarketValue"])
             )
@@ -442,9 +447,10 @@ class Index(BondBasket):
 
         warnings.simplefilter("default", category=RuntimeWarning)
 
-        # Save synthetic difference history to file.
-        new_history = pd.DataFrame(pd.Series(saved_history))
-        new_history.to_csv(fid)
+        if not force_calculations:
+            # Save synthetic difference history to file.
+            new_history = pd.DataFrame(pd.Series(saved_history))
+            new_history.to_csv(fid)
 
         # pd.DataFrame(calculated_s).to_csv(fid)
         # Add the the cumulative synthetic differences to the current
@@ -472,6 +478,63 @@ class Index(BondBasket):
         """
         current_cusips = self.day(self.dates[-1], as_index=True).cusips
         return self.subset(cusip=current_cusips)
+
+    def drop_tail(self, col, pct=10):
+        """
+        Drop the widest tail portion of an index by given
+        percent of cumulative market value.
+
+        Parameters
+        ----------
+        col: str
+            Column to find tail for.
+        pct: int or float, default=10
+            Size of tail by percent of cumulative market value.
+
+        Returns
+        -------
+        :class:`Index`:
+            Index the current :class:`Index` with the
+            specified tail dropped.
+        """
+        df = self.df.sort_values(["Date", col])
+        drop_threshold = 1 - (pct / 100)
+
+        def daily_drop_tail(df):
+            mv_percentile = np.cumsum(df["MarketValue"]) / np.sum(
+                df["MarketValue"]
+            )
+            return df[mv_percentile < drop_threshold]
+
+        return Index(df.groupby("Date").apply(daily_drop_tail))
+
+    def get_tail(self, col, pct=10):
+        """
+        Get just the widest tail portion of an index by given
+        percent of cumulative market value.
+
+        Parameters
+        ----------
+        col: str
+            Column to find tail for.
+        pct: int or float, default=10
+            Size of tail by percent of cumulative market value.
+
+        Returns
+        -------
+        :class:`Index`:
+            Index of the specified tail of the current :class:`Index`.
+        """
+        df = self.df.sort_values(["Date", col])
+        drop_threshold = 1 - (pct / 100)
+
+        def daily_keep_tail(df):
+            mv_percentile = np.cumsum(df["MarketValue"]) / np.sum(
+                df["MarketValue"]
+            )
+            return df[mv_percentile >= drop_threshold]
+
+        return Index(df.groupby("Date").apply(daily_keep_tail))
 
     def get_cusip_history(self, cusip):
         """
@@ -619,13 +682,9 @@ class Index(BondBasket):
         """
         col_df = self.get_value_history(col)
         mv_df = self.get_value_history("MarketValue")
-        var_df = col_df.rolling(
-            window=window_size, min_periods=window_size
-        ).var()
-        weights_df = mv_df.divide(np.sum(mv_df, axis=1).values, axis=0)
-        vol = np.sum(
-            ((var_df * weights_df ** 2) ** 0.5).dropna(how="all"), axis=1
-        )
+        var_df = col_df.rolling(window_size, min_periods=window_size).var()
+        weights_df = mv_df.divide(np.sum(mv_df, axis=1).values, axis=0) ** 2
+        vol = (np.sum(var_df * weights_df, axis=1) ** 0.5)[window_size - 1 :]
         if annualized:
             vol *= 252 ** 0.5
         return vol
@@ -914,10 +973,44 @@ def main():
     from datetime import timedelta
     import matplotlib.pyplot as plt
 
-    # vis.style()
-    # db = Database()
-    # db.display_all_columns()
-    # db.load_market_data(date='3/5/2009')
+    vis.style()
+    kwargs = load_json("indexes")
+    db = Database()
+    db.display_all_columns()
+    # db.load_market_data(start="5/1/2019", end="12/1/2019", local=True)
+    db.load_market_data(start="7/1/2020", local=True)
     # %%
 
-    self = Index(db.build_market_index().df)
+    self = Index(
+        db.build_market_index(
+            # sector="OWNED_NO_GUARANTEE",
+            maturity=(10, None),
+            in_stats_index=True,
+        ).df
+    )
+
+    # %%
+    oas = self.OAS()
+    oas_prev_mv = self.get_synthetic_differenced_history(
+        "OAS", force_calculations=True
+    )
+    oas_mv = self.get_synthetic_differenced_history(
+        "OAS", col2="MarketValue", force_calculations=True, dropna=True
+    )
+    # %%
+    vis.plot_timeseries(oad, title="Long Credit OAD")
+    vis.savefig("long_credit_oad")
+    # %%
+    vis.plot_multiple_timeseries(
+        [
+            oas.rename("Actual OAS"),
+            oas_mv.rename("Synthetic OAS, different MV's"),
+            oas_prev_mv.rename("Synthetic OAS, same MV's"),
+        ],
+        alpha=0.6,
+        xtickfmt="auto",
+    )
+    vis.savefig("Gov_owned_no_guar_OAS_2019")
+    # vis.show()
+
+    # %%
