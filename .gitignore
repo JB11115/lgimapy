@@ -77,5 +77,8 @@ data/feathers/
 /data/
 /latex/
 reports/
+/src/**/*.json
+/src/**/*.png
+/src/**/*.csv
 src/lgimapy/notebooks/
 src/lgimapy.egg-info/
