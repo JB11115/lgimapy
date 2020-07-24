@@ -115,8 +115,14 @@ class BondBasket:
     @property
     @lru_cache(maxsize=None)
     def cusips(self):
-        """List[str]: Memoized unique cusips in index."""
+        """List[str]: Memoized unique CUSIPs in index."""
         return list(self.df.index.unique())
+
+    @property
+    @lru_cache(maxsize=None)
+    def isins(self):
+        """List[str]: Memoized unique ISINs in index."""
+        return list(self.df.['ISIN'].unique())
 
     @property
     @lru_cache(maxsize=None)
@@ -187,6 +193,25 @@ class BondBasket:
     @property
     def ticker_df(self):
         return groupby(self.df, "Ticker")
+
+
+    @property
+    @lru_cache(maxsize=None)
+    def rating_changes(self):
+        """pd.DataFrame: Rating change history of basket."""
+        fid = root("data/rating_changes.parquet")
+        df = pd.read_parquet(fid)
+        return df[
+            (df['Date_PREV']) >= self.dates[0])
+            & (df['Date_NEW'] <= self.dates[-1])
+            & (df['CUSIP'])
+            ]
+        if start is not None:
+            df = df[df["Date_PREV"] >= pd.to_datetime(start)].copy()
+        if end is not None:
+            df = df[df["Date_PREV"] <= pd.to_datetime(end)].copy()
+        return df
+
 
     def subset(
         self,
