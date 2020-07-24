@@ -122,7 +122,7 @@ class BondBasket:
     @lru_cache(maxsize=None)
     def isins(self):
         """List[str]: Memoized unique ISINs in index."""
-        return list(self.df.['ISIN'].unique())
+        return list(self.df['ISIN'].unique())
 
     @property
     @lru_cache(maxsize=None)
