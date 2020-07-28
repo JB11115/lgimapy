@@ -145,7 +145,16 @@ def get_sector_table(maturity, path, db):
                 continue
 
             # Calculate spread.
-            oas = ix_sector.get_synthetic_differenced_history("OAS")
+            ix_sector_corrected = ix_sector.drop_ratings_migrations()
+            try:
+                oas = ix_sector_corrected.get_synthetic_differenced_history(
+                    "OAS"
+                )
+            except UnboundLocalError:
+                # Not enough history.
+                print(sector, rating_kws)
+                continue
+
             oas_ytd = oas[oas.index >= db.date("YTD")]
             oas_1m = oas[oas.index >= db.date("1m")]
             oas_min = np.min(oas_ytd)
@@ -368,6 +377,7 @@ def vol_model_zscores(history_dict, maturity, path):
 
     vis.plot_timeseries(
         beta,
+        start=Database().date("5m"),
         title="Compensation for Volatility",
         ylabel="bp increase in OAS per\nbp increase in Daily Spread Vol",
         xtickfmt="auto",
@@ -702,7 +712,8 @@ def make_1m_sector_table(sector_df, maturity, name, doc, db):
         start=db.date("1m"), maturity=maturity, in_stats_index=True
     )
     ix_xsret = 1e4 * ix.aggregate_excess_returns()
-    ix_oas = ix.get_synthetic_differenced_history("OAS")
+    ix_corrected = ix.drop_ratings_migrations()
+    ix_oas = ix_corrected.get_synthetic_differenced_history("OAS")
     df = df.append(pd.Series(dtype="object"), ignore_index=True)
     n = len(df) - 1
     df.loc[n, "raw_sector"] = "index"
