@@ -268,6 +268,68 @@ class Database:
             infer_datetime_format=True,
         )
 
+    @property
+    @lru_cache(maxsize=None)
+    def _index_kwargs_dict(self):
+        """dict[str: dict]: keyword arguments for saved indexes."""
+        return load_json("indexes")
+
+    @property
+    @lru_cache(maxsize=None)
+    def _rating_changes_df(self):
+        """pd.DataFrame: Rating change history."""
+        fid = root("data/rating_changes.parquet")
+        return pd.read_parquet(fid)
+
+    def rating_changes(self, start=None, end=None):
+        """
+        Get history of rating changes.
+
+        Parameters
+        ----------
+        start: datetime, optional
+            Start date for rating changes.
+        end: datetime, optional
+            End date for rating changes.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Rating changes within specified dates.
+        """
+        df = self._rating_changes_df.copy()
+        if start is not None:
+            df = df[df["Date_PREV"] >= pd.to_datetime(start)].copy()
+        if end is not None:
+            df = df[df["Date_PREV"] <= pd.to_datetime(end)].copy()
+        return df
+
+    def index_kwargs(self, name, **kwargs):
+        """
+        Index keyword arguments for saved indexes,
+        with ability to override/add new arguments.
+
+        Parameters
+        ----------
+        name: str
+            Name of stored index.
+        kwargs:
+            Keyword arguments to override or add to index.
+
+        Returns
+        -------
+        dict:
+            Keyword arguments and respective constraints
+            for specified index.
+        """
+        try:
+            d = self._index_kwargs_dict[name]
+        except KeyError:
+            raise KeyError(f"{name} is not a stored Index.")
+
+        d.update(**kwargs)
+        return d
+
     def date(self, date_delta, reference_date=None, **kwargs):
         """
         Find date relative to a specified date.
@@ -1925,8 +1987,38 @@ def main():
     self = Database()
 
     self.load_market_data(local=True, date="7/14/2020")
+
     # %%
-    date = db.trade_dates(start="3/1/1998")[0]
-    # self.load_market_data(local=True, date='7/14/2020')
-    self.load_market_data(date=date, local=True)
-    ix = self.build_market_index()
+    db = Database()
+    db.load_market_data(local=True)
+
+    with Time():
+        df = db.rating_changes(start='1/1/2020')
+
+
+
+
+
+    # %%
+    db.load_market_data(date='3/2/2020')
+    ix = db.build_market_index()
+    og_cusips = ix.cusips
+    len(og_cusips)
+
+
+    db.load_market_data(start='3/2/2020', local=True)
+    ix_clean = db.build_market_index(date='3/2/2020')
+    clean_cusips = ix_clean.cusips
+    len(clean_cusips)
+
+    changed_cusips = set(og_cusips) ^ set(clean_cusips)
+
+    ix_old = db.build_market_index(cusip=changed_cusips)
+
+    cols = ['CUSIP', 'Issuer', 'MaturityDate', 'ISIN']
+    ix_old.df[cols]
+
+
+    ix_new = ix_clean.subset(issuer=ix_old.df['Issuer'], isin=ix_old.df['ISIN'])
+    ix_new.df[cols]
+    sorted(list(df))
