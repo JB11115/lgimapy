@@ -13,11 +13,9 @@ def update_rating_changes():
     saved_df, last_saved_date = read_saved_data(fid)
     dates = db.trade_dates(start=last_saved_date)
     curr_date = dates[-1]  # init in case loop doesn't run
-    df_list = [saved_df]
+    df_list = [] if saved_df is None else [saved_df]
 
-    for i, curr_date in enumerate(dates[1:]):
-        if i == 100:
-            break
+    for i, curr_date in tqdm(enumerate(dates[1:1000])):
         prev_date = dates[i]
         df = db.load_market_data(
             start=prev_date, end=curr_date, clean=False, ret_df=True
@@ -34,7 +32,7 @@ def update_rating_changes():
     updated_df.iloc[-1, 1] = curr_date
     updated_df.to_csv(fid)  # .csv for solutions team
 
-    # Save parquet for use in lgimapy
+    # Save parquet for use in lgimapy (with blank row removed).
     df_parquet = clean_rating_dtypes(updated_df.iloc[:-1])
     df_parquet.to_parquet(fid.parent / f"{fid.stem}.parquet")
 
@@ -105,6 +103,7 @@ def get_rating_changes(df, db):
         "Date_PREV": "Date_PREV",
         "Date_NEW": "Date_NEW",
         "CUSIP": "CUSIP",
+        "ISIN_NEW": "ISIN",
         "Ticker_NEW": "Ticker",
         "Issuer_NEW": "Issuer",
         "Sector_NEW": "Sector",
