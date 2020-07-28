@@ -22,8 +22,8 @@ def update_cover_page(fid, db):
     fig_dir = root("latex/valuation_pack/fig")
 
     ix_d = {}
-    db = Database()
-    db.load_market_data(local=True, start=db.date("5y"))
+    # db = Database()
+    # db.load_market_data(local=True, start=db.date("5y"))
     ix_d["mc"] = db.build_market_index(in_stats_index=True)
     ix_d["lc"] = db.build_market_index(in_stats_index=True, maturity=(10, None))
     ix_d["10y"] = db.build_market_index(in_stats_index=True, maturity=(8, 12))
