@@ -789,10 +789,6 @@
         "NAME": "LIBOR",
         "YTW": "US0003M Index"
     },
-    "US_ECO_SURP": {
-        "NAME": "US Economic Surprise",
-        "LEVEL": "ECSURPUS Index"
-    },
     "US_GDP_QOQ": {
         "NAME": "US GDP QoQ",
         "LEVEL": "GDP CQOQ Index"
