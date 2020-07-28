@@ -122,7 +122,7 @@ class BondBasket:
     @lru_cache(maxsize=None)
     def isins(self):
         """List[str]: Memoized unique ISINs in index."""
-        return list(self.df['ISIN'].unique())
+        return list(self.df["ISIN"].unique())
 
     @property
     @lru_cache(maxsize=None)
@@ -194,24 +194,17 @@ class BondBasket:
     def ticker_df(self):
         return groupby(self.df, "Ticker")
 
-
     @property
     @lru_cache(maxsize=None)
-    def rating_changes(self):
+    def _ratings_changes_df(self):
         """pd.DataFrame: Rating change history of basket."""
         fid = root("data/rating_changes.parquet")
         df = pd.read_parquet(fid)
         return df[
-            (df['Date_PREV']) >= self.dates[0])
-            & (df['Date_NEW'] <= self.dates[-1])
-            & (df['CUSIP'])
-            ]
-        if start is not None:
-            df = df[df["Date_PREV"] >= pd.to_datetime(start)].copy()
-        if end is not None:
-            df = df[df["Date_PREV"] <= pd.to_datetime(end)].copy()
-        return df
-
+            (df["Date_PREV"] >= self.dates[0])
+            & (df["Date_NEW"] <= self.dates[-1])
+            & (df["ISIN"].isin(self.isins))
+        ].copy()
 
     def subset(
         self,
@@ -623,6 +616,10 @@ class BondBasket:
                 else:
                     max_con = min(index_val[1], subset_val[1])
                 subset_index_constraints[constraint] = (min_con, max_con)
+            elif constraint == "special_rules":
+                subset_index_constraints[
+                    constraint
+                ] = f"({index_val}) & ({subset_val})"
             else:
                 # Hopefully this never happens.
                 raise NotImplementedError(not_imp_msg.format(constraint))
