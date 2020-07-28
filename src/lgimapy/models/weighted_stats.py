@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def weighted_percentile(a, weights=None, q=50):
+def weighted_percentile(a, weights=None, q=50, dropna=True):
     """
     Weighted version of ``np.percentile``.
 
@@ -15,6 +15,8 @@ def weighted_percentile(a, weights=None, q=50):
         Percentile or sequence of percentiles to compute,
         which must be between 0 and 100 inclusive.
         Defaults to median.
+    dropna: bool, default=True
+        If ``True`` remove nan's from either array.
 
     Returns
     -------
@@ -29,6 +31,11 @@ def weighted_percentile(a, weights=None, q=50):
     if weights is None:
         weights = np.ones(len(a))
     weights = np.array(weights)
+
+    if dropna:
+        mask = ~np.isnan(a) & ~np.isnan(weights)
+        a = a[mask]
+        weights = weights[mask]
 
     sorter = np.argsort(a)
     sorted_a = a[sorter]
