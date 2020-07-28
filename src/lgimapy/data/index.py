@@ -479,6 +479,47 @@ class Index(BondBasket):
         current_cusips = self.day(self.dates[-1], as_index=True).cusips
         return self.subset(cusip=current_cusips)
 
+    def drop_ratings_migrations(self):
+        """
+        Drop any bonds who had rating migrations
+        pushing them out of the current index.
+
+        Returns
+        -------
+        :class:`Index`
+            Index of bonds that spend entire series in
+            current index rating boundaries.
+        """
+        # Load rating changes for bonds in index.
+        df = self._ratings_changes_df
+        cons = self.constraints
+        in_stats_ix = cons.get("in_stats_index", False)
+        in_returns_ix = cons.get("in_returns_ix_index", False)
+
+        # Determine minimum and maximum allowable ratings.
+        if "rating" in cons:
+            # If ratings are specified, use those ratings.
+            min_rating, max_rating = cons["rating"]
+        elif in_stats_ix or in_returns_ix:
+            # If its an index member, use (AAA, BBB-).
+            min_rating, max_rating = 1, 10
+        else:
+            # Allow all ratings.
+            min_rating, max_rating = 0, 23
+
+        # Return an index with all bonds outside allowable
+        # range dropped. Use ISIN as ISINs dont change
+        # over time.
+        df = df[
+            (df["NumericRating_NEW"] > max_rating)
+            | (df["NumericRating_NEW"] < min_rating)
+        ]
+        if len(df):
+            # There are bonds to drop.
+            return self.subset(isin=set(df["ISIN"]), special_rules="~ISIN")
+        else:
+            return self
+
     def drop_tail(self, col, pct=10):
         """
         Drop the widest tail portion of an index by given
@@ -974,43 +1015,11 @@ def main():
     import matplotlib.pyplot as plt
 
     vis.style()
-    kwargs = load_json("indexes")
     db = Database()
     db.display_all_columns()
     # db.load_market_data(start="5/1/2019", end="12/1/2019", local=True)
     db.load_market_data(start="7/1/2020", local=True)
+    # db.load_market_data(local=True)
     # %%
 
-    self = Index(
-        db.build_market_index(
-            # sector="OWNED_NO_GUARANTEE",
-            maturity=(10, None),
-            in_stats_index=True,
-        ).df
-    )
-
-    # %%
-    oas = self.OAS()
-    oas_prev_mv = self.get_synthetic_differenced_history(
-        "OAS", force_calculations=True
-    )
-    oas_mv = self.get_synthetic_differenced_history(
-        "OAS", col2="MarketValue", force_calculations=True, dropna=True
-    )
-    # %%
-    vis.plot_timeseries(oad, title="Long Credit OAD")
-    vis.savefig("long_credit_oad")
-    # %%
-    vis.plot_multiple_timeseries(
-        [
-            oas.rename("Actual OAS"),
-            oas_mv.rename("Synthetic OAS, different MV's"),
-            oas_prev_mv.rename("Synthetic OAS, same MV's"),
-        ],
-        alpha=0.6,
-        xtickfmt="auto",
-    )
-    vis.savefig("Gov_owned_no_guar_OAS_2019")
-    # vis.show()
-
-    # %%
+    self = db.build_market_index(**db.index_kwargs("STATS_all"))
