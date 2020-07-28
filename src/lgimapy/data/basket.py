@@ -48,11 +48,33 @@ def groupby(df, cols):
     pd.DataFrame
         Grouped DataFrame.
     """
+    df_to_group = df.copy()
     if cols == "risk entity":
         groupby_cols = ["Ticker", "Issuer"]
     else:
         groupby_cols = to_list(cols, dtype=str)
 
+    # Collect columns that should be market value weighted
+    # and create a mv weighted column for each that is present.
+    mv_weight_cols = [
+        "OAS",
+        "OASD",
+        "OAD",
+        "DirtyPrice",
+        "CleanPrice",
+        "PX_Adj_OAS",
+    ]
+    mv_agg_rules = {}
+    df_cols = set(df)
+    any_mv_cols_present = len(set(mv_weight_cols) & df_cols)
+    if any_mv_cols_present and "MarketValue" in df_cols:
+        for col in mv_weight_cols:
+            if col not in df_cols:
+                continue
+            df_to_group[f"MV_{col}"] = df["MarketValue"] * df[col]
+            mv_agg_rules[f"MV_{col}"] = np.sum
+
+    # Combine aggregation rules for all columns.
     agg_rules = {
         "Ticker": mode,
         "Issuer": mode,
@@ -73,14 +95,24 @@ def groupby(df, cols):
         "OAS_Diff": np.sum,
         "DTS_Diff": np.sum,
         "DTS_Contrib": np.sum,
+        **mv_agg_rules,
     }
-
+    # Apply aggregation of present columns.
     agg_cols = {
         col: rule
         for col, rule in agg_rules.items()
-        if col in df.columns and col not in groupby_cols
+        if col in df_to_group.columns and col not in groupby_cols
     }
-    return df.groupby(groupby_cols, observed=True).aggregate(agg_cols)
+    gdf = df_to_group.groupby(groupby_cols, observed=True).aggregate(agg_cols)
+
+    # Clean market value weighted columns by dividing by total
+    # market value and renaming back to original name.
+    col_names = {}
+    for col in mv_agg_rules.keys():
+        gdf[col] = gdf[col] / gdf["MarketValue"]
+        col_names[col] = col[3:]
+
+    return gdf.rename(columns=col_names)
 
 
 class BondBasket:
@@ -765,3 +797,15 @@ class BondBasket:
         if input_val is not None:
             self._all_rules.append(col_name)
             self._flags[col_name] = int(input_val)
+
+    def calc_dollar_adjusted_spreads(self):
+        """
+        Adjust spreads by 1 bp tighter (wider) per $ over (under)
+        par for BBB's and 0.5 bp for A rateds.
+        """
+        multiplier = np.ones(len(self.df))
+        # Use a 0.5 multiplier for A rated bonds.
+        multiplier[self.df["NumericRating"] < 8] = 0.5
+        self.df["PX_Adj_OAS"] = self.df["OAS"] - multiplier * (
+            self.df["CleanPrice"] - 100
+        )
