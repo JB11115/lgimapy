@@ -16,12 +16,12 @@ from lgimapy.utils import load_json, mkdir, root, Time
 # %%
 
 
-def make_credit_snapshots(date=None):
+def make_credit_snapshots(date=None, include_portfolio=True):
     """Build credit snapshots and sitch them together."""
     indexes = ["US_IG", "US_IG_10+"]
     for index in indexes:
         build_credit_snapshot(
-            index, date=date, include_portfolio_positions=True
+            index, date=date, include_portfolio_positions=include_portfolio
         )
 
 
@@ -442,8 +442,9 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
     """
     # Get synthetic OAS and price histories.
     try:
-        oas = ix.get_synthetic_differenced_history("OAS")
-        price = ix.get_synthetic_differenced_history("DirtyPrice")
+        ix_corrected = ix.drop_ratings_migrations()
+        oas = ix_corrected.get_synthetic_differenced_history("OAS")
+        price = ix_corrected.get_synthetic_differenced_history("DirtyPrice")
     except UnboundLocalError:
         # DataFrame is emtpy.
         d = OrderedDict([("Close*OAS", np.nan), ("Close*Price", np.nan)])
@@ -512,52 +513,9 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
     return pd.DataFrame(d, index=[ix.name])
 
 
-def convert_sectors_to_fin_flags(sectors):
-    """
-    Convert sectors to flag indicating if they
-    are non-financial (0), financial (1), or other (2).
-
-    Parameters
-    ----------
-    sectors: pd.Series
-        Sectors
-
-    Returns
-    -------
-    fin_flags: nd.array
-        Array of values indicating if sectors are non-financial (0),
-        financial (1), or other (Treasuries, Sovs, Govt owned).
-    """
-
-    financials = {
-        "P&C",
-        "LIFE",
-        "APARTMENT_REITS",
-        "BANKING",
-        "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-        "RETAIL_REITS",
-        "HEALTHCARE_REITS",
-        "OTHER_REITS",
-        "FINANCIAL_OTHER",
-        "FINANCE_COMPANIES",
-        "OFFICE_REITS",
-    }
-    other = {
-        "TREASURIES",
-        "SOVEREIGN",
-        "SUPRANATIONAL",
-        "INDUSTRIAL_OTHER",
-        "GOVERNMENT_GUARANTEE",
-        "OWNED_NO_GUARANTEE",
-    }
-    fin_flags = np.zeros(len(sectors))
-    fin_flags[sectors.isin(financials)] = 1
-    fin_flags[sectors.isin(other)] = 2
-    return fin_flags
-
-
 if __name__ == "__main__":
-    date = "6/29/2020"
+    date = "/29/2020"
+    date = Database().date('today')
     with Time():
         make_credit_snapshots(date)
         # update_credit_snapshots()
