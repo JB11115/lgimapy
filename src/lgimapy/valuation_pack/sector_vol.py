@@ -152,7 +152,6 @@ def get_sector_table(maturity, path, db):
                 )
             except UnboundLocalError:
                 # Not enough history.
-                print(sector, rating_kws)
                 continue
 
             oas_ytd = oas[oas.index >= db.date("YTD")]
@@ -242,8 +241,8 @@ def get_sector_table(maturity, path, db):
         prev_xs_rets[i] = xs_ret_change_d.get(key, np.NaN)
     table_df["xsret_model"] = curr_xs_rets
     table_df["xsret_prev"] = prev_xs_rets
-    temp_fid = root("src/lgimapy/valuation_pack/temp.csv")
-    table_df.dropna(subset=["xsret_model", "vol_model"]).to_csv(temp_fid)
+    # temp_fid = root("src/lgimapy/valuation_pack/temp.csv")
+    # table_df.dropna(subset=["xsret_model", "vol_model"]).to_csv(temp_fid)
     return table_df.dropna(subset=["xsret_model", "vol_model"])
 
 
@@ -724,7 +723,6 @@ def make_1m_sector_table(sector_df, maturity, name, doc, db):
     df.loc[n, "RealXSRet"] = 1e4 * ix.aggregate_excess_returns()
     df.loc[n, "ModelXSRet"] = 0
     df.loc[n, "ModelResid"] = 0
-    # print(df.tail())
     fin_flags = {
         f"{name} Non-Fin Sector 1M Performance": 0,
         f"{name} Fin Sector 1M Performance": 1,
