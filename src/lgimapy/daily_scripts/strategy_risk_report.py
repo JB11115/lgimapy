@@ -41,6 +41,8 @@ def main():
         "US Long Corporate",
         "US Long Corp 2% Cap",
         "US Long Credit Ex Emerging Market",
+        "US Corporate 1% Issuer Cap",
+        "Global Agg USD Corp",
         "Custom RBS",
         "GM_Blend",
         "US Corporate IG",
@@ -95,7 +97,7 @@ def main():
         multi_row_header=True,
         adjust=True,
         hide_index=True,
-        midrule_locs=[1, 6, 13, 18, 19, 22],
+        midrule_locs=[2, 9, 16, 21, 22, 25],
     )
     doc.add_text("\\pagebreak")
     for page in df["pages"].values:
