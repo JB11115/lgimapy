@@ -700,7 +700,14 @@ class Database:
         """
 
         # Make temporary matrix of numeric ratings.
-        ratings_mat = df[cols].fillna("NR").values
+        ratings_mat = np.zeros((len(df), len(cols)), dtype="object")
+        for i, col in enumerate(cols):
+            try:
+                agency_col = df[col].cat.add_categories("NR")
+            except ValueError:
+                agency_col = df[col]
+
+            ratings_mat[:, i] = agency_col.fillna("NR")
 
         # Fill matrix with numeric ratings for each rating agency.
         while True:
@@ -1993,21 +2000,16 @@ def main():
     db.load_market_data(local=True)
 
     with Time():
-        df = db.rating_changes(start='1/1/2020')
-
-
-
-
+        df = db.rating_changes(start="1/1/2020")
 
     # %%
-    db.load_market_data(date='3/2/2020')
+    db.load_market_data(date="3/2/2020")
     ix = db.build_market_index()
     og_cusips = ix.cusips
     len(og_cusips)
 
-
-    db.load_market_data(start='3/2/2020', local=True)
-    ix_clean = db.build_market_index(date='3/2/2020')
+    db.load_market_data(start="3/2/2020", local=True)
+    ix_clean = db.build_market_index(date="3/2/2020")
     clean_cusips = ix_clean.cusips
     len(clean_cusips)
 
@@ -2015,10 +2017,9 @@ def main():
 
     ix_old = db.build_market_index(cusip=changed_cusips)
 
-    cols = ['CUSIP', 'Issuer', 'MaturityDate', 'ISIN']
+    cols = ["CUSIP", "Issuer", "MaturityDate", "ISIN"]
     ix_old.df[cols]
 
-
-    ix_new = ix_clean.subset(issuer=ix_old.df['Issuer'], isin=ix_old.df['ISIN'])
+    ix_new = ix_clean.subset(issuer=ix_old.df["Issuer"], isin=ix_old.df["ISIN"])
     ix_new.df[cols]
     sorted(list(df))
