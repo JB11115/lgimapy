@@ -704,7 +704,7 @@ class Database:
         for i, col in enumerate(cols):
             try:
                 agency_col = df[col].cat.add_categories("NR")
-            except ValueError:
+            except (AttributeError, ValueError):
                 agency_col = df[col]
 
             ratings_mat[:, i] = agency_col.fillna("NR")
