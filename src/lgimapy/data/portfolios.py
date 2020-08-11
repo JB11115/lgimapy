@@ -41,6 +41,14 @@ class Portfolio:
     def otr_tsy_oad(self, maturity):
         return self._otr_tsy_s.loc[maturity]
 
+    def _ow_col(self, col):
+        if col[:2] == "P_":
+            return col
+        elif col[:3] == "BM_":
+            return col
+        else:
+            return f"{col}_Diff"
+
     def plot_tsy_weights(self, ax=None, figsize=(8, 4)):
         """
         Plot yield curve.
@@ -178,7 +186,6 @@ class Account(BondBasket, Portfolio):
         return weights.add(ix, fill_value=0).fillna(0)
 
     def rating_overweights(self, by="OAD"):
-        by = by.upper()
         ratings = {
             "Total": (None, None),
             "AAA": "AAA",
@@ -197,7 +204,6 @@ class Account(BondBasket, Portfolio):
         return pd.Series(overweights, index=ratings.keys(), name=by)
 
     def bond_overweights(self, by="OAD", sort=True):
-        by = by.upper()
         ix = (
             self.df["Ticker"].astype(str)
             + " "
@@ -209,31 +215,30 @@ class Account(BondBasket, Portfolio):
         ).values
         if sort:
             return pd.Series(
-                self.df[f"{by}_Diff"].values, index=ix, name=by
+                self.df[self._ow_col(by)].values, index=ix, name=by
             ).sort_values(ascending=False)
         else:
-            return pd.Series(self.df[f"{by}_Diff"].values, index=ix, name=by)
+            return pd.Series(
+                self.df[self._ow_col(by)].values, index=ix, name=by
+            )
 
     def ticker_overweights(self, by="OAD", sort=True):
-        by = by.upper()
         if sort:
-            s = self.ticker_df[f"{by}_Diff"].sort_values(ascending=False)
+            s = self.ticker_df[self._ow_col(by)].sort_values(ascending=False)
         else:
-            s = self.ticker_df[f"{by}_Diff"]
+            s = self.ticker_df[self._ow_col(by)]
         return s.rename(by)
 
     def sector_overweights(self, by="OAD", sort=True):
-        by = by.upper()
         if sort:
-            s = self.sector_df[f"{by}_Diff"].sort_values(ascending=False)
+            s = self.sector_df[self._ow_col(by)].sort_values(ascending=False)
         else:
-            s = self.sector_df[f"{by}_Diff"]
+            s = self.sector_df[self._ow_col(by)]
         return s.rename(by)
 
     def top_level_sector_overweights(self, by="OAD", sort=True):
-        by = by.upper()
         sectors = ["Industrials", "Financials", "Utilities", "Non-Corp"]
-        ow_val_dict = self.top_level_sector_df[f"{by}_Diff"].to_dict()
+        ow_val_dict = self.top_level_sector_df[self._ow_col(by)].to_dict()
         # Add nans for any missing sectors.
         s = pd.Series(
             {sector: ow_val_dict.get(sector, np.nan) for sector in sectors}
@@ -662,7 +667,7 @@ def main():
     # act_name = "NFLLA"
     # act_name = "SEIC"
     # act_name = "LIB150"
-    act_name = "P-LD"
+    act_name = "JOYLA"
     act_df = db.load_portfolio(
         account=act_name,
         date=date,
@@ -671,17 +676,76 @@ def main():
         universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
+
+    # %%
     # strat_name = "US Credit"
     strat_name = "US Long Credit"
     # strat_name = "US Credit Plus"
-    # strat_name = "US Long Government/Credit"
+    strat_name = "Liability Aware Long Duration Credit"
+    # strat_name = "US High Yield"
+
     # %%
-    stats_strat_df = db.load_portfolio(
+    strat_df = db.load_portfolio(
         strategy=strat_name,
         date=date,
         market_cols=True,
         ret_df=True,
-        universe="stats",
+        # universe="stats",
     )
-    stats_strat_df
+    strat = Strategy(strat_df, name=strat_name, date=date)
+
     # %%
+    strat.ticker_overweights()
+
+    strat.ticker_overweights("Weight").loc["GOOGL"]
+    strat.ticker_overweights("P_Weight").loc["GOOGL"]
+    strat.ticker_overweights("BM_Weight").loc["GOOGL"]
+
+    strat.ticker_df.loc["GOOGL"]
+    strat.ticker_df.loc["GOOGL"]
+    strat.ticker_df["P_Weight"].sum()
+    strat.df.head()
+
+    strat_df.head()
+    strat.df[strat.df["Ticker"] == "GOOGL"]
+    db.load_market_data(
+        cusips=["02079KAE7", "037833BA7", "037833AT7"], clean=False
+    )
+    df = db.build_market_index().df
+
+    strat.ticker_df["P_Weight"].sum()
+    strat.ticker_df
+
+    acnt.ticker_df.loc["GOOGL"]
+
+    # %%
+    strat.plot_tsy_weights()
+    vis.show()
+
+    # %%
+    from lgimapy.bloomberg import bdh
+
+    # %%
+    trump = (
+        bdh("RCPPTAPP", "Index", "PX_LAST", start="11/1/2016")
+        .squeeze()
+        .rename("Trump Approval")
+        / 100
+    )
+    dollar = (
+        bdh("DXY", "Curncy", "PX_LAST", start="11/1/2016")
+        .squeeze()
+        .rename("DXY Spot")
+    )
+    # %%
+    vis.plot_double_y_axis_timeseries(
+        trump,
+        dollar,
+        ylabel_right="DXY Spot",
+        ylabel_left="Trump Appoval",
+        ytickfmt_left="{x:.0%}",
+        ytickfmt_right="${x:.0f}",
+        plot_kws_right={"color": "k"},
+        plot_kws_left={"color": "firebrick"},
+    )
+    vis.savefig("trump_vs_dxy")
