@@ -722,8 +722,8 @@ class Index(BondBasket):
             Computed volatility with datetime index.
         """
         col_df = self.get_value_history(col)
-        mv_df = self.get_value_history("MarketValue")
         var_df = col_df.rolling(window_size, min_periods=window_size).var()
+        mv_df = self.get_value_history("MarketValue").mask(var_df.isna())
         weights_df = mv_df.divide(np.sum(mv_df, axis=1).values, axis=0) ** 2
         vol = (np.sum(var_df * weights_df, axis=1) ** 0.5)[window_size - 1 :]
         if annualized:
@@ -1018,8 +1018,17 @@ def main():
     db = Database()
     db.display_all_columns()
     # db.load_market_data(start="5/1/2019", end="12/1/2019", local=True)
-    db.load_market_data(start="7/1/2020", local=True)
-    # db.load_market_data(local=True)
+    # db.load_market_data(start="7/1/2020", local=True)
+    date = db.date("today")
+    date = db.nearest_date("1/17/2020")
+    db.load_market_data(local=True, start=db.date("1y"))
+    dt = date.strftime("%m_%d")
     # %%
 
     self = db.build_market_index(**db.index_kwargs("STATS_all"))
+    self = db.build_market_index(
+        sector="INDEPENDENT",
+        in_stats_index=True,
+        maturity=(10, None),
+        rating=("BBB+", "BBB-"),
+    )
