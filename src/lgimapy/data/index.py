@@ -915,7 +915,9 @@ class Index(BondBasket):
             ex_rets = df["TRet"].values - tsy_trets
             self.df.loc[self.df["Date"] == date, "XSRet"] = ex_rets
 
-    def accumulate_individual_excess_returns(self, start_date=None):
+    def accumulate_individual_excess_returns(
+        self, start_date=None, end_date=None
+    ):
         """
         Accumulate excess returns for each cusip since start date.
 
@@ -923,6 +925,8 @@ class Index(BondBasket):
         ----------
         start_date: datetime
             Date to start aggregating returns.
+        end_date: datetime
+            Date to end aggregating returns.
 
         Returns
         -------
@@ -939,6 +943,9 @@ class Index(BondBasket):
         if start_date is not None:
             xs_ret_df = xs_ret_df[xs_ret_df.index > to_datetime(start_date)]
             t_ret_df = t_ret_df[t_ret_df.index > to_datetime(start_date)]
+        if end_date is not None:
+            xs_ret_df = xs_ret_df[xs_ret_df.index <= to_datetime(end_date)]
+            t_ret_df = t_ret_df[t_ret_df.index <= to_datetime(end_date)]
 
         # Calculate implied risk free returns.
         rf_ret_df = t_ret_df - xs_ret_df
@@ -948,19 +955,23 @@ class Index(BondBasket):
         rf_total_ret = np.prod(1 + rf_ret_df) - 1
         return (total_ret - rf_total_ret).rename("XSRet")
 
-    def aggregate_excess_returns(self, start_date=None):
+    def aggregate_excess_returns(self, start_date=None, end_date=None):
         """
-        Aggregate excess returns since start date.
+        Aggregate excess returns since start date for
+        entire :class:`Index`.
 
         Parameters
         ----------
         start_date: datetime
             Date to start aggregating returns.
+        end_date: datetime
+            Date to end aggregating returns.
 
         Returns
         -------
         float:
-            Aggregated excess returns for full index.
+            Aggregated excess returns for entire :class:`Index`
+            between specified dates.
         """
         self._get_prev_market_value_history()
         self.compute_excess_returns()
@@ -971,6 +982,9 @@ class Index(BondBasket):
         if start_date is not None:
             xs_rets = xs_rets[xs_rets.index > to_datetime(start_date)]
             t_rets = t_rets[t_rets.index > to_datetime(start_date)]
+        if end_date is not None:
+            xs_rets = xs_rets[xs_rets.index <= to_datetime(end_date)]
+            t_rets = t_rets[t_rets.index <= to_datetime(end_date)]
 
         # Calculate implied risk free returns.
         rf_rets = t_rets - xs_rets
@@ -979,6 +993,51 @@ class Index(BondBasket):
         total_ret = np.prod(1 + t_rets) - 1
         rf_total_ret = np.prod(1 + rf_rets) - 1
         return total_ret - rf_total_ret
+
+    def cumulative_excess_returns(self, start_date=None, end_date=None):
+        """
+        Get cumulative aggregated excess returns for the
+        entire :class:`Index`.
+
+        Parameters
+        ----------
+        start_date: datetime
+            Date to start aggregating returns.
+        end_date: datetime
+            Date to end aggregating returns.
+
+        Returns
+        -------
+        pd.Series:
+            Cumulative excess returns for full with datetime index
+            for entire :class:`Index`.
+        """
+        self._get_prev_market_value_history()
+        self.compute_excess_returns()
+
+        # Find excess and total returns in date range.
+        xs_rets = self.market_value_weight("XSRet", weight="PrevMarketValue")
+        t_rets = self.market_value_weight("TRet", weight="PrevMarketValue")
+        if start_date is not None:
+            xs_rets = xs_rets[xs_rets.index > to_datetime(start_date)]
+            t_rets = t_rets[t_rets.index > to_datetime(start_date)]
+        if end_date is not None:
+            xs_rets = xs_rets[xs_rets.index <= to_datetime(end_date)]
+            t_rets = t_rets[t_rets.index <= to_datetime(end_date)]
+
+        dates = xs_rets.index
+        xsrets_a = np.zeros(len(dates))
+        for i, date in enumerate(dates):
+            xs_rets_i = xs_rets[xs_rets.index <= date]
+            t_rets_i = t_rets[t_rets.index <= date]
+            # Calculate implied risk free returns.
+            rf_rets_i = t_rets_i - xs_rets_i
+            # Calculate total returns over period and use treasury
+            # returns to back out excess returns.
+            total_ret_i = np.prod(1 + t_rets_i) - 1
+            rf_total_ret_i = np.prod(1 + rf_rets_i) - 1
+            xsrets_a[i] = total_ret_i - rf_total_ret_i
+        return pd.Series(xsrets_a, index=dates)
 
     def _fill_missing_columns_with_bbg_data(self):
         """
@@ -1026,9 +1085,3 @@ def main():
     # %%
 
     self = db.build_market_index(**db.index_kwargs("STATS_all"))
-    self = db.build_market_index(
-        sector="INDEPENDENT",
-        in_stats_index=True,
-        maturity=(10, None),
-        rating=("BBB+", "BBB-"),
-    )
