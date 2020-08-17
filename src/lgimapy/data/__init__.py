@@ -4,7 +4,13 @@ from lgimapy.data.security_functions import (
     spread_diff,
     standardize_cusips,
 )
-from lgimapy.data.securities import Bond, SyntheticTBill, TBond, TreasuryCurve
+from lgimapy.data.securities import (
+    Bond,
+    SyntheticTBill,
+    TBond,
+    NewBond,
+    TreasuryCurve,
+)
 from lgimapy.data.basket import BondBasket, groupby
 from lgimapy.data.index import Index
 from lgimapy.data.portfolios import Account, Strategy
@@ -34,6 +40,7 @@ __all__ = [
     "Bond",
     "SyntheticTBill",
     "TBond",
+    "NewBond",
     "TreasuryCurve",
     "BondBasket",
     "groupby",
