@@ -623,6 +623,52 @@ class TreasuryCurve:
         ax.set_xlim(trange)
 
 
+class NewBond:
+    def __init__(self, maturity_years, coupon):
+        self.coupon = coupon
+        self.maturity_years = maturity_years
+
+        self.coupon_years = np.arange(0.5, maturity_years + 0.5, 0.5)
+        self.cash_flows = coupon / 2 * np.ones(int(maturity_years * 2))
+        self.cash_flows[-1] += 100
+
+    def _ytm_func(self, y, price):
+        """float: Yield to maturity error function for solver."""
+        error = (
+            sum(
+                cf * np.exp(-y * t)
+                for cf, t in zip(self.cash_flows, self.coupon_years)
+            )
+            - price
+        )
+        return error
+
+    @property
+    def ytm(self):
+        """
+        ytm: float
+            Yield to maturity of the bond at $100 price and
+            semiannual coupons.
+        """
+        x0 = 0.02  # initial guess
+        warnings.simplefilter(action="ignore", category=RuntimeWarning)
+        ytm = fsolve(self._ytm_func, x0, args=(100))[0]
+        warnings.simplefilter(action="default", category=RuntimeWarning)
+        return ytm
+
+    @property
+    def duration(self):
+        cash_flow_number = np.arange(1, int(2 * self.maturity_years) + 1)
+        return (
+            np.sum(
+                self.cash_flows
+                / (1 + self.ytm / 2) ** cash_flow_number
+                * self.coupon_years
+            )
+            / 100
+        )
+
+
 def main():
     from lgimapy.data import Database
     from lgimapy.utils import Time
