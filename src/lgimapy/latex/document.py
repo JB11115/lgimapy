@@ -349,6 +349,7 @@ class Document:
             \\definecolor{{babyblue}}{{HTML}}{{85C7DB}}
             \\definecolor{{salmon}}{{HTML}}{{DB8585}}
             \\definecolor{{eggplant}}{{HTML}}{{815a71}}
+            \\definecolor{{mauve}}{{HTML}}{{a78197}}
 
             %% Define function for perctile bars in tables.
             \\newlength{{\\barw}}
