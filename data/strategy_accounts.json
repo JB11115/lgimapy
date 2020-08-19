@@ -132,13 +132,11 @@
         "DTELD",
         "EFHLD",
         "ERICLD",
-        "FEDLD",
         "FELD",
         "FELD",
         "FHNLD",
         "GABCLD",
         "GENMLD",
-        "GLWLD",
         "HBANLD",
         "HEKLD",
         "KELLD1",
@@ -172,11 +170,8 @@
         "REXAMLD",
         "REXAMMC",
         "RIOLD2",
-        "SALD",
-        "SALD2",
         "SALDT",
         "SALDT1",
-        "SAULD",
         "SEMLD",
         "SRELD",
         "TOTLD",
@@ -394,6 +389,13 @@
     "80% US Credit/20% 7-10 yr Treasury": [
         "FBB-CA",
         "FBB-CA2"
+    ],
+    "Custom US Long Credit": [
+        "FEDLD",
+        "GLWLD",
+        "SALD",
+        "SALD2",
+        "SAULD"
     ],
     "US Long Credit Plus": [
         "FLD"
