@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 from functools import lru_cache, partial
 from glob import glob
 from inspect import cleandoc, getfullargspec
+from itertools import chain
 
 import datetime as dt
 import numpy as np
@@ -1692,16 +1693,25 @@ class Database:
 
         # Convert inputs for SQL call.
         if account is None:
-            account = "NULL"
+            sql_account = "NULL"
         else:
             acnts = to_list(account, dtype=str)
-            account = f"'{','.join(acnts) if len(acnts) > 1 else acnts[0]}'"
+            sql_account = f"'{','.join(acnts) if len(acnts) > 1 else acnts[0]}'"
 
-        strategy = "NULL" if strategy is None else f"'{strategy}'"
+        sql_strategy = "NULL" if strategy is None else f"'{strategy}'"
         manager = "NULL" if manager is None else f"'{manager}'"
         universe = {"stats": "statistics"}.get(universe.lower(), universe)
         universe = f"'{universe.title()}'"
-        inputs = [start, strategy, account, manager, "NULL", universe, "1", end]
+        inputs = [
+            start,
+            sql_strategy,
+            sql_account,
+            manager,
+            "NULL",
+            universe,
+            "1",
+            end,
+        ]
 
         # Build SQL calls using stored procedure.
         sql_base = f"exec LGIMADatamart.[dbo].[sp_AFI_GetPortfolioAnalytics] "
@@ -1761,16 +1771,35 @@ class Database:
             df.loc[missing_ix, "AmountOutstanding"] = cusip_mv
             df["MarketValue"] = df["AmountOutstanding"] * df["DirtyPrice"] / 100
 
+        # Correct BB's OAD for IG accounts.
+        hy_eligible_strategies = ["US Credit Plus", "US Long Credit Plus"]
+        hy_eligible_accounts = list(
+            chain(
+                *[
+                    self._strategy_to_accounts[strat]
+                    for strat in hy_eligible_strategies
+                ]
+            )
+        )
+        if (
+            strategy in hy_eligible_strategies
+            or account in hy_eligible_accounts
+        ):
+            df.loc[
+                (df["NumericRating"] >= 11) & (df["NumericRating"] <= 13),
+                ["OAD_Diff", "P_OAD"],
+            ] *= 0.5
+
         if ret_df:
             return df
         if start == end:
-            if strategy != "NULL":
-                return Strategy(df, name=strategy.strip("'"), date=start)
-            elif account != "NULL":
+            if sql_strategy != "NULL":
+                return Strategy(df, name=sql_strategy.strip("'"), date=start)
+            elif sql_account != "NULL":
                 if len(acnts) == 1:
-                    return Account(df, account.strip("'"), date=start)
+                    return Account(df, sql_account.strip("'"), date=start)
                 else:
-                    return Strategy(df, account, date=start)
+                    return Strategy(df, sql_account, date=start)
             else:
                 return df
         else:
@@ -1994,6 +2023,7 @@ def main():
     self = Database()
 
     self.load_market_data(local=True, date="7/14/2020")
+    # %%
 
     # %%
     db = Database()
