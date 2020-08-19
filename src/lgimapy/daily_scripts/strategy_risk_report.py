@@ -111,7 +111,7 @@ def main():
 def get_single_latex_risk_page(
     strategy, date, prev_date, pdf_path, universe="returns", n_table_rows=10
 ):
-
+    # Define special strategies.
     GC_strategies = {
         "US Long GC 70/30",
         "US Long GC 75/25",
@@ -119,6 +119,9 @@ def get_single_latex_risk_page(
         "US Long Government/Credit",
     }
     is_GC_strategy = strategy in GC_strategies
+
+    hy_eligible_strategies = {"US Credit Plus", "US Long Credit Plus"}
+    is_hy_eligible_strategy = strategy in hy_eligible_strategies
 
     db = Database()
     curr_strat = db.load_portfolio(
@@ -132,6 +135,7 @@ def get_single_latex_risk_page(
 
     # Build overview table.
     default_properties = ["dts_pct", "dts_abs", "credit_pct"]
+    general_overview_midrules = None
     if is_GC_strategy:
         properties = [
             "dts_pct",
@@ -142,6 +146,19 @@ def get_single_latex_risk_page(
             "curve_duration(7)",
             "curve_duration(10)",
         ]
+    elif is_hy_eligible_strategy:
+        properties = [
+            "dts_pct",
+            "ig_dts_pct",
+            "hy_dts_pct",
+            "dts_abs",
+            "ig_dts_abs",
+            "hy_dts_abs",
+            "credit_pct",
+            "ig_mv_pct",
+            "hy_mv_pct",
+        ]
+        general_overview_midrules = ["DTS (abs)", "Credit (\\%)"]
     else:
         properties = ["dts_pct", "dts_abs", "credit_pct"]
 
@@ -193,6 +210,7 @@ def get_single_latex_risk_page(
         "AA",
         "A",
         "BBB",
+        "BB",
         "Industrials",
         "Financials",
         "Utilities",
@@ -211,11 +229,11 @@ def get_single_latex_risk_page(
     if n_accounts > 10:
         # Limit to top 5 and bottom 5 accounts with midrule between.
         n_accounts = 10
-        midrule_loc = "5"
+        account_dispersion_midrules = "5"
         for key, val in disp.items():
             disp[key] = pd.concat([val.head(), val.tail()])
     else:
-        midrule_loc = None
+        account_dispersion_midrules = None
 
     account_table = pd.DataFrame(index=range(n_accounts))
     account_table["Account"] = disp["dts"].index
@@ -247,7 +265,7 @@ def get_single_latex_risk_page(
             .values
         )
 
-    bond_ow_table = pd.DataFrame(index=range(n_table_rows))
+    bond_ow_table = pd.DataFrame(index=range(n))
     bond_ow_df.sort_values("diff", inplace=True, ascending=False)
     bond_ow_table["Risk*Added"] = clean_index(bond_ow_df)[:n]
     bond_ow_table["$\\Delta$OAD*(yrs)"] = bond_ow_df["diff"].values[:n]
@@ -256,7 +274,6 @@ def get_single_latex_risk_page(
     bond_ow_table["$\\Delta$OAD*(yrs) "] = bond_ow_df["diff"].values[:n]
 
     # Build sector overweight table.
-    n = n_table_rows
     sector_ow_df = pd.concat(
         [
             curr_strat.sector_overweights().rename("curr"),
@@ -268,7 +285,7 @@ def get_single_latex_risk_page(
 
     sector_ow_df["diff"] = sector_ow_df["curr"] - sector_ow_df["prev"]
 
-    sector_ow_table = pd.DataFrame(index=range(n_table_rows))
+    sector_ow_table = pd.DataFrame(index=range(n))
     sector_ow_df.sort_values("curr", inplace=True, ascending=False)
     sector_ow_table["Largest*OW"] = sector_ow_df.index[:n]
     sector_ow_table["OAD*(yrs)"] = sector_ow_df["curr"].values[:n]
@@ -296,7 +313,7 @@ def get_single_latex_risk_page(
     ).fillna(0)
     ticker_ow_df["diff"] = ticker_ow_df["curr"] - ticker_ow_df["prev"]
 
-    ticker_ow_table = pd.DataFrame(index=range(n_table_rows))
+    ticker_ow_table = pd.DataFrame(index=range(n))
     ticker_ow_df.sort_values("curr", inplace=True, ascending=False)
     ticker_ow_table["Largest*OW"] = ticker_ow_df.index[:n]
     ticker_ow_table["OAD*(yrs)"] = ticker_ow_df["curr"].values[:n]
@@ -311,6 +328,38 @@ def get_single_latex_risk_page(
     ticker_ow_table["Risk*Reduced"] = ticker_ow_df.index[:n]
     ticker_ow_table["$\\Delta$OAD*(yrs) "] = ticker_ow_df["diff"].values[:n]
     ticker_ow_table["Current * OAD "] = ticker_ow_df["curr"].values[:n]
+
+    # Build HY ticker overweight table if necessry.
+    if is_hy_eligible_strategy:
+        hy_ticker_ow_df = pd.concat(
+            [
+                curr_strat.HY_ticker_overweights().rename("curr"),
+                prev_strat.HY_ticker_overweights().rename("prev"),
+                curr_strat.HY_ticker_overweights("P_Weight"),
+            ],
+            axis=1,
+            sort=False,
+        ).fillna(0)
+        hy_ticker_ow_df["diff"] = (
+            hy_ticker_ow_df["curr"] - hy_ticker_ow_df["prev"]
+        )
+
+        n_hy = int(n / 2)
+        hy_ticker_ow_table = pd.DataFrame(index=range(n_hy))
+        hy_ticker_ow_df.sort_values("curr", inplace=True, ascending=False)
+        hy_ticker_ow_table["Largest*OW"] = hy_ticker_ow_df.index[:n_hy]
+        hy_ticker_ow_table["OAD*(yrs)"] = hy_ticker_ow_df["curr"].values[:n_hy]
+        hy_ticker_ow_table["MV*(%)"] = hy_ticker_ow_df["P_Weight"].values[:n_hy]
+        hy_ticker_ow_df.sort_values("diff", inplace=True, ascending=False)
+        hy_ticker_ow_table["Risk*Added"] = hy_ticker_ow_df.index[:n_hy]
+        hy_ticker_ow_table["$\\Delta$OAD*(yrs)"] = hy_ticker_ow_df[
+            "diff"
+        ].values[:n_hy]
+        hy_ticker_ow_df.sort_values("diff", inplace=True, ascending=True)
+        hy_ticker_ow_table["Risk*Reduced"] = hy_ticker_ow_df.index[:n_hy]
+        hy_ticker_ow_table["$\\Delta$OAD*(yrs) "] = hy_ticker_ow_df[
+            "diff"
+        ].values[:n_hy]
 
     # Create summary series for cover page.
     tsy_weights = curr_strat.tsy_weights()
@@ -339,7 +388,11 @@ def get_single_latex_risk_page(
     page.set_variable("tsy_fig_fid", tsy_fig_fid)
     page.start_edit("overview")
     page.add_table(
-        overview_table, caption="General Overview", col_fmt="lccc", adjust=True
+        overview_table,
+        caption="General Overview",
+        col_fmt="lccc",
+        midrule_locs=general_overview_midrules,
+        adjust=True,
     )
     page.end_edit()
     page.start_edit("gen_overweight")
@@ -360,12 +413,28 @@ def get_single_latex_risk_page(
         caption="Account Dispersion",
         col_fmt="lrc|rc|rc",
         multi_row_header=True,
-        midrule_locs=midrule_loc,
+        midrule_locs=account_dispersion_midrules,
         prec={"DTS*(%)": "1%", "Tsy*OAD": "2f", "Cash*(%)": "1%"},
         font_size="scriptsize",
         hide_index=True,
         align="left",
     )
+    if is_hy_eligible_strategy:
+        page.add_table(
+            hy_ticker_ow_table,
+            caption="HY Issuers",
+            col_fmt="lrcc|rc|rc",
+            multi_row_header=True,
+            prec={
+                "OAD*(yrs)": "2f",
+                "MV*(%)": "2%",
+                "$\\Delta$OAD*(yrs)": "3f",
+                "$\\Delta$OAD*(yrs) ": "3f",
+            },
+            font_size="scriptsize",
+            hide_index=True,
+            align="left",
+        )
     page.end_edit()
     page.start_edit("bond")
     page.add_table(
