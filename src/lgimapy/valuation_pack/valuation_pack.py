@@ -9,8 +9,9 @@ from lgimapy.utils import root, Time
 
 from cover_page import update_cover_page
 from cross_asset import update_market_review
-from equilibium_pca_model import update_equilibrium_model
+from tail_recovery import update_lc_tail
 from macro_indicators import update_macro_indicators
+from equilibium_pca_model import update_equilibrium_model
 from sector_vol import update_volatility_indicators
 
 # %%
@@ -28,6 +29,7 @@ def main():
     db.load_market_data(local=True, start=db.date("5y"))
     update_cover_page(fid, db)
     update_market_review(fid)
+    update_lc_tail(fid)
     update_macro_indicators(fid)
     update_equilibrium_model(fid)
     update_volatility_indicators(fid, db)
