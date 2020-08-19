@@ -144,11 +144,23 @@ class Account(BondBasket, Portfolio):
     def dts(self, method="pct"):
         method = method.lower()
         if method == "pct":
-            return np.sum(self.df["P_DTS"]) / np.sum(self.df["BM_DTS"])
+            return self.dts("port") / self.dts("bm")
         elif method == "abs":
             return np.sum(self.df["DTS_Diff"])
         elif method == "gc":
             return np.sum(self.df["DTS_Diff"]) / self._long_credit_A_rated_OAS
+        elif method in {"p", "port", "portfolio"}:
+            return np.sum(self.df["P_DTS"])
+        elif method in {"bm", "benchmark"}:
+            return np.sum(self.df["BM_DTS"])
+        elif method == "hy_abs":
+            return self.subset(rating=("HY")).dts("abs")
+        elif method == "hy_pct":
+            return self.subset(rating=("HY")).dts("port") / self.dts("port")
+        elif method == "ig_abs":
+            return self.subset(rating=("IG")).dts("abs")
+        elif method == "ig_pct":
+            return self.subset(rating=("IG")).dts("port") / self.dts("port")
         else:
             raise NotImplementedError(f"'{method}' is not a proper `method`.")
 
@@ -164,6 +176,12 @@ class Account(BondBasket, Portfolio):
 
     def bm_credit_pct(self):
         return np.sum(self.df["BM_Weight"])
+
+    def HY_mv_pct(self):
+        return self.subset(rating=("HY")).credit_pct()
+
+    def IG_mv_pct(self):
+        return self.subset(rating=("IG")).credit_pct()
 
     def tsy_pct(self):
         return np.sum(self.tsy_df["P_Weight"])
@@ -192,6 +210,8 @@ class Account(BondBasket, Portfolio):
             "AA": ("AA+", "AA-"),
             "A": ("A+", "A-"),
             "BBB": ("BBB+", "BBB-"),
+            "BB": ("BB+", "BB-"),
+            "B": ("B+", "B-"),
         }
         overweights = []
         for rating in ratings.values():
@@ -228,6 +248,10 @@ class Account(BondBasket, Portfolio):
         else:
             s = self.ticker_df[self._ow_col(by)]
         return s.rename(by)
+
+    def HY_ticker_overweights(self, by="OAD", sort=True):
+        hy_account = self.subset(rating="HY")
+        return hy_account.ticker_overweights(by=by, sort=True)
 
     def sector_overweights(self, by="OAD", sort=True):
         if sort:
@@ -368,9 +392,6 @@ class Strategy(BondBasket, Portfolio):
                 )
                 / self.market_value
             )
-            return (
-                np.sum(df[account_vals] * df["MarketValue"]) / self.market_value
-            )
         elif isinstance(account_vals, pd.Series):
             return (
                 np.sum(account_vals.mul(self.account_market_values, axis=0))
@@ -380,7 +401,8 @@ class Strategy(BondBasket, Portfolio):
             raise NotImplementedError
 
     def _property_functions(self, fun_type, properties):
-        properties = to_list(properties, str)
+        if properties is not None:
+            properties = [p.lower() for p in to_list(properties, str)]
         default_properties = [
             "dts_pct",
             "dts_abs",
@@ -405,7 +427,13 @@ class Strategy(BondBasket, Portfolio):
             "dts_pct": self.account_dts("pct"),
             "dts_abs": self.account_dts("abs"),
             "dts_gc": self.account_dts("gc"),
+            "hy_dts_abs": self.account_dts("hy_abs"),
+            "hy_dts_pct": self.account_dts("hy_pct"),
+            "ig_dts_abs": self.account_dts("ig_abs"),
+            "ig_dts_pct": self.account_dts("ig_pct"),
             "credit_pct": self.account_credit_pct(),
+            "ig_mv_pct": self.account_IG_mv_pct(),
+            "hy_mv_pct": self.account_HY_mv_pct(),
             "cash_pct": self.account_cash_pct(),
             "tsy_pct": self.account_tsy_pct(),
             "tsy_oad": self.account_tsy_oad(),
@@ -418,7 +446,13 @@ class Strategy(BondBasket, Portfolio):
             "dts_pct": self.dts("pct"),
             "dts_abs": self.dts("abs"),
             "dts_gc": self.dts("gc"),
+            "hy_dts_abs": self.dts("hy_abs"),
+            "hy_dts_pct": self.dts("hy_pct"),
+            "ig_dts_abs": self.dts("ig_abs"),
+            "ig_dts_pct": self.dts("ig_pct"),
             "credit_pct": self.credit_pct(),
+            "ig_mv_pct": self.IG_mv_pct(),
+            "hy_mv_pct": self.HY_mv_pct(),
             "cash_pct": self.cash_pct(),
             "tsy_pct": self.tsy_pct(),
             "tsy_oad": self.tsy_oad(),
@@ -431,7 +465,13 @@ class Strategy(BondBasket, Portfolio):
             "dts_pct": "DTS (%)",
             "dts_abs": "DTS (abs)",
             "dts_gc": "DTS/A-Spreads",
+            "hy_dts_abs": "HY DTS (abs)",
+            "hy_dts_pct": "HY (%) of DTS",
+            "ig_dts_abs": "IG DTS (abs)",
+            "ig_dts_pct": "IG (%) of DTS",
             "credit_pct": "Credit (%)",
+            "hy_mv_pct": "HY MV (%)",
+            "ig_mv_pct": "IG MV (%)",
             "cash_pct": "Cash (%)",
             "tsy_pct": "Tsy (%)",
             "tsy_oad": "Tsy OAD",
@@ -452,7 +492,13 @@ class Strategy(BondBasket, Portfolio):
             "dts_pct": "1%",
             "dts_abs": "1f",
             "dts_gc": "2f",
+            "hy_dts_pct": "1%",
+            "ig_dts_pct": "1%",
+            "hy_dts_abs": "1f",
+            "ig_dts_abs": "1f",
             "credit_pct": "1%",
+            "hy_mv_pct": "1%",
+            "ig_mv_pct": "1%",
             "cash_pct": "1%",
             "tsy_pct": "1%",
             "tsy_oad": "1f",
@@ -461,7 +507,7 @@ class Strategy(BondBasket, Portfolio):
             "curve_duration(10)": "3f",
             "market_value": "0f",
         }
-        return [fmt[prop] for prop in to_list(properties, str)]
+        return [fmt[prop.lower()] for prop in to_list(properties, str)]
 
     def account_properties(self, properties=None):
         return pd.concat(
@@ -473,9 +519,20 @@ class Strategy(BondBasket, Portfolio):
 
     @lru_cache(maxsize=None)
     def account_dts(self, method="pct"):
-        name = {"pct": "DTS (%)", "abs": "DTS (abs)", "gc": "DTS/A-Spreads"}[
-            method.lower()
-        ]
+        name = {
+            "pct": "DTS (%)",
+            "abs": "DTS (abs)",
+            "gc": "DTS/A-Spreads",
+            "p": "Portfolio DTS (bp*yr)",
+            "port": "Portfolio DTS (bp*yr)",
+            "portfolio": "Portfolio DTS (bp*yr)",
+            "bm": "Benchmark DTS (bp*yr)",
+            "benchmark": "Benchmark DTS (bp*yr)",
+            "hy_pct": "HY (%) of DTS",
+            "hy_abs": "HY DTS (abs)",
+            "ig_pct": "IG (%) of DTS",
+            "ig_abs": "IG DTS (abs)",
+        }[method.lower()]
         return self.calculate_account_values(lambda x: x.dts(method), name)
 
     @lru_cache(maxsize=None)
@@ -517,6 +574,24 @@ class Strategy(BondBasket, Portfolio):
     @lru_cache(maxsize=None)
     def credit_pct(self):
         return self.account_value_weight(self.account_credit_pct())
+
+    @lru_cache(maxsize=None)
+    def account_HY_mv_pct(self):
+        name = "HY MV (%)"
+        return self.calculate_account_values(lambda x: x.HY_mv_pct(), name)
+
+    @lru_cache(maxsize=None)
+    def HY_mv_pct(self):
+        return self.account_value_weight(self.account_HY_mv_pct())
+
+    @lru_cache(maxsize=None)
+    def account_IG_mv_pct(self):
+        name = "IG MV (%)"
+        return self.calculate_account_values(lambda x: x.IG_mv_pct(), name)
+
+    @lru_cache(maxsize=None)
+    def IG_mv_pct(self):
+        return self.account_value_weight(self.account_IG_mv_pct())
 
     @lru_cache(maxsize=None)
     def account_bm_credit_pct(self):
@@ -562,6 +637,10 @@ class Strategy(BondBasket, Portfolio):
             .rename(by)
         )
 
+    def HY_ticker_overweights(self, by="OAD"):
+        hy_strategy = self.subset(rating="HY")
+        return hy_strategy.ticker_overweights(by=by)
+
     def sector_overweights(self, by="OAD"):
         return (
             self.account_value_weight(self.account_sector_overweights(by=by))
@@ -581,11 +660,17 @@ class Strategy(BondBasket, Portfolio):
         )
 
     def rating_overweights(self, by="OAD"):
-        return (
+        sorted_order = ["Total", "AAA", "AA", "A", "BBB", "BB", "B"]
+        rating_ow = (
             self.account_value_weight(self.account_rating_overweights(by))
-            .loc[["Total", "AAA", "AA", "A", "BBB"]]
+            .reindex(sorted_order)
             .rename(by)
         )
+        for rating in sorted_order[-2:]:
+            # Remove HY ratings if they are not in portfolio.
+            if rating_ow.loc[rating] == 0 or np.isnan(rating_ow.loc[rating]):
+                rating_ow.drop(rating, inplace=True)
+        return rating_ow
 
     def bond_overweights(self, by="OAD"):
         return (
@@ -667,21 +752,27 @@ def main():
     # act_name = "NFLLA"
     # act_name = "SEIC"
     # act_name = "LIB150"
-    act_name = "JOYLA"
+    # act_name = "P-LD"
+    act_name = "FLD"
     act_df = db.load_portfolio(
         account=act_name,
         date=date,
         market_cols=True,
         ret_df=True,
-        universe="stats",
+        # universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
-
+    acnt.HY_mv_pct()
+    acnt.IG_mv_pct()
+    acnt.rating_overweights()
     # %%
+    acnt.rating_overweights("OAD")
+    # df.to_csv("rep_account_ticker_overweights.csv")
     # strat_name = "US Credit"
     strat_name = "US Long Credit"
-    # strat_name = "US Credit Plus"
     strat_name = "Liability Aware Long Duration Credit"
+    strat_name = "US Long A+ Credit"
+    strat_name = "US Credit Plus"
     # strat_name = "US High Yield"
 
     # %%
@@ -695,57 +786,6 @@ def main():
     strat = Strategy(strat_df, name=strat_name, date=date)
 
     # %%
-    strat.ticker_overweights()
-
-    strat.ticker_overweights("Weight").loc["GOOGL"]
-    strat.ticker_overweights("P_Weight").loc["GOOGL"]
-    strat.ticker_overweights("BM_Weight").loc["GOOGL"]
-
-    strat.ticker_df.loc["GOOGL"]
-    strat.ticker_df.loc["GOOGL"]
-    strat.ticker_df["P_Weight"].sum()
-    strat.df.head()
-
-    strat_df.head()
-    strat.df[strat.df["Ticker"] == "GOOGL"]
-    db.load_market_data(
-        cusips=["02079KAE7", "037833BA7", "037833AT7"], clean=False
-    )
-    df = db.build_market_index().df
-
-    strat.ticker_df["P_Weight"].sum()
-    strat.ticker_df
-
-    acnt.ticker_df.loc["GOOGL"]
-
-    # %%
-    strat.plot_tsy_weights()
-    vis.show()
-
-    # %%
-    from lgimapy.bloomberg import bdh
-
-    # %%
-    trump = (
-        bdh("RCPPTAPP", "Index", "PX_LAST", start="11/1/2016")
-        .squeeze()
-        .rename("Trump Approval")
-        / 100
-    )
-    dollar = (
-        bdh("DXY", "Curncy", "PX_LAST", start="11/1/2016")
-        .squeeze()
-        .rename("DXY Spot")
-    )
-    # %%
-    vis.plot_double_y_axis_timeseries(
-        trump,
-        dollar,
-        ylabel_right="DXY Spot",
-        ylabel_left="Trump Appoval",
-        ytickfmt_left="{x:.0%}",
-        ytickfmt_right="${x:.0f}",
-        plot_kws_right={"color": "k"},
-        plot_kws_left={"color": "firebrick"},
-    )
-    vis.savefig("trump_vs_dxy")
+    strat.rating_overweights()
+    strat.IG_mv_pct()
+    strat.HY_mv_pct()
