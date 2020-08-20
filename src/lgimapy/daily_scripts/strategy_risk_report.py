@@ -63,6 +63,15 @@ def main():
         "US Long Corporate A or better",
         "US Corporate 7+ Years",
     ]
+    midrule_strats = [
+        "US Long Corporate",
+        "US Corporate IG",
+        "Liability Aware Long Duration Credit",
+        "80% US A or Better LC/20% US BBB LC",
+        "Barclays-Russell LDI Custom - DE",
+        "US Corporate 7+ Years",
+    ]
+    strategy_midrules = [strategies.index(strat) for strat in midrule_strats]
     # %%
     fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
     if universe == "stats":
@@ -97,7 +106,7 @@ def main():
         multi_row_header=True,
         adjust=True,
         hide_index=True,
-        midrule_locs=[2, 9, 16, 21, 22, 25],
+        midrule_locs=strategy_midrules,
     )
     doc.add_text("\\pagebreak")
     for page in df["pages"].values:
@@ -136,6 +145,7 @@ def get_single_latex_risk_page(
     # Build overview table.
     default_properties = ["dts_pct", "dts_abs", "credit_pct"]
     general_overview_midrules = None
+    ow_metric = "OAD"
     if is_GC_strategy:
         properties = [
             "dts_pct",
@@ -147,6 +157,7 @@ def get_single_latex_risk_page(
             "curve_duration(10)",
         ]
     elif is_hy_eligible_strategy:
+        ow_metric = "OASD"
         properties = [
             "dts_pct",
             "ig_dts_pct",
@@ -245,13 +256,13 @@ def get_single_latex_risk_page(
 
     # Build bond change in overweight table.
     n = n_table_rows
-    curr_strat.bond_overweights().rename("curr")
-    prev_strat.bond_overweights().rename("prev")
+    curr_strat.bond_overweights(ow_metric).rename("curr")
+    prev_strat.bond_overweights(ow_metric).rename("prev")
 
     bond_ow_df = pd.concat(
         [
-            curr_strat.bond_overweights().rename("curr"),
-            prev_strat.bond_overweights().rename("prev"),
+            curr_strat.bond_overweights(ow_metric).rename("curr"),
+            prev_strat.bond_overweights(ow_metric).rename("prev"),
         ],
         axis=1,
         sort=False,
@@ -268,16 +279,18 @@ def get_single_latex_risk_page(
     bond_ow_table = pd.DataFrame(index=range(n))
     bond_ow_df.sort_values("diff", inplace=True, ascending=False)
     bond_ow_table["Risk*Added"] = clean_index(bond_ow_df)[:n]
-    bond_ow_table["$\\Delta$OAD*(yrs)"] = bond_ow_df["diff"].values[:n]
+    bond_ow_table[f"$\\Delta${ow_metric}*(yrs)"] = bond_ow_df["diff"].values[:n]
     bond_ow_df.sort_values("diff", inplace=True, ascending=True)
     bond_ow_table["Risk*Reduced"] = clean_index(bond_ow_df)[:n]
-    bond_ow_table["$\\Delta$OAD*(yrs) "] = bond_ow_df["diff"].values[:n]
+    bond_ow_table[f"$\\Delta${ow_metric}*(yrs) "] = bond_ow_df["diff"].values[
+        :n
+    ]
 
     # Build sector overweight table.
     sector_ow_df = pd.concat(
         [
-            curr_strat.sector_overweights().rename("curr"),
-            prev_strat.sector_overweights().rename("prev"),
+            curr_strat.sector_overweights(ow_metric).rename("curr"),
+            prev_strat.sector_overweights(ow_metric).rename("prev"),
         ],
         axis=1,
         sort=False,
@@ -288,25 +301,29 @@ def get_single_latex_risk_page(
     sector_ow_table = pd.DataFrame(index=range(n))
     sector_ow_df.sort_values("curr", inplace=True, ascending=False)
     sector_ow_table["Largest*OW"] = sector_ow_df.index[:n]
-    sector_ow_table["OAD*(yrs)"] = sector_ow_df["curr"].values[:n]
+    sector_ow_table[f"{ow_metric}*(yrs)"] = sector_ow_df["curr"].values[:n]
     sector_ow_df.sort_values("curr", inplace=True, ascending=True)
     sector_ow_table["Largest*UW"] = sector_ow_df.index[:n]
-    sector_ow_table["OAD*(yrs) "] = sector_ow_df["curr"].values[:n]
+    sector_ow_table[f"{ow_metric}*(yrs) "] = sector_ow_df["curr"].values[:n]
     sector_ow_df.sort_values("diff", inplace=True, ascending=False)
     sector_ow_table["Risk*Added"] = sector_ow_df.index[:n]
-    sector_ow_table["$\\Delta$OAD*(yrs)"] = sector_ow_df["diff"].values[:n]
-    sector_ow_table["Current*OAD"] = sector_ow_df["curr"].values[:n]
+    sector_ow_table[f"$\\Delta${ow_metric}*(yrs)"] = sector_ow_df[
+        "diff"
+    ].values[:n]
+    sector_ow_table[f"Current*{ow_metric}"] = sector_ow_df["curr"].values[:n]
     sector_ow_df.sort_values("diff", inplace=True, ascending=True)
     sector_ow_table["Risk*Reduced"] = sector_ow_df.index[:n]
-    sector_ow_table["$\\Delta$OAD*(yrs) "] = sector_ow_df["diff"].values[:n]
-    sector_ow_table["Current * OAD "] = sector_ow_df["curr"].values[:n]
+    sector_ow_table[f"$\\Delta${ow_metric}*(yrs) "] = sector_ow_df[
+        "diff"
+    ].values[:n]
+    sector_ow_table[f"Current * {ow_metric} "] = sector_ow_df["curr"].values[:n]
 
     # Build ticker overweight table.
     n = n_table_rows
     ticker_ow_df = pd.concat(
         [
-            curr_strat.ticker_overweights().rename("curr"),
-            prev_strat.ticker_overweights().rename("prev"),
+            curr_strat.ticker_overweights(ow_metric).rename("curr"),
+            prev_strat.ticker_overweights(ow_metric).rename("prev"),
         ],
         axis=1,
         sort=False,
@@ -316,25 +333,29 @@ def get_single_latex_risk_page(
     ticker_ow_table = pd.DataFrame(index=range(n))
     ticker_ow_df.sort_values("curr", inplace=True, ascending=False)
     ticker_ow_table["Largest*OW"] = ticker_ow_df.index[:n]
-    ticker_ow_table["OAD*(yrs)"] = ticker_ow_df["curr"].values[:n]
+    ticker_ow_table[f"{ow_metric}*(yrs)"] = ticker_ow_df["curr"].values[:n]
     ticker_ow_df.sort_values("curr", inplace=True, ascending=True)
     ticker_ow_table["Largest*UW"] = ticker_ow_df.index[:n]
-    ticker_ow_table["OAD*(yrs) "] = ticker_ow_df["curr"].values[:n]
+    ticker_ow_table[f"{ow_metric}*(yrs) "] = ticker_ow_df["curr"].values[:n]
     ticker_ow_df.sort_values("diff", inplace=True, ascending=False)
     ticker_ow_table["Risk*Added"] = ticker_ow_df.index[:n]
-    ticker_ow_table["$\\Delta$OAD*(yrs)"] = ticker_ow_df["diff"].values[:n]
-    ticker_ow_table["Current*OAD"] = ticker_ow_df["curr"].values[:n]
+    ticker_ow_table[f"$\\Delta${ow_metric}*(yrs)"] = ticker_ow_df[
+        "diff"
+    ].values[:n]
+    ticker_ow_table[f"Current*{ow_metric}"] = ticker_ow_df["curr"].values[:n]
     ticker_ow_df.sort_values("diff", inplace=True, ascending=True)
     ticker_ow_table["Risk*Reduced"] = ticker_ow_df.index[:n]
-    ticker_ow_table["$\\Delta$OAD*(yrs) "] = ticker_ow_df["diff"].values[:n]
-    ticker_ow_table["Current * OAD "] = ticker_ow_df["curr"].values[:n]
+    ticker_ow_table[f"$\\Delta${ow_metric}*(yrs) "] = ticker_ow_df[
+        "diff"
+    ].values[:n]
+    ticker_ow_table[f"Current * {ow_metric} "] = ticker_ow_df["curr"].values[:n]
 
     # Build HY ticker overweight table if necessry.
     if is_hy_eligible_strategy:
         hy_ticker_ow_df = pd.concat(
             [
-                curr_strat.HY_ticker_overweights().rename("curr"),
-                prev_strat.HY_ticker_overweights().rename("prev"),
+                curr_strat.HY_ticker_overweights(ow_metric).rename("curr"),
+                prev_strat.HY_ticker_overweights(ow_metric).rename("prev"),
                 curr_strat.HY_ticker_overweights("P_Weight"),
             ],
             axis=1,
@@ -348,16 +369,18 @@ def get_single_latex_risk_page(
         hy_ticker_ow_table = pd.DataFrame(index=range(n_hy))
         hy_ticker_ow_df.sort_values("curr", inplace=True, ascending=False)
         hy_ticker_ow_table["Largest*OW"] = hy_ticker_ow_df.index[:n_hy]
-        hy_ticker_ow_table["OAD*(yrs)"] = hy_ticker_ow_df["curr"].values[:n_hy]
+        hy_ticker_ow_table[f"{ow_metric}*(yrs)"] = hy_ticker_ow_df[
+            "curr"
+        ].values[:n_hy]
         hy_ticker_ow_table["MV*(%)"] = hy_ticker_ow_df["P_Weight"].values[:n_hy]
         hy_ticker_ow_df.sort_values("diff", inplace=True, ascending=False)
         hy_ticker_ow_table["Risk*Added"] = hy_ticker_ow_df.index[:n_hy]
-        hy_ticker_ow_table["$\\Delta$OAD*(yrs)"] = hy_ticker_ow_df[
+        hy_ticker_ow_table[f"$\\Delta${ow_metric}*(yrs)"] = hy_ticker_ow_df[
             "diff"
         ].values[:n_hy]
         hy_ticker_ow_df.sort_values("diff", inplace=True, ascending=True)
         hy_ticker_ow_table["Risk*Reduced"] = hy_ticker_ow_df.index[:n_hy]
-        hy_ticker_ow_table["$\\Delta$OAD*(yrs) "] = hy_ticker_ow_df[
+        hy_ticker_ow_table[f"$\\Delta${ow_metric}*(yrs) "] = hy_ticker_ow_df[
             "diff"
         ].values[:n_hy]
 
@@ -426,10 +449,10 @@ def get_single_latex_risk_page(
             col_fmt="lrcc|rc|rc",
             multi_row_header=True,
             prec={
-                "OAD*(yrs)": "2f",
+                f"{ow_metric}*(yrs)": "2f",
                 "MV*(%)": "2%",
-                "$\\Delta$OAD*(yrs)": "3f",
-                "$\\Delta$OAD*(yrs) ": "3f",
+                f"$\\Delta${ow_metric}*(yrs)": "3f",
+                f"$\\Delta${ow_metric}*(yrs) ": "3f",
             },
             font_size="scriptsize",
             hide_index=True,
@@ -452,7 +475,7 @@ def get_single_latex_risk_page(
     def col_prec(df):
         prec = {}
         for col in df.columns:
-            if "OAD" in col:
+            if ow_metric in col:
                 if "Delta" in col:
                     prec[col] = "3f"
                 else:
@@ -472,7 +495,10 @@ def get_single_latex_risk_page(
         caption="Issuers",
         align="left",
         prec=col_prec(ticker_ow_table),
-        div_bar_col=["$\\Delta$OAD*(yrs)", "$\\Delta$OAD*(yrs) "],
+        div_bar_col=[
+            f"$\\Delta${ow_metric}*(yrs)",
+            f"$\\Delta${ow_metric}*(yrs) ",
+        ],
         center_div_bar_header=False,
         **table_kwargs,
     )
