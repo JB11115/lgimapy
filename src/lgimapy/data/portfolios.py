@@ -156,11 +156,11 @@ class Account(BondBasket, Portfolio):
         elif method == "hy_abs":
             return self.subset(rating=("HY")).dts("abs")
         elif method == "hy_pct":
-            return self.subset(rating=("HY")).dts("port") / self.dts("port")
+            return self.subset(rating=("HY")).dts("port") / self.dts("bm")
         elif method == "ig_abs":
             return self.subset(rating=("IG")).dts("abs")
         elif method == "ig_pct":
-            return self.subset(rating=("IG")).dts("port") / self.dts("port")
+            return self.subset(rating=("IG")).dts("port") / self.dts("bm")
         else:
             raise NotImplementedError(f"'{method}' is not a proper `method`.")
 
@@ -466,9 +466,9 @@ class Strategy(BondBasket, Portfolio):
             "dts_abs": "DTS (abs)",
             "dts_gc": "DTS/A-Spreads",
             "hy_dts_abs": "HY DTS (abs)",
-            "hy_dts_pct": "HY (%) of DTS",
+            "hy_dts_pct": "HY DTS (%)",
             "ig_dts_abs": "IG DTS (abs)",
-            "ig_dts_pct": "IG (%) of DTS",
+            "ig_dts_pct": "IG DTS (%)",
             "credit_pct": "Credit (%)",
             "hy_mv_pct": "HY MV (%)",
             "ig_mv_pct": "IG MV (%)",
@@ -528,9 +528,9 @@ class Strategy(BondBasket, Portfolio):
             "portfolio": "Portfolio DTS (bp*yr)",
             "bm": "Benchmark DTS (bp*yr)",
             "benchmark": "Benchmark DTS (bp*yr)",
-            "hy_pct": "HY (%) of DTS",
+            "hy_pct": "HY DTS (%)",
             "hy_abs": "HY DTS (abs)",
-            "ig_pct": "IG (%) of DTS",
+            "ig_pct": "IG DTS (%)",
             "ig_abs": "IG DTS (abs)",
         }[method.lower()]
         return self.calculate_account_values(lambda x: x.dts(method), name)
@@ -762,9 +762,9 @@ def main():
         # universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
-    acnt.HY_mv_pct()
-    acnt.IG_mv_pct()
-    acnt.rating_overweights()
+    acnt.ticker_overweights()
+
+    acnt.HY_ticker_overweights()
     # %%
     acnt.rating_overweights("OAD")
     # df.to_csv("rep_account_ticker_overweights.csv")
@@ -786,6 +786,4 @@ def main():
     strat = Strategy(strat_df, name=strat_name, date=date)
 
     # %%
-    strat.rating_overweights()
-    strat.IG_mv_pct()
-    strat.HY_mv_pct()
+    strat.HY_ticker_overweights("P_Weight")
