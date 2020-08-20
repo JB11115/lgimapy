@@ -37,6 +37,7 @@ def main():
 
     strategies = [
         "US Long Credit",
+        "Custom US Long Credit",
         "US Long Credit Plus",
         "US Long Corporate",
         "US Long Corp 2% Cap",
