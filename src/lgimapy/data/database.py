@@ -476,7 +476,12 @@ class Database:
         return {int(k): v for k, v in rating_dict.items()}
 
     def convert_numeric_ratings(self, ratings):
-        return ratings.map(self._numeric_to_letter_ratings)
+        if isinstance(ratings, pd.Series):
+            return ratings.map(self._numeric_to_letter_ratings)
+        elif isinstance(ratings, int):
+            return self._numeric_to_letter_ratings[ratings]
+        else:
+            return [self._numeric_to_letter_ratings[r] for r in ratings]
 
     def display_all_columns(self):
         """Set DataFrames to display all columnns in IPython."""
@@ -657,7 +662,7 @@ class Database:
         for sector, c_type in collateral_map.items():
             df.loc[df["Sector"] == sector, "CollateralType"] = c_type
 
-        # Add AAA rattings to treasury strips which have no ratings.
+        # Add AAA ratings to treasury strips which have no ratings.
         cols = ["MoodyRating", "SPRating", "FitchRating"]
         strip_mask = df["Ticker"] == "SP"
         for col in cols:
@@ -1725,7 +1730,7 @@ class Database:
         if not len(df):
             raise ValueError("No data for specified date.")
 
-        if market_cols is None:
+        if not market_cols:
             df.sort_values(["Date", "Account", "Ticker"], inplace=True)
         else:
             # Get market data, loading if required.
@@ -1816,11 +1821,11 @@ class Database:
             INNER JOIN LGIMADatamart.dbo.DimStrategy s (NOLOCK)\
                 ON a.StrategyKey = s.StrategyKey\
             WHERE a.DateEnd = '9999-12-31'\
+                AND a.DateClose IS NULL\
             ORDER BY BloombergID\
             """
         df = pd.read_sql(sql, self._conn)
         df.columns = ["account", "manager", "strategy"]
-
         # Save account: strategy json.
         account_strategy = {
             row["account"]: row["strategy"] for _, row in df.iterrows()
@@ -2022,7 +2027,7 @@ def main():
 
     self = Database()
 
-    self.load_market_data(local=True, date="7/14/2020")
+    # self.load_market_data(local=True, date="7/14/2020")
     # %%
 
     # %%
@@ -2033,23 +2038,15 @@ def main():
         df = db.rating_changes(start="1/1/2020")
 
     # %%
-    db.load_market_data(date="3/2/2020")
-    ix = db.build_market_index()
-    og_cusips = ix.cusips
-    len(og_cusips)
+    db = Database("dev")
+    db = Database()
 
-    db.load_market_data(start="3/2/2020", local=True)
-    ix_clean = db.build_market_index(date="3/2/2020")
-    clean_cusips = ix_clean.cusips
-    len(clean_cusips)
-
-    changed_cusips = set(og_cusips) ^ set(clean_cusips)
-
-    ix_old = db.build_market_index(cusip=changed_cusips)
-
-    cols = ["CUSIP", "Issuer", "MaturityDate", "ISIN"]
-    ix_old.df[cols]
-
-    ix_new = ix_clean.subset(issuer=ix_old.df["Issuer"], isin=ix_old.df["ISIN"])
-    ix_new.df[cols]
-    sorted(list(df))
+    df = db.load_market_data(start="8/20/2020", ret_df=True, clean=False)
+    # %%
+    # sql = (
+    #     "exec [LGIMADatamart].[dbo].[sp_AFI_Get_SecurityAnalytics] "
+    #     "'08/20/2020', '08/21/2020'"
+    # )
+    # sql = "select * from DimInternalRating"
+    # df = pd.read_sql(sql, db._conn)
+    # list(df)
