@@ -18,13 +18,13 @@ from sector_vol import update_volatility_indicators
 def main():
     # Duplicate template file and rename to todays date.
     fid = f"{dt.today().strftime('%Y-%m-%d')}_Valuation_Pack"
-    directory = root("latex/valuation_pack")
+    directory = root("reports/valuation_pack")
     src = directory / "template.tex"
     dst = directory / f"{fid}.tex"
     copy(src, dst)
 
     vis.style()
-    doc = Document(fid, path="valuation_pack", fig_dir=True)
+    doc = Document(fid, path="reports/valuation_pack", fig_dir=True)
     db = Database()
     db.load_market_data(local=True, start=db.date("5y"))
     update_cover_page(fid, db)
@@ -33,7 +33,9 @@ def main():
     update_macro_indicators(fid)
     update_equilibrium_model(fid)
     update_volatility_indicators(fid, db)
-    doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
+    doc = Document(
+        fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
+    )
     doc.save(save_tex=True)
     os.remove(dst)
 

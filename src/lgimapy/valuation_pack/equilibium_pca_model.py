@@ -47,7 +47,9 @@ def update_equilibrium_model(fid):
     # calculate gs-style risk indicators
     df_risk = run_risk_indicators(df, df_pca)
     # %%
-    doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
+    doc = Document(
+        fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
+    )
     doc.start_edit("equilibrium_model_table")
     doc.add_table(
         format_table(equilibrium_table),
@@ -147,7 +149,7 @@ def run_risk_indicators(df, df_pca):
 
     # plot risk ratios
     # create plots for valuation pack
-    path = root("latex/valuation_pack/fig")
+    path = root("reports/valuation_pack/fig")
     df_reg = pd.concat(
         [df_risk, df_pca, gs_global_MAP], join="outer", sort=True, axis=1
     )
@@ -239,7 +241,7 @@ def run_pca_analysis():
     )
 
     # create plots for valuation pack
-    path = root("latex/valuation_pack/fig")
+    path = root("reports/valuation_pack/fig")
 
     # Plot 1: all the R2 for each asset class for PCA 1,2,3,4 model
     X = df_reg[["PCA 1", "PCA 2", "PCA 3", "PCA 4"]]

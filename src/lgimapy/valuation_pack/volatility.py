@@ -60,7 +60,7 @@ def update_voltility_model():
     axes[1].set_yticks([-50, -25, 0, 25, 50])
 
     # vis.show()
-    vis.savefig(root("latex/valuation_pack/fig/long_credit_vol_model"))
+    vis.savefig(root("reports/valuation_pack/fig/long_credit_vol_model"))
     warnings.simplefilter(action="default", category=FutureWarning)
 
 

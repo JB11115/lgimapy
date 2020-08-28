@@ -11,7 +11,6 @@ import seaborn as sns
 from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.utils import root
 
 
 currencies = ["\N{dollar sign}", "\N{euro sign}", "\N{pound sign}"]

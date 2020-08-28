@@ -15,7 +15,9 @@ from lgimapy.utils import nearest_date, root
 
 def update_market_review(fid):
     db = Database()
-    doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
+    doc = Document(
+        fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
+    )
 
     # Market review.
     market_review_dfs = calculate_market_review_tables()
@@ -391,7 +393,7 @@ def update_cross_asset_trets():
     ax.locator_params(axis="y", nbins=5)
     ax.tick_params(axis="y", labelsize=8)
     vis.format_yaxis(ax, "{x:.0%}")
-    fig_dir = root("latex/valuation_pack/fig")
+    fig_dir = root("reports/valuation_pack/fig")
     vis.savefig(fig_dir / "cross_asset_trets")
     vis.close()
 

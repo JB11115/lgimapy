@@ -28,12 +28,14 @@ def update_volatility_indicators(fid, db):
     # fid = 'temp'
     vis.style()
     update_voltility_model()
-    path = root("latex/valuation_pack/fig")
+    path = root("reports/valuation_pack/fig")
     page_maturities = {
         "Long Credit": (10, None),
         "5-10 yr Credit": (5, 10),
     }
-    doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
+    doc = Document(
+        fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
+    )
     for page, maturity in page_maturities.items():
         table_df = get_sector_table(maturity, path=path, db=db)
         plot_sector_spread_vs_vol(table_df, maturity, path=path)
@@ -288,22 +290,24 @@ def plot_sector_spread_vs_vol(df, maturity, path):
     threshold = 1
     df["deviation"] = diagonal_deviation(df["vol"], df["oas"], threshold)
     texts = []
-    for _, row in df.iterrows():
-        if np.abs(row["deviation"]) < threshold:
-            # Not an outlier -> don't label.
-            continue
-        texts.append(
-            ax.annotate(
-                row["name"],
-                xy=(row["vol"], row["oas"]),
-                xytext=(1, 3),
-                textcoords="offset points",
-                ha="left",
-                va="bottom",
-                fontsize=8,
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for _, row in df.iterrows():
+            if np.abs(row["deviation"]) < threshold:
+                # Not an outlier -> don't label.
+                continue
+            texts.append(
+                ax.annotate(
+                    row["name"],
+                    xy=(row["vol"], row["oas"]),
+                    xytext=(1, 3),
+                    textcoords="offset points",
+                    ha="left",
+                    va="bottom",
+                    fontsize=8,
+                )
             )
-        )
-    adjust_text(texts)
+        adjust_text(texts)
     ax.set_title("Long Credit Sector Volatility", fontweight="bold")
     ax.set_xlabel("Daily Spread Volatility (bp)")
     ax.set_ylabel("OAS (bp)")
@@ -338,34 +342,30 @@ def vol_model_zscores(history_dict, maturity, path):
     oas = oas_df.values
     i = 0
     n_lookback_days = 20
-    warnings.simplefilter(action="ignore", category=RuntimeWarning)
+    with warnings.catch_warnings():
+        warnings.simplefilter(action="ignore", category=RuntimeWarning)
+        for i in range(n):
+            # Peform regression for current date.
+            i_start = max(0, i - n_lookback_days)
+            x = vol[i_start : i + 1, :].ravel()
+            y = oas[i_start : i + 1, :].ravel()
+            mask = ~(np.isnan(y) | np.isnan(x))  # remove nans
+            reg_res = sm.RLM(
+                y[mask], sm.add_constant(x[mask]), M=sm.robust.norms.Hampel()
+            ).fit()
+            # reg_res.summary()
+            alpha_a[i], beta_a[i] = reg_res.params
+            scale_a[i] = reg_res.scale
 
-    for i in range(n):
-        # Peform regression for current date.
-        i_start = max(0, i - n_lookback_days)
-        x = vol[i_start : i + 1, :].ravel()
-        y = oas[i_start : i + 1, :].ravel()
-        # x, y = vol[i, :], oas[i, :]
-        len(y)
-        len(x)
-        mask = ~(np.isnan(y) | np.isnan(x))  # remove nans
-        reg_res = sm.RLM(
-            y[mask], sm.add_constant(x[mask]), M=sm.robust.norms.Hampel()
-        ).fit()
-        # reg_res.summary()
-        alpha_a[i], beta_a[i] = reg_res.params
-        scale_a[i] = reg_res.scale
+            # Compute deviation from regression line for each sector.
+            y_resid = (y - (x * beta_a[i] + alpha_a[i]))[-m:]
+            x_resid = (x - (y - alpha_a[i]) / beta_a[i])[-m:]
 
-        # Compute deviation from regression line for each sector.
-        y_resid = (y - (x * beta_a[i] + alpha_a[i]))[-m:]
-        x_resid = (x - (y - alpha_a[i]) / beta_a[i])[-m:]
-
-        deviation_a[i, :] = (
-            np.sign(y_resid)
-            * np.abs(x_resid * y_resid)
-            / (x_resid ** 2 + y_resid ** 2) ** 0.5
-        )
-    warnings.simplefilter(action="default", category=RuntimeWarning)
+            deviation_a[i, :] = (
+                np.sign(y_resid)
+                * np.abs(x_resid * y_resid)
+                / (x_resid ** 2 + y_resid ** 2) ** 0.5
+            )
 
     alpha = pd.Series(alpha_a, index=dates, name="$\\alpha$")
     beta = pd.Series(beta_a, index=dates, name="$\\beta$")
@@ -443,28 +443,30 @@ def plot_maturity_bucket_spread_vs_vol(path, db):
     rating_buckets = {"A": ("AAA", "A-"), "BBB": ("BBB+", "BBB-")}
     sector_buckets = {"Industrials": 0, "Financials": 1, "Non-Corp": 2}
 
-    warnings.simplefilter(action="ignore", category=FutureWarning)
-    ix = db.build_market_index(in_stats_index=True)
-    d = defaultdict(list)
-    for maturity_cat, maturities in maturity_buckets.items():
-        for rating_cat, ratings in rating_buckets.items():
-            for sector, fin_flag in sector_buckets.items():
-                ix_cat = ix.subset(
-                    maturity=maturities, rating=ratings, financial_flag=fin_flag
-                )
-                # Calculate spread and volatility.
-                oas = ix_cat.market_value_weight("OAS")
-                vol = ix_cat.market_value_weight_vol("OAS")
-                if not len(vol):
-                    # Not enough days to create volatility.
-                    continue
-                # Store current snapshot.
-                d["\nMaturity Bucket"].append(maturity_cat)
-                d[" "].append(sector)
-                d["\nRating"].append(rating_cat)
-                d["vol"].append(vol[-1])
-                d["oas"].append(oas[-1])
-    warnings.simplefilter(action="default", category=FutureWarning)
+    with warnings.catch_warnings():
+        warnings.simplefilter(action="ignore", category=FutureWarning)
+        ix = db.build_market_index(in_stats_index=True)
+        d = defaultdict(list)
+        for maturity_cat, maturities in maturity_buckets.items():
+            for rating_cat, ratings in rating_buckets.items():
+                for sector, fin_flag in sector_buckets.items():
+                    ix_cat = ix.subset(
+                        maturity=maturities,
+                        rating=ratings,
+                        financial_flag=fin_flag,
+                    )
+                    # Calculate spread and volatility.
+                    oas = ix_cat.market_value_weight("OAS")
+                    vol = ix_cat.market_value_weight_vol("OAS")
+                    if not len(vol):
+                        # Not enough days to create volatility.
+                        continue
+                    # Store current snapshot.
+                    d["\nMaturity Bucket"].append(maturity_cat)
+                    d[" "].append(sector)
+                    d["\nRating"].append(rating_cat)
+                    d["vol"].append(vol[-1])
+                    d["oas"].append(oas[-1])
     df = pd.DataFrame(d)
 
     fig, ax = vis.subplots(figsize=(8, 7.5))
@@ -537,16 +539,6 @@ def plot_sector_xsret_vs_oad(sector_df):
     ax.set_ylabel("OAD (yrs)")
     ax.legend(loc=2, bbox_to_anchor=(1.02, 1), prop={"size": 10})
     vis.show()
-
-
-# %%
-# db = Database()
-# db.load_market_data(start=db.date("5y"), local=True)
-# fid = "temp"
-# page = name = "Long Credit"
-# maturity = (10, None)
-# table_df = pd.read_csv(root("src/lgimapy/valuation_pack/temp.csv"), index_col=0)
-# table_df
 
 
 def make_sector_table(sector_df, name, doc):
@@ -816,11 +808,6 @@ def make_1m_sector_table(sector_df, maturity, name, doc, db):
         )
         doc.end_edit()
 
-
-# doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
-# make_sector_table(table_df, page, doc)
-# make_1m_sector_table(table_df, maturity, page, doc, db)
-# doc.save(save_tex=True)
 
 # %%
 

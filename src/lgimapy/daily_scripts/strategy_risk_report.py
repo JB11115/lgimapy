@@ -37,7 +37,7 @@ def main():
 
     strategies = [
         "US Long Credit",
-        "Custom US Long Credit",
+        # "US Long Credit - Custom",
         "US Long Credit Plus",
         "US Long Corporate",
         "US Long Corp 2% Cap",
@@ -117,7 +117,7 @@ def main():
 
     # %%
 
-
+# %%
 def get_single_latex_risk_page(
     strategy, date, prev_date, pdf_path, universe="returns", n_table_rows=10
 ):

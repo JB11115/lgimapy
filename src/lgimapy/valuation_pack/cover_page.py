@@ -19,24 +19,24 @@ def update_cover_page(fid, db):
     """Create cover page for strategy meeting."""
     # Load market data and store indexes that will be re-used in memory.
     vis.style()
-    fig_dir = root("latex/valuation_pack/fig")
+    fig_dir = root("reports/valuation_pack/fig")
 
     ix_d = {}
-    # db = Database()
+    db = Database()
     # db.load_market_data(local=True, start=db.date("5y"))
     ix_d["mc"] = db.build_market_index(in_stats_index=True)
     ix_d["lc"] = db.build_market_index(in_stats_index=True, maturity=(10, None))
     ix_d["10y"] = db.build_market_index(in_stats_index=True, maturity=(8, 12))
     ix_d["30y"] = db.build_market_index(in_stats_index=True, maturity=(25, 32))
 
-    update_credit_overview(fig_dir, ix_d)
+    update_credit_overview(fig_dir, ix_d, save=True)
     update_bbb_a_ratios(fig_dir, ix_d)
     update_hy_ig_ratios(fig_dir, ix_d)
     update_strategy_scores(fid, fig_dir)
     del ix_d
 
 
-def update_credit_overview(fig_dir, ix_d):
+def update_credit_overview(fig_dir, ix_d, save=True):
     """
     Update overall view of credit plots for full market and long credit,
     including 5 year stats, last value, median, percentiles, and
@@ -97,7 +97,7 @@ def update_credit_overview(fig_dir, ix_d):
         label=lbl,
     )
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    axes[0].legend(fancybox=True, title=title, shadow=True)
+    axes[0].legend(loc="upper left", fancybox=True, title=title, shadow=True)
     axes[0].set_title("US Market Credit", fontweight="bold")
 
     # Plot short term scores below LC index.
@@ -113,9 +113,11 @@ def update_credit_overview(fig_dir, ix_d):
         )
     vis.format_xaxis(axes[1], df, "auto")
     plt.tight_layout()
-    vis.savefig(fig_dir / "US_MC_bollinger")
-    vis.close()
-    # vis.show()
+    if save:
+        vis.savefig(fig_dir / "US_MC_bollinger")
+        vis.close()
+    else:
+        vis.show()
 
     # Bollinger bands for long credit.
     fig, axes = vis.subplots(
@@ -170,7 +172,7 @@ def update_credit_overview(fig_dir, ix_d):
         label=lbl,
     )
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    axes[0].legend(fancybox=True, title=title, shadow=True)
+    axes[0].legend(loc="upper left", fancybox=True, title=title, shadow=True)
     axes[0].set_title("US Long Credit", fontweight="bold")
 
     # Plot short term scores below LC index.
@@ -186,8 +188,11 @@ def update_credit_overview(fig_dir, ix_d):
         )
     vis.format_xaxis(axes[1], df, "auto")
     plt.tight_layout()
-    vis.savefig(fig_dir / "US_LC_bollinger")
-    vis.close()
+    if save:
+        vis.savefig(fig_dir / "US_LC_bollinger")
+        vis.close()
+    else:
+        vis.show()
 
 
 def update_hy_ig_ratios(fig_dir, ix_d):
@@ -358,7 +363,7 @@ def update_strategy_scores(fid, fig_dir):
     else:
         text = f"\\Huge \\textbf{{{score}}}"
 
-    doc = Document(fid, path="valuation_pack", load_tex=True)
+    doc = Document(fid, path="reports/valuation_pack", load_tex=True)
     doc.start_edit("short_term_score")
     doc.add_text(text)
     doc.end_edit()

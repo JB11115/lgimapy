@@ -24,7 +24,9 @@ def update_macro_indicators(fid, plot=True):
 
     # Open valuation pack document and update macro indicator page
     # with generated tables.
-    doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
+    doc = Document(
+        fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
+    )
     doc.start_edit("macro_indicator_tables")
     doc.add_table(
         cash_table.df,
@@ -122,7 +124,7 @@ def pct_change(s, delta_months):
 
 def calculate_macro_indicators(plot=True):
     db = Database()
-    path = root("latex/valuation_pack/fig")
+    path = root("reports/valuation_pack/fig")
     cdx_table = ValuationTable()
     cash_table = ValuationTable()
     figsize = (8, 5.5)
@@ -812,7 +814,7 @@ if __name__ == "__main__":
 #     figsize=figsize,
 #     xtickfmt="auto",
 # )
-# path = root("latex/valuation_pack/fig")
+# path = root("reports/valuation_pack/fig")
 #
 # vis.savefig("0_ISM_SNR_LOAN", path=path)
 # vis.show()

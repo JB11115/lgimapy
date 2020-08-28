@@ -143,9 +143,8 @@ def build_credit_snapshot(
 
     fid = f"{today.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
     csv_path = root("data/credit_snapshots")
-    pdf_path = root("reports/credit_snapshots")
+    pdf_path = "reports/credit_snapshots"
     mkdir(csv_path)
-    mkdir(pdf_path)
 
     # Define sectors for each table.
     # Subsectors are indicated with a leading `~`.
@@ -515,7 +514,7 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
 
 if __name__ == "__main__":
     date = "/29/2020"
-    date = Database().date('today')
+    date = Database().date("today")
     with Time():
         make_credit_snapshots(date)
         # update_credit_snapshots()

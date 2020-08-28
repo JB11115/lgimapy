@@ -8,7 +8,7 @@ from matplotlib.lines import Line2D
 from lgimapy import vis
 from lgimapy.data import Database, spread_diff
 from lgimapy.latex import Document
-from lgimapy.utils import EventDistance, root
+from lgimapy.utils import EventDistance
 
 vis.style()
 
@@ -16,13 +16,14 @@ vis.style()
 
 
 def update_lc_tail(fid):
-    doc = Document(fid, path="valuation_pack", fig_dir=True, load_tex=True)
-    path = root("latex/valuation_pack/fig")
+    doc = Document(
+        fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
+    )
     crises_xsrets, crises_spreads = get_crises_tail_recovery_dfs()
-    plot_xsret_crises_recoveries(crises_xsrets, path)
-    plot_spread_crises_recoveries(crises_spreads, path)
+    plot_xsret_crises_recoveries(crises_xsrets, doc.fig_dir)
+    plot_spread_crises_recoveries(crises_spreads, doc.fig_dir)
     tail_df, curr_dt, prev_dt = get_tail_df()
-    plot_just_tail(tail_df, curr_dt, prev_dt, path)
+    plot_just_tail(tail_df, curr_dt, prev_dt, doc.fig_dir)
     make_tail_position_table(tail_df, doc)
     doc.save_tex()
 

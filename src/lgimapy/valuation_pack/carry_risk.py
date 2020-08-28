@@ -10,7 +10,7 @@ from lgimapy import vis
 from lgimapy.bloomberg import bdh, bdp, bds
 from lgimapy.data import Database, Index
 from lgimapy.models import find_drawdowns
-from lgimapy.utils import load_json, root, Time
+from lgimapy.utils import load_json, Time
 
 # %%
 
