@@ -194,3 +194,91 @@ def get_overview_table(sector_kws, strategies, n=20):
         note = None
 
     return table_df[table_cols], note
+
+
+# %%
+def get_forecasted_xsrets(db, lookback="1m"):
+    """
+    Get forecasted excess returns from specified lookback.
+    """
+    # Use stas index to find an index eligible bonds over
+    # entire period. Then build an index of these bonds
+    # where they do not drop out for any reason.
+    lookback_date = db.date(lookback)
+    stats_ix = db.build_market_index(in_stats_index=True, start=lookback_date)
+    ix = db.build_market_index(cusip=stats_ix.cusips, start=lookback_date)
+    ix.df["DTS"] = ix.df["OAS"] * ix.df["OASD"]
+    ix.df["RatingBucket"] = np.NaN
+    ix.df.loc[ix.df["NumericRating"] <= 7, "RatingBucket"] = "A"
+    # ix.df.loc[ix.df["NumericRating"].isin((4, 5, 6)), "RatingBucket"] = "A"
+    ix.df.loc[ix.df["NumericRating"].isin((8, 9, 10)), "RatingBucket"] = "BBB"
+    d = defaultdict(dict)
+    for date in ix.dates:
+        # Get the days data.
+        date_ix = ix.day(date, as_index=True)
+        date_cusips = date_ix.cusips
+        date_df = date_ix.df.copy()
+
+        # Subset the bonds which have not been forecasted already.
+        already_been_forecasted = (
+            pd.Series(date_df["RatingBucket"].items())
+            .isin(d["ModelXSRet"])
+            .values
+        )
+        in_rating_bucket = ~date_df["RatingBucket"].isna()
+        pred_df = date_df[~already_been_forecasted & in_rating_bucket]
+        # d["n_pred"][date] = len(pred_df)
+        if not len(pred_df):
+            # No new bonds to forecast.
+            continue
+
+        # Calculate excess returns and weights from the date to current date.
+        ix_from_date = ix.subset(start=date)
+        xsrets = ix_from_date.accumulate_individual_excess_returns()
+        weights = ix_from_date.get_value_history("MarketValue").sum()
+
+        # Perform regression to find expected excess returns.
+        x_cols = ["OAS", "OAD", "DTS"]
+        reg_df = pd.concat((date_df[x_cols], xsrets), axis=1).dropna()
+        X = sm.add_constant(reg_df[x_cols])
+        ols = sm.OLS(reg_df["XSRet"], X).fit()
+        # d["r2"][date] = ols.rsquared
+        pred_df = pd.concat(
+            (
+                pred_df[["RatingBucket", *x_cols]],
+                xsrets,
+                weights.rename("weight"),
+            ),
+            axis=1,
+            join="inner",
+            sort=False,
+        )
+
+        X_pred = sm.add_constant(pred_df[x_cols], has_constant="add")
+        pred_df["pred"] = ols.predict(X_pred)
+        pred_df
+        # Store forecasted values.
+        for cusip, row in pred_df.iterrows():
+            key = (cusip, row["RatingBucket"])
+            d["ModelXSRet"][key] = row["pred"]
+            d["RealXSRet"][key] = row["XSRet"]
+            d["weight"][key] = row["weight"]
+
+    # Create DataFrame of all forecasted cusip/rating bucket combinations.
+    df = pd.Series(d["ModelXSRet"]).to_frame()
+    df.columns = ["ModelXSRet"]
+    list_d = defaultdict(list)
+    for i, (key, model_xsret) in enumerate(df["ModelXSRet"].items()):
+        cusip, rating_bucket = key
+        list_d["CUSIP"].append(cusip)
+        list_d["RatingBucket"].append(rating_bucket)
+        for col in ["RealXSRet", "weight"]:
+            list_d[col].append(d[col][key])
+    for col, vals in list_d.items():
+        df[col] = vals
+    df.set_index("CUSIP", drop=True, inplace=True)
+    return df
+
+
+if __name__ == "__main__":
+    create_sector_report()
