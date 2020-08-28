@@ -63,6 +63,7 @@ def groupby(df, cols):
         "DirtyPrice",
         "CleanPrice",
         "PX_Adj_OAS",
+        "NumericRating",
     ]
     mv_agg_rules = {}
     df_cols = set(df)
@@ -255,6 +256,7 @@ class BondBasket:
         L3=None,
         sector=None,
         subsector=None,
+        LGIMA_sector=None,
         drop_treasuries=True,
         drop_municipals=False,
         maturity=(None, None),
@@ -333,6 +335,8 @@ class BondBasket:
             to include, default is all.
         subsector: str, List[str], optional
             Subsector or list of subsectors to include, default is all.
+        LGIMA_sector: str, List[str], optional
+            LGIMA custom sector(s) to include, default is all.
         drop_treasuries: bool, default=True
             Whether to drop treausuries.
         drop_municipals: bool, default=False
@@ -492,6 +496,7 @@ class BondBasket:
         L3 = to_list(L3, dtype=str, sort=True)
         sector = to_list(sector, dtype=str, sort=True)
         subsector = to_list(subsector, dtype=str, sort=True)
+        LGIMA_sector = to_list(LGIMA_sector, dtype=str, sort=True)
 
         # Convert all flag constraints to int.
         in_returns_index = to_int(in_returns_index)
@@ -546,6 +551,7 @@ class BondBasket:
             "L3": ("L3", L3),
             "sector": ("Sector", sector),
             "subsector": ("Subsector", subsector),
+            "LGIMA_sector": ("LGIMASector", LGIMA_sector),
             "market_of_issue": ("MarketOfIssue", market_of_issue),
             "country_of_domicile": ("CountryOfDomicile", country_of_domicile),
             "country_of_risk": ("CountryOfRisk", country_of_risk),
