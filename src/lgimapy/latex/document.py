@@ -70,7 +70,7 @@ class Document:
         if path is None:
             self.path = Path(os.getcwd())
         elif isinstance(path, str):
-            self.path = root(f"latex/{path}")
+            self.path = root(path)
             mkdir(self.path)
         else:
             self.path = Path(path)
@@ -276,6 +276,7 @@ class Document:
             "float",
             "graphicx",
             "makecell",
+            "marvosym",
             "MnSymbol",
             "nicefrac",
             "ragged2e",
