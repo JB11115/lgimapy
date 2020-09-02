@@ -1,3 +1,4 @@
+import argparse
 from collections import defaultdict
 
 import numpy as np
@@ -95,6 +96,21 @@ def main():
             "col_fmt": "l|rrrr|rrr|rrr|rrrr",
         },
     }
+    # Print indexes to scrape then exit.
+    args = parse_args()
+    if args.print:
+        print("\nYields")
+        for i, index in enumerate(sections["Yields Overview"]["cols"]):
+            print(f"  {i+1}) {index.split('*')[0]}")
+        print("\nRemaining Spreads")
+        remaining_indexes = (
+            sections["Spreads Overview"]["cols"][-3:]
+            + sections["Spreads Fin/Non-Fin"]["cols"][-6:]
+        )
+        for i, index in enumerate(remaining_indexes):
+            print(f"  {i+1}) {index.split('*')[0]}")
+        return
+
     # %%
     doc = Document("HY_spreads_yields_returns", path="reports/HY")
     doc.add_preamble(
@@ -247,6 +263,15 @@ def make_table(df, yields=False, highlight_dates=None):
     if yields:
         table = table.round(2)
     return table, color_locs, table_notes
+
+
+def parse_args():
+    """Collect settings from command line and set defaults."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-p", "--print", action="store_true", help="Print Indexes"
+    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
