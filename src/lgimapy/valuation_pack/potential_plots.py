@@ -155,6 +155,12 @@ doc.add_figure("US_IG_spread_dispersion", savefig=True)
 
 # %%
 # US IG market value history.
+db = Database()
+db.load_market_data(db.date("1y"), local=True)
+# %%
+ix_d = {}
+ix_d["mc"] = db.build_market_index(in_stats_index=True)
+ix_d["lc"] = db.build_market_index(in_stats_index=True, maturity=(10, None))
 yfmt = "${x:.1f}T"
 vis.plot_double_y_axis_timeseries(
     ix_d["mc"].total_value().rename("Market Credit") / 1e6,
@@ -167,8 +173,8 @@ vis.plot_double_y_axis_timeseries(
     alpha=0.8,
     figsize=(8, 4),
 )
-doc.add_figure("US_IG_market_values", savefig=True)
-
+# doc.add_figure("US_IG_market_values", savefig=True)
+vis.show()
 # %%
 # US rates vol vs equity vol.
 df = db.load_bbg_data(
