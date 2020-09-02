@@ -109,6 +109,7 @@ def main():
         )
         for i, index in enumerate(remaining_indexes):
             print(f"  {i+1}) {index.split('*')[0]}")
+        print()
         return
 
     # %%
