@@ -35,10 +35,6 @@ def main():
     extensions = []
     managers = []
     for strategy, accounts in tqdm(strategy_accounts.items()):
-        if strategy != "US Long Credit":
-            continue
-        else:
-            break
         if strategy in stragies_with_no_benchmark:
             continue
         for account in accounts:
