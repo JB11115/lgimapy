@@ -1,3 +1,4 @@
+import re
 from functools import partial
 
 import numpy as np
@@ -155,7 +156,9 @@ def latex_color_gradient(
 
     gradient_colors = []
     for val in vals:
-        if val < center:
+        if np.isnan(val) or val is None:
+            gradient_colors.append(f"{{{cmin}!0!{cmid}}}")
+        elif val < center:
             val = max(val, vmin)
             alpha = int(alphamax * (center - val) / (center - vmin))
             gradient_colors.append(f"{{{cmin}!{alpha}!{cmid}}}")
@@ -210,7 +213,6 @@ def latex_diverging_bars(
     return divergent_bars
 
 
-# %%
 def latex_table(
     df,
     caption=None,
@@ -718,12 +720,12 @@ def latex_table(
         fout += f"{{\\{justification} {table_notes} \\par}}"
         fout += "\n"
     fout += "\end{table}"
+    # One final check to remove nans.
+    if nan_value:
+        fout = re.sub(" nan\\\\% ", nan_value, fout)
+        fout = re.sub(" nan ", nan_value, fout)
+
     return fout
 
 
-# from lgimapy.utils import root
-#
-# table_df = pd.read_csv(root("src/lgimapy/valuation_pack/temp.csv"), index_col=0)
-#
-# df = latex_table(table_df, arrow_col="xsret_change")
-# print(df.to_latex())
+# %%
