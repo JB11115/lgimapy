@@ -83,14 +83,14 @@ def create_sector_report():
     ]
 
     # %%
+    n = 20
     doc = Document(fid, path=pdf_path)
     doc.add_preamble(margin=1, bookmarks=True)
     for sector in tqdm(sectors):
         sector_kwargs = db.index_kwargs(sector, in_stats_index=None)
         sector_kws = sector_kwargs
         doc.add_section(sector_kwargs["name"].replace("&", "\&"))
-        table, footnote = get_overview_table(sector_kwargs, strategies)
-        # sector_kws = sector_kwargs
+        table, footnote = get_overview_table(sector_kwargs, strategies, n)
         prec = {}
         ow_cols = []
         for col in table.columns:
@@ -99,15 +99,17 @@ def create_sector_report():
             elif "OAD OW" in col:
                 ow_cols.append(col)
                 prec[col] = "2f"
-        ow_max = max(0, table[ow_cols].max().max())
-        ow_min = min(0, table[ow_cols].min().min())
-        sector
+
+        issuer_table = table.iloc[3 : n + 2, :].copy()
+        ow_max = max(1e-5, issuer_table[ow_cols].max().max())
+        ow_min = min(-1e-5, issuer_table[ow_cols].min().min())
         doc.add_table(
             table,
             table_notes=footnote,
             col_fmt="llc|cc|cccc",
-            prec=prec,
             multi_row_header=True,
+            midrule_locs=[table.index[3], "Other"],
+            prec=prec,
             adjust=True,
             gradient_cell_col=ow_cols,
             gradient_cell_kws={
@@ -137,6 +139,18 @@ def get_overview_table(sector_kws, strategies, n=20):
     table_df: pd.DataFrame
         Table of most important ``n`` tickers.
     """
+    table_cols = [
+        "Rating",
+        "Analyst*Score",
+        "BM %*US LC",
+        "BM %*US C",
+        "US LC*OAD OW",
+        "US C*OAD OW",
+        "US LA*OAD OW",
+        "US LGC*OAD OW",
+    ]
+
+    # Get DataFrame of all individual issuers.
     df_list = []
     ratings_list = []
     for name, strat in strategies.items():
@@ -157,43 +171,54 @@ def get_overview_table(sector_kws, strategies, n=20):
                     f"BM %*{name}"
                 )
             )
-
     ratings = np.mean(pd.DataFrame(ratings_list)).round(0).astype(int)
-    df_list.append(db.convert_numeric_ratings(ratings).rename("Rating"))
+    df_list.append(Database().convert_numeric_ratings(ratings).rename("Rating"))
     df = pd.DataFrame(df_list).T.rename_axis(None)
     df["Analyst*Score"] = 0  # TODO: Use analyst score.
-    table_cols = [
-        "Rating",
-        "Analyst*Score",
-        "BM %*US LC",
-        "BM %*US C",
-        "US LC*OAD OW",
-        "US C*OAD OW",
-        "US LA*OAD OW",
-        "US LGC*OAD OW",
-    ]
+
     # Find total overweight over all strategies.
     ow_cols = [col for col in df.columns if "OAD OW" in col]
     bm_pct_cols = [col for col in df.columns if "BM %" in col]
     df["ow"] = np.sum(df[ow_cols], axis=1)
+
+    # Get summary rows.
+    summary_rows = ["Total", "A Rated", "BBB Rated"]
+    summary_df = pd.DataFrame()
+    for name in summary_rows:
+        if name == "Total":
+            df_row = df.sum().rename(name)
+        else:
+            df_row = (
+                df[df["Rating"].astype(str).str.startswith(name[0])]
+                .sum()
+                .rename(name)
+            )
+        df_row["Rating"] = "-"
+        df_row["Analyst*Score"] = "-"
+        summary_df = summary_df.append(df_row)
+
+    # Create `other` row if required.
     if len(df) > n:
         # Sort columns by combination of portfolio overweights
         # and market value. Lump together remaining tickers.
         df["bm"] = np.sum(df[bm_pct_cols], axis=1)
-        df["sort"] = np.abs(df["ow"]) + 10 * df["bm"]
-        df.sort_values("sort", ascending=False, inplace=True)
+        df["importance"] = np.abs(df["ow"]) + 10 * df["bm"]
+        df.sort_values("importance", ascending=False, inplace=True)
         df_top_tickers = df.iloc[: n - 1, :]
         df_other_tickers = df.iloc[n:, :]
         other_tickers = df_other_tickers.sum().rename("Other")
         other_tickers["Rating"] = "-"
-        table_df = df_top_tickers.append(other_tickers)
+        other_tickers["Analyst*Score"] = "-"
+        table_df = df_top_tickers.sort_values("ow", ascending=False).append(
+            other_tickers
+        )
         other_tickers = ", ".join(sorted(df_other_tickers.index))
         note = f"\\scriptsize \\textit{{Other}} consists of {other_tickers}."
     else:
         table_df = df.sort_values("ow", ascending=False)
         note = None
 
-    return table_df[table_cols], note
+    return summary_df.append(table_df)[table_cols], note
 
 
 # %%
