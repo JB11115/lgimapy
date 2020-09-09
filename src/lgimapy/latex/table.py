@@ -726,6 +726,3 @@ def latex_table(
         fout = re.sub(" nan ", nan_value, fout)
 
     return fout
-
-
-# %%
