@@ -80,7 +80,8 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     df["Short Term"].fillna(method="ffill", inplace=True)
     df.dropna(inplace=True)
     pctile = int(np.round(100 * oas.rank(pct=True)[-1]))
-    ordinal = {1: "st", 2: "nd", 3: "rd"}.get(pctile, "th")
+    last_digit = pctile // 1 % 10
+    ordinal = {1: "st", 2: "nd", 3: "rd"}.get(last_digit, "th")
     lbl = cleandoc(
         f"""
          Last: {oas[-1]:.0f} ({pctile:.0f}{ordinal} %tile)
@@ -142,15 +143,6 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     oas_lc = ix_lc.get_synthetic_differenced_history("OAS")
 
     # Get strategy meeting scoring data and combine with OAS.
-    scores_df = (
-        pd.read_excel(
-            root("data/chicago_strategy_meeting_scores.xlsx"),
-            index_col=0,
-            sheet_name="Summary",
-        )
-        .loc["Short Term"]
-        .astype(int)
-    )
     df = pd.concat([oas_lc, scores_df], axis=1, sort=True)
     df["Short Term"].fillna(method="ffill", inplace=True)
     df.dropna(inplace=True)
