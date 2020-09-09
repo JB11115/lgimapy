@@ -56,7 +56,6 @@ def clean_dtypes(df):
             "LiquidityCostScore",
             "AccruedInterest",
             "AmountOutstanding",
-            "MarketValue",
             "LQA",
             "KRD06mo",
             "KRD02yr",
@@ -65,8 +64,15 @@ def clean_dtypes(df):
             "KRD20yr",
             "KRD30yr",
             "YieldToWorst",
+            "YieldToMat",
+            "ModDurationToWorst",
+            "ModDurationToMat",
             "NumericRating",
             "MaturityYears",
+            "TRet",
+            "XSRet",
+            "MTDXSRet",
+            "MTDLiborXSRet",
             "IssueYears",
             "DirtyPrice",
             "MarketValue",
@@ -94,6 +100,9 @@ def clean_dtypes(df):
             "RiskEntity",
             "Sector",
             "Subsector",
+            "ML_Sector",
+            "ML_Subsector",
+            "CompositeRating",
             "MoodyRating",
             "SPRating",
             "FitchRating",
@@ -153,6 +162,16 @@ def convert_sectors_to_fin_flags(sectors):
         "YANKEE_BANKS",
         "REITS",
         "US_REGIONAL_BANKS",
+        # Merrill Lynch Sectors
+        "BANKS",
+        "GENERAL_FINANCIAL",
+        "GUARANTEED_FINANCIALS",
+        "LIFE_INSURANCE",
+        "NONLIFE_INSURANCE",
+        "PUBLIC_BANKS",
+        "REAL_ESTATE_INVESTMENT_&_SERVICES",
+        "REAL_ESTATE_INVESTMENT_TRUSTS",
+        "REGIONS",
     }
     other = {
         "TREASURIES",
@@ -169,6 +188,39 @@ def convert_sectors_to_fin_flags(sectors):
         "UTILITY_OTHER",
         "NATURAL_GAS",
         "ELECTRIC",
+        # Merrill Lynch Sectors
+        "AGENCIES",
+        "AUSTRALIA_COVERED",
+        "AUSTRIA_COVERED",
+        "BELGIUM_COVERED",
+        "CANADA_COVERED",
+        "DENMARK_COVERED",
+        "ELECTRICITY",
+        "FINLAND_COVERED",
+        "FRANCE_COVERED_LEGAL",
+        "FRANCE_COVERED_SFH",
+        "FRANCE_COVERED_STRUCTURED",
+        "GAS_/_WATER_&_MULTIUTILITIE",
+        "HYPOTHEKENPFANDBRIEFE",
+        "IRELAND_COVERED",
+        "ITALY_COVERED",
+        "LUXEMBOURG_COVERED",
+        "NETHERLANDS_COVERED",
+        "NEW_ZEALAND_COVERED",
+        "NORWAY_COVERED",
+        "OEFFENTLICHE_PFANDBRIEFE",
+        "OTHER_COLLATERALIZED",
+        "OTHER_PFANDBRIEFE",
+        "OTHER_SOVEREIGNS",
+        "POOLED_CEDULAS",
+        "PORTUGAL_COVERED",
+        "SECURITIZED",
+        "SINGLE_CEDULAS",
+        "SOVEREIGNS",
+        "SWEDEN_COVERED",
+        "SWITZERLAND_COVERED",
+        "UK_COVERED",
+        "US_COVERED",
     }
     fin_flags = np.zeros(len(sectors))
     fin_flags[sectors.isin(financials)] = 1
@@ -487,6 +539,11 @@ class Database:
         """Set DataFrames to display all columnns in IPython."""
         pd.set_option("display.max_columns", 999)
 
+    def display_all_rows(self, n=500):
+        """Set DataFrames to display all columnns in IPython."""
+        pd.set_option("display.max_rows", n)
+        pd.set_option("display.min_rows", n)
+
     def nearest_date(self, date, **kwargs):
         """
         Return trade date nearest to input date.
@@ -679,6 +736,84 @@ class Database:
 
         # Add bloomberg subsector.
         df["Subsector"] = get_bloomberg_subsector(df["CUSIP"].values)
+        return clean_dtypes(df)
+
+    def _preprocess_basys_data(self, df):
+        # Fill missing sectors and subsectors.
+        sector_cols = [f"Level {i}" for i in range(7)]
+        df[sector_cols] = (
+            df[sector_cols]
+            .replace("*", np.nan)
+            .fillna(method="ffill", axis=1)
+            .copy()
+        )
+        df.loc[df["Level 1"] == "Sovereigns", "Level 5"] = "Sovereigns"
+
+        # Fill missing collateral types.
+        collat_cols = [f"Seniority Level {i+1}" for i in range(3)]
+        df[collat_cols] = (
+            df[collat_cols]
+            .replace("*", np.nan)
+            .fillna(method="ffill", axis=1)
+            .copy()
+        )
+
+        col_map = {
+            "Date": "Date",
+            "Ticker": "Ticker",
+            "Issuer": "Issuer",
+            "ISIN": "ISIN",
+            "CUSIP": "CUSIP",
+            "Coupon": "CouponRate",
+            "Final Maturity": "MaturityDate",
+            "Workout date": "WorstDate",
+            "Level 5": "ML_Sector",
+            "Level 6": "ML_Subsector",
+            "Markit iBoxx Rating": "CompositeRating",
+            "Seniority Level 2": "CollateralType",
+            "Notional Amount": "AmountOutstanding",
+            "Market Value": "MarketValue",
+            "Next Call Date": "NextCallDate",
+            "Index Price": "CleanPrice",
+            "Dirty Index Price": "DirtyPrice",
+            "Accrued Interest": "AccruedInterest",
+            "Effective OA duration": "OAD",
+            "OAS": "OAS",
+            "Semi-Annual Yield": "YieldToWorst",
+            "Semi-Annual Yield to Maturity": "YieldToMat",
+            "Semi-Annual Modified Duration": "ModDurationToWorst",
+            "Semi-Annual Modified Duration to Maturity": "ModDurationToMat",
+            "Month-to-date Sovereign Curve Swap Return": "MTDXSRet",
+            "Month-to-date Libor Swap Return": "MTDLiborXSRet",
+        }
+        df = df.rename(columns=col_map)[col_map.values()].copy()
+
+        # Convert str time to datetime.
+        for date_col in ["Date", "MaturityDate", "WorstDate", "NextCallDate"]:
+            df[date_col] = pd.to_datetime(
+                df[date_col], format="%Y-%m-%d", errors="coerce"
+            )
+
+        # Define maturites yearrs.
+        day = "timedelta64[D]"
+        df["MaturityYears"] = (df["MaturityDate"] - df["Date"]).astype(
+            day
+        ) / 365
+
+        # Capitalize sectors, and issuers.
+        for col in ["ML_Subsector", "ML_Sector", "Issuer"]:
+            df[col] = df[col].str.upper()
+        df["ML_Sector"] = df["ML_Sector"].str.replace(" ", "_")
+
+        # Put amount outstanding and market value into $M.
+        for col in ["AmountOutstanding", "MarketValue"]:
+            df[col] /= 1e6
+
+        # Get numeric ratings from composit ratings.
+        df["NumericRating"] = self._get_numeric_ratings(df, ["CompositeRating"])
+
+        # Add financial flag column.
+        df["FinancialFlag"] = convert_sectors_to_fin_flags(df["ML_Sector"])
         return clean_dtypes(df)
 
     def _get_numeric_ratings(self, df, cols):
@@ -2031,17 +2166,17 @@ def main():
     # %%
 
     # %%
-    db = Database()
-    db.load_market_data(local=True)
-
-    with Time():
-        df = db.rating_changes(start="1/1/2020")
+    # db = Database()
+    # db.load_market_data(local=True)
+    #
+    # with Time():
+    #     df = db.rating_changes(start="1/1/2020")
 
     # %%
-    db = Database("dev")
-    db = Database()
+    # db = Database("dev")
+    # db = Database()
 
-    df = db.load_market_data(start="8/20/2020", ret_df=True, clean=False)
+    # df = db.load_market_data(start="8/20/2020", ret_df=True, clean=False)
     # %%
     # sql = (
     #     "exec [LGIMADatamart].[dbo].[sp_AFI_Get_SecurityAnalytics] "
@@ -2050,3 +2185,30 @@ def main():
     # sql = "select * from DimInternalRating"
     # df = pd.read_sql(sql, db._conn)
     # list(df)
+    # %%
+    self.load_market_data(local=True)
+    self.load_market_data()
+    ix = self.build_market_index()
+    from pathlib import Path
+
+    def get_fids(region):
+        """Get all files for given region."""
+
+        dir = Path(f"S:/FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{region}/")
+        fids = dir.glob("*")
+        files = {}
+        for fid in fids:
+            if len(fid.stem) != 21:
+                # Bad file.
+                continue
+            date = pd.to_datetime(fid.stem[-10:])
+            files[date] = fid
+        return pd.Series(files)
+
+    fids = get_fids("EUR")
+    fid = fids[0]
+    df_raw = pd.read_csv(fid, engine="python")
+    df = df_raw.copy()
+
+    self._preprocess_basys_data(df_raw)
+    # %%
