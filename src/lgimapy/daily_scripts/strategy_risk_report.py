@@ -37,7 +37,7 @@ def main():
 
     strategies = [
         "US Long Credit",
-        # "US Long Credit - Custom",
+        "US Long Credit - Custom",
         "US Long Credit Plus",
         "US Long Corporate",
         "US Long Corp 2% Cap",
@@ -116,6 +116,7 @@ def main():
     doc.save(save_tex=False)
 
     # %%
+
 
 # %%
 def get_single_latex_risk_page(
