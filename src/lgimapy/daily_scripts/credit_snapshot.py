@@ -19,6 +19,7 @@ from lgimapy.utils import load_json, mkdir, root, Time
 def make_credit_snapshots(date=None, include_portfolio=True):
     """Build credit snapshots and sitch them together."""
     indexes = ["US_IG", "US_IG_10+"]
+    # indexes = ["US_IG"]
     for index in indexes:
         build_credit_snapshot(
             index, date=date, include_portfolio_positions=include_portfolio
@@ -316,8 +317,9 @@ def make_table(full_df, sectors, caption, ix_kwargs, include_overweights):
     }
     df.drop("color", axis=1, inplace=True)
     df.drop("z", axis=1, inplace=True)
+    ow_col = [col for col in df.columns if "*OW" in col][0]
     if not include_overweights:
-        df.drop("Over*Weight", axis=1, inplace=True)
+        df.drop(ow_col, axis=1, inplace=True)
 
     # Add indent to index column for subsectors.
     final_ix = []
@@ -394,7 +396,7 @@ def make_table(full_df, sectors, caption, ix_kwargs, include_overweights):
     col_fmt = "l|cc|cc|cc|cc|cc|c|c|c|ccl"
     if include_overweights:
         col_fmt = f"{col_fmt}|c"
-        prec["Over*Weight"] = "2f"
+        prec[ow_col] = "2f"
 
     table = latex_table(
         df,
@@ -440,6 +442,7 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
         DataFrame row of IG snapshot table for specified sector.
     """
     # Get synthetic OAS and price histories.
+    ow_col = "-*OW" if portfolio is None else f"{portfolio.name}*OW"
     try:
         ix_corrected = ix.drop_ratings_migrations()
         oas = ix_corrected.get_synthetic_differenced_history("OAS")
@@ -459,7 +462,7 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
         d["6m*Max"] = np.nan
         d["6m*%tile"] = 0
         d["z"] = None
-        d["Over*Weight"] = np.nan
+        d[ow_col] = np.nan
         return pd.DataFrame(d, index=[ix.name])
 
     # Get current state of the index and 6 month OAS/XSRet history.
@@ -504,16 +507,16 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
             if k not in unused_constraints
         }
         sector_portfolio = portfolio.subset(**constraints)
-        d["Over*Weight"] = np.sum(sector_portfolio.df["OAD_Diff"])
+        d[ow_col] = np.sum(sector_portfolio.df["OAD_Diff"])
 
     else:
-        d["Over*Weight"] = np.nan
+        d[ow_col] = np.nan
 
     return pd.DataFrame(d, index=[ix.name])
 
 
 if __name__ == "__main__":
-    date = "/29/2020"
+    date = "8/31/2020"
     date = Database().date("today")
     with Time():
         make_credit_snapshots(date)
