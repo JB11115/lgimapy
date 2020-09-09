@@ -76,7 +76,6 @@
     ],
     "US Government: Long": [
         "AEELG",
-        "ARNCLG",
         "HWMLG"
     ],
     "US Long Credit": [
@@ -105,7 +104,6 @@
         "GABCLD",
         "GENMLD",
         "HBANLD",
-        "HEKLD",
         "KELLD1",
         "KELLD2",
         "KHCLD",
@@ -352,7 +350,8 @@
         "MYAMSC"
     ],
     "US Corporate IG": [
-        "LGAS-CB"
+        "LGAS-CB",
+        "RSURC"
     ],
     "Absolute Return - LIB150": [
         "LIB150"

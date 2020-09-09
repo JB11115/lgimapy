@@ -112,7 +112,6 @@
         "AEELG",
         "AHGOVI",
         "AONSTRP",
-        "ARNCLG",
         "BLUEGOV",
         "BSSTRP",
         "CITSTRP",
@@ -169,7 +168,6 @@
         "GENMLD",
         "GLWLD",
         "HBANLD",
-        "HEKLD",
         "KELLD1",
         "KELLD2",
         "KHCLD",
@@ -277,6 +275,7 @@
         "PPG",
         "RFAGC",
         "RFCGC",
+        "RSURC",
         "SEIGC",
         "USBGC"
     ],
