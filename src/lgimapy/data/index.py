@@ -216,6 +216,26 @@ class Index(BondBasket):
         else:
             return df
 
+    def issuer_index(self):
+        """
+        Combine bonds by ticker into an index of daily issuers.
+
+        Returns
+        -------
+        :class:`Index`:
+            Index of issuers.
+        """
+
+        def daily_issuer_agg(df):
+            """Aggregate bonds for single day into issuers."""
+            return groupby(df, "Ticker")
+
+        idf = self.df.groupby("Date").apply(daily_issuer_agg).reset_index()
+        # Add a CUSIP column since a :class:`Index`
+        # expects it as the pd.DataFrame.index.
+        idf["CUSIP"] = idf["Ticker"]
+        return Index(idf.set_index("CUSIP", drop=False))
+
     def clear_day_cache(self):
         """Clear cache of stored days."""
         self._day_cache = ""
@@ -1213,25 +1233,10 @@ def main():
     # db.load_market_data(start="5/1/2019", end="12/1/2019", local=True)
     # db.load_market_data(start="7/1/2020", local=True)
     date = db.date("today")
-    date = db.nearest_date("8/17/2020")
+    date = db.nearest_date("8/26/2020")
     db.load_market_data(local=True, start=date)
-    dt = date.strftime("%m_%d")
     # %%
 
     self = db.build_market_index(**db.index_kwargs("STATS_all"))
 
     # %%
-
-    def daily_issuer_weight(df):
-        """Standard deviation for single day."""
-        return groupby(df, "Ticker")
-
-    idf = self.df.groupby("Date").apply(daily_issuer_weight).reset_index()
-    idf["CUSIP"] = idf["Ticker"]
-    idf.set_index("CUSIP", drop=False, inplace=True)
-    list(idf)
-    ix = Index(idf)
-    self.MEDIAN("OAS")
-    ix.MEDIAN("OAS")
-    ix.MEDIAN("OAS", weights=None)
-    self.MEDIAN("OAS", weights=None)
