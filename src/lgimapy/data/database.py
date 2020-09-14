@@ -358,15 +358,15 @@ class Database:
             df = df[df["Date_PREV"] <= pd.to_datetime(end)].copy()
         return df
 
-    def index_kwargs(self, name, unused_constraints=None, **kwargs):
+    def index_kwargs(self, key, unused_constraints=None, **kwargs):
         """
         Index keyword arguments for saved indexes,
         with ability to override/add new arguments.
 
         Parameters
         ----------
-        name: str
-            Name of stored index.
+        key: str
+            Key of stored index in `indexes.json`.
         unused_constraints: str or List[str], optional
             Constraintes to remove from kwargs list if present.
         kwargs:
@@ -379,9 +379,9 @@ class Database:
             for specified index.
         """
         try:
-            d = self._index_kwargs_dict[name]
+            d = self._index_kwargs_dict[key].copy()
         except KeyError:
-            raise KeyError(f"{name} is not a stored Index.")
+            raise KeyError(f"{key} is not a stored Index.")
 
         if unused_constraints is not None:
             unused_cons = to_set(unused_constraints, dtype=str)
