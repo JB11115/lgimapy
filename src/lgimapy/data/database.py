@@ -32,6 +32,7 @@ from lgimapy.utils import (
     to_datetime,
     to_int,
     to_list,
+    to_set,
 )
 
 from lgimapy.bloomberg import bdp
@@ -357,7 +358,7 @@ class Database:
             df = df[df["Date_PREV"] <= pd.to_datetime(end)].copy()
         return df
 
-    def index_kwargs(self, name, **kwargs):
+    def index_kwargs(self, name, unused_constraints=None, **kwargs):
         """
         Index keyword arguments for saved indexes,
         with ability to override/add new arguments.
@@ -366,6 +367,8 @@ class Database:
         ----------
         name: str
             Name of stored index.
+        unused_constraints: str or List[str], optional
+            Constraintes to remove from kwargs list if present.
         kwargs:
             Keyword arguments to override or add to index.
 
@@ -379,6 +382,10 @@ class Database:
             d = self._index_kwargs_dict[name]
         except KeyError:
             raise KeyError(f"{name} is not a stored Index.")
+
+        if unused_constraints is not None:
+            unused_cons = to_set(unused_constraints, dtype=str)
+            d = {k: v for k, v in d.items() if k not in unused_cons}
 
         d.update(**kwargs)
         return d
@@ -2210,5 +2217,5 @@ def main():
     df_raw = pd.read_csv(fid, engine="python")
     df = df_raw.copy()
 
-    self._preprocess_basys_data(df_raw)
+    self._preprocess_basys_data(df_raw)["MaturityYears"]
     # %%
