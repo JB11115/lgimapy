@@ -14,7 +14,7 @@ def main():
     # Load data.
     spreads_fid = root("data/HY/report_spreads.csv")
     yields_fid = root("data/HY/report_yields.csv")
-    tret_fid = root("data/HY/report_total_returns.xlsx")
+    tret_fid = root("data/HY/report_total_returns.csv")
 
     spreads_df = pd.read_csv(
         spreads_fid, index_col=0, parse_dates=True, infer_datetime_format=True
@@ -22,7 +22,7 @@ def main():
     yields_df = pd.read_csv(
         yields_fid, index_col=0, parse_dates=True, infer_datetime_format=True
     )
-    tret_df = pd.read_excel(tret_fid, index_col=0)
+    tret_df = pd.read_csv(tret_fid, index_col=0)
 
     sections = {
         "Spreads Overview": {

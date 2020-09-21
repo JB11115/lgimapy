@@ -5,39 +5,10 @@ and combine them with previously saved data.
 
 import pandas as pd
 
+from lgimapy.bloomberg import bdp
 from lgimapy.utils import root
 
 # %%
-
-
-def read_csv(fid):
-    raw_df = pd.read_csv(fid, usecols=(0, 1), header=None)
-
-    # Find split points where new index starts and ends.
-    key = raw_df.iloc[1, 1]
-    ilocs = list(raw_df[raw_df[1] == key].index)
-    ilocs.append(len(raw_df))
-
-    # Reformate each index to its own column.
-    df_list = []
-    for i, iloc in enumerate(ilocs[1:]):
-        df = raw_df.iloc[ilocs[i] - 1 : iloc - 1].dropna()
-        name = df.iloc[0, 1]
-        df = df.iloc[2:]
-        df.set_index(0, inplace=True)
-        df.index.name = None
-        df.columns = [name]
-        df.index = pd.to_datetime(df.index, errors="coerce")
-        df[name] = pd.to_numeric(df[name])
-        df_list.append(df)
-
-    # Combine columns and save.
-    return pd.concat(df_list, axis=1, sort=True)
-
-
-def combine_dfs(old_df, new_df):
-    old_df_prev = old_df[~old_df.index.isin(new_df.index)].copy()
-    return pd.concat((old_df_prev, new_df), sort=True)
 
 
 def main():
@@ -93,6 +64,78 @@ def main():
 
     updated_spread_df.to_csv(report_spread_fid)
     updated_yield_df.to_csv(report_yield_fid)
+
+    update_total_return_data()
+
+
+def read_csv(fid):
+    raw_df = pd.read_csv(fid, usecols=(0, 1), header=None)
+
+    # Find split points where new index starts and ends.
+    key = raw_df.iloc[1, 1]
+    ilocs = list(raw_df[raw_df[1] == key].index)
+    ilocs.append(len(raw_df))
+
+    # Reformate each index to its own column.
+    df_list = []
+    for i, iloc in enumerate(ilocs[1:]):
+        df = raw_df.iloc[ilocs[i] - 1 : iloc - 1].dropna()
+        name = df.iloc[0, 1]
+        df = df.iloc[2:]
+        df.set_index(0, inplace=True)
+        df.index.name = None
+        df.columns = [name]
+        df.index = pd.to_datetime(df.index, errors="coerce")
+        df[name] = pd.to_numeric(df[name])
+        df_list.append(df)
+
+    # Combine columns and save.
+    return pd.concat(df_list, axis=1, sort=True)
+
+
+def combine_dfs(old_df, new_df):
+    old_df_prev = old_df[~old_df.index.isin(new_df.index)].copy()
+    return pd.concat((old_df_prev, new_df), sort=True)
+
+
+def update_total_return_data():
+    """Scrape total return data from Bloomberg and save file."""
+    tret_fid = root("data/HY/report_total_returns.csv")
+    index_names = {
+        "H0A0": "US HY",
+        "HC1N": "US BB",
+        "HUC2": "US B",
+        "HUC3": "US CCC",
+        "HE00": "EU HY",
+        "HE1M": "EU BB",
+        "HE20": "EU B",
+        "EMUH": "EM HY",
+        "EM3B": "EM BB",
+        "EM6B": "EM B",
+        "C4NF": "US BBB",
+        "ER40": "EU BBB",
+        "EM2B": "EM BBB",
+        "SPX": "S&P 500",
+        "SX5E": "\\EUR stoxx50",
+        "MXEF": "EM MSCI",
+    }
+    periods = ["1WK", "1MO", "3MO", "6MO", "YTD", "1YR", "3YR", "5YR"]
+    df_list = []
+    for period in periods:
+        field = f"LAST_CLOSE_TRR_{period}"
+        df_period = bdp(index_names.keys(), "Index", field).squeeze()
+        # Un-annualize the 3 and 5 yr total returns.
+        if period == "3YR":
+            df_period = 100 * ((1 + df_period / 100) ** 3 - 1)
+        elif period == "5YR":
+            df_period = 100 * ((1 + df_period / 100) ** 5 - 1)
+        df_list.append(df_period.rename(period))
+    df = pd.concat(df_list, axis=1)
+
+    # Add index names as first column.
+    df["Index"] = pd.Series(df.index).map(index_names).values
+    df = df[["Index"] + periods]
+    df.to_csv(tret_fid)
 
 
 # %%
