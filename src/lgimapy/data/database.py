@@ -361,7 +361,7 @@ class Database:
     def index_kwargs(self, key, unused_constraints=None, **kwargs):
         """
         Index keyword arguments for saved indexes,
-        with ability to override/add new arguments.
+        with ability to override/add/remove arguments.
 
         Parameters
         ----------
@@ -535,12 +535,47 @@ class Database:
         return {int(k): v for k, v in rating_dict.items()}
 
     def convert_numeric_ratings(self, ratings):
+        """
+        Convert numeric ratings to S&P letter ratings.
+
+        Parameters
+        ----------
+        rating: int, Iterable[int], or pd.Series
+            Numeric rating(s) to convert.
+
+        Returns
+        -------
+        str, List[str], or pd.Series
+            S&P letter ratings for input values.
+        """
+
         if isinstance(ratings, pd.Series):
             return ratings.map(self._numeric_to_letter_ratings)
         elif isinstance(ratings, int):
             return self._numeric_to_letter_ratings[ratings]
         else:
             return [self._numeric_to_letter_ratings[r] for r in ratings]
+
+    def convert_letter_ratings(self, ratings):
+        """
+        Convert letter ratings to numeric values.
+
+        Parameters
+        ----------
+        rating: str, Iterable[str], or pd.Series
+            Letter rating(s) to convert.
+
+        Returns
+        -------
+        int, List[int], or pd.Series
+            Numeric values for input letter ratings.
+        """
+        if isinstance(ratings, pd.Series):
+            return ratings.map(self._ratings)
+        elif isinstance(ratings, str):
+            return self._ratings[ratings]
+        else:
+            return [self._ratings[r] for r in ratings]
 
     def display_all_columns(self):
         """Set DataFrames to display all columnns in IPython."""
