@@ -123,13 +123,13 @@ class Index(BondBasket):
         """Create copy of current :class:`Index`."""
         return Index(self.df.copy(), constraints=self.constraints)
 
-    def total_value(self, synthetic=False):
+    def total_value(self, col="MarketValue", synthetic=False):
         """float: Total value of index in $M."""
         dates = self.dates[1:] if synthetic else self.dates
         a = np.zeros(len(dates))
         for i, date in enumerate(dates):
             df = self.synthetic_day(date) if synthetic else self.day(date)
-            a[i] = np.sum(df["MarketValue"])
+            a[i] = np.sum(df[col])
         return pd.Series(a, index=dates, name="total_value")
 
     def day(self, date, as_index=False):
@@ -1240,3 +1240,4 @@ def main():
     self = db.build_market_index(**db.index_kwargs("STATS_all"))
 
     # %%
+    list(self.df)
