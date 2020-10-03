@@ -242,8 +242,6 @@ class Database:
     ----------
     df: pd.DataFrame
         Full DataFrame of all cusips over loaded period.
-    trade_dates: List[datetime].
-        List of dates with bond data.
     """
 
     def __init__(self, server="LIVE"):
@@ -268,7 +266,12 @@ class Database:
         return list(self._trade_date_df.index)
 
     def trade_dates(
-        self, start=None, end=None, exclusive_start=None, exclusive_end=None
+        self,
+        start=None,
+        end=None,
+        exclusive_start=None,
+        exclusive_end=None,
+        market="US",
     ):
         """
         List of trade dates in database.
@@ -283,13 +286,16 @@ class Database:
             Exclusive starting date for trade dates.
         exclusive_end: datetime, optional
             Exclusive end date for trade dates.
+        market: ``{"US", "EUR", "GBP"}``, default="US"
+            Market to get trade dates for.
 
         Returns
         -------
         List[datetime]:
             Trade dates in specified range.
         """
-        trade_dates = self._trade_date_df[self._trade_date_df["holiday"] == 0]
+        df = self._trade_date_df(market.upper())
+        trade_dates = df[df["holiday"] == 0]
         if start is not None:
             trade_dates = trade_dates[trade_dates.index >= to_datetime(start)]
         if exclusive_start is not None:
@@ -304,23 +310,18 @@ class Database:
             ]
         return list(trade_dates.index)
 
-    @property
     @lru_cache(maxsize=None)
-    def holiday_dates(self):
+    def holiday_dates(self, market="US"):
         """List[datetime]: Memoized list of holiday dates."""
-        holidays = self._trade_date_df[self._trade_date_df["holiday"] == 1]
+        df = self._trade_date_df(market.upper())
+        holidays = df[df["holiday"] == 1]
         return list(holidays.index)
 
-    @property
     @lru_cache(maxsize=None)
-    def _trade_date_df(self):
+    def _trade_date_df(self, market):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
-        return pd.read_csv(
-            root("data/trade_dates.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )
+        fid = root(f"data/{market}/trade_dates.parquet")
+        return pd.read_parquet(fid)
 
     @property
     @lru_cache(maxsize=None)
@@ -431,7 +432,7 @@ class Database:
             return today
         elif date_delta == "YESTERDAY" or date_delta == "DAILY":
             return self.nearest_date(today, inclusive=False, after=False)
-        elif date_delta == "WTD":
+        elif date_delta in {"WTD", "LAST_WEEK_END"}:
             return self.trade_dates()[
                 last_trade(today - timedelta(today.weekday() + 1)) - 1
             ]
@@ -447,9 +448,9 @@ class Database:
         elif date_delta == "MONTH_END":
             next_month = self.date("NEXT_MONTH_START", reference_date=today)
             return self.date("MTD", reference_date=next_month)
-        elif date_delta == "MTD":
+        elif date_delta in {"MTD", "LAST_MONTH_END"}:
             return self.trade_dates()[last_trade(today.replace(day=1)) - 1]
-        elif date_delta == "YTD":
+        elif date_delta in {"YTD", "LAST_YEAR_END"}:
             return self.trade_dates()[
                 last_trade(today.replace(month=1, day=1)) - 1
             ]
@@ -1124,7 +1125,7 @@ class Database:
         cusips=None,
         clean=True,
         ret_df=False,
-        local=False,
+        local=True,
         local_file_fmt="feather",
         data=None,
     ):
@@ -2228,29 +2229,38 @@ def main():
     # df = pd.read_sql(sql, db._conn)
     # list(df)
     # %%
-    self.load_market_data(local=True)
-    self.load_market_data()
-    ix = self.build_market_index()
-    from pathlib import Path
 
-    def get_fids(region):
-        """Get all files for given region."""
-
-        dir = Path(f"S:/FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{region}/")
-        fids = dir.glob("*")
-        files = {}
-        for fid in fids:
-            if len(fid.stem) != 21:
-                # Bad file.
-                continue
-            date = pd.to_datetime(fid.stem[-10:])
-            files[date] = fid
-        return pd.Series(files)
-
-    fids = get_fids("EUR")
     fid = fids[0]
     df_raw = pd.read_csv(fid, engine="python")
     df = df_raw.copy()
 
     self._preprocess_basys_data(df_raw)["MaturityYears"]
     # %%
+    db = Database()
+    d = defaultdict(list)
+    for day in [15, 16, 17]:
+        date = f"9/{day}/2020"
+        db.load_market_data(date=date)
+        ix = db.build_market_index()
+        ix_mc = db.build_market_index(in_stats_index=True)
+        n_total = len(ix.df)
+        n_ix = len(ix_mc.df)
+        total_missing = len(ix.df[ix.df["FitchRating"] == "NR"])
+        ix_missing = len(ix_mc.df[ix_mc.df["FitchRating"] == "NR"])
+        d["Date"].append(date)
+        d['Fitch "NR" Ratings'].append(total_missing)
+        d['Fitch "NR" Ratings (%)'].append(total_missing / n_total)
+        d['Fitch Index "NR" Ratings'].append(ix_missing)
+        d['Fitch Index "NR" Ratings (%)'].append(ix_missing / n_ix)
+
+    df = pd.DataFrame(d).set_index("Date", drop=True).rename_axis(None)
+    df
+
+    # %%
+    db.display_all_rows(10)
+    db = Database()
+    db.load_market_data(start="1/1/2020", local=True)
+    bbg_hy_ix = db.build_market_index(in_hy_stats_index=True, sector="BANKING")
+    bbg_hy_ix.OAS()
+
+    bbg_hy_ix.OAS().rank(pct=True)
