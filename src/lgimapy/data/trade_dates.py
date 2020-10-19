@@ -92,3 +92,5 @@ def update_regional_trade_dates(market):
 
 if __name__ == "__main__":
     update_trade_dates()
+    market = "EUR"
+    dates = None

@@ -12,6 +12,7 @@ from lgimapy.data.securities import (
     TreasuryCurve,
 )
 from lgimapy.data.basket import BondBasket, groupby
+from lgimapy.data.basys import get_basys_fids
 from lgimapy.data.index import Index
 from lgimapy.data.portfolios import Account, Strategy
 from lgimapy.data.database import (
@@ -44,6 +45,7 @@ __all__ = [
     "TreasuryCurve",
     "BondBasket",
     "groupby",
+    "get_basys_fids",
     "Index",
     "Account",
     "Strategy",

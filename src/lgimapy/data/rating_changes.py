@@ -2,7 +2,12 @@ import pandas as pd
 from tqdm import tqdm
 
 from lgimapy.bloomberg import get_bloomberg_subsector
-from lgimapy.data import Database, clean_dtypes, convert_sectors_to_fin_flags
+from lgimapy.data import (
+    Database,
+    Index,
+    clean_dtypes,
+    convert_sectors_to_fin_flags,
+)
 from lgimapy.utils import root
 
 
@@ -15,13 +20,18 @@ def update_rating_changes():
     curr_date = dates[-1]  # init in case loop doesn't run
     df_list = [] if saved_df is None else [saved_df]
 
-    for i, curr_date in tqdm(enumerate(dates[1:1000])):
+    for i, curr_date in tqdm(enumerate(dates[1:])):
         prev_date = dates[i]
         df = db.load_market_data(
             start=prev_date, end=curr_date, clean=False, ret_df=True
         )
         # Remove holidays.
         df = df[df["Date"].isin({prev_date, curr_date})].copy()
+        # Fill missing data with bloomberg data pre Oct-2018.
+        if curr_date < pd.to_datetime("11/1/2018"):
+            ix = Index(clean_dtypes(df))
+            ix._fill_missing_columns_with_bbg_data()
+            df = ix.df.reset_index(drop=True)
         df_list.append(get_rating_changes(df, db))
 
     # Combine saved data with newly computed data, and append
@@ -108,12 +118,13 @@ def get_rating_changes(df, db):
         "Issuer_NEW": "Issuer",
         "Sector_NEW": "Sector",
         "Subsector_NEW": "Subsector",
+        "AmountOutstanding_PREV": "AmountOutstanding",
+        "MarketValue_PREV": "MarketValue",
         "MaturityDate_NEW": "MaturityDate",
         "MaturityYears_NEW": "MaturityYears",
         "USCreditReturnsFlag_PREV": "USCreditReturnsFlag",
         "USHYReturnsFlag_PREV": "USHYReturnsFlag",
         "FinancialFlag_PREV": "FinancialFlag",
-        "MarketValue_PREV": "MarketValue",
         "NumericRating_PREV": "NumericRating_PREV",
         "NumericRating_NEW": "NumericRating_NEW",
         "MoodyRating_PREV": "MoodyRating_PREV",
@@ -167,7 +178,7 @@ def clean_rating_dtypes(df):
             "FitchRating_NEW",
             "FitchRating_CHANGE",
         ],
-        "float32": ["MaturityYears", "MarketValue",],
+        "float32": ["MaturityYears", "MarketValue", "AmountOutstanding"],
         "category": [
             "CUSIP",
             "ISIN",

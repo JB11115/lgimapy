@@ -9,7 +9,7 @@ from lgimapy.utils import root, to_datetime
 def get_treasury_oad_values(date):
     date = to_datetime(date)
     db = Database()
-    db.load_market_data(date=date)
+    db.load_market_data(date=date, local=False)
     ix = db.build_market_index(
         sector="TREASURIES", ticker="T", drop_treasuries=False
     )

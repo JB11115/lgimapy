@@ -16,7 +16,7 @@ from lgimapy.bloomberg import (
     get_settlement_date,
 )
 from lgimapy.data import concat_index_dfs
-from lgimapy.utils import load_json, root
+from lgimapy.utils import check_market, load_json, root
 
 plt.style.use("fivethirtyeight")
 
@@ -31,10 +31,13 @@ class Bond:
     ----------
     s: pd.Series
         Single bond row from :attr:`Index.df`.
+    market: ``{"US", "EUR", "GBP"}``, default="US"
+        Market region of bond.
     """
 
-    def __init__(self, s):
+    def __init__(self, s, market="US"):
         self.s = s
+        self.market = check_market(market)
         self.__dict__.update(s.to_dict())
 
     def __repr__(self):
@@ -90,12 +93,8 @@ class Bond:
     @lru_cache(maxsize=None)
     def _trade_date_df(self):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
-        return pd.read_csv(
-            root("data/trade_dates.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )
+        fir = root(f"data/{self.market}/trade_dates.parquet")
+        return pd.read_parquet(fid)
 
     def _theoretical_coupon_dates(self):
         """

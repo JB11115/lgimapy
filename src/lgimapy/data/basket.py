@@ -14,6 +14,7 @@ from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import Bond, concat_index_dfs, new_issue_mask, TreasuryCurve
 from lgimapy.utils import (
     check_all_equal,
+    check_market,
     dump_json,
     load_json,
     mkdir,
@@ -64,6 +65,9 @@ def groupby(df, cols):
         "CleanPrice",
         "PX_Adj_OAS",
         "NumericRating",
+        "DTS",
+        "DTS_Ratio",
+        "AnalystRating",
     ]
     mv_agg_rules = {}
     df_cols = set(df)
@@ -131,11 +135,14 @@ class BondBasket:
         Key: value pairs of the constraints used in
         :meth:`BondBasket.subset` to create
         current :class:`BondBasket`.
+    market: ``{"US", "EUR", "GBP"}``, default="US"
+        Market region of bond.
     """
 
-    def __init__(self, df, name=None, constraints=None):
+    def __init__(self, df, name=None, constraints=None, market="US"):
         self.df = df.set_index("CUSIP", drop=False)
         self.name = "" if name is None else name
+        self.market = check_market(market)
         self._constraints = dict() if constraints is None else constraints
 
     @property
@@ -203,12 +210,8 @@ class BondBasket:
     @lru_cache(maxsize=None)
     def _trade_date_df(self):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
-        return pd.read_csv(
-            root("data/trade_dates.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )
+        fid = root("data/US/trade_dates.parquet")
+        return pd.read_parquet(fid)
 
     @property
     @lru_cache(maxsize=None)

@@ -74,6 +74,8 @@ class Index(BondBasket):
         Key: value pairs of the constraints used in either
         :meth:`Database.build_market_index` or
         :meth:`Index.subset` to create current :class:`Index`.
+    market: ``{"US", "EUR", "GBP"}``, default="US"
+        Market region of bond.
 
     Attributes
     ----------
@@ -82,7 +84,7 @@ class Index(BondBasket):
         the :class:`Index`.
     """
 
-    def __init__(self, df, name=None, constraints=None):
+    def __init__(self, df, name=None, constraints=None, market="US"):
         super().__init__(df, name, constraints)
         # Initialize cache for storing daily DataFrames.
         self._day_cache = {}

@@ -12,7 +12,7 @@ def save_lgima_sectors(date):
     """
 
     db = Database()
-    df = db.load_market_data(date=(date), clean=False, ret_df=True)
+    df = db.load_market_data(date=(date), clean=False, ret_df=True, local=False)
     basket = BondBasket(df)
 
     industrial_sectors = {

@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import pyodbc
 
-from lgimapy.bloomberg import get_bloomberg_subsector
+from lgimapy.bloomberg import bdp, get_bloomberg_subsector
 from lgimapy.data import (
     concat_index_dfs,
     Index,
@@ -23,6 +23,7 @@ from lgimapy.data import (
     Strategy,
 )
 from lgimapy.utils import (
+    check_market,
     dump_json,
     load_json,
     nearest_date,
@@ -34,8 +35,6 @@ from lgimapy.utils import (
     to_list,
     to_set,
 )
-
-from lgimapy.bloomberg import bdp
 
 # %%
 
@@ -81,6 +80,7 @@ def clean_dtypes(df):
             "Quantity",
             "AccountWeight",
             "BenchmarkWeight",
+            "AnalystRating",
         ],
         "int8": [
             "FinancialFlag",
@@ -294,7 +294,7 @@ class Database:
         List[datetime]:
             Trade dates in specified range.
         """
-        df = self._trade_date_df(market.upper())
+        df = self._trade_date_df(check_market(market))
         trade_dates = df[df["holiday"] == 0]
         if start is not None:
             trade_dates = trade_dates[trade_dates.index >= to_datetime(start)]
@@ -313,7 +313,7 @@ class Database:
     @lru_cache(maxsize=None)
     def holiday_dates(self, market="US"):
         """List[datetime]: Memoized list of holiday dates."""
-        df = self._trade_date_df(market.upper())
+        df = self._trade_date_df(check_market(market))
         holidays = df[df["holiday"] == 1]
         return list(holidays.index)
 
@@ -391,7 +391,7 @@ class Database:
         d.update(**kwargs)
         return d
 
-    def date(self, date_delta, reference_date=None, **kwargs):
+    def date(self, date_delta, reference_date=None, market="US", **kwargs):
         """
         Find date relative to a specified date.
 
@@ -401,6 +401,8 @@ class Database:
             Difference between reference date and target date.
         reference_date: datetime, optional
             Reference date to use, if None use most recent trade date.
+        market: ``{"US", "EUR", "GBP"}``, default="US"
+            Market to get trade dates for.
         kwargs:
             Keyword arguments for :func:`nearest_date`.
 
@@ -413,47 +415,54 @@ class Database:
         --------
         :func:`nearest_date`
         """
+        market = check_market(market)
         date_delta = date_delta.upper()
+        trade_dates = self.trade_dates(market=market)
 
         if date_delta == "PORTFOLIO_START":
             return pd.to_datetime("9/1/2018")
         if date_delta == "MARKET_START":
-            return pd.to_datetime("2/2/1998")
-
+            return {
+                "US": pd.to_datetime("2/2/1998"),
+                "EUR": pd.to_datetime("11/20/2014"),
+                "GBP": pd.to_datetime("11/20/2014"),
+            }[market]
         # Use today as reference date if none is provided,
         # otherwise find closes trading date to reference date.
         if reference_date is None:
-            today = self.trade_dates()[-1]
+            today = trade_dates[-1]
         else:
-            today = self.nearest_date(reference_date, **kwargs)
+            today = self.nearest_date(reference_date, market=market, **kwargs)
 
-        last_trade = partial(bisect_left, self.trade_dates())
+        last_trade = partial(bisect_left, trade_dates)
         if date_delta == "TODAY":
             return today
         elif date_delta == "YESTERDAY" or date_delta == "DAILY":
-            return self.nearest_date(today, inclusive=False, after=False)
+            return self.nearest_date(
+                today, market=market, inclusive=False, after=False
+            )
         elif date_delta in {"WTD", "LAST_WEEK_END"}:
-            return self.trade_dates()[
+            return trade_dates[
                 last_trade(today - timedelta(today.weekday() + 1)) - 1
             ]
         elif date_delta == "MONTH_START":
-            return self.trade_dates()[last_trade(today.replace(day=1))]
+            return trade_dates[last_trade(today.replace(day=1))]
         elif date_delta == "NEXT_MONTH_START":
             # Find first trade date that is on or after the 1st
             # of the next month.
             next_month = 1 if today.month == 12 else today.month + 1
             next_year = today.year + 1 if today.month == 12 else today.year
             next_month_start = pd.to_datetime(f"{next_month}/1/{next_year}")
-            return self.nearest_date(next_month_start, before=False)
+            return self.nearest_date(
+                next_month_start, market=market, before=False
+            )
         elif date_delta == "MONTH_END":
             next_month = self.date("NEXT_MONTH_START", reference_date=today)
             return self.date("MTD", reference_date=next_month)
         elif date_delta in {"MTD", "LAST_MONTH_END"}:
-            return self.trade_dates()[last_trade(today.replace(day=1)) - 1]
+            return trade_dates[last_trade(today.replace(day=1)) - 1]
         elif date_delta in {"YTD", "LAST_YEAR_END"}:
-            return self.trade_dates()[
-                last_trade(today.replace(month=1, day=1)) - 1
-            ]
+            return trade_dates[last_trade(today.replace(month=1, day=1)) - 1]
         else:
             # Assume value-unit specification.
             positive = "+" in date_delta
@@ -472,11 +481,11 @@ class Database:
             dt_kwargs = {dt_kwarg_map[unit]: val}
             if positive:
                 return self.nearest_date(
-                    today + relativedelta(**dt_kwargs), **kwargs
+                    today + relativedelta(**dt_kwargs), market=market, **kwargs
                 )
             else:
                 return self.nearest_date(
-                    today - relativedelta(**dt_kwargs), **kwargs
+                    today - relativedelta(**dt_kwargs), market=market, **kwargs
                 )
 
     def account_values(self):
@@ -587,7 +596,7 @@ class Database:
         pd.set_option("display.max_rows", n)
         pd.set_option("display.min_rows", n)
 
-    def nearest_date(self, date, **kwargs):
+    def nearest_date(self, date, market="US", **kwargs):
         """
         Return trade date nearest to input date.
 
@@ -595,6 +604,8 @@ class Database:
         ----------
         date: datetime object
             Input date.
+        market: ``{"US", "EUR", "GBP"}``, default="US"
+            Market to get trade dates for.
         kwargs:
             Keyword arguments for :func:`nearest_date`.
 
@@ -607,7 +618,7 @@ class Database:
         --------
         :func:`nearest_date`
         """
-        return nearest_date(date, self.trade_dates(), **kwargs)
+        return nearest_date(date, self.trade_dates(market=market), **kwargs)
 
     def _standardize_cusips(self, df):
         """
@@ -833,9 +844,21 @@ class Database:
 
         # Convert str time to datetime.
         for date_col in ["Date", "MaturityDate", "WorstDate", "NextCallDate"]:
-            df[date_col] = pd.to_datetime(
+            dates = pd.to_datetime(
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
+            # Find indexes with NaT dates, and use other format.
+            mask = dates.isna()
+            clean_dates = pd.to_datetime(
+                df.loc[mask, date_col], format="%d/%m/%Y", errors="coerce"
+            )
+            dates.loc[mask] = clean_dates
+            mask = dates.isna()
+            clean_dates = pd.to_datetime(
+                df.loc[mask, date_col], errors="coerce"
+            )
+            dates.loc[mask] = clean_dates
+            df[date_col] = dates
 
         # Define maturites yearrs.
         day = "timedelta64[D]"
@@ -1117,6 +1140,12 @@ class Database:
         # Make new fields categories and drop duplicates.
         return clean_dtypes(df).drop_duplicates(subset=["CUSIP", "Date"])
 
+    def _preload_provided_data(self, data):
+        """Load data provided to :meth:`load_market_data`."""
+        self.df = data.copy()
+        if self._ret_df:
+            return self.df
+
     def load_market_data(
         self,
         date=None,
@@ -1127,6 +1156,7 @@ class Database:
         ret_df=False,
         local=True,
         local_file_fmt="feather",
+        market="US",
         data=None,
     ):
         """
@@ -1158,45 +1188,55 @@ class Database:
             If True, return loaded DataFrame.
         local: bool, default=False
             Load index from local feather file.
+        local_file_fmt: ``{"feather", "parquet"}``, default="feather"
+            File extension for local files.
+        market: ``{"US", "EUR", "GBP"}``, default="US"
+            Market region of bond.
+        data: pd.DataFrame
+            Pre-loaded data to keep in :class:`Database` memory as
+            :attr:`df`.
 
         Returns
         -------
         df: pd.DataFrame
             DataFrame for specified date's index data if `ret_df` is true.
         """
-        # Process dates.
+        self._start = to_datetime(start)
+        self._end = to_datetime(end)
         if date is not None:
-            start = end = date
+            self._start = self._end = to_datetime(date)
+        self.market = check_market(market)
+        self._fid_extension = local_file_fmt
+        self._ret_df = ret_df
+        self._clean = clean
 
         # Store data if provided.
         if data is not None:
-            self.df = data
-            if ret_df:
-                return self.df
-            else:
-                return
+            return self._preload_provided_data(data)
 
-        # Load local feather files if specified.
+        # Load local files if specified.
         if local:
             # Find correct local files to load.
             fmt = f"%Y_%m.{local_file_fmt}"
-            s = self.trade_dates()[-1] if start is None else to_datetime(start)
-            start_month = pd.to_datetime(f"{s.month}/1/{s.year}")
-            end = self.trade_dates()[-1] if end is None else end
+            start = (
+                self.trade_dates()[-1] if self._start is None else self._start
+            )
+            start_month = pd.to_datetime(f"{start.month}/1/{start.year}")
+            end = self.trade_dates()[-1] if self._end is None else self._end
             files = pd.date_range(start_month, end, freq="MS").strftime(fmt)
-            fids = [root(f"data/{local_file_fmt}s/{f}") for f in files]
+            fid_dir = root(f"data/{check_market(market)}/{local_file_fmt}s")
+            fids = [fid_dir / file for file in files]
 
             # Load feather files as DataFrames and subset to correct dates.
             read_func = {
                 "feather": pd.read_feather,
                 "parquet": pd.read_parquet,
-            }[local_file_fmt]
+            }[self._fid_extension]
             self.df = clean_dtypes(
                 concat_index_dfs([read_func(f) for f in fids])
             )
             self.df = self.df[
-                (self.df["Date"] >= to_datetime(s))
-                & (self.df["Date"] <= to_datetime(end))
+                (self.df["Date"] >= start) & (self.df["Date"] <= end)
             ]
             self._loaded_dates = list(pd.to_datetime(self.df["Date"].unique()))
             if ret_df:
@@ -1748,7 +1788,7 @@ class Database:
         # Money market accounts
         df = df[~df["CUSIP"].isna()].copy()
 
-        # Fix bad column names.
+        # Clean up column names.
         col_map = {
             "Maturity": "MaturityDate",
             "Seniority": "CollateralType",
@@ -1777,6 +1817,7 @@ class Database:
             "BMDTSAgg": "BM_DTS",
             "DTSVar": "DTS_Diff",
             "MKT_VAL": "StrategyMarketValue",
+            "RVRecommendation": "AnalystRating",
         }
         df.columns = [col_map.get(col, col) for col in df.columns]
 
@@ -1811,6 +1852,9 @@ class Database:
         is_cash = df["Sector"] == "CASH"
         has_maturity_date = ~df["MaturityDate"].isna()
         df = df[is_cash | has_maturity_date].copy()
+
+        # Clean analyst ratings.
+        df["AnalystRating"] = df["AnalystRating"].replace("NR", np.nan)
         return clean_dtypes(df).drop_duplicates(
             subset=["Date", "CUSIP", "Account"]
         )
@@ -2254,13 +2298,40 @@ def main():
         d['Fitch Index "NR" Ratings (%)'].append(ix_missing / n_ix)
 
     df = pd.DataFrame(d).set_index("Date", drop=True).rename_axis(None)
-    df
 
     # %%
-    db.display_all_rows(10)
     db = Database()
-    db.load_market_data(start="1/1/2020", local=True)
+    db.load_market_data(start="7/1/2020")
     bbg_hy_ix = db.build_market_index(in_hy_stats_index=True, sector="BANKING")
     bbg_hy_ix.OAS()
 
     bbg_hy_ix.OAS().rank(pct=True)
+
+    # %%
+    db = Database()
+    db.load_market_data(start="1/1/2015")
+    ix = db.build_market_index(maturity=(28, 32), in_stats_index=True)
+    issuer_ix = ix.issuer_index()
+
+    # %%
+    mv_oas_a = ix.subset(rating=("A+", "A-")).OAS()
+    mv_oas_bbb = ix.subset(rating=("BBB+", "BBB-")).OAS()
+
+    issuer_oas_a = issuer_ix.subset(rating=("A+", "A-")).MEAN(
+        "OAS", weights=None
+    )
+    issuer_oas_b = issuer_ix.subset(rating=("BBB+", "BBB-")).MEAN(
+        "OAS", weights=None
+    )
+
+    def diff(oas_a, oas_bbb):
+        df = pd.concat((oas_a.rename("A"), oas_bbb.rename("BBB")), axis=1)
+        df.fillna(method="ffill", inplace=True)
+        return df["BBB"] - df["A"]
+
+    # %%
+    db = Database()
+    strat = db.load_portfolio(strategy="US Long A+ Credit")
+
+    # %%
+    strat.df["AnalystRating"]

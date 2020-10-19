@@ -752,27 +752,23 @@ def main():
     # act_name = "NFLLA"
     # act_name = "SEIC"
     # act_name = "LIB150"
-    # act_name = "P-LD"
-    act_name = "FLD"
+    act_name = "P-LD"
+    # act_name = "FLD"
     act_df = db.load_portfolio(
         account=act_name,
         date=date,
         market_cols=True,
         ret_df=True,
-        # universe="stats",
+        universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
-    acnt.ticker_overweights()
-
-    acnt.HY_ticker_overweights()
     # %%
-    acnt.rating_overweights("OAD")
-    # df.to_csv("rep_account_ticker_overweights.csv")
+
     # strat_name = "US Credit"
     strat_name = "US Long Credit"
     strat_name = "Liability Aware Long Duration Credit"
-    strat_name = "US Long A+ Credit"
-    strat_name = "US Credit Plus"
+    # strat_name = "US Long A+ Credit"
+    # strat_name = "Custom US Long Credit"
     # strat_name = "US High Yield"
 
     # %%
@@ -784,6 +780,3 @@ def main():
         # universe="stats",
     )
     strat = Strategy(strat_df, name=strat_name, date=date)
-
-    # %%
-    strat.HY_ticker_overweights("P_Weight")
