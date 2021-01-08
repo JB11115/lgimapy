@@ -171,6 +171,17 @@ class LatexScript:
         """
         self._add_to_body(f"\section{{{section}}}")
 
+    def add_subsection(self, section):
+        """
+        Add a new subsection to :attr:`Document.body`.
+
+        Parameters
+        ----------
+        section: str
+            Title of new section.
+        """
+        self._add_to_body(f"\subsection{{{section}}}")
+
     def add_paragraph(self, paragraph):
         """
         Add text as a new paragraph to :attr:`Document.body`.
@@ -259,6 +270,10 @@ class LatexScript:
         """Add verticle skip"""
         self.add_text(f"\\vskip{vskip}")
 
+    def add_vfill(self, vskip="1em"):
+        """Add verticle skip"""
+        self.add_text(f"\\vfill")
+
     def set_variable(self, var_name, var_val):
         """
         Set a value for a variable in LaTeX file denoted
@@ -309,10 +324,11 @@ class LatexScript:
         n=None,
         figures=None,
         widths=None,
+        valign="b",
         caption=None,
+        caption_on_top=True,
         subcaptions=None,
         subcaptions_on_top=True,
-        caption_on_top=True,
         indent=2,
     ):
         # Determine number of subfigures.
@@ -366,7 +382,7 @@ class LatexScript:
         if caption_on_top:
             fout += self._format_caption(caption, indent=indent)
         for i, (fig, subcap, w) in enumerate(zip(figure_list, subcaps, widths)):
-            fout += f"{t}\\begin{{subfigure}}[b]{{{w}\\textwidth}}\n"
+            fout += f"{t}\\begin{{subfigure}}[{valign}]{{{w}\\textwidth}}\n"
             fout += f"{2*t}\\centering\n"
             if subcaptions_on_top:
                 fout += self._format_caption(subcap, indent=double_indent)
