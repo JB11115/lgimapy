@@ -7,6 +7,8 @@ import pandas as pd
 
 from lgimapy.data import Database, spread_diff, standardize_cusips
 
+# %%
+
 
 def build_movers_sheets():
     """
@@ -50,10 +52,8 @@ def build_movers_sheets():
     # Load index on dates from SQL database, then find changes.
     df_names = ["week", "month", "tights"]
     raw_dfs = {
-        k: db.load_market_data(date=v, local=True, ret_df=True)
-        for k, v in dates.items()
+        k: db.load_market_data(date=v, ret_df=True) for k, v in dates.items()
     }
-
     index_chg_dfs = {
         n: spread_diff(raw_dfs[n], raw_dfs["yesterday"]) for n in df_names
     }
@@ -191,6 +191,8 @@ def build_weighted_average_table(maturity, df_dict):
     table = table[headers]  # arrange columns
     return table
 
+
+# %%
 
 if __name__ == "__main__":
     build_movers_sheets()

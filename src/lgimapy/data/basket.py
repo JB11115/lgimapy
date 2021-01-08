@@ -284,6 +284,11 @@ class BondBasket:
         in_hy_stats_index=None,
         in_hy_returns_index=None,
         in_any_index=None,
+        in_H4UN_index=None,
+        in_H0A0_index=None,
+        in_HC1N_index=None,
+        in_HUC2_index=None,
+        in_HUC3_index=None,
         is_144A=None,
         financial_flag=None,
         is_new_issue=None,
@@ -416,8 +421,28 @@ class BondBasket:
             If ``False``, only include bonds out of HY returns index.
             By defualt include both.
         in_any_index: bool, optional
-            If ``True``, only include bonds in any index.
-            If ``False``, only include bonds not in any index.
+            If ``True``, only include bonds in any Bloomberg index.
+            If ``False``, only include bonds not in any Bloomberg index.
+            By defualt include both.
+        in_H4UN_index: bool, optional
+            If ``True``, only include bonds in iBoxx H4UN index.
+            If ``False``, only include bonds not in iBoxx H4UN index.
+            By defualt include both.
+        in_H0A0_index: bool, optional
+            If ``True``, only include bonds in iBoxx H0A0 index.
+            If ``False``, only include bonds not in iBoxx H0A0 index.
+            By defualt include both.
+        in_HC1N_index: bool, optional
+            If ``True``, only include bonds in iBoxx HC1N index.
+            If ``False``, only include bonds not in iBoxx HC1N index.
+            By defualt include both.
+        in_HUC2_index: bool, optional
+            If ``True``, only include bonds in iBoxx HUC2 index.
+            If ``False``, only include bonds not in iBoxx HUC2 index.
+            By defualt include both.
+        in_HUC3_index: bool, optional
+            If ``True``, only include bonds in iBoxx HUC3 index.
+            If ``False``, only include bonds not in iBoxx HUC3 index.
             By defualt include both.
         is_144A: bool, optional
             If ``True``, only include 144A bonds.
@@ -506,6 +531,11 @@ class BondBasket:
         in_hy_stats_index = to_int(in_hy_stats_index)
         in_hy_returns_index = to_int(in_hy_returns_index)
         in_any_index = to_int(in_any_index)
+        in_H4UN_index = to_int(in_H4UN_index)
+        in_H0A0_index = to_int(in_H0A0_index)
+        in_HC1N_index = to_int(in_HC1N_index)
+        in_HUC2_index = to_int(in_HUC2_index)
+        in_HUC3_index = to_int(in_HUC3_index)
         is_144A = to_int(is_144A)
         financial_flag = to_int(financial_flag)
         is_new_issue = to_int(is_new_issue)
@@ -571,6 +601,11 @@ class BondBasket:
             "in_hy_stats_index": ("USHYStatisticsFlag", in_hy_stats_index),
             "in_hy_returns_index": ("USHYReturnsFlag", in_hy_returns_index),
             "in_any_index": ("AnyIndexFlag", in_any_index),
+            "in_H4UN_index": ("H4UNFlag", in_H4UN_index),
+            "in_H0A0_index": ("H0A0Flag", in_H0A0_index),
+            "in_HC1N_index": ("HC1NFlag", in_HC1N_index),
+            "in_HUC2_index": ("HUC2Flag", in_HUC2_index),
+            "in_HUC3_index": ("HUC3Flag", in_HUC3_index),
             "is_144A": ("Eligibility144AFlag", is_144A),
             "financial_flag": ("FinancialFlag", financial_flag),
             "is_new_issue": ("NewIssueMask", is_new_issue),
@@ -717,7 +752,7 @@ class BondBasket:
         for rule in self._all_rules:
             if rule in rule_cols:
                 continue  # already added to subset mask
-            subset_mask_list.append(replace_multiple(rule, repl_dict))
+            subset_mask_list.append(repl_dict[rule])
 
         # Combine formatting rules into single mask and subset DataFrame,
         # and drop temporary columns.
@@ -734,13 +769,29 @@ class BondBasket:
         # If required, import child class.
         class_name = self.__class__.__name__
         if class_name == "BondBasket":
-            return BondBasket(df, name, subset_index_constraints)
+            return BondBasket(
+                df=df,
+                name=name,
+                constraints=subset_index_constraints,
+                market=self.market,
+            )
         elif class_name in {"Account", "Strategy"}:
             child_class = getattr(import_module("lgimapy.data"), class_name)
-            return child_class(df, name, self.date, subset_index_constraints)
+            return child_class(
+                df=df,
+                name=name,
+                date=self.date,
+                constraints=subset_index_constraints,
+                market=self.market,
+            )
         else:
             child_class = getattr(import_module("lgimapy.data"), class_name)
-            return child_class(df, name, subset_index_constraints)
+            return child_class(
+                df=df,
+                name=name,
+                constraints=subset_index_constraints,
+                market=self.market,
+            )
 
     def _add_category_input(self, input_val, col_name):
         """

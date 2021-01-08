@@ -173,6 +173,10 @@
         "NAME": "Iron Ore",
         "PRICE": "IOE1 Comdty"
     },
+    "BITCOIN": {
+        "NAME": "Bitcoin",
+        "PRICE": "XBTUSD Curncy"
+    },
     "US_PC_RATIO": {
         "NAME": "US Equity Put/Call Ratio",
         "PRICE": "PCUSEQTR Index"
@@ -184,6 +188,13 @@
     "EUR_PC_RATIO": {
         "NAME": "Euro Stoxx 50 Put/Call Ratio",
         "PRICE": "SX5EPT Index"
+    },
+    "DOWJONES": {
+        "NAME": "Dow Jones",
+        "PRICE": "DJI Index",
+        "TRET": "DJITR Index",
+        "PE_RATIO": "DJI Index|BEST_PE_RATIO",
+        "PB_RATIO": "DJI Index|PX_TO_BOOK_RATIO"
     },
     "SP500": {
         "NAME": "S&P 500",
@@ -856,6 +867,10 @@
     "US_ECO_SURP": {
         "NAME": "US Economic Surprise",
         "LEVEL": "ECSURPUS Index"
+    },
+    "GLOBAL_ECO_SURP": {
+        "NAME": "US Economic Surprise",
+        "LEVEL": "CESIG10 Index"
     },
     "US_IND_CONF": {
         "NAME": "US Industrial Confidence",

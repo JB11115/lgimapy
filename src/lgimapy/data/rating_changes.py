@@ -18,7 +18,11 @@ def update_rating_changes():
     for i, curr_date in tqdm(enumerate(dates[1:1000])):
         prev_date = dates[i]
         df = db.load_market_data(
-            start=prev_date, end=curr_date, clean=False, ret_df=True
+            start=prev_date,
+            end=curr_date,
+            clean=False,
+            ret_df=True,
+            local=False,
         )
         # Remove holidays.
         df = df[df["Date"].isin({prev_date, curr_date})].copy()
@@ -51,6 +55,12 @@ def read_saved_data(fid):
             df[date_col] = pd.to_datetime(
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
+    # Start from specified data if required.
+    # start_from_date = pd.to_datetime("9/10/2020")
+    start_from_date = None
+    if start_from_date is not None:
+        df = df[df["Date_NEW"] <= start_from_date].copy()
+        last_date = start_from_date
     return df, last_date
 
 

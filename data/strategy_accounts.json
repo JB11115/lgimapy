@@ -6,12 +6,15 @@
         "3539BNM",
         "4054BNM",
         "AIBBNM",
+        "APBNM",
         "BABBNM",
         "BNM",
         "BUPABNM",
         "CATBNM",
         "CBNM",
+        "CDTBNM",
         "DBRBNM",
+        "DBRSBNM",
         "DELBNM",
         "DHSBNM",
         "DRDBNM",
@@ -104,6 +107,7 @@
         "GABCLD",
         "GENMLD",
         "HBANLD",
+        "HEKLD",
         "KELLD1",
         "KELLD2",
         "KHCLD",
@@ -116,6 +120,7 @@
         "ONCRLD",
         "P-LD",
         "PAHLD",
+        "PCALD",
         "PFELD",
         "PGELD",
         "PGELDV",
@@ -179,6 +184,14 @@
         "CNPSTRP",
         "GENMSTRP"
     ],
+    "US Long Credit - Custom": [
+        "ARCLD",
+        "FEDLD",
+        "GLWLD",
+        "SALD",
+        "SALD2",
+        "SAULD"
+    ],
     "US Long Government/Credit": [
         "BACLGC",
         "CMAGC",
@@ -228,7 +241,6 @@
         "BLFWA",
         "BLWHLDTL",
         "BLWP-RGA",
-        "ENLOE",
         "FBBR3SP",
         "FBBR3TA",
         "FBBR3TL",
@@ -278,18 +290,6 @@
         "EXCLC",
         "JNJLC"
     ],
-    "US Strips 15+ Yr": [
-        "BSSTRP",
-        "CITSTRP",
-        "FEDSTRP",
-        "KORSTRP",
-        "P-STRP",
-        "PCASTRP",
-        "PREMSTRP",
-        "RLATSTRP",
-        "RLDRSTRP",
-        "RLUKSTRP"
-    ],
     "US Long Credit Ex Emerging Market": [
         "CALLC"
     ],
@@ -302,6 +302,16 @@
         "GTMC",
         "GTSMC"
     ],
+    "US Strips 15+ Yr": [
+        "CITSTRP",
+        "FEDSTRP",
+        "KORSTRP",
+        "P-STRP",
+        "PREMSTRP",
+        "RLATSTRP",
+        "RLDRSTRP",
+        "RLUKSTRP"
+    ],
     "US Intermediate Credit": [
         "CNPIC"
     ],
@@ -311,13 +321,6 @@
     "80% US Credit/20% 7-10 yr Treasury": [
         "FBB-CA",
         "FBB-CA2"
-    ],
-    "US Long Credit - Custom": [
-        "FEDLD",
-        "GLWLD",
-        "SALD",
-        "SALD2",
-        "SAULD"
     ],
     "US Long Credit Plus": [
         "FLD"
@@ -348,10 +351,6 @@
     "Global Agg USD Securitized Passive": [
         "LGA-BL",
         "MYAMSC"
-    ],
-    "US Corporate IG": [
-        "LGAS-CB",
-        "RSURC"
     ],
     "Absolute Return - LIB150": [
         "LIB150"
@@ -391,6 +390,9 @@
     "Custom RBS": [
         "RDTNLD1"
     ],
+    "US Corporate IG": [
+        "RSURC"
+    ],
     "US Credit A or better": [
         "SEIAC"
     ],
@@ -399,8 +401,5 @@
     ],
     "US Corporate 7+ Years": [
         "UBSCC"
-    ],
-    "BofA ML 10+ Year AAA-A US Corp Const": [
-        "UTCBNM"
     ]
 }

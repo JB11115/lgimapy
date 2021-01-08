@@ -135,7 +135,7 @@ def latex_color_gradient(
         Pre-defined color in LaTeX preamble for central color.
     cmax: str, default='firebrick'
         Pre-defined color in LaTeX preamble for values above center.
-    alphamax: int, default=80
+    alphamax: int, default=70
         Maximum blending parameter for cmin and cmax colors.
     symmetric: bool, default=False
         If True, set vmin and vmax to the same distance away
@@ -154,6 +154,13 @@ def latex_color_gradient(
         vmin = center - vdist
         vmax = center + vdist
 
+    # Ensure vmax and vmin are not equal to the central value.
+    # This avoids a division by zero error when calculating alpha.
+    if vmax <= center:
+        vmax = center + 1e-5
+    if vmin >= center:
+        vmin = center - 1e-5
+
     gradient_colors = []
     for val in vals:
         if np.isnan(val) or val is None:
@@ -163,7 +170,6 @@ def latex_color_gradient(
             alpha = int(alphamax * (center - val) / (center - vmin))
             gradient_colors.append(f"{{{cmin}!{alpha}!{cmid}}}")
         else:
-            color = cmax
             val = min(val, vmax)
             alpha = int(alphamax * (val - center) / (vmax - center))
             gradient_colors.append(f"{{{cmax}!{alpha}!{cmid}}}")
@@ -211,6 +217,35 @@ def latex_diverging_bars(
             divergent_bars.append(f"\\divbar{{{bar_size}}}{{{cmax}}}")
 
     return divergent_bars
+
+
+def apply_row_fmt(fout, row_fmt_d, fmt_str, ix_map, hide_index):
+    """
+    Apply formatting to entire row such as bold or background color."""
+    if row_fmt_d is None:
+        # No formatting needed.
+        return fout
+
+    # For each tuple of rows, format the row as needed.
+    for rows, fmt in row_fmt_d.items():
+        row_modifier = fmt_str.format(fmt)
+        rows = to_list(rows, str)
+        for loc in rows:
+            loc = ix_map.get(loc, loc)
+            if hide_index:
+                n = 0
+                body = fout[fout.find("\\midrule\n") :][9:]
+                match = body.split("\\\\\n")[int(loc)]
+            else:
+                n = 1
+                if loc == "header":
+                    match = "\n{}"
+                else:
+                    match = f"\n{loc} "
+            ix = fout.find(match)
+            if ix != -1:
+                fout = row_modifier.join((fout[: ix + n], fout[ix + n :]))
+    return fout
 
 
 def latex_table(
@@ -576,12 +611,12 @@ def latex_table(
 
     # Add indent to index column for sub-indexes if requried.
     if indent_subindexes:
-        og_ix = list(df.index)
+        og_index = list(df.index)
         final_ix = []
-        for i, ix in enumerate(og_ix):
+        for i, ix in enumerate(og_index):
             if ix.startswith("~"):
                 try:
-                    if og_ix[i + 1].startswith("~"):
+                    if og_index[i + 1].startswith("~"):
                         final_ix.append("\hspace{1mm} $\\vdash$ " + ix[1:])
                     else:
                         final_ix.append("\hspace{1mm} $\lefthalfcup$ " + ix[1:])
@@ -592,9 +627,8 @@ def latex_table(
                 final_ix.append(ix)
         df.index = final_ix
         # Save a map of old to new index values.
-        ix_map = {og: final for og, final in zip(og_ix, final_ix)}
+        ix_map = {og: final for og, final in zip(og_index, final_ix)}
     else:
-        # Init empty map of old to new index values.
         ix_map = {}
 
     # Replace improperly formatted values in table.
@@ -673,38 +707,10 @@ def latex_table(
                 fout = fmt_str.join((fout[: ix + n], fout[ix + n :]))
 
     # Apply row formatting if necessary.
-    if row_font is not None:
-        for rows, row_fmt in row_font.items():
-            fmt_str = f"\\rowfont{{{row_fmt}}} \n"
-            rows = to_list(rows, str)
-            for loc in rows:
-                loc = ix_map.get(loc, loc)
-                if loc == "header":
-                    match = "\n{}"
-                    n = 1
-                else:
-                    match = f"\n{loc} "
-                    n = 1
-                ix = fout.find(match)
-                if ix != -1:
-                    fout = fmt_str.join((fout[: ix + n], fout[ix + n :]))
-
-    # Apply row background coloring if necessary.
-    if row_color is not None:
-        for rows, color in row_color.items():
-            fmt_str = f"\\rowcolor{{{color}}} \n"
-            rows = to_list(rows, str)
-            for loc in rows:
-                loc = ix_map.get(loc, loc)
-                if loc == "header":
-                    match = "\n{}"
-                    n = 1
-                else:
-                    match = f"\n{loc} "
-                    n = 1
-                ix = fout.find(match)
-                if ix != -1:
-                    fout = fmt_str.join((fout[: ix + n], fout[ix + n :]))
+    font_str = "\\rowfont{{{}}} \n"
+    fout = apply_row_fmt(fout, row_font, font_str, ix_map, hide_index)
+    color_str = "\\rowcolor{{{}}} \n"
+    fout = apply_row_fmt(fout, row_color, color_str, ix_map, hide_index)
 
     # Replace all greek letters if required.
     if greeks:
@@ -726,3 +732,6 @@ def latex_table(
         fout = re.sub(" nan ", nan_value, fout)
 
     return fout
+
+
+# %%

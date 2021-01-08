@@ -187,6 +187,8 @@ def make_table(df, yields=False, highlight_dates=None):
     }
     title = "Yield" if yields else "Spread"
     table_notes = (
+        "Percentile ranges display values for the high end of the range."
+        "\\\\"
         f"{title} deciles highlited for \\color{{babyblue}}"
         f"\\textbf{{{table_colors['babyblue'].strftime(date_fmt)}}} "
         f"\\color{{black}}, \\color{{mauve}}"

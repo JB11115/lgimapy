@@ -567,8 +567,6 @@ def calculate_macro_indicators(plot=True):
     start = np.max([start, pd.to_datetime("1/1/2010")])
     df = df[df.index >= start]
 
-    df.tail(100)
-
     for ix, table in zip(["US_IG", "CDX_IG"], [cash_table, cdx_table]):
         tls = TLS(df[[left_axis, ix]], left_axis).fit()
         table.add_row(title, "Coincident", tls)

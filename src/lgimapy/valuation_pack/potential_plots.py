@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 from datetime import datetime as dt
 from inspect import cleandoc
@@ -312,3 +313,17 @@ vis.plot_timeseries(
 vis.show()
 # vis.savefig("fed_funds")
 # vis.close()
+
+
+# %%
+db = Database()
+db.load_market_data(start=db.date("1y"), local=True)
+ix = db.build_market_index(in_stats_index=True, maturity=(10, None))
+price = ix.MEAN("CleanPrice")
+# %%
+fig, ax = vis.subplots()
+vis.plot_timeseries(
+    price, title=f"Price of Long Credit Index: ${price[-1]:.2f}", ax=ax
+)
+vis.format_yaxis(ax, ytickfmt="${x:.0f}")
+vis.savefig("LC_Index_Dollar_Price")

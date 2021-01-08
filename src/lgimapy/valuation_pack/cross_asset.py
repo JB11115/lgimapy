@@ -445,7 +445,15 @@ def secuirites():
             "UK_10Y",
             "UK_30Y",
         ],
-        "commodities": ["GSCI", "OIL", "GOLD", "SILVER", "COPPER", "IRON"],
+        "commodities": [
+            "GSCI",
+            "OIL",
+            "GOLD",
+            "SILVER",
+            "COPPER",
+            "IRON",
+            "BITCOIN",
+        ],
         "credit": [
             "US_IG",
             "US_IG_10+",

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from datetime import datetime as dt
 from tqdm import tqdm
 
 import lgimapy.vis as vis
@@ -13,9 +14,10 @@ def main():
     db = Database()
     db.update_portfolio_account_data()
     date = db.date("today")
-    # date = db.date("MTD")
     prev_date = db.date("1w")
-    # prev_date = pd.to_datetime("7/2/2020")
+
+    # date = db.date("MONTH_START")
+    # prev_date = db.date("MONTH_START", "7/15/2020")
 
     # prev_date = db.date("YTD")
     pdf_path = root("reports/strategy_risk")
@@ -31,9 +33,6 @@ def main():
         {k: len(v) for k, v in strat_acnt.items()}
     ).sort_values(ascending=False)
     # strat_df.head(10)
-
-    # universe = "stats"
-    universe = "returns"
 
     strategies = [
         "US Long Credit",
@@ -75,18 +74,14 @@ def main():
     strategy_midrules = [strategies.index(strat) for strat in midrule_strats]
     # %%
     fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
-    if universe == "stats":
-        fid = f"{fid}_stats"
-    # fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q1_2020"
+    # fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q3_2020"
     doc = Document(fid, path=pdf_path, fig_dir=True)
     doc.add_preamble(margin=1, bookmarks=True, bar_size=7)
     res = []
 
     for strategy in tqdm(strategies):
         res.append(
-            get_single_latex_risk_page(
-                strategy, date, prev_date, pdf_path, universe
-            )
+            get_single_latex_risk_page(strategy, date, prev_date, pdf_path,)
         )
 
     df = (
@@ -120,8 +115,32 @@ def main():
 
 # %%
 def get_single_latex_risk_page(
-    strategy, date, prev_date, pdf_path, universe="returns", n_table_rows=10
+    strategy, date, prev_date, pdf_path, n_table_rows=10
 ):
+    db = Database()
+    current_universe = "returns"
+    prev_universe = "returns"
+    if dt.today().month != date.month:
+        # First day of the month. Use stats index.
+        current_universe = "stats"
+        prev_universe = "stats"
+    elif date.month != prev_date.month:
+        # First week of the month, but not the first day. Use
+        # current returns index but previous stats index for
+        # fair comparison.
+        prev_universe = "stats"
+
+    # current_universe = prev_universe = "returns"
+    curr_strat = db.load_portfolio(
+        strategy=strategy, date=date, universe=current_universe
+    )
+    prev_strat = db.load_portfolio(
+        strategy=strategy, date=prev_date, universe=prev_universe
+    )
+
+    date_fmt = date.strftime("%#m/%#d")
+    prev_date_fmt = prev_date.strftime("%#m/%#d")
+
     # Define special strategies.
     GC_strategies = {
         "US Long GC 70/30",
@@ -133,17 +152,6 @@ def get_single_latex_risk_page(
 
     hy_eligible_strategies = {"US Credit Plus", "US Long Credit Plus"}
     is_hy_eligible_strategy = strategy in hy_eligible_strategies
-
-    db = Database()
-    curr_strat = db.load_portfolio(
-        strategy=strategy, date=date, universe=universe
-    )
-    prev_strat = db.load_portfolio(
-        strategy=strategy, date=prev_date, universe=universe
-    )
-    date_fmt = date.strftime("%#m/%#d")
-    prev_date_fmt = prev_date.strftime("%#m/%#d")
-
     # Build overview table.
     default_properties = ["dts_pct", "dts_abs", "credit_pct"]
     general_overview_midrules = None

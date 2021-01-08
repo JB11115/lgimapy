@@ -54,7 +54,11 @@ pld_sectors = [
     "MUNIS",
 ]
 df = db.load_portfolio(
-    accounts="P-LD", market_cols=True, drop_treasuries=False, drop_cash=False
+    account="P-LD",
+    market_cols=True,
+    drop_treasuries=False,
+    drop_cash=False,
+    ret_df=True,
 )
 db.load_market_data(data=df)
 for sector in pld_sectors:
@@ -68,7 +72,7 @@ positions["Overall High Grade Corp"] = get_position(dts=dts)
 positions["Overall in Credit"] = get_position(dts=dts)
 
 # Get position for ABS/CMBS.
-df = db.load_portfolio(accounts="P-MC", market_cols=True)
+df = db.load_portfolio(account="CITMC", market_cols=True, ret_df=True)
 ix = db.build_market_index(**kwargs["ABS_CMBS"])
 oad = np.sum(ix.df["OAD_Diff"])
 positions[kwargs["ABS_CMBS"]["name"]] = get_position(oad=oad)

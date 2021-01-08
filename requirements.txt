@@ -58,7 +58,7 @@ multiprocess==0.70.7
 netaddr==0.7.19
 netifaces==0.10.9
 numexpr==2.6.9
-numpy==1.17.4
+numpy==1.19.0
 openpyxl==3.0.2
 oslo.concurrency==4.0.0
 oslo.config==8.0.0
@@ -66,7 +66,7 @@ oslo.i18n==4.0.0
 oslo.utils==4.0.0
 osqp==0.5.0
 packaging==19.0
-pandas==0.25.0
+pandas==1.0.3
 path.py==10.3.1
 patsy==0.5.1
 pbr==5.4.4
@@ -77,7 +77,7 @@ pprint==0.1
 proglog==0.1.9
 prompt-toolkit==2.0.9
 purepng==0.2.0
-pyarrow==0.13.0
+pyarrow==0.17.0
 PyAutoGUI==0.9.48
 # pybbg==1.0.0
 pycparser==2.19

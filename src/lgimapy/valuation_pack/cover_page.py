@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime as dt
 from inspect import cleandoc
+from shutil import copy
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -11,29 +12,40 @@ import seaborn as sns
 from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.utils import root
+from lgimapy.utils import root, get_ordinal
 
 
 # %%
 def update_cover_page(fid, db):
     """Create cover page for strategy meeting."""
     # Load market data and store indexes that will be re-used in memory.
+    # %%
     vis.style()
     fig_dir = root("reports/valuation_pack/fig")
 
     ix_d = {}
-    # db = Database()
-    # db.load_market_data(local=True, start=db.date("5y"))
+    db = Database()
+    db.load_market_data(local=True, start=db.date("5y"))
     ix_d["mc"] = db.build_market_index(in_stats_index=True)
     ix_d["lc"] = db.build_market_index(in_stats_index=True, maturity=(10, None))
     ix_d["10y"] = db.build_market_index(in_stats_index=True, maturity=(8, 12))
     ix_d["30y"] = db.build_market_index(in_stats_index=True, maturity=(25, 32))
 
-    update_credit_overview(fig_dir, ix_d, save=True)
+    update_credit_overview(fig_dir, ix_d, save=False)
+    # %%
     update_bbb_a_ratios(fig_dir, ix_d)
     update_hy_ig_ratios(fig_dir, ix_d)
     update_strategy_scores(fid, fig_dir)
     del ix_d
+
+
+# %%
+
+
+def save_to_global_pack(fid):
+    src = root(f"reports/valuation_pack/fig/{fid}.png")
+    dst = root(f"reports/global_valuation_pack/fig/{fid}.png")
+    copy(src, dst)
 
 
 def update_credit_overview(fig_dir, ix_d, save=True):
@@ -64,7 +76,8 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     axes[0].axhline(pct[95], label="_nolegend_", **pct_line_kwargs)
     # Find corrected OAS data with proper volatility.
     ix_mc = ix_d["mc"].subset(start=db.date("1y"))
-    oas_mc = ix_mc.get_synthetic_differenced_history("OAS")
+    ix_corrected = ix_mc.drop_ratings_migrations()
+    oas_mc = ix_corrected.get_synthetic_differenced_history("OAS")
 
     # Get strategy meeting scoring data and combine with OAS.
     scores_df = (
@@ -80,14 +93,18 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     df["Short Term"].fillna(method="ffill", inplace=True)
     df.dropna(inplace=True)
     pctile = int(np.round(100 * oas.rank(pct=True)[-1]))
-    last_digit = pctile // 1 % 10
-    ordinal = {1: "st", 2: "nd", 3: "rd"}.get(last_digit, "th")
+    ordinal = get_ordinal(pctile)
     lbl = cleandoc(
         f"""
-         Last: {oas[-1]:.0f} ({pctile:.0f}{ordinal} %tile)
-         Range: [{np.min(oas):.0f}, {np.max(oas):.0f}]
-         """
+        Historical Stats Index
+        Last: {oas[-1]:.0f} ({pctile:.0f}{ordinal} %tile)
+        Range: [{np.min(oas):.0f}, {np.max(oas):.0f}]
+        """
     )
+    vis.plot_timeseries(
+        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
+    )
+
     vis.plot_timeseries(
         df["OAS"],
         color="navy",
@@ -95,10 +112,11 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         ylabel="OAS",
         ax=axes[0],
         legend=False,
-        label=lbl,
+        label="Corrected Index",
     )
+
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    axes[0].legend(loc="upper left", fancybox=True, title=title, shadow=True)
+    axes[0].legend(loc="upper right", fancybox=True, title=title, shadow=True)
     axes[0].set_title("US Market Credit", fontweight="bold")
 
     # Plot short term scores below LC index.
@@ -116,6 +134,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     plt.tight_layout()
     if save:
         vis.savefig(fig_dir / "US_MC_bollinger")
+        save_to_global_pack("US_MC_bollinger")
         vis.close()
     else:
         vis.show()
@@ -140,20 +159,27 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     axes[0].axhline(pct[95], label="_nolegend_", **pct_line_kwargs)
     # Find corrected OAS data with proper volatility.
     ix_lc = ix_d["lc"].subset(start=db.date("1y"))
-    oas_lc = ix_lc.get_synthetic_differenced_history("OAS")
+    ix_corrected = ix_lc.drop_ratings_migrations()
+    oas_lc = ix_corrected.get_synthetic_differenced_history("OAS")
 
     # Get strategy meeting scoring data and combine with OAS.
     df = pd.concat([oas_lc, scores_df], axis=1, sort=True)
     df["Short Term"].fillna(method="ffill", inplace=True)
     df.dropna(inplace=True)
     pctile = int(np.round(100 * oas.rank(pct=True)[-1]))
-    ordinal = {1: "st", 2: "nd", 3: "rd"}.get(pctile, "th")
+    last_digit = pctile // 1 % 10
+    ordinal = {1: "st", 2: "nd", 3: "rd"}.get(last_digit, "th")
     lbl = cleandoc(
         f"""
-         Last: {oas[-1]:.0f} ({pctile:.0f}{ordinal} %tile)
-         Range: [{np.min(oas):.0f}, {np.max(oas):.0f}]
-         """
+        Historical Stats Index
+        Last: {oas[-1]:.0f} ({pctile:.0f}{ordinal} %tile)
+        Range: [{np.min(oas):.0f}, {np.max(oas):.0f}]
+        """
     )
+    vis.plot_timeseries(
+        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
+    )
+
     vis.plot_timeseries(
         df["OAS"],
         color="navy",
@@ -161,10 +187,10 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         ylabel="OAS",
         ax=axes[0],
         legend=False,
-        label=lbl,
+        label="Corrected Index",
     )
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    axes[0].legend(loc="upper left", fancybox=True, title=title, shadow=True)
+    axes[0].legend(loc="upper right", fancybox=True, title=title, shadow=True)
     axes[0].set_title("US Long Credit", fontweight="bold")
 
     # Plot short term scores below LC index.
@@ -238,7 +264,6 @@ def update_hy_ig_ratios(fig_dir, ix_d):
 
 def update_bbb_a_ratios(fig_dir, ix_d):
     """Update plot for BBB/A nonfin ratio for 10y and 30y bonds."""
-    # %%
     # energy_sectors = [
     #     "INDEPENDENT",
     #     "REFINING",
@@ -249,7 +274,6 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     # ix_nonfin = ix_d["mc"].subset(
     #     financial_flag=0, sector=energy_sectors, special_rules="~Sector"
     # )
-    ix_nonfin = ix_d["mc"].subset(financial_flag=0, start="5/1/2020")
     ix_nonfin = ix_d["mc"].subset(financial_flag=0)
     ixs = {
         "30_A": ix_nonfin.subset(rating=("A+", "A-"), maturity=(25, 32)),
@@ -266,8 +290,6 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     ).dropna(how="any")
     df["10 yr"] = df["10_BBB"] / df["10_A"]
     df["30 yr"] = df["30_BBB"] / df["30_A"]
-
-    # %%
 
     # Plot
     fig, ax_left = vis.subplots(figsize=(9, 6))
@@ -300,6 +322,7 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     plt.tight_layout()
     vis.savefig(fig_dir / "BBB_A_nonfin_ratio")
     vis.close()
+    save_to_global_pack("BBB_A_nonfin_ratio")
 
 
 # %%
@@ -340,12 +363,11 @@ def update_strategy_scores(fid, fig_dir):
             index_col=0,
             sheet_name="Summary",
         )
-        .iloc[:, -2:]
+        .iloc[:-3, -2:]
         .dropna(how="all")
         .fillna(0)
         .astype(int)
     )
-
     # Add short term score to page.
     score = scores_df.loc["Short Term"][-1]
     if score > 0:
@@ -375,21 +397,22 @@ def update_strategy_scores(fid, fig_dir):
     strategy_scores_plot(df, axes[0], cmap)
     axes[0].set_title("Strategy Scoring\n", fontsize=15, fontweight="bold")
 
-    # Individual Scores.
-    scores_df = (
-        pd.read_excel(
-            root("data/chicago_strategy_meeting_scores.xlsx"),
-            index_col=0,
-            sheet_name="3 Months",
-        )
-        .iloc[:, -2:]
-        .dropna(how="all")
-    )
+    # Load and clean individual scores, recording averages.
+    scores_df = pd.read_excel(
+        root("data/chicago_strategy_meeting_scores.xlsx"),
+        index_col=0,
+        sheet_name="3 Months",
+    ).iloc[:, -2:]
     # Drop non-credit scores.
     scores_df = scores_df[["(" not in name for name in scores_df.index]]
     avg_scores = np.mean(scores_df)
-    scores_df = scores_df.fillna(0).astype(int)
-    # Find average and create table for plotting.
+    # Drop people with no new scores.
+    prev_date, curr_date = scores_df.columns
+    scores_df = scores_df[~scores_df[curr_date].isna()]
+    # If prev score is missing, fill it with current score for chart.
+    scores_df.fillna(method="bfill", axis=1, inplace=True)
+
+    # Create table for plotting.
     df = pd.DataFrame(np.zeros([len(scores_df), 7]), index=scores_df.index)
     df.columns = np.arange(-3, 4)
     for col in [0, 1]:

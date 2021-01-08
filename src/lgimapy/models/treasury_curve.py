@@ -816,9 +816,6 @@ def update_treasury_curve_dates(dates=None, verbose=True):
     """
     # Get list of dates with treasury curves
     db = Database()
-    trade_dates = db.load_trade_dates() if dates is None else dates
-    start = pd.to_datetime("1/2/1998")
-    end = None
 
     # Get list of previously scraped dates if it exists.
     try:
@@ -830,17 +827,10 @@ def update_treasury_curve_dates(dates=None, verbose=True):
     # or if the day immediately preceding has not been
     # scraped, saving the curve and KRD parameters.
     i = 0
-    for date in trade_dates:
-        if date in db.holiday_dates:
-            continue
-        if date < pd.to_datetime(start):
-            continue
+    for date in db.trade_dates(start=db.date("MARKET_START")):
         if date in scraped_dates and i == 0:
             continue
-        if end is not None and date > end:
-            continue
-
-        db.load_market_data(date=date)
+        db.load_market_data(date=date, local=False)
         treasury_ix = db.build_market_index(
             drop_treasuries=False, sector="TREASURIES"
         )
@@ -882,14 +872,14 @@ def update_specific_date(specified_date, plot=True, **kwargs):
     next_date = db.trade_dates(start=specified_date)[1]
 
     # Fit curve for both days.
-    db.load_market_data(date=specified_date)
+    db.load_market_data(date=specified_date, local=False)
     tcb = TreasuryCurveBuilder(
         db.build_market_index(drop_treasuries=False, sector="TREASURIES")
     )
     tcb.fit(verbose=1)
     tcb.save()
 
-    db.load_market_data(date=next_date)
+    db.load_market_data(date=next_date, local=False)
     tcb = TreasuryCurveBuilder(
         db.build_market_index(drop_treasuries=False, sector="TREASURIES")
     )

@@ -31,6 +31,7 @@ from lgimapy.data.lgima_sectors import save_lgima_sectors, update_lgima_sectors
 from lgimapy.data.nonfin_spreads_by_sub_rating import update_nonfin_spreads
 from lgimapy.data.strategy_overweights import update_strategy_overweights
 from lgimapy.data.rating_changes import update_rating_changes
+from lgimapy.data.hy_index_members import update_hy_index_members
 
 __all__ = [
     "concat_index_dfs",
@@ -63,4 +64,5 @@ __all__ = [
     "update_nonfin_spreads",
     "update_strategy_overweights",
     "update_rating_changes",
+    "update_hy_index_members",
 ]

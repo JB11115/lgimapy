@@ -1,5 +1,5 @@
 from lgimapy.bloomberg.core import bdh, bdp, bds
-from lgimapy.bloomberg.id_to_cusip import id_to_cusip, scrape_id_to_cusip
+from lgimapy.bloomberg.id_to_cusip import id_to_cusip, id_to_isin
 from lgimapy.bloomberg.subsectors import (
     update_subsector_json,
     get_bloomberg_subsector,
@@ -23,7 +23,7 @@ __all__ = [
     "get_cashflows",
     "scrape_coupon_dates",
     "id_to_cusip",
-    "scrape_id_to_cusip",
+    "id_to_isin",
     "get_settlement_date",
     "get_issue_price",
     "get_accrual_date",

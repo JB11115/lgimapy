@@ -1,27 +1,19 @@
 import warnings
 from collections import defaultdict
-from datetime import timedelta, date
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import statsmodels.api as sm
 from sklearn.decomposition import PCA
 from sklearn.experimental import enable_iterative_imputer
-from sklearn.linear_model import LinearRegression
 from sklearn.impute import IterativeImputer
-from sklearn.metrics import r2_score
-from statsmodels.regression.quantile_regression import QuantReg
 
 import lgimapy.vis as vis
-from lgimapy.bloomberg import bdh
 from lgimapy.data import Database
 from lgimapy.latex import Document
 from lgimapy.utils import root
 
-# from dateutil.relativedelta import relativedelta
-# from lgimapy.utils import load_json, dump_json
-# from statsmodels.tsa.stattools import adfuller
 
 # %%
 
@@ -40,16 +32,15 @@ def update_equilibrium_model(fid):
     df_risk: a dataframe of risk sentiment indicators
     """
     vis.style()
-    # fid = "temp"
-    # pca on asset prices
-    df, df_pca, equilibrium_table = run_pca_analysis()
-
-    # calculate gs-style risk indicators
-    df_risk = run_risk_indicators(df, df_pca)
-    # %%
     doc = Document(
         fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
     )
+
+    df_levels, df_pca, equilibrium_table = run_pca_analysis()
+
+    plot_pc_vs_factors(df_levels, df_pca, doc)
+    plot_credit_risk_appetite(df_levels, df_pca, doc)
+
     doc.start_edit("equilibrium_model_table")
     doc.add_table(
         format_table(equilibrium_table),
@@ -67,16 +58,21 @@ def update_equilibrium_model(fid):
         multi_row_header=True,
     )
     doc.end_edit()
-    doc.save_tex()
-    # %%
-    # save the risk indicators and pca factors
-    # save_data(df_risk, df_pca)
+    doc.save()
+    # doc.save_tex()
 
 
 def format_table(df):
-
     no_dec = [
+        "SP500",
+        "SP500_GROW",
+        "SP500_VALU",
+        "RUSSELL_2000",
+        "MSCI_EU",
+        "MSCI_ACWI",
+        "MSCI_EM",
         "GOLD",
+        "COPPER",
         "CDX_HY",
         "CDX_IG",
         "EM_CORP",
@@ -111,13 +107,13 @@ def format_table(df):
     for ix, row in df.iterrows():
         if ix in no_dec:
             d["Current * Level"].append(f"{row['cur_level']:.0f}")
-            d["Model * Level"].append(f"{row['Norm_mod_val']:.0f}")
+            d["Model * Level"].append(f"{row['model_level']:.0f}")
         elif ix in yields:
             d["Current * Level"].append(f"{row['cur_level']:.2%}")
-            d["Model * Level"].append(f"{row['Norm_mod_val']:.2%}")
+            d["Model * Level"].append(f"{row['model_level']:.2%}")
         else:
             d["Current * Level"].append(f"{row['cur_level']:.2f}")
-            d["Model * Level"].append(f"{row['Norm_mod_val']:.2f}")
+            d["Model * Level"].append(f"{row['model_level']:.2f}")
 
         d["Current * 1yr Z-score"].append(row["cur_1y_z"])
         d["Current less Model * 1yr Z-score"].append(row["cur_resid"])
@@ -132,32 +128,14 @@ def format_table(df):
     return pd.DataFrame(d, index=new_index)
 
 
-def run_risk_indicators(df, df_pca):
-
+def plot_credit_risk_appetite(df_levels, df_pca, doc):
+    """Plot the credit risk appetite."""
     start_date = Database().date("12y")
-
     df_add = load_additional_bloom_data(start_date)
-    df_bloom = pd.concat([df, df_add], join="outer", sort=True, axis=1)
-
+    df_bloom = pd.concat([df_levels, df_add], join="outer", sort=True, axis=1)
     df_ratios = calc_risk_ratios(df_bloom)
     df_ratios.dropna(axis=0, how="any", inplace=True)
-
     df_risk = calc_risk_appetite_indexes(df_ratios)
-
-    bbg_st_dt = "20000101"
-    gs_global_MAP = bdh("GSERMWD", "INDEX", "PX_LAST", bbg_st_dt)
-
-    # plot risk ratios
-    # create plots for valuation pack
-    path = root("reports/valuation_pack/fig")
-    df_reg = pd.concat(
-        [df_risk, df_pca, gs_global_MAP], join="outer", sort=True, axis=1
-    )
-
-    df_reg.dropna(axis=0, how="any", inplace=True)
-    df_reg.rename(columns={"PX_LAST": "GS_MAP"}, inplace=True)
-
-    # %%
 
     # Plot Credit risk appetite.
     credit_app = df_risk["credit_appetite"]
@@ -176,109 +154,75 @@ def run_risk_indicators(df, df_pca):
     ax.fill_between(
         credit_app.index, credit_app.values, 0, color=color, alpha=0.5
     )
-    vis.savefig("credit_risk_appetite", path=path)
-
-    # vis.plot_timeseries(oas, color="darkorange", ax=ax)
-    # vis.show()
-    # %%
-
-    # fig, ax = vis.subplots(figsize=(8, 5))
-    #
-    # _, right_ax = vis.plot_double_y_axis_timeseries(
-    #     oas, credit_app, invert_right_axis=True, ax=ax, ret_axes=True
-    # )
-    # right_ax.fill_between(
-    #     credit_app.index, credit_app.values, 0, color="firebrick", alpha=0.5
-    # )
-    # vis.set_percentile_limits([oas, credit_app], [ax, right_ax])
-    # vis.show()
-
-    # %%
-
-    # Plot 1: PCA 1 vs risk appetite indicator
-    # plot_table = {
-    #     "risk_appetite": ("PCA 1", -0.12),
-    #     "credit_appetite": ("PCA 1", -0.12),
-    #     "govie_appetite": ("PCA 1", -0.12),
-    #     "vol_appetite": ("PCA 1", -0.12),
-    #     "curncy_appetite": ("PCA 1", -0.12),
-    #     "equity_appetite": ("PCA 1", -0.12),
-    #     "GS_MAP": ("risk_appetite", 1),
-    # }
-    #
-    # for key, (text, scalar) in plot_table.items():
-    #     title = f"{key} vs {text}"
-    #     figsize = (8, 5.5)
-    #
-    #     vis.plot_multiple_timeseries(
-    #         [
-    #             df_reg[key].rename(f"{key}"),
-    #             scalar * df_reg[text].rename(f"{text}"),
-    #         ],
-    #         ylabel="1yr z-score",
-    #         title=title,
-    #         figsize=figsize,
-    #         xtickfmt="auto",
-    #     )
-    #
-    #     vis.savefig(f"{key}_vs_{text}", path=path)
-    #     vis.close()
-
-    return df_risk
+    vis.savefig("credit_risk_appetite", path=doc.fig_dir)
+    vis.close()
 
 
 def run_pca_analysis():
-
-    # get bloomberg data on asset classes, z-score it, run pca routine
-    start_date = Database().date("12y")
+    """
+    Perform PCA analysis using 1yr Z-scores for each asset class.
+    """
+    # Get bloomberg data on asset classes, z-score it, run pca routine.
+    db = Database()
+    start_date = db.date("12y")
     df = load_pca_bloom_data(start_date)
-    df_z = (df - df.rolling(window=250).mean()) / df.rolling(window=250).std()
-    # df_pca = run_pca(df_z.drop(['US_IG'], axis=1))  #use to drop an asset
-    df_pca, _ = do_pca(df_z.dropna(axis=0, how="any"))
-    # sys_risk = do_rolling_pca(df_z.dropna(axis=0, how='any'))
+    df_mean = df.rolling(window=250).mean()
+    df_std = df.rolling(window=250).std()
+    df_z = (df - df_mean) / df_std
+    df_pca, __ = do_pca(df_z.dropna(axis=0, how="any"))
     df_reg = pd.concat([df_z, df_pca], join="outer", sort=True, axis=1).dropna(
         axis=0, how="any"
     )
 
-    # create plots for valuation pack
-    path = root("reports/valuation_pack/fig")
+    # For assets which use PB ratio Z-scores, find the book value
+    # So PB ratio can be converted back to index price level.
+    pb_ratio_assets = {
+        "SP500",
+        "SP500_GROW",
+        "SP500_VALU",
+        "RUSSELL_2000",
+        "MSCI_EU",
+        "MSCI_ACWI",
+        "MSCI_EM",
+    }
+    pb_ratio = db.load_bbg_data(pb_ratio_assets, "PB_RATIO")
+    price = db.load_bbg_data(pb_ratio_assets, "price")
+    scalar_multiple = {}
+    for asset in pb_ratio_assets:
+        pbr = pb_ratio[asset].dropna().iloc[-1]
+        p = price[asset].dropna().iloc[-1]
+        scalar_multiple[asset] = p / pbr
 
-    # Plot 1: all the R2 for each asset class for PCA 1,2,3,4 model
+    # For each asset, perform a regression using PC's to find
+    # what the model suggests current level should be, and
+    # record residual for the model in terms of Z-score.
     X = df_reg[["PCA 1", "PCA 2", "PCA 3", "PCA 4"]]
-
     col_names = []
-    d = defaultdict(list)
-    t = defaultdict(list)
-    # loop through each asset in df_reg frame and do a regression
+    d, t = defaultdict(list), defaultdict(list)
     for col in df_reg.columns:
         if not col.startswith("PCA"):
             col_names.append(col)
             y = df_reg[col]
             OLS_result = sm.OLS(y, X).fit(cov_type="HC1")
-            LAD_result = QuantReg(y, X).fit(q=0.5, cov_type="HC1")
-            resid = y - OLS_result.predict(X)
+            pred_z = OLS_result.predict(X)
+            resid = y - pred_z
+            scalar = scalar_multiple.get(col, 1)
+            model_level = scalar * ((pred_z * df_std[col]) + df_mean[col])
             d["OLS_res"].append(OLS_result)
-            d["LAD_res"].append(LAD_result)
-            d["OLS_r2"].append(OLS_result.rsquared)
+            d["OLS_r2"].append(OLS_result.rsquared_adj)
             d["OLS_resid"].append(resid)
-            d["LAD_r2"].append(LAD_result.rsquared)  # doesn't work
-            t["cur_level"].append(df[col].iloc[-1])
+            t["cur_level"].append(scalar * df[col].iloc[-1])
             t["cur_1y_z"].append(df_z[col].iloc[-1])
-            t["pred_1y_z"].append(OLS_result.predict(X).iloc[-1])
+            t["pred_1y_z"].append(pred_z.iloc[-1])
             t["cur_resid"].append(resid[-1])
-            t["mean_resid"].append(resid.mean())
-            t["std"].append(df[col].iloc[-250:].std())
-            t["R2"].append(OLS_result.rsquared)
+            t["model_level"].append(model_level.iloc[-1])
+            t["R2"].append(OLS_result.rsquared_adj)
 
-    reg_results = pd.DataFrame(d, index=col_names)
+    # reg_results = pd.DataFrame(d, index=col_names)
     table = pd.DataFrame(t, index=col_names)
-    mod_values = (
-        table["cur_level"]
-        - (table["cur_resid"] - table["mean_resid"]) * table["std"]
-    )
-    table = pd.concat([table, mod_values], join="outer", sort=True, axis=1)
-    table.rename(columns={0: "Norm_mod_val"}, inplace=True)
 
+    # Flip residual signs for assets that are rich when current
+    # level is greater than model level, such as equities.
     asset_signs_reversed = [
         "SP500",
         "SP500_GROW",
@@ -288,220 +232,123 @@ def run_pca_analysis():
         "MSCI_ACWI",
         "MSCI_EM",
         "GOLD",
-        "OIL",
         "COPPER",
+        "OIL",
+        "VIX",
+        "VIX_3M",
+        "OIL_VOL",
+        "MOVE",
+        "USD_TW",
     ]
 
     table["cur_resid_sign"] = [
-        -1 * table.loc[ix, "cur_resid"]
+        -table.loc[ix, "cur_resid"]
         if ix in asset_signs_reversed
         else table.loc[ix, "cur_resid"]
         for ix in table.index
     ]
     table = table.sort_values("cur_resid_sign")
+    return df, df_pca, table
 
-    figsize = (8, 11)
-    fig, ax = vis.subplots(figsize=figsize)
-    r2 = reg_results["OLS_r2"].sort_values()
-    ax.barh(np.arange(len(r2)), r2)
-    ax.set_title("Adj R2 for PCA factor model")
-    ax.set_yticks(np.arange(len(r2)))
-    ax.set_yticklabels(r2.index, fontsize=8)
 
-    vis.savefig("PCA_R2_values", path=path)
-    vis.close()
+def do_pca(df):
+    """Perform PCA on given DataFrame."""
+    pca = PCA(n_components=4)
+    pca_data = pca.fit_transform(df)
+    df_pca = pd.DataFrame(
+        data=pca_data,
+        columns=[f"PCA {i+1}" for i in range(pca_data.shape[1])],
+        index=df.index,
+    )
+    return df_pca, pca.explained_variance_ratio_
 
-    # Plots showing deviation of asset class from PCA model implied level
-    plot_table = {
-        "US_IG": "US IG",
-        "US_HY": "US HY",
-        "US_IG_10+": "US IG Long",
-        "EU_IG": "EU IG",
-        "EU_HY": "EU HY",
-    }
 
-    for key, text in plot_table.items():
-        title = f"{text} (1yr z-score) vs PCA model deviation"
-        figsize = (8, 5.5)
-        PCA_resid = reg_results.loc[key, "OLS_resid"].rename("PCA residual")
-        vis.plot_multiple_timeseries(
-            [df_reg[key].rename(f"{text}"), PCA_resid],
-            ylabel="1yr z-score",
-            title=title,
-            figsize=figsize,
-            xtickfmt="auto",
-        )
+def plot_pc_vs_factors(df_levels, df_pca, doc):
+    """Plot all 4 identified PC's vs their respective factors/"""
+    # Load factor data.
+    db = Database()
+    sov_risk = (
+        df_levels["ITALY_10Y"] + df_levels["SPAIN_10Y"]
+    ) / 2 - df_levels["BUND_10Y"]
+    start = "1/1/2000"
+    df = pd.concat(
+        [
+            db.load_bbg_data("GLOBAL_ECO_SURP", "level", start=start),
+            db.load_bbg_data("UST_10Y_RY", "YTW", start=start),
+            db.load_bbg_data("USD_TW", "price", start=start),
+            sov_risk.rename("SOV_risk"),
+        ],
+        axis=1,
+    ).fillna(method="ffill")
+    df.columns = ["ECO_SURP", "REAL", "USD", "SOV"]
+    n = 250
+    for col in df.columns:
+        s = df[col]
+        df[f"{col}_Z"] = (s - s.rolling(n).mean()) / s.rolling(n).std()
 
-        vis.savefig(f"{key}_deviation", path=path)
-        vis.close()
-
-    # Plots showing PCA factor identification
-    bbg_st_dt = "20000101"
-
-    CESI_global = bdh("CESIG10", "INDEX", "PX_LAST", bbg_st_dt)
-    real_10y = bdh("USGGT10Y", "INDEX", "PX_LAST", bbg_st_dt)
-    usd_twi = bdh("USTWBGD", "INDEX", "PX_LAST", bbg_st_dt)
-    real_z = (
-        real_10y - real_10y.rolling(window=250).mean()
-    ) / real_10y.rolling(window=250).std()
-    usd_z = (usd_twi - usd_twi.rolling(window=250).mean()) / usd_twi.rolling(
-        window=250
-    ).std()
-
-    sov_risk = (df["ITALY_10Y"] + df["SPAIN_10Y"]) / 2 - df["BUND_10Y"]
-    sov_z = (sov_risk - sov_risk.rolling(window=250).mean()) / sov_risk.rolling(
-        window=250
-    ).std()
-
-    pca_list = [df_pca, CESI_global, real_10y, real_z, usd_z, sov_z]
-    pca_frame = pd.concat(pca_list, join="outer", sort=True, axis=1)
-    new_cols = list(pca_frame.columns)
-    new_cols[-5:] = ["CESIG10", "REAL_10Y", "REAL_Z", "USD_Z", "SOV_Z"]
-    pca_frame.columns = new_cols
-
-    pca_ID = {
-        "CESIG10": (-5, "PCA 1"),
-        "REAL_Z": (-0.5, "PCA 2"),
-        "USD_Z": (0.66, "PCA 3"),
-        "SOV_Z": (-1, "PCA 4"),
-    }
-
-    for factor, (scalar, pca) in pca_ID.items():
-        title = f"{pca} (rescaled) vs {factor}"
-        figsize = (8, 5.5)
-
-        vis.plot_multiple_timeseries(
-            [
-                pca_frame[pca].rename(pca) * scalar,
-                pca_frame[factor].rename(f"{factor}"),
-            ],
-            ylabel=f"{factor}",
-            start="1-1-2009",
-            title=title,
-            figsize=figsize,
-            xtickfmt="auto",
-        )
-
-        vis.savefig(f"{pca.replace(' ', '_')}_v_{factor}", path=path)
-        vis.close()
-
-    # %%
+    # Combine PCA and factor data together.
+    df_pca_and_factors = pd.concat(
+        [df, df_pca.rename(columns={f"PCA {i}": f"PC {i}" for i in range(5)}),],
+        axis=1,
+    ).fillna(method="ffill")
     fig, axes = vis.subplots(2, 2, figsize=(12, 8), sharex=True)
-    pca_ID = {
-        "CESIG10": (-5, "PCA 1", "Economic Surprise"),
-        "REAL_Z": (-0.5, "PCA 2", "Real Rates"),
-        "USD_Z": (0.66, "PCA 3", "US Dollar"),
-        "SOV_Z": (-1, "PCA 4", "Euro Area Risk"),
-    }
 
-    for ax, (factor, (scalar, pca, name)) in zip(axes.flat, pca_ID.items()):
-        title = f"{pca} vs {name}"
+    # Build plots, using a scalar to properly scale PC's to factors.
+    pca_ID = {
+        "ECO_SURP": (
+            -5,
+            "PC 1",
+            "Economic Surprise",
+            "Citi Economic Surprise Index",
+        ),
+        "REAL_Z": (-0.5, "PC 2", "Real Rates", "US Generic 10y Real Yield"),
+        "USD_Z": (0.66, "PC 3", "US Dollar", "US Fed Trade Weighted $ Index"),
+        "SOV_Z": (
+            -1,
+            "PC 4",
+            "Euro Area Risk",
+            ("$\\dfrac{Spain\ 10y + Italy\ 10y}{2} " "- Bund\ 10y$"),
+        ),
+    }
+    for ax, (factor, (scalar, pc, name, des)) in zip(axes.flat, pca_ID.items()):
+        title = f"{pc} vs {name}\n"
         df_plot = pd.concat(
             [
-                pca_frame[pca].rename(f"{pca} (rescaled)") * scalar,
-                pca_frame[factor].rename(name),
+                df_pca_and_factors[pc].rename(f"{pc} (rescaled)") * scalar,
+                df_pca_and_factors[factor].rename(des),
             ],
             axis=1,
             sort=True,
-        ).fillna(method="ffill")
-
+        )
+        vis.set_n_ticks(ax, 5)
         vis.plot_multiple_timeseries(
             df_plot,
             c_list=["black", "darkorchid"],
             ylabel=name,
-            start="1-1-2009",
+            start="1/1/2009",
             title=title,
             xtickfmt="auto",
             alpha=0.9,
             lw=1.2,
             ax=ax,
-            legend={"loc": "lower left", "fancybox": True, "shadow": True},
+            legend={
+                "loc": "upper center",
+                "bbox_to_anchor": (0.5, 1.1),
+                "ncol": 2,
+                "fancybox": True,
+                "shadow": True,
+                "fontsize": 10,
+            },
         )
-
-    vis.savefig("pca_vs_factors", path=path)
+    vis.savefig("pca_vs_factors", path=doc.fig_dir)
     vis.close()
-
-    # %%
-
-    return df, df_pca, table
-
-
-def do_pca(df):
-    # as currently used, function assumes df comes in already z-scored
-
-    # pca = PCA(n_components = 'mle', svd_solver = 'full')
-    pca = PCA(n_components=8)
-    df3 = pca.fit_transform(df)
-
-    df_pca = pd.DataFrame(
-        data=df3,
-        columns=[f"PCA {i+1}" for i in range(df3.shape[1])],
-        index=df.index,
-    )
-
-    # print(pca.explained_variance_ratio_)
-    # df_pca = pca.singular_values_
-
-    return df_pca, pca.explained_variance_ratio_
-
-
-def do_rolling_pca(df):
-
-    window = 500  # create a 2y window
-
-    np_data = df.to_numpy()
-    num_rows = np_data.shape[0]
-
-    d = defaultdict(list)
-    for row in range(num_rows - window):
-        np_data_windowed = np_data[row : row + window]
-        pca = PCA(n_components=8)
-        pca.fit_transform(np_data_windowed)
-        d["explained_var"].append(sum(pca.explained_variance_ratio_))
-
-    sys_risk = pd.DataFrame(d, index=df.index[-(num_rows - window) :])
-
-    return sys_risk
-
-
-def save_data(df_risk, df_pca):
-
-    fids = [
-        root("data/risk_appetite/risk_app_data.csv"),
-        root("data/risk_appetite/pca_data.csv"),
-    ]
-
-    for fid, df in zip(fids, [df_risk, df_pca]):
-        try:
-            old_data = pd.read_csv(
-                fid, index_col=0, parse_dates=True, infer_datetime_format=True
-            )
-
-        except FileNotFoundError:
-
-            df.to_csv(fid)
-
-        else:
-            old_date = old_data.index.max()
-            cur_date = df.index.max()
-
-            # check if old data needs updating
-            if old_date < cur_date:
-
-                # remove overlapping dates in the old_data
-                old_data = old_data[:-2]
-                df_list = [old_data, df]
-                all_data = pd.concat(df_list, join="outer", sort=False, axis=0)
-
-                all_data.to_csv(fid)
-
-    return
 
 
 def calc_risk_appetite_indexes(df):
 
-    df2 = (df - df.rolling(window=250).mean()) / df.rolling(window=250).std()
-    df2.dropna(axis=0, how="any", inplace=True)
+    df_z = (
+        (df - df.rolling(window=250).mean()) / df.rolling(window=250).std()
+    ).dropna(axis=0, how="any")
 
     indic_dict = {
         "credit_appetite": "(US_HY_vs_IG + EU_HY_vs_IG + EM_HY_vs_IG + US_IG"
@@ -519,14 +366,12 @@ def calc_risk_appetite_indexes(df):
 
     df_list = []
     for indic_name, indic_list in indic_dict.items():
-        df_list.append(df2.eval(indic_list).rename(indic_name))
+        df_list.append(df_z.eval(indic_list).rename(indic_name))
 
-    df3 = pd.concat(df_list, join="outer", sort=True, axis=1)
-    eval_instruct = "(" + " + ".join(df3.columns) + ")/5"
-    df_list.append(df3.eval(eval_instruct).rename("risk_appetite"))
-    df3 = pd.concat(df_list, join="outer", sort=True, axis=1)
-
-    return df3
+    df_risk_app = pd.concat(df_list, join="outer", sort=True, axis=1)
+    eval_instruct = "(" + " + ".join(df_risk_app.columns) + ")/5"
+    df_list.append(df_risk_app.eval(eval_instruct).rename("risk_appetite"))
+    return pd.concat(df_list, sort=True, axis=1)
 
 
 def calc_risk_ratios(df):
@@ -573,7 +418,7 @@ def calc_risk_ratios(df):
     for risk_name, risk_equation in risk_ratios.items():
         df_list.append(df.eval(risk_equation).rename(risk_name))
 
-    return pd.concat(df_list, join="outer", sort=True, axis=1)
+    return pd.concat(df_list, sort=True, axis=1)
 
 
 def load_additional_bloom_data(start_date):
@@ -691,7 +536,7 @@ def load_pca_bloom_data(start_date):
         sort=True,
     )
     jans = [pd.to_datetime(f"1-1-{y}") for y in range(2008, 2021)]
-    holidays = set(db.holiday_dates) | set(jans)
+    holidays = set(db.holiday_dates()) | set(jans)
     df = df[~df.index.isin(holidays)]
 
     # impute missing credit data with iterative regression approach
@@ -708,5 +553,6 @@ def load_pca_bloom_data(start_date):
     return imputed_df
 
 
+# %%
 if __name__ == "__main__":
-    update_risk_appetite_indicators("temp")
+    update_equilibrium_model("val_pack_temp")

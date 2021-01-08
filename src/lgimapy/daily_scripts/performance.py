@@ -10,6 +10,7 @@ def main():
     args = parse_args()
     accounts = [
         "P-LD",
+        "CHLD",
         "FLD",
         "GSKLC",
         "CITMC",

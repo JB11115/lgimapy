@@ -102,8 +102,8 @@ class Portfolio:
 
 
 class Account(BondBasket, Portfolio):
-    def __init__(self, df, name, date, constraints=None):
-        BondBasket.__init__(self, df, name, constraints)
+    def __init__(self, df, name, date, constraints=None, market="US"):
+        BondBasket.__init__(self, df, name, constraints, market)
         Portfolio.__init__(self, date)
         self._tsy_bins = [2, 3, 5, 7, 10, 20, 30]
         self.df, self.tsy_df, self.cash_df = self._split_credit_tsy_cash(df)
@@ -320,8 +320,8 @@ class Account(BondBasket, Portfolio):
 
 
 class Strategy(BondBasket, Portfolio):
-    def __init__(self, df, name, date, constraints=None):
-        BondBasket.__init__(self, df, name, constraints)
+    def __init__(self, df, name, date, constraints=None, market="US"):
+        BondBasket.__init__(self, df, name, constraints, market)
         Portfolio.__init__(self, date)
         self.name = name
         self.df = df
@@ -752,27 +752,24 @@ def main():
     # act_name = "NFLLA"
     # act_name = "SEIC"
     # act_name = "LIB150"
-    # act_name = "P-LD"
-    act_name = "FLD"
+    act_name = "P-LD"
+    act_name = "HITHY"
     act_df = db.load_portfolio(
         account=act_name,
         date=date,
         market_cols=True,
         ret_df=True,
-        # universe="stats",
+        universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
-    acnt.ticker_overweights()
 
-    acnt.HY_ticker_overweights()
     # %%
-    acnt.rating_overweights("OAD")
-    # df.to_csv("rep_account_ticker_overweights.csv")
+
     # strat_name = "US Credit"
     strat_name = "US Long Credit"
     strat_name = "Liability Aware Long Duration Credit"
-    strat_name = "US Long A+ Credit"
-    strat_name = "US Credit Plus"
+    # strat_name = "US Long A+ Credit"
+    # strat_name = "Custom US Long Credit"
     # strat_name = "US High Yield"
 
     # %%
@@ -786,4 +783,6 @@ def main():
     strat = Strategy(strat_df, name=strat_name, date=date)
 
     # %%
-    strat.HY_ticker_overweights("P_Weight")
+    acnt = db.load_portfolio(account="PMCHY")
+
+    acnt.df

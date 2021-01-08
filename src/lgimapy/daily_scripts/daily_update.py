@@ -18,6 +18,7 @@ from lgimapy.data import (
     update_nonfin_spreads,
     update_rating_changes,
     update_strategy_overweights,
+    update_hy_index_members,
 )
 from lgimapy.models.treasury_curve import update_treasury_curve_dates
 
@@ -33,10 +34,12 @@ def main():
     print()
     update_fed_funds(trade_dates)
     print("Updated Fed Funds\n")
-    update_treasury_curve_dates()
-
     update_trade_dates(trade_dates)
     print()
+    update_hy_index_members()
+    print("Updated HY Index Flags")
+    update_treasury_curve_dates()
+
     update_feathers()
     print()
     update_lgima_sectors()
@@ -77,7 +80,7 @@ def check_datamart_quality(dates):
     db = Database()
     date = dates[-1]
     print(date.strftime("%m/%d/%Y"))
-    db.load_market_data(date=date)
+    db.load_market_data(date=date, local=False)
     ix = db.build_market_index()
 
     # Make sure data is fully populated.
@@ -90,7 +93,7 @@ def check_datamart_quality(dates):
         else:
             print(f"Currently only {n_bonds:,.0f} populated, waiting...")
             sleep(30)
-            db.load_market_data(date=date)
+            db.load_market_data(date=date, local=False)
             ix = db.build_market_index()
             n_bonds_prev = n_bonds
             n_bonds = len(ix.df)

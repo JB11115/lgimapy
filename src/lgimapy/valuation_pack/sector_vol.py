@@ -13,19 +13,16 @@ from tqdm import tqdm
 from lgimapy import vis
 from lgimapy.data import Database, convert_sectors_to_fin_flags
 from lgimapy.latex import Document
-from lgimapy.models import rolling_zscore
-from lgimapy.utils import load_json, root
+from lgimapy.models import rolling_zscore, XSRETPerformance
+from lgimapy.utils import load_json, root, get_ordinal
 
 from volatility import update_voltility_model
 
 # %%
 
 
-def update_volatility_indicators(fid, db):
+def update_sector_models(fid, db):
     """Update volatility indicator figures."""
-    # db = Database()
-    # db.load_market_data(start=db.date("5y"), local=True)
-    # fid = 'temp'
     vis.style()
     update_voltility_model()
     path = root("reports/valuation_pack/fig")
@@ -36,11 +33,14 @@ def update_volatility_indicators(fid, db):
     doc = Document(
         fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
     )
+    fid = "val_pack_temp"
+    db = Database()
+    db.load_market_data(start=db.date("1y"))
     for page, maturity in page_maturities.items():
         table_df = get_sector_table(maturity, path=path, db=db)
         plot_sector_spread_vs_vol(table_df, maturity, path=path)
-        make_sector_table(table_df, page, doc)
-        make_1m_sector_table(table_df, maturity, page, doc, db=db)
+        make_forward_looking_sector_table(table_df, page, doc)
+        make_performance_tables(maturity, page, doc, db=db)
     plot_maturity_bucket_spread_vs_vol(path=path, db=db)
     doc.save_tex()
 
@@ -93,7 +93,6 @@ def get_sector_table(maturity, path, db):
         "US_REGIONAL_BANKS",
         "YANKEE_BANKS",
         "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-        "FINANCE_COMPANIES",
         "LIFE",
         "P&C",
         "REITS",
@@ -114,18 +113,11 @@ def get_sector_table(maturity, path, db):
     ix = db.build_market_index(
         in_stats_index=True, maturity=maturity, start=db.date("1.2y")
     )
-    model_xsret_df = get_forecasted_xsrets(db)
     d = defaultdict(list)
     history_d = defaultdict(list)
     top_level_sector = "Industrials"
     for sector in sectors:
         for rating, rating_kws in ratings.items():
-            # break
-            # rating = "BBB"
-            # rating_kws = ("BBB+", "BBB-")
-            # sector = "AUTOMOTIVE"
-            # rating = "A"
-            # rating_kws = ("AAA", "A-")
             ix_sector = ix.subset(**kwargs[sector], rating=rating_kws)
             # Get top level sector.
             if sector == "SIFI_BANKS_SR":
@@ -159,40 +151,6 @@ def get_sector_table(maturity, path, db):
             oas_ytd = oas[oas.index >= db.date("YTD")]
             oas_1m = oas[oas.index >= db.date("1m")]
             oas_min = np.min(oas_ytd)
-
-            # Calculate forecasted vs realized excess returns.
-            # %%
-            ix_sector_1m = ix_sector.subset(start=db.date("1m"))
-            sector_model_xsret_df = model_xsret_df[
-                (model_xsret_df["RatingBucket"] == rating)
-                & model_xsret_df.index.isin(ix_sector_1m.cusips)
-            ]
-            # temp_df = pd.concat(
-            #     (
-            #         sector_model_xsret_df,
-            #         df[["Issuer", "MaturityDate", "IssueDate", "OAS", "OAD"]],
-            #     ),
-            #     join="inner",
-            #     axis=1,
-            # )
-            # temp_df["ModelXSRet"] = temp_df["ModelXSRet"].values * 1e4
-            # temp_df["RealXSRet"] = temp_df["RealXSRet"].values * 1e4
-            # temp_df["OutPerform"] = temp_df["RealXSRet"] - temp_df["ModelXSRet"]
-            # temp_df["weight"] = (
-            #     temp_df["weight"].values / temp_df["weight"].sum()
-            # )
-            # temp_df.to_csv(f"{rating}_Autos_XSRet.csv")
-            # %%
-            for col in ["ModelXSRet", "RealXSRet"]:
-                d[col].append(
-                    1e4
-                    * np.sum(
-                        sector_model_xsret_df[col]
-                        * sector_model_xsret_df["weight"]
-                    )
-                    / sector_model_xsret_df["weight"].sum()
-                )
-            d["ModelResid"].append(d["ModelXSRet"][-1] - d["RealXSRet"][-1])
 
             # Store historical results.
             history_d["vol"].append(vol.rename(f"{ix_sector.name}|{rating}"))
@@ -229,7 +187,7 @@ def get_sector_table(maturity, path, db):
     table_df["vol_model"] = -vol_model
 
     # Add xsret model results to table.
-    xs_ret_z_scores_df = xsret_model_zscores(sectors, maturity, db)
+    xs_ret_z_scores_df = xsret_model_zscores(sectors, maturity, db, n_months=9)
     xs_ret_d, xs_ret_change_d = {}, {}
     for idx, vals in xs_ret_z_scores_df.iterrows():
         key = tuple(idx.split("|"))
@@ -326,12 +284,8 @@ def vol_model_zscores(history_dict, maturity, path):
     deviations from the regression line.
     """
     maturity_fid = f"{maturity[0]}_{maturity[1]}"
-    # history_dict = history_d.copy()
     vol_df = pd.concat(history_dict["vol"], axis=1, sort=True)
     oas_df = pd.concat(history_dict["oas"], axis=1, sort=True)
-    vol_df.shape
-    oas_df.shape
-    oas_df
     cols, dates = vol_df.columns, vol_df.index
     n, m = vol_df.shape
 
@@ -385,41 +339,6 @@ def vol_model_zscores(history_dict, maturity, path):
     )
     vis.savefig(f"sector_vol_beta_{maturity_fid}", path=path)
     vis.close()
-
-    # Plot sectors timeseries through time.
-    # n_out = 4
-    # current_dev = z_score_df.iloc[-1, :].sort_values()
-    # ix = current_dev.index
-    # outliers = list(ix[:n_out]) + list(ix[-n_out:])
-    #
-    # fig, ax = vis.subplots(figsize=(15, 8))
-    # for col in z_score_df.columns:
-    #     ax.plot(
-    #         z_score_df[col],
-    #         c="lightgrey",
-    #         lw=1,
-    #         alpha=0.7,
-    #         label="_nolegend_",
-    #     )
-    # colors = sns.color_palette("husl", n_out * 2).as_hex()
-    # for sector, color in zip(reversed(outliers), colors):
-    #     vis.plot_timeseries(
-    #         z_score_df[sector],
-    #         lw=2.5,
-    #         color=color,
-    #         alpha=0.9,
-    #         label=f"{sector.replace('|', ' (')})",
-    #         ax=ax,
-    #     )
-    # vis.format_xaxis(ax, s=z_score_df, xtickfmt="auto")
-    # ax.set_title(
-    #     "Long Credit Sector Volatility Compensation Timeseries",
-    #     fontweight="bold",
-    # )
-    # ax.set_ylabel("Deviation Z-score")
-    # ax.legend(loc="upper left", fancybox=True, shadow=True)
-    # vis.savefig(f"sector_vol_timeseries_{maturity_fid)}", path=path)
-    # vis.close()
 
     # Return current values for each sector/rating combination.
     current_zscores_s = z_score_df.iloc[-1, :]
@@ -541,7 +460,7 @@ def plot_sector_xsret_vs_oad(sector_df):
     vis.show()
 
 
-def make_sector_table(sector_df, name, doc):
+def make_forward_looking_sector_table(sector_df, name, doc):
     col_map = {
         "raw_sector": "raw_sector",
         "name": "Sector",
@@ -647,6 +566,7 @@ def make_sector_table(sector_df, name, doc):
                 sector_locs[locs] = color
         table["Model*Change"] = -rank_change(table, "XSRet*Model", "xsret_prev")
         table.drop(["raw_sector", "xsret_prev"], axis=1, inplace=True)
+        table.index += 1
 
         doc.start_edit(f"{name.replace(' ', '_')}_{fin_flag}_sector_table")
         doc.add_table(
@@ -673,65 +593,25 @@ def make_sector_table(sector_df, name, doc):
         doc.end_edit()
 
 
-def make_1m_sector_table(sector_df, maturity, name, doc, db):
-    col_map = {
-        "raw_sector": "raw_sector",
-        "name": "Sector",
-        "rating": "Rating",
-        "oas": "OAS*(bp)",
-        "oas_1m_chg": "1M*$\\Delta$OAS",
-        "RealXSRet": "Real*XSRet",
-        "ModelXSRet": "FCast*XSRet",
-        "ModelResid": "Out*Perform",
+def make_performance_tables(maturity, name, doc, db):
+    mod = XSRETPerformance(db)
+    mod.train(forecast="1m", maturity=maturity)
+    index_name = f"{name} Stats Index"
+    raw_df = mod.get_sector_table()
+    df = mod.add_index_row(raw_df, name=index_name)
+    table_captions = {
+        f"{name} Non-Fin Sector 1M Performance": "Industrials",
+        f"{name} Fin Sector 1M Performance": "Financials",
+        f"{name} Non-Corp Sector 1M Performance": "Non-Corp",
     }
-    prec = {
-        "OAS*(bp)": "0f",
-        "1M*$\\Delta$OAS": "0f",
-        "Real*XSRet": "0f",
-        "FCast*XSRet": "0f",
-        "Out*Perform": "0f",
-    }
-    kwargs = load_json("indexes")
 
-    df = sector_df.copy()
-    df["fin"] = convert_sectors_to_fin_flags(df["raw_sector"])
-    df["ModelResid"] = -df["ModelResid"].values
-
-    # Add index to df.
-    # df = table_df.copy()
-    ix = db.build_market_index(
-        start=db.date("1m"), maturity=maturity, in_stats_index=True
-    )
-    ix_xsret = 1e4 * ix.aggregate_excess_returns()
-    ix_corrected = ix.drop_ratings_migrations()
-    ix_oas = ix_corrected.get_synthetic_differenced_history("OAS")
-    df = df.append(pd.Series(dtype="object"), ignore_index=True)
-    n = len(df) - 1
-    df.loc[n, "raw_sector"] = "index"
-    df.loc[n, "name"] = f"{name} Stats Index"
-    df.loc[n, "rating"] = "-"
-    df.loc[n, "oas"] = ix_oas[-1]
-    df.loc[n, "oas_1m_chg"] = ix_oas[-1] - ix_oas[0]
-    df.loc[n, "RealXSRet"] = 1e4 * ix.aggregate_excess_returns()
-    df.loc[n, "ModelXSRet"] = 0
-    df.loc[n, "ModelResid"] = 0
-    fin_flags = {
-        f"{name} Non-Fin Sector 1M Performance": 0,
-        f"{name} Fin Sector 1M Performance": 1,
-        f"{name} Non-Corp Sector 1M Performance": 2,
-    }
-    date = db.date("1m").strftime("%m/%d/%Y")
-
-    for caption, fin_flag in fin_flags.items():
+    for caption, top_level_sector in table_captions.items():
         table = (
-            df[(df["fin"] == fin_flag) | (df["raw_sector"] == "index")][
-                col_map.keys()
-            ]
-            .dropna()
-            .sort_values("ModelResid", ascending=False)
-            .rename(columns=col_map)
+            df[df["TopLevelSector"].isin({top_level_sector, "-"})]
+            .sort_values("Out*Perform", ascending=False)
             .reset_index(drop=True)
         )
+        table.index += 1  ## start count at 1
         # Get row colors for level 3 sectors.
         sector_row_colors = {
             "ENERGY": "magicmint",
@@ -780,20 +660,28 @@ def make_1m_sector_table(sector_df, maturity, name, doc, db):
             )
             if locs:
                 sector_locs[locs] = color
-        table.drop(["raw_sector"], axis=1, inplace=True)
-        index_loc = tuple(table[table["Rating"] == "-"].index)
-        if fin_flag == 0:
-            fnote = f"Performance since {date}."
-        elif fin_flag == 2:
+        index_loc = tuple(table[table["TopLevelSector"] == "-"].index)
+        table.drop(["raw_sector", "TopLevelSector"], axis=1, inplace=True)
+        if top_level_sector == "Industrials":
+            date = mod.predict_from_date.strftime("%m/%d/%Y")
+            mae = int(mod.MAE())
+            mae_pctile = mod.MAE(pctile=name)
+            ordinal = get_ordinal(mae_pctile)
+            fnote = (
+                f"Performance since {date}. Model MAE was {mae} bp, "
+                f"the {mae_pctile}{ordinal} \%tile of model error history."
+            )
+        elif top_level_sector == "Non-Corp":
             fnote = "."
         else:
             fnote = None
 
-        doc.start_edit(f"{name.replace(' ', '_')}_1m_{fin_flag}_sector_table")
+        doc.start_edit(
+            f"{name.replace(' ', '_')}_1m_{top_level_sector}_sector_table"
+        )
         doc.add_table(
             table,
-            # hide_index=True,
-            prec=prec,
+            prec=mod.table_prec(table),
             col_fmt="llc|cc|ccc",
             caption=caption,
             table_notes=fnote,
@@ -930,89 +818,6 @@ def rank_change(df, current="current", prev="prev"):
     comb_df = pd.concat((curr_ranks, prev_ranks), axis=1)
     comb_df["change"] = comb_df["curr"] - comb_df["prev"]
     return comb_df["change"]
-
-
-def get_forecasted_xsrets(db, lookback="1m"):
-    """
-    Get forecasted excess returns from specified lookback.
-    """
-    # Use stas index to find an index eligible bonds over
-    # entire period. Then build an index of these bonds
-    # where they do not drop out for any reason.
-    lookback_date = db.date(lookback)
-    stats_ix = db.build_market_index(in_stats_index=True, start=lookback_date)
-    ix = db.build_market_index(cusip=stats_ix.cusips, start=lookback_date)
-    ix.df["DTS"] = ix.df["OAS"] * ix.df["OASD"]
-    ix.df["RatingBucket"] = np.NaN
-    ix.df.loc[ix.df["NumericRating"] <= 7, "RatingBucket"] = "A"
-    # ix.df.loc[ix.df["NumericRating"].isin((4, 5, 6)), "RatingBucket"] = "A"
-    ix.df.loc[ix.df["NumericRating"].isin((8, 9, 10)), "RatingBucket"] = "BBB"
-    d = defaultdict(dict)
-    for date in ix.dates:
-        # Get the days data.
-        date_ix = ix.day(date, as_index=True)
-        date_cusips = date_ix.cusips
-        date_df = date_ix.df.copy()
-
-        # Subset the bonds which have not been forecasted already.
-        already_been_forecasted = (
-            pd.Series(date_df["RatingBucket"].items())
-            .isin(d["ModelXSRet"])
-            .values
-        )
-        in_rating_bucket = ~date_df["RatingBucket"].isna()
-        pred_df = date_df[~already_been_forecasted & in_rating_bucket]
-        # d["n_pred"][date] = len(pred_df)
-        if not len(pred_df):
-            # No new bonds to forecast.
-            continue
-
-        # Calculate excess returns and weights from the date to current date.
-        ix_from_date = ix.subset(start=date)
-        xsrets = ix_from_date.accumulate_individual_excess_returns()
-        weights = ix_from_date.get_value_history("MarketValue").sum()
-
-        # Perform regression to find expected excess returns.
-        x_cols = ["OAS", "OAD", "DTS"]
-        reg_df = pd.concat((date_df[x_cols], xsrets), axis=1).dropna()
-        X = sm.add_constant(reg_df[x_cols])
-        ols = sm.OLS(reg_df["XSRet"], X).fit()
-        # d["r2"][date] = ols.rsquared
-        pred_df = pd.concat(
-            (
-                pred_df[["RatingBucket", *x_cols]],
-                xsrets,
-                weights.rename("weight"),
-            ),
-            axis=1,
-            join="inner",
-            sort=False,
-        )
-
-        X_pred = sm.add_constant(pred_df[x_cols], has_constant="add")
-        pred_df["pred"] = ols.predict(X_pred)
-        pred_df
-        # Store forecasted values.
-        for cusip, row in pred_df.iterrows():
-            key = (cusip, row["RatingBucket"])
-            d["ModelXSRet"][key] = row["pred"]
-            d["RealXSRet"][key] = row["XSRet"]
-            d["weight"][key] = row["weight"]
-
-    # Create DataFrame of all forecasted cusip/rating bucket combinations.
-    df = pd.Series(d["ModelXSRet"]).to_frame()
-    df.columns = ["ModelXSRet"]
-    list_d = defaultdict(list)
-    for i, (key, model_xsret) in enumerate(df["ModelXSRet"].items()):
-        cusip, rating_bucket = key
-        list_d["CUSIP"].append(cusip)
-        list_d["RatingBucket"].append(rating_bucket)
-        for col in ["RealXSRet", "weight"]:
-            list_d[col].append(d[col][key])
-    for col, vals in list_d.items():
-        df[col] = vals
-    df.set_index("CUSIP", drop=True, inplace=True)
-    return df
 
 
 # %%

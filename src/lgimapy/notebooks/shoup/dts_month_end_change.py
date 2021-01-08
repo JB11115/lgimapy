@@ -14,7 +14,8 @@ strats = {
     "Long Gov/Credit": "USBGC",
 }
 
-date = db.date("month_end", "6/1/2020")
+date = db.date("month_end", "1/5/2020")
+date = db.date("today")
 print(date.strftime("%m/%d/%Y"))
 
 

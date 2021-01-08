@@ -685,11 +685,12 @@ def plot_timeseries(
     stats=False,
     bollinger=False,
     mean_line=False,
+    mean_line_kws=None,
     median_line=False,
+    median_line_kws=None,
     pct_lines=False,
     end_point=True,
     end_point_kws=None,
-    ax=None,
     figsize=(8, 6),
     ytickfmt=None,
     xtickfmt="auto",
@@ -697,6 +698,7 @@ def plot_timeseries(
     xlabel=None,
     title=None,
     legend=True,
+    ax=None,
     **kwargs,
 ):
     """
@@ -713,15 +715,21 @@ def plot_timeseries(
     stats_start: datetime, optional
         Date to start aggreating statistics, may be before ``start``.
     stats: bool, default=False
-        If True display stats in Axes legend.
+        If ``True`` display stats in Axes legend.
     bollinger: bool, default=False
-        If True plot bollinger bands around series.
-    mean_line: bool, default=False
-        If True plot mean line.
+        If ``True`` plot bollinger bands around series.
+    mean_line: bool or float, default=False
+        If ``True`` compute mean line and plot. If float is given
+        use provided value as mean.
+    mean_line_kws: dict, optional
+        Kwargs for ``matplotlib.Axes.plot()`` for mean line.
+    median_line: bool or float, default=False
+        If ``True`` compute mean line and plot. If float is given
+        use provided value as mean.
+    median_line_kws: dict, optional
+        Kwargs for ``matplotlib.Axes.plot()`` for median line.
     pct_lines: bool or Tuple[int], default=False
         If tuple is given, plot lines at the given percentiles.
-    ax: matplotlib Axes, optional
-        Axes in which to draw plot, otherwise activate Axes.
     figsize: (float, float), default=(8, 6).
         Figure size.
     xtickfmt: ``{'auto', None}``, optional
@@ -729,25 +737,20 @@ def plot_timeseries(
         AutoDateLocator and ConciseDateFormatter.
     xlabel: str, optional
         X-axis label.
-    ytickfmt_{left, right_inner, right_outer}: str, optional
-        Format as used by ``str.format()`` for ``left``, ``right_inner``,
-        or ``right_outer`` y-axis.
-    ylabel_{left, right_inner, right_outer}: str, optional
-        Y-axis label for ``left``, ``right_inner``, or ``right_outer`` axis.
+    ytickfmt: str, optional
+        Format as used by ``str.format()`` y-axis.
+    ylabel: str, optional
+        Y-axis label.
     title: str, optional
         Plot title.
     legend: bool or dict, default=False
-        If False, hide legend. If True, show legend defaulting
+        If False, hide legend. If ``True``, show legend defaulting
         to names of ``s_left`` and ``s_right`` with default parameters.
         For non-default parameters pass kwargs to ``Axes.legend()``.
-    plot_kws: dict, optional
-        Kwargs for both plots.
-    plot_kws_{left, right_inner, right_outer}, optional
-        matpltolib kwargs for either ``left``, ``right_inner``, and
-        ``right_outer`` plots.
-    color_yticks: bool, default=True
-        If True color y-axis tick labels to match respective
-        colors from line plots.
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+    kwargs: dict, optional
+        Kwargs for ``matplotlib.Axes.plot()``.
     """
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -781,24 +784,33 @@ def plot_timeseries(
         if "label" not in plot_kws:
             plot_kws["label"] = "_nolegend_"
 
-    if mean_line:
-        avg = np.mean(s)
-        ax.axhline(
-            avg,
-            ls="--",
-            lw=1.5,
-            color="firebrick",
-            label=f"Mean: {avg:.{n}{f}}",
-        )
-    if median_line:
-        avg = np.median(s)
-        ax.axhline(
-            avg,
-            ls="--",
-            lw=1.5,
-            color="firebrick",
-            label=f"Median: {avg:.{n}{f}}",
-        )
+    if mean_line is not False:
+        avg = np.mean(s) if mean_line is True else mean_line
+        mean_line_kwargs = {
+            "color": "firebrick",
+            "ls": "--",
+            "lw": 1.5,
+            "prec": n,
+        }
+        if mean_line_kws is not None:
+            mean_line_kwargs.update(**mean_line_kws)
+        prec = mean_line_kwargs.pop("prec")
+        mean_line_kwargs["label"] = f"Median: {avg:.{prec}{f}}"
+        ax.axhline(avg, **mean_line_kwargs)
+
+    if median_line is not False:
+        med = np.median(s) if median_line is True else median_line
+        median_line_kwargs = {
+            "color": "firebrick",
+            "ls": "--",
+            "lw": 1.5,
+            "prec": n,
+        }
+        if median_line_kws is not None:
+            median_line_kwargs.update(**median_line_kws)
+        prec = median_line_kwargs.pop("prec")
+        median_line_kwargs["label"] = f"Median: {med:.{prec}{f}}"
+        ax.axhline(med, **median_line_kwargs)
 
     if pct_lines:
         pct_line_kwargs = {"ls": "--", "lw": 1.5, "color": "dimgrey"}
@@ -847,7 +859,12 @@ def plot_timeseries(
         ax.set_xlabel(xlabel)
     if ylabel is not None:
         ax.set_ylabel(ylabel)
-    if legend and (plot_kws["label"] != "_nolegend_" or mean_line or pct_lines):
+    if legend and (
+        plot_kws["label"] not in {None, "_nolegend_"}
+        or mean_line is not False
+        or median_line is not False
+        or pct_lines is not False
+    ):
         if isinstance(legend, dict):
             ax.legend(**legend)
         else:

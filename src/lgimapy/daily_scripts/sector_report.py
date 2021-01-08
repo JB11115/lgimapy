@@ -1,3 +1,4 @@
+import multiprocessing as mp
 import warnings
 from collections import defaultdict
 
@@ -10,31 +11,44 @@ from tqdm import tqdm
 from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
+from lgimapy.models import XSRETPerformance
 from lgimapy.utils import root
 
 vis.style()
 # %%
-# db.load_market_data(start=db.date('1y'), local=True)
-# ix = db.build_market_index()
 
-# %%
+
 def create_sector_report():
     db = Database()
     date = db.date("today")
     pdf_path = root("reports/sector_reports")
     fid = f"{date.strftime('%Y-%m-%d')}_Sector_Report"
 
+    # Load strategy data and store in strategy dict.
     strategy_names = {
         "US Long Credit": "US LC",
-        "US Credit": "US C",
+        "US Credit": "US MC",
         "Liability Aware Long Duration Credit": "US LA",
         "US Long Government/Credit": "US LGC",
     }
-
-    strategies = {
-        name: db.load_portfolio(strategy=strat)
+    strategy_d = {
+        name: db.load_portfolio(strategy=strat, universe="stats")
         for strat, name in strategy_names.items()
     }
+
+    # Train excess return models and store in dict.
+    db_xsret = Database()
+    db_xsret.load_market_data(start=db.date("2m"))
+    db_xsret.make_thread_safe()
+    xsret_model_d = {}
+    model_maturities = {
+        "Long Credit": (10, None),
+        "5-10 yr Credit": (5, 10),
+    }
+    for name, maturity in model_maturities.items():
+        mod = XSRETPerformance(db_xsret)
+        mod.train(forecast="1m", maturity=maturity)
+        xsret_model_d[name] = mod
 
     sectors = [
         "BASICS",
@@ -83,27 +97,69 @@ def create_sector_report():
     ]
 
     # %%
-    n = 20
+    # Create document, append each page, and save.
     doc = Document(fid, path=pdf_path)
     doc.add_preamble(margin=1, bookmarks=True)
-    for sector in tqdm(sectors):
-        sector_kwargs = db.index_kwargs(sector, in_stats_index=None)
-        sector_kws = sector_kwargs
-        doc.add_section(sector_kwargs["name"].replace("&", "\&"))
-        table, footnote = get_overview_table(sector_kwargs, strategies, n)
-        prec = {}
-        ow_cols = []
-        for col in table.columns:
-            if "BM %" in col:
-                prec[col] = "2%"
-            elif "OAD OW" in col:
-                ow_cols.append(col)
-                prec[col] = "2f"
+    # pool = mp.Pool(processes=mp.cpu_count() - 2)
+    # res = [
+    #     pool.apply_async(
+    #         get_sector_page, args=(sector, doc, strategy_d, xsret_model_d)
+    #     )
+    #     for sector in sectors
+    # ]
+    # pages = [r.get() for r in res]
+    pages = [
+        get_sector_page(sector, doc, strategy_d, xsret_model_d)
+        for sector in tqdm(sectors)
+    ]
+    df = (
+        pd.DataFrame(pages, columns=["sector", "page"])
+        .set_index("sector")
+        .reindex(sectors)
+    )
+    for page in df["page"]:
+        doc.add_page(page)
+    doc.save(save_tex=False)
 
-        issuer_table = table.iloc[3 : n + 2, :].copy()
-        ow_max = max(1e-5, issuer_table[ow_cols].max().max())
-        ow_min = min(-1e-5, issuer_table[ow_cols].min().min())
-        doc.add_table(
+    # %%
+
+
+# %%
+def get_sector_page(sector, doc, strategy_d, xsret_model_d):
+    """Create single page for each sector."""
+
+    page = doc.create_page()
+    sector_kwargs = Database().index_kwargs(sector)
+    page_name = sector_kwargs["name"].replace("&", "\&")
+    page.add_section(page_name)
+
+    page = add_overview_table(page, sector, strategy_d, n=20)
+    page = add_issuer_performance_tables(page, sector_kwargs, xsret_model_d)
+
+    page.add_pagebreak()
+    return sector, page
+
+
+def add_overview_table(page, sector, strategy_d, n):
+    sector_kwargs = Database().index_kwargs(
+        sector, unused_constraints="in_stats_index"
+    )
+    table, footnote = _get_overview_table(sector_kwargs, strategy_d, n)
+    prec = {}
+    ow_cols = []
+    for col in table.columns:
+        if "BM %" in col:
+            prec[col] = "2%"
+        elif "OAD OW" in col:
+            ow_cols.append(col)
+            prec[col] = "2f"
+
+    issuer_table = table.iloc[3 : n + 2, :].copy()
+    ow_max = max(1e-5, issuer_table[ow_cols].max().max())
+    ow_min = min(-1e-5, issuer_table[ow_cols].min().min())
+    edit = page.add_subfigures(1, widths=[0.75])
+    with page.start_edit(edit):
+        page.add_table(
             table,
             table_notes=footnote,
             col_fmt="llc|cc|cccc",
@@ -119,16 +175,10 @@ def create_sector_report():
                 "vmin": ow_min,
             },
         )
-        doc.add_pagebreak()
-    doc.save(save_tex=True)
-
-    # %%
+    return page
 
 
-# %%
-
-
-def get_overview_table(sector_kws, strategies, n=20):
+def _get_overview_table(sector_kwargs, strategy_d, n):
     """
     Get overview table for tickers in given sector including
     rating, % of major benchmarks, and LGIMA's overweights
@@ -143,9 +193,9 @@ def get_overview_table(sector_kws, strategies, n=20):
         "Rating",
         "Analyst*Score",
         "BM %*US LC",
-        "BM %*US C",
+        "BM %*US MC",
         "US LC*OAD OW",
-        "US C*OAD OW",
+        "US MC*OAD OW",
         "US LA*OAD OW",
         "US LGC*OAD OW",
     ]
@@ -153,8 +203,8 @@ def get_overview_table(sector_kws, strategies, n=20):
     # Get DataFrame of all individual issuers.
     df_list = []
     ratings_list = []
-    for name, strat in strategies.items():
-        sector_strat = strat.subset(**sector_kws)
+    for name, strat in strategy_d.items():
+        sector_strat = strat.subset(**sector_kwargs)
         ow_col = f"{name}*OAD OW"
         if sector_strat.accounts:
             df_list.append(sector_strat.ticker_overweights().rename(ow_col))
@@ -164,17 +214,18 @@ def get_overview_table(sector_kws, strategies, n=20):
                 df_list.append(pd.Series(name=ow_col))
         ticker_df = sector_strat.ticker_df
         ratings_list.append(ticker_df["NumericRating"].dropna())
-        if name in {"US LC", "US C"}:
+        if name in {"US LC", "US MC"}:
             # Get weight of each ticker in benchmark.
             df_list.append(
                 (ticker_df["BM_Weight"] / len(sector_strat.accounts)).rename(
                     f"BM %*{name}"
                 )
             )
+
     ratings = np.mean(pd.DataFrame(ratings_list)).round(0).astype(int)
     df_list.append(Database().convert_numeric_ratings(ratings).rename("Rating"))
     df = pd.DataFrame(df_list).T.rename_axis(None)
-    df["Analyst*Score"] = 0  # TODO: Use analyst score.
+    df["Analyst*Score"] = strat.ticker_df["AnalystRating"][df.index].round(0)
 
     # Find total overweight over all strategies.
     ow_cols = [col for col in df.columns if "OAD OW" in col]
@@ -221,89 +272,43 @@ def get_overview_table(sector_kws, strategies, n=20):
     return summary_df.append(table_df)[table_cols], note
 
 
+def add_issuer_performance_tables(page, sector_kwargs, xsret_model_d):
+    table_edits = page.add_subfigures(2)
+    for edit, (title, mod) in zip(table_edits, xsret_model_d.items()):
+        table = mod.get_issuer_table(**sector_kwargs).reset_index(drop=True)
+        table.drop("RatingBucket", axis=1, inplace=True)
+        bold_rows = tuple(
+            table[table["Issuer"].isin({"A-Rated", "BBB-Rated"})].index
+        )
+        with page.start_edit(edit):
+            page.add_table(
+                table,
+                prec=mod.table_prec(table),
+                col_fmt="llc|cc|ccc",
+                caption=f"{title} 1M Performance",
+                adjust=True,
+                hide_index=True,
+                font_size="scriptsize",
+                multi_row_header=True,
+                row_font={bold_rows: "\\bfseries"},
+                gradient_cell_col=["Out*Perform", "Impact*Factor"],
+                gradient_cell_kws={
+                    "Out*Perform": {"cmax": "steelblue", "cmin": "firebrick"},
+                    "Impact*Factor": {"cmax": "oldmauve"},
+                },
+            )
+            page.add_vskip()
+
+    return page
+
+
 # %%
-def get_forecasted_xsrets(db, lookback="1m"):
-    """
-    Get forecasted excess returns from specified lookback.
-    """
-    # Use stas index to find an index eligible bonds over
-    # entire period. Then build an index of these bonds
-    # where they do not drop out for any reason.
-    lookback_date = db.date(lookback)
-    stats_ix = db.build_market_index(in_stats_index=True, start=lookback_date)
-    ix = db.build_market_index(cusip=stats_ix.cusips, start=lookback_date)
-    ix.df["DTS"] = ix.df["OAS"] * ix.df["OASD"]
-    ix.df["RatingBucket"] = np.NaN
-    ix.df.loc[ix.df["NumericRating"] <= 7, "RatingBucket"] = "A"
-    # ix.df.loc[ix.df["NumericRating"].isin((4, 5, 6)), "RatingBucket"] = "A"
-    ix.df.loc[ix.df["NumericRating"].isin((8, 9, 10)), "RatingBucket"] = "BBB"
-    d = defaultdict(dict)
-    for date in ix.dates:
-        # Get the days data.
-        date_ix = ix.day(date, as_index=True)
-        date_cusips = date_ix.cusips
-        date_df = date_ix.df.copy()
-
-        # Subset the bonds which have not been forecasted already.
-        already_been_forecasted = (
-            pd.Series(date_df["RatingBucket"].items())
-            .isin(d["ModelXSRet"])
-            .values
-        )
-        in_rating_bucket = ~date_df["RatingBucket"].isna()
-        pred_df = date_df[~already_been_forecasted & in_rating_bucket]
-        # d["n_pred"][date] = len(pred_df)
-        if not len(pred_df):
-            # No new bonds to forecast.
-            continue
-
-        # Calculate excess returns and weights from the date to current date.
-        ix_from_date = ix.subset(start=date)
-        xsrets = ix_from_date.accumulate_individual_excess_returns()
-        weights = ix_from_date.get_value_history("MarketValue").sum()
-
-        # Perform regression to find expected excess returns.
-        x_cols = ["OAS", "OAD", "DTS"]
-        reg_df = pd.concat((date_df[x_cols], xsrets), axis=1).dropna()
-        X = sm.add_constant(reg_df[x_cols])
-        ols = sm.OLS(reg_df["XSRet"], X).fit()
-        # d["r2"][date] = ols.rsquared
-        pred_df = pd.concat(
-            (
-                pred_df[["RatingBucket", *x_cols]],
-                xsrets,
-                weights.rename("weight"),
-            ),
-            axis=1,
-            join="inner",
-            sort=False,
-        )
-
-        X_pred = sm.add_constant(pred_df[x_cols], has_constant="add")
-        pred_df["pred"] = ols.predict(X_pred)
-        pred_df
-        # Store forecasted values.
-        for cusip, row in pred_df.iterrows():
-            key = (cusip, row["RatingBucket"])
-            d["ModelXSRet"][key] = row["pred"]
-            d["RealXSRet"][key] = row["XSRet"]
-            d["weight"][key] = row["weight"]
-
-    # Create DataFrame of all forecasted cusip/rating bucket combinations.
-    df = pd.Series(d["ModelXSRet"]).to_frame()
-    df.columns = ["ModelXSRet"]
-    list_d = defaultdict(list)
-    for i, (key, model_xsret) in enumerate(df["ModelXSRet"].items()):
-        cusip, rating_bucket = key
-        list_d["CUSIP"].append(cusip)
-        list_d["RatingBucket"].append(rating_bucket)
-        for col in ["RealXSRet", "weight"]:
-            list_d[col].append(d[col][key])
-    for col, vals in list_d.items():
-        df[col] = vals
-    df.set_index("CUSIP", drop=True, inplace=True)
-    return df
 
 
 if __name__ == "__main__":
     create_sector_report()
+
+# mod = XSRETPerformance(db)
+# mod.train(maturity=(10, None))
+#
+#

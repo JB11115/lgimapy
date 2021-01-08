@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pkg_resources
+import psutil
 from tabulate import tabulate
 
 # %%
@@ -62,6 +63,36 @@ def root(join_path=None):
 #         return Path("/domino/datasets/local/lgimapy").joinpath(join_path[5:])
 #     else:
 #         return root_path.joinpath(join_path)
+
+
+def restart_program(RAM_threshold=90):
+    """
+    Restarts the current program, with file objects
+    and descriptors cleanup, preventing memory leaks
+    from building up over time.
+
+    Parameters
+    ----------
+    RAM_threshold: int or ``False``, default=90
+        Integer percentage threshold for current RAM usage at
+        which to quit the program if exceeded. If ``False``
+        ignore RAM usage entirely.
+    """
+    # Check RAM usage and stop process if above threshold.
+    if RAM_threshold and psutil.virtual_memory().percent > RAM_threshold:
+        quit()
+
+    # Close open files.
+    try:
+        p = psutil.Process(os.getpid())
+        for handler in p.open_files() + p.connections():
+            os.close(handler.fd)
+    except Exception as e:
+        print(e)
+
+    # Restart program.
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
 
 
 def load_json(filename, empty_on_error=False):
@@ -178,6 +209,21 @@ def mkdir(directory):
         os.makedirs(directory)
     except OSError:
         pass
+
+
+def check_market(market):
+    """
+    Ensure market is in available markets, raise error otherwise.
+    """
+    market = market.upper()
+    allowable_markets = {"US", "EUR", "GBP"}
+    if market in allowable_markets:
+        return market
+    else:
+        raise ValueError(
+            f"'{market}' not in allowable markets. "
+            f"Please select one of {allowable_markets}."
+        )
 
 
 def squeeze(x):
@@ -440,7 +486,7 @@ def floatftime(time_horizon, unit="d"):
     ----------
     time_horizon: str
         String representation of time.
-    unit: {'s', 't', 'h', 'd', 'w', 'm', 'y'}, default='d'
+    unit: ``{'s', 't', 'h', 'd', 'w', 'm', 'y'}``, default='d'
         Unit of numeric result, not case sensative.
 
     Returns
@@ -466,6 +512,19 @@ def floatftime(time_horizon, unit="d"):
     num, in_unit = float(time_horizon[:-1]), time_horizon[-1].lower()
     num_time = num * unit_conversion[in_unit] / unit_conversion[unit]
     return num_time
+
+
+def get_ordinal(n):
+    """str: return ordinal (e.g., 'th', 'st', 'rd') for a number."""
+    # Return "th" for special cas of 11, 12, and 13.
+    last_two_digits = int(np.round(n, 0)) % 100
+    if last_two_digits in {11, 12, 13}:
+        return "th"
+
+    # Find ordinal based on last digit.
+    last_digit = int(np.round(n, 0)) % 10
+    ordinal = {1: "st", 2: "nd", 3: "rd"}.get(last_digit, "th")
+    return ordinal
 
 
 def rolling_sum(a, n, pad=None):

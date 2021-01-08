@@ -300,7 +300,7 @@ def plot_xsret_crises_recoveries(xsret_dict, path):
         fallen_angel_diff.index <= current_date
     ].iloc[-1]
 
-    fig, ax = vis.subplots(figsize=(14, 10))
+    fig, ax = vis.subplots(figsize=(14, 9.5))
     colors = ["k", "navy", "darkgreen", "darkorchid"]
     for col, color in zip(in_index_diff.columns, colors):
         ax.plot(
@@ -345,7 +345,7 @@ def plot_spread_crises_recoveries(spread_dict, path):
     in_index_diff = in_index_tail_df - index_ex_tail_df
     current_date = in_index_diff["Covid-19"].dropna().index[-1]
     current_df = in_index_diff[in_index_diff.index <= current_date].iloc[-1]
-    fig, ax = vis.subplots(figsize=(14, 10))
+    fig, ax = vis.subplots(figsize=(14, 9.5))
     colors = ["k", "navy", "darkgreen", "darkorchid"]
     for col, color in zip(in_index_diff.columns, colors):
         ax.plot(

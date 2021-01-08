@@ -256,7 +256,13 @@ def main():
     from lgimapy.utils import Time
     from lgimapy.data import Database
     from statsmodels.tsa.stattools import adfuller
+    from tqdm import tqdm
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mtick
 
+    # %matplotlib qt
+    plt.style.use("fivethirtyeight")
     # Check for staionarity
     # db2 = Database()
     # db2.load_market_data(start="1/1/2019", local=True)
@@ -286,13 +292,6 @@ def main():
     # # %%
 
     # %%
-    db2 = Database()
-    db2.load_market_data(date="8/21/2019")
-    ix_temp = db2.build_market_index(in_returns_index=True)
-    ix_temp.df["USAggReturnsFlag"]
-    print(np.sum(ix_temp.df["USAggReturnsFlag"]))
-
-    # %%
 
     db = Database()
     db.load_market_data(start="1/1/2018", end="12/31/2018", local=True)
@@ -309,17 +308,11 @@ def main():
     self = Beta()
     self._bm_ix = benchmark_ix.copy()
     self._portfolio_ix = portfolio_ix.copy()
+    list(self._bm_ix.df)
 
     # %%
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-    import matplotlib.ticker as mtick
 
-    # %matplotlib qt
-    plt.style.use("fivethirtyeight")
-    # %%
-
-    factor = "OAS"
+    factor = "XSRet"
     lags = 4
     n = 20
 
@@ -329,21 +322,25 @@ def main():
     def transform_ols(self, factor, lags, n):
         # %%
         # Get mkt and cusip factor levels for full period.
+        # if factor == 'XSRet':
+        #     self._bm_ix.compute_excess_returns()
+        #     self._portfolio_ix.compute_excess_returns()
+
         mkt = self._bm_ix.market_value_weight(factor, synthetic=True)
         df = self._portfolio_ix.get_value_history(factor, synthetic=True)
 
-        if factor.upper() == "OAS":
+        if factor == "OAS":
             # Difference OAS to make it stationary.
             mkt = np.log(mkt[1:] / mkt.values[:-1])
             df = np.log(df[1:] / df.values[:-1])
 
         # Convert pandas objects to numpy arrays for speed.
-        factor_a = df.values[:, :200]
+        factor_a = df.values[:, :100]
         mkt_a = mkt.values
 
         # %%
-        lags = 10
-        n = 80
+        lags = 5
+        n = 40
 
         # Find locations with `m` consecutive non-nan values.
         m = 1 + 2 * lags
@@ -356,7 +353,7 @@ def main():
         with Time():
             beta_vars = np.full([*factor_a.shape, 4 * lags + 1], np.nan)
             beta_pvals = np.full([*factor_a.shape, 4 * lags + 1], np.nan)
-            for j in range(factor_a.shape[1]):
+            for j in tqdm(range(factor_a.shape[1])):
                 for t in range(m + n - 2, len(mkt_a)):
                     if good_locs[t, j] != 1:
                         # Skip due to nan values in regression.
@@ -367,7 +364,7 @@ def main():
                         x = add_constant(mkt_a[t - lags - n : t - lags])
                         y = factor_a[t - i - n + 1 : t - i + 1, j]
                         res = RLM(y, x).fit()
-                        res = OLS(y, x).fit()
+                        # res = OLS(y, x).fit()
                         beta_vars[t, j, k] = res.params[1]
                         beta_pvals[t, j, k] = res.pvalues[1]
                         k += 1
@@ -379,7 +376,7 @@ def main():
                         x = add_constant(factor_a[t - lags - n : t - lags, j])
                         y = mkt_a[t - i - n + 1 : t - i + 1]
                         res = RLM(y, x).fit()
-                        res = OLS(y, x).fit()
+                        # res = OLS(y, x).fit()
                         beta_vars[t, j, k] = res.params[1]
                         beta_pvals[t, j, k] = res.pvalues[1]
                         k += 1
@@ -388,7 +385,7 @@ def main():
             denom = 1 + np.sum(beta_vars[:, :, m:], axis=2)
             beta = num / denom
             beta_df = pd.DataFrame(
-                beta, columns=df.columns[:200], index=df.index
+                beta, columns=df.columns[:100], index=df.index
             )
 
         # %%

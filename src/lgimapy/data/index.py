@@ -70,6 +70,10 @@ class Index(BondBasket):
         Index DataFrame from :meth:`Database.build_market_index`.
     name: str, optional
         Optional name of index.
+    market: ``{"US", "EUR", "GBP"}``, default="US"
+        Market to get trade dates for.
+    index: str or None, default='CUSIP'
+        Column to use as index for :attr:`BondBasket.df`.
     constraints: dict, optional
         Key: value pairs of the constraints used in either
         :meth:`Database.build_market_index` or
@@ -82,8 +86,16 @@ class Index(BondBasket):
         the :class:`Index`.
     """
 
-    def __init__(self, df, name=None, constraints=None):
-        super().__init__(df, name, constraints)
+    def __init__(
+        self, df, name=None, constraints=None, market="US", index="CUSIP"
+    ):
+        super().__init__(
+            df=df,
+            name=name,
+            market=market,
+            constraints=constraints,
+            index=index,
+        )
         # Initialize cache for storing daily DataFrames.
         self._day_cache = {}
         self._day_cache_key = "_".join(self.df.columns)
@@ -266,7 +278,7 @@ class Index(BondBasket):
         oas_not_strongly_positive = self.df["OAS"] < 40
         maturity_map = {2: 0, 3: 2, 5: 3, 8: 5, 7: 5, 10: 7, 30: 10}
         has_normal_mat = self.df["OriginalMaturity"].isin(maturity_map.keys())
-        matures_in_more_than_3_months = self.df["MaturityYears"] > 3 / 12
+        matures_in_more_than_3_months = self.df["MaturityYears"] > (3 / 12)
         bad_cusips = ["912820FL6"]
         is_not_bad_cusip = ~self.df["CUSIP"].isin(bad_cusips)
 
@@ -487,7 +499,7 @@ class Index(BondBasket):
         return pd.Series(synthetic_history, index=self.dates, name=col)
 
     def subset_current_universe(self):
-        """"
+        """ "
         Return an index consisting only of bonds which exist
         on the most current day in the index, (e.g., drop all
         bonds that have matured or fallen out of the index).
@@ -500,10 +512,15 @@ class Index(BondBasket):
         current_cusips = self.day(self.dates[-1], as_index=True).cusips
         return self.subset(cusip=current_cusips)
 
-    def drop_ratings_migrations(self):
+    def drop_ratings_migrations(self, allowable_ratings=None):
         """
         Drop any bonds who had rating migrations
         pushing them out of the current index.
+
+        Parameters
+        ----------
+        allowable_ratings: tuple[str], optional
+            Allowable rating range to keep bonds for.
 
         Returns
         -------
@@ -512,18 +529,33 @@ class Index(BondBasket):
             current index rating boundaries.
         """
         # Load rating changes for bonds in index.
-        df = self._ratings_changes_df
         cons = self.constraints
-        in_stats_ix = cons.get("in_stats_index", False)
-        in_returns_ix = cons.get("in_returns_ix_index", False)
+
+        if "isin" in cons:
+            raise NotImplementedError(
+                "Cannot drop ratings migrations in an Index based on Isins"
+            )
+
+        ig_indexes = [
+            "in_stats_index",
+            "in_returns_ix_index",
+            "in_agg_returns_index",
+            "in_agg_stats_index",
+        ]
+        index_constraints = {ix: cons.get(ix, False) for ix in ig_indexes}
+        in_ig_index = sum(index_constraints.values())
 
         # Determine minimum and maximum allowable ratings.
-        if "rating" in cons:
+        if allowable_ratings is not None:
+            min_rating, max_rating = self.convert_input_ratings(
+                allowable_ratings
+            )
+        elif "rating" in cons:
             # If ratings are specified, use those ratings.
             min_rating, max_rating = cons["rating"]
-        elif in_stats_ix or in_returns_ix:
+        elif in_ig_index:
             # If its an index member, use (AAA, BBB-).
-            min_rating, max_rating = 1, 10
+            min_rating, max_rating = 0, 10
         else:
             # Allow all ratings.
             min_rating, max_rating = 0, 23
@@ -531,14 +563,29 @@ class Index(BondBasket):
         # Return an index with all bonds outside allowable
         # range dropped. Use ISIN as ISINs dont change
         # over time.
-        df = df[
-            (df["NumericRating_NEW"] > max_rating)
-            | (df["NumericRating_NEW"] < min_rating)
+        rating_change_df = self._ratings_changes_df
+        downgraded_out_of_range = (
+            rating_change_df["NumericRating_PREV"] <= max_rating
+        ) & (rating_change_df["NumericRating_NEW"] > max_rating)
+        upgraded_out_of_range = (
+            rating_change_df["NumericRating_PREV"] >= min_rating
+        ) & (rating_change_df["NumericRating_NEW"] < min_rating)
+
+        df_to_drop = rating_change_df[
+            upgraded_out_of_range | downgraded_out_of_range
         ]
-        if len(df):
-            # There are bonds to drop.
-            return self.subset(isin=set(df["ISIN"]), special_rules="~ISIN")
+        if len(df_to_drop):
+            # There are bonds to drop. Ensure you keep any bonds that are
+            # currently in the index, and drop the rest from the index.
+            current_isins = self.day(self.dates[-1], as_index=True).isins
+            isins_to_drop = set(df_to_drop["ISIN"]) - set(current_isins)
+            if isins_to_drop:
+                return self.subset(isin=isins_to_drop, special_rules="~ISIN")
+            else:
+                # The bonds to be dropped are still in the current index.
+                return self
         else:
+            # There are no bonds to drop.
             return self
 
     def drop_tail(self, col, pct=10):
@@ -1093,21 +1140,61 @@ class Index(BondBasket):
 
         # Find excess and total returns in date range.
         xs_ret_df = self.get_value_history("XSRet")
-        t_ret_df = self.get_value_history("TRet")
         if start_date is not None:
             xs_ret_df = xs_ret_df[xs_ret_df.index > to_datetime(start_date)]
-            t_ret_df = t_ret_df[t_ret_df.index > to_datetime(start_date)]
         if end_date is not None:
             xs_ret_df = xs_ret_df[xs_ret_df.index <= to_datetime(end_date)]
-            t_ret_df = t_ret_df[t_ret_df.index <= to_datetime(end_date)]
 
         # Calculate implied risk free returns.
+        total_ret, t_ret_df = self.accumulate_individual_total_returns(
+            start_date, end_date, return_total_ret_timeseries=True
+        )
         rf_ret_df = t_ret_df - xs_ret_df
         # Calculate total returns over period and use treasury
         # returns to back out excess returns.
-        total_ret = np.prod(1 + t_ret_df) - 1
         rf_total_ret = np.prod(1 + rf_ret_df) - 1
         return (total_ret - rf_total_ret).rename("XSRet")
+
+    def accumulate_individual_total_returns(
+        self, start_date=None, end_date=None, return_total_ret_timeseries=False
+    ):
+        """
+        Accumulate excess returns for each cusip since start date.
+
+        Parameters
+        ----------
+        start_date: datetime
+            Date to start aggregating returns.
+        end_date: datetime
+            Date to end aggregating returns.
+        return_total_ret_timeseries: bool, default=False.
+            If ``True`` return both accumulated total returns as
+            well as total return timeseries for each bond.
+
+        Returns
+        -------
+        total_ret: pd.Series
+            The accumlated total return of each bond indexed
+            by it cusip.
+        t_ret_df: pd.DataFrame
+            Total return timeseries of each CUSIP, only returned if
+            ``return_total_ret_timeseries`` is ``True``.
+        """
+        self._get_prev_market_value_history()
+        self.compute_total_returns()
+
+        # Find excess and total returns in date range.
+        t_ret_df = self.get_value_history("TRet")
+        if start_date is not None:
+            t_ret_df = t_ret_df[t_ret_df.index > to_datetime(start_date)]
+        if end_date is not None:
+            t_ret_df = t_ret_df[t_ret_df.index <= to_datetime(end_date)]
+
+        total_ret = np.prod(1 + t_ret_df) - 1
+        if return_total_ret_timeseries:
+            return total_ret, t_ret_df
+        else:
+            return total_ret
 
     def aggregate_excess_returns(self, start_date=None, end_date=None):
         """
@@ -1132,21 +1219,62 @@ class Index(BondBasket):
 
         # Find excess and total returns in date range.
         xs_rets = self.market_value_weight("XSRet", weight="PrevMarketValue")
-        t_rets = self.market_value_weight("TRet", weight="PrevMarketValue")
         if start_date is not None:
             xs_rets = xs_rets[xs_rets.index > to_datetime(start_date)]
-            t_rets = t_rets[t_rets.index > to_datetime(start_date)]
         if end_date is not None:
             xs_rets = xs_rets[xs_rets.index <= to_datetime(end_date)]
-            t_rets = t_rets[t_rets.index <= to_datetime(end_date)]
 
         # Calculate implied risk free returns.
+        total_ret, t_rets = self.aggregate_total_returns(
+            start_date, end_date, return_total_ret_timeseries=True
+        )
         rf_rets = t_rets - xs_rets
         # Calculate total returns over period and use treasury
         # returns to back out excess returns.
-        total_ret = np.prod(1 + t_rets) - 1
         rf_total_ret = np.prod(1 + rf_rets) - 1
         return total_ret - rf_total_ret
+
+    def aggregate_total_returns(
+        self, start_date=None, end_date=None, return_total_ret_timeseries=False
+    ):
+        """
+        Aggregate total returns since start date for
+        entire :class:`Index`.
+
+        Parameters
+        ----------
+        start_date: datetime
+            Date to start aggregating returns.
+        end_date: datetime
+            Date to end aggregating returns.
+        return_total_ret_timeseries: bool, default=False
+            If ``True`` return both aggregated total returns as
+            well as total return timeseries.
+
+        Returns
+        -------
+        total_ret: float
+            Aggregated total returns for entire :class:`Index`
+            between specified dates.
+        t_rets: pd.Series
+            Total return timeseries, only returned if
+            ``return_total_ret_timeseries`` is ``True``.
+        """
+        self._get_prev_market_value_history()
+        self.compute_total_returns()
+
+        # Find excess and total returns in date range.
+        t_rets = self.market_value_weight("TRet", weight="PrevMarketValue")
+        if start_date is not None:
+            t_rets = t_rets[t_rets.index > to_datetime(start_date)]
+        if end_date is not None:
+            t_rets = t_rets[t_rets.index <= to_datetime(end_date)]
+
+        total_ret = np.prod(1 + t_rets) - 1
+        if return_total_ret_timeseries:
+            return total_ret, t_rets
+        else:
+            return total_ret
 
     def cumulative_excess_returns(self, start_date=None, end_date=None):
         """
@@ -1216,6 +1344,28 @@ class Index(BondBasket):
             self.df[col] = self.df[col].cat.add_categories(new_cats)
             self.df[col] = self.df[col].fillna(self.df["CUSIP"].map(bbg_d))
 
+    def _add_hy_index_flags(self):
+        """Add index flags for HY indexes to :attr:`df`."""
+        ix_date_isins = self.df.set_index("Date")["ISIN"]
+        start = ix_date_isins.index[0]
+        end = ix_date_isins.index[-1]
+
+        indexes = ["H4UN", "H0A0", "HC1N", "HUC2", "HUC3"]
+        for index in indexes:
+            # Load flag data and subset to correct dates.
+            fid = root(f"data/index_members/{index}.parquet")
+            flag_df = pd.read_parquet(fid)
+            flag_d = flag_df[
+                (flag_df.index >= start) & (flag_df.index <= end)
+            ].T.to_dict()
+            flags = np.zeros(len(ix_date_isins))
+            for i, (date, isin) in enumerate(ix_date_isins.items()):
+                try:
+                    flags[i] = flag_d[date].get(isin, 0)
+                except KeyError:
+                    flags[i] = 0
+            self.df[f"{index}Flag"] = flags.astype("int8")
+
 
 # %%
 def main():
@@ -1232,12 +1382,18 @@ def main():
     db.display_all_columns()
     # db.load_market_data(start="5/1/2019", end="12/1/2019", local=True)
     # db.load_market_data(start="7/1/2020", local=True)
-    date = db.date("today")
-    date = db.nearest_date("8/26/2020")
-    db.load_market_data(local=True, start=date)
-    # %%
 
-    self = db.build_market_index(**db.index_kwargs("STATS_all"))
+    db.load_market_data(start="12/10/2020")
+    db.add_hy_index_flags()
+    self = db.build_market_index()
 
     # %%
-    list(self.df)
+    ix_full = db.build_market_index(in_H4UN_index=True)
+    tickers = ix_full.tickers[5:15]
+    ix = db.build_market_index(in_H4UN_index=True, ticker=tickers)
+
+    # %%
+    issuer_ix = ix.issuer_index()
+    issuer_ix.accumulate_individual_total_returns().sort_index()
+
+    # %%

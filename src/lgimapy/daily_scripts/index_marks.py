@@ -11,8 +11,8 @@ print(ixs["Long Credit"].index[-1].strftime("%m/%d/%Y"))
 for ix, df in ixs.items():
     diff = int(df.diff()[-1])
     if diff > 0:
-        print(f"  {ix}: {diff} bp wider")
+        print(f"  {ix}: {df.iloc[-1]:.0f}, {diff} bp wider")
     elif diff < 0:
-        print(f"  {ix}: {-diff} bp tighter")
+        print(f"  {ix}: {df.iloc[-1]:.0f}, {-diff} bp tighter")
     else:
-        print(f"  {ix}: unched")
+        print(f"  {ix}: {df.iloc[-1]:.0f}, unched")

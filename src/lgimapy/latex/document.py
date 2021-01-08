@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from inspect import cleandoc
 from pathlib import Path
 
@@ -30,9 +31,9 @@ class KeywordNotFoundError(Exception):
     pass
 
 
-class Document:
+class LatexScript:
     """
-    Class for building a document in LaTeX.
+    Base class for writing LaTeX in Python.
 
     TODO: add other types such as
         * array
@@ -43,8 +44,6 @@ class Document:
         * header
         * equation
         * bibliography
-
-    TODO: documentation
 
     Parameters
     ----------
@@ -64,61 +63,33 @@ class Document:
         to edit.
     """
 
-    def __init__(self, fid, path=None, fig_dir=False, load_tex=False):
-        # Format fid and path.
-        self.fid = fid[:-4] if fid.endswith(".tex") else fid
+    def __init__(self, path, fig_dir, tab_indent):
+        """Format path for file and figure directory."""
         if path is None:
             self.path = Path(os.getcwd())
         elif isinstance(path, str):
             self.path = root(path)
-            mkdir(self.path)
         else:
             self.path = Path(path)
-            mkdir(self.path)
 
-        # Create figure directory if required.
         self._fig_dir_bool = fig_dir
         if fig_dir:
             self.fig_dir = self.path.joinpath("fig/")
-            mkdir(self.fig_dir)
         else:
             self.fig_dir = self.path
 
-        # Initialize document components.
-        if load_tex:
-            self._loaded_file = True
-            self.preamble, self.body = self._load_tex()
-        else:
-            self._loaded_file = False
-            self.body = "\n\n\\begin{document}\n\n"
-            self.add_preamble()
-        self.bibliography = ""
-        self.appendix = ""
-        self.background_image = ""
         self._currently_open_edit = False
+        self._tab_indent = tab_indent
 
-    def _load_tex(self):
-        """
-        Load .tex file and separate preamble from body.
+    def __enter__(self):
+        return self
 
-        Returns
-        -------
-        preamble: str
-            Preamble of loaded .tex file.
-        body: str
-            Body of loaded .tex file.
-        """
-        # Load file.
-        fid = f"{self.path.joinpath(self.fid)}.tex"
-        with open(fid, "r") as f:
-            doc = f.read()
+    def __exit__(self, type, value, traceback):
+        self.end_edit()
 
-        # Split into file parts.
-        ix_begin_body = doc.find("\\begin{document}")
-        ix_end_body = doc.find("\end{document}")
-        preamble = doc[:ix_begin_body]
-        body = doc[ix_begin_body:ix_end_body]
-        return preamble, body
+    def _add_to_body(self, script):
+        """Add additional script to current :param:`body`."""
+        self.body = "\n\n".join([self.body, script])
 
     def start_edit(self, keyword):
         """
@@ -162,6 +133,7 @@ class Document:
 
         # Make safety flag to avoid saving file before edit is complete.
         self._currently_open_edit = True
+        return self
 
     def end_edit(self):
         """
@@ -187,6 +159,324 @@ class Document:
 
         # Close edit so document can be safely saved.
         self._currently_open_edit = False
+
+    def add_section(self, section):
+        """
+        Add a new section to :attr:`Document.body`.
+
+        Parameters
+        ----------
+        section: str
+            Title of new section.
+        """
+        self._add_to_body(f"\section{{{section}}}")
+
+    def add_paragraph(self, paragraph):
+        """
+        Add text as a new paragraph to :attr:`Document.body`.
+
+        Parameters
+        ----------
+        paragraph: str
+            Individual paragraph of text.
+        """
+        self.body = "\n".join([self.body, "\n", paragraph, "\\bigskip"])
+
+    def add_text(self, text):
+        """
+        Add text to :attr:`Document.body`.
+
+        Parameters
+        ----------
+        text: str
+            Text to add to :attr:`Document.body`.
+        """
+        self._add_to_body(text)
+
+    def add_table(self, table_or_df, **kwargs):
+        """
+        Add table to document using :func:`latex_table`.
+
+        Parameters
+        ----------
+        table_or_df: str or pd.DataFrame
+            If str is provided, it is expected to be a
+            pre-formatted table for LaTeX. Otherwise,
+            a DataFrame is expected to be input into
+            :func:`latex_table`.
+        kwargs:
+            Keyword arguments for :func:`latex_table`.
+
+
+        See Also
+        --------
+        :func:`latex_table`: Return table with syntax formatted for LaTeX.
+        """
+        if isinstance(table_or_df, str):
+            self._add_to_body(table_or_df)
+        else:
+            table = latex_table(table_or_df, **kwargs)
+            self._add_to_body(table)
+
+    def add_figure(self, fids, savefig=False, **kwargs):
+        """
+        Add table to document using :func:`latex_table`.
+
+        Parameters
+        ----------
+        fids: fids: str or List[str].
+            Filenames for figure(s).
+        savefig: bool, default=False
+            If True save single Figure to proper directory.
+        kwargs:
+            Keyword arguments for :func:`latex_figure`.
+
+
+        See Also
+        --------
+        :func:`latex_figure`: Return figure with syntax formatted for LaTeX.
+        """
+        fids = to_list(fids, dtype=str)
+        if savefig:
+            if len(fids) == 1:
+                vis.savefig(self.fig_dir / fids[0])
+                vis.close()
+            else:
+                msg = "Saving can only be done on individual Figures."
+                raise ValueError(msg)
+
+        if self._fig_dir_bool:
+            fids = [f"fig/{fid}" for fid in fids]
+
+        fig = latex_figure(fids, **kwargs)
+        self._add_to_body(fig)
+
+    def add_pagebreak(self):
+        """Add a pagebreak."""
+        self.add_text("\\pagebreak")
+
+    def add_vskip(self, vskip="1em"):
+        """Add verticle skip"""
+        self.add_text(f"\\vskip{vskip}")
+
+    def set_variable(self, var_name, var_val):
+        """
+        Set a value for a variable in LaTeX file denoted
+        by ``~{VARIABLE_NAME}~`` in LaTeX file.
+
+        Parameters
+        ----------
+        var_name: str
+            Name of variable in LaTeX file.
+        var_val: str or scalar
+            Value to set variable equal to.
+        """
+        regex = f"~{{{var_name}}}~"
+        self.body = re.sub(regex, str(var_val), self.body)
+
+    @property
+    def _epoch(self):
+        """int: current epoch, used for unique identifier."""
+        epoch = int(time.time() * 1e3)
+        time.sleep(0.001)
+        return epoch
+
+    def _format_caption(self, caption, indent=None):
+        """str: Format caption for a figure."""
+        indent = self._tab_indent if indent is None else indent
+        t = " " * indent  # tab length
+        if caption is None:
+            return f"{t}%\\caption{{}}\n"
+        else:
+            return f"{t}\\caption{{{caption}}}\n"
+
+    def add_caption(self, caption, indent=None):
+        """Add a caption to current figure."""
+        self._add_to_body(self._format_caption(caption, indent=indent))
+
+    def _format_plot(self, fid, width=0.95, indent=None):
+        """str: Format plot fid to insert into a figure."""
+        indent = self._tab_indent if indent is None else indent
+        t = " " * indent  # tab length
+        return f"{t}\\includegraphics[width={width}\\textwidth]{{{fid}}}\n"
+
+    def add_plot(self, fid, width=0.95, indent=None):
+        """Add a plot to current figure."""
+        self._add_to_body(self._format_plot(fid, width=width, indent=indent))
+
+    def add_subfigures(
+        self,
+        n=None,
+        figures=None,
+        widths=None,
+        caption=None,
+        subcaptions=None,
+        subcaptions_on_top=True,
+        caption_on_top=True,
+        indent=2,
+    ):
+        # Determine number of subfigures.
+        if n is None:
+            if figures is None:
+                raise ValueError(
+                    "Either a value for `n` or a list of figures is required."
+                )
+            else:
+                figure_list = to_list(figures, dtype=str)
+                n = len(figure_list)
+        else:
+            if figures is not None:
+                figure_list = to_list(figures, dtype=str)
+                if len(subcaps) != n:
+                    raise ValueError(
+                        "Length of `figures` must equal number of subfigures."
+                    )
+            else:
+                figure_list = [None] * n
+
+        # Get subfigure widths and ensure they fit constraints.
+        if widths is None:
+            widths = [round(0.95 / n, 3)] * n
+        else:
+            if sum(widths) > 1:
+                raise ValueError("Sum of widths is greater than 1.")
+            if len(widths) != n:
+                raise ValueError(
+                    "Length of `widths` must equal number of subfigures."
+                )
+
+        # Get subcaptions and ensure they fit constraints.
+        if subcaptions is None:
+            subcaps = [None] * n
+        else:
+            subcaps = to_list(subcaptions, dtype=str)
+            if len(subcaps) != n:
+                raise ValueError(
+                    "Length of `subcaptions` must equal number of subfigures."
+                )
+
+        unique_edit_IDs = []
+
+        # Create subfigure string.
+        indent = self._tab_indent if indent is None else indent
+        double_indent = 2 * indent
+        t = " " * indent  # tab length
+        fout = f"\\begin{{figure}}[H]\n"
+        fout += f"{t}\\centering\n"
+        if caption_on_top:
+            fout += self._format_caption(caption, indent=indent)
+        for i, (fig, subcap, w) in enumerate(zip(figure_list, subcaps, widths)):
+            fout += f"{t}\\begin{{subfigure}}[b]{{{w}\\textwidth}}\n"
+            fout += f"{2*t}\\centering\n"
+            if subcaptions_on_top:
+                fout += self._format_caption(subcap, indent=double_indent)
+            if fig is None:
+                # make editable location and store keyword.
+                edit_id = self._epoch
+                unique_edit_IDs.append(edit_id)
+                fout += f"{2*t}%%\\begin{{{edit_id}}}\n"
+                fout += f"{2*t}%%\\end{{{edit_id}}}\n"
+            else:
+                # Add plot.
+                fout += self._format_plot(fig, indent=double_indent, width=1)
+            if not subcaptions_on_top:
+                fout += self._format_caption(subcap, indent=double_indent)
+            fout += f"{t}\\end{{subfigure}}\n"
+            if i != n - 1:
+                # Not last figure, so add horizontal space.
+                fout += f"{t}\\hfill\n"
+        if not caption_on_top:
+            fout += self._format_caption(caption, indent=indent)
+        fout += "\\end{figure}\n"
+        self._add_to_body(fout)
+
+        if len(unique_edit_IDs) == 1:
+            return unique_edit_IDs[0]
+        else:
+            return tuple(unique_edit_IDs)
+
+
+class Document(LatexScript):
+    """
+    Class for building a document in LaTeX.
+
+    Parameters
+    ----------
+    fid: str
+        Filename.
+    path: Path or str, default=None
+        Path to directory for file.
+
+        * None: create in current directory.
+        * Path: create at specified directory, create dir if required.
+        * str: create `root/latex/{str}` directory, create dir if required.
+    fig_dir: bool, defautl=False
+        If True, create a directory named ``fig`` to store all
+        figures in the specified path.
+    load_tex: bool, default=False
+        If True, load a tex file with the specified filename
+        to edit.
+    """
+
+    def __init__(
+        self, fid, path=None, fig_dir=False, load_tex=False, tab_indent=2
+    ):
+        super().__init__(path=path, fig_dir=fig_dir, tab_indent=tab_indent)
+
+        # Format fid and create directories for saving file and figures.
+        self.fid = fid[:-4] if fid.endswith(".tex") else fid
+        mkdir(self.path)
+        mkdir(self.fig_dir)
+
+        # Initialize document components.
+        if isinstance(load_tex, str):
+            # Set _loaded_file to be False, otherwise a .tex file
+            # will be saved to the `path` and not deleted.
+            self._loaded_file = False
+            self.preamble, self.body = self._load_tex(load_tex)
+        elif load_tex:
+            self._loaded_file = True
+            self.preamble, self.body = self._load_tex()
+        else:
+            self._loaded_file = False
+            self.body = "\n\n\\begin{document}\n\n"
+            self.add_preamble()
+
+        # Initialize other document properties.
+        self.bibliography = ""
+        self.appendix = ""
+        self.background_image = ""
+
+    def _load_tex(self, tex_fid=None):
+        """
+        Load .tex file and separate preamble from body.
+
+        Parameters
+        ----------
+        tex_fid: str, optional
+            Fid from `\tex` directory to load.
+
+        Returns
+        -------
+        preamble: str
+            Preamble of loaded .tex file.
+        body: str
+            Body of loaded .tex file.
+        """
+        # Load file.
+        if tex_fid is None:
+            fid = f"{self.path.joinpath(self.fid)}.tex"
+        else:
+            fid = root(f"src/lgimapy/tex/{tex_fid}.tex")
+        with open(fid, "r") as f:
+            doc = f.read()
+
+        # Split into file parts.
+        ix_begin_body = doc.find("\\begin{document}")
+        ix_end_body = doc.find("\end{document}")
+        preamble = doc[:ix_begin_body]
+        body = doc[ix_begin_body:ix_end_body]
+        return preamble, body
 
     def add_preamble(
         self,
@@ -351,6 +641,7 @@ class Document:
             \\definecolor{{salmon}}{{HTML}}{{DB8585}}
             \\definecolor{{eggplant}}{{HTML}}{{815a71}}
             \\definecolor{{mauve}}{{HTML}}{{a78197}}
+            \\definecolor{{oldmauve}}{{HTML}}{{4C243B}}
 
             %% Define function for perctile bars in tables.
             \\newlength{{\\barw}}
@@ -389,39 +680,6 @@ class Document:
     def add_appendix(self):
         """TODO"""
         self.appendix = ""
-
-    def add_section(self, section):
-        """
-        Add a new section to :attr:`Document.body`.
-
-        Parameters
-        ----------
-        section: str
-            Title of new section.
-        """
-        self.body = "\n\n".join([self.body, f"\section{{{section}}}"])
-
-    def add_paragraph(self, paragraph):
-        """
-        Add text as a new paragraph to :attr:`Document.body`.
-
-        Parameters
-        ----------
-        paragraph: str
-            Individual paragraph of text.
-        """
-        self.body = "\n".join([self.body, "\n", paragraph, "\\bigskip"])
-
-    def add_text(self, text):
-        """
-        Add text to :attr:`Document.body`.
-
-        Parameters
-        ----------
-        text: str
-            Text to add to :attr:`Document.body`.
-        """
-        self.body = "\n\n".join([cleandoc(self.body), text])
 
     def add_background_image(
         self,
@@ -463,84 +721,7 @@ class Document:
 
             """
         )
-        self.body = "\n\n".join([self.body, "\BgThispage"])
-
-    def add_table(self, table_or_df, **kwargs):
-        """
-        Add table to document using :func:`latex_table`.
-
-        Parameters
-        ----------
-        table_or_df: str or pd.DataFrame
-            If str is provided, it is expected to be a
-            pre-formatted table for LaTeX. Otherwise,
-            a DataFrame is expected to be input into
-            :func:`latex_table`.
-        kwargs:
-            Keyword arguments for :func:`latex_table`.
-
-
-        See Also
-        --------
-        :func:`latex_table`: Return table with syntax formatted for LaTeX.
-        """
-        if isinstance(table_or_df, str):
-            self.body = "\n\n".join((self.body, table_or_df))
-        else:
-            table = latex_table(table_or_df, **kwargs)
-            self.body = "\n\n".join((self.body, table))
-
-    def add_figure(self, fids, savefig=False, **kwargs):
-        """
-        Add table to document using :func:`latex_table`.
-
-        Parameters
-        ----------
-        fids: fids: str or List[str].
-            Filenames for figure(s).
-        savefig: bool, default=False
-            If True save single Figure to proper directory.
-        kwargs:
-            Keyword arguments for :func:`latex_figure`.
-
-
-        See Also
-        --------
-        :func:`latex_figure`: Return figure with syntax formatted for LaTeX.
-        """
-        fids = to_list(fids, dtype=str)
-        if savefig:
-            if len(fids) == 1:
-                vis.savefig(self.fig_dir / fids[0])
-                vis.close()
-            else:
-                msg = "Saving can only be done on individual Figures."
-                raise ValueError(msg)
-
-        if self._fig_dir_bool:
-            fids = [f"fig/{fid}" for fid in fids]
-
-        fig = latex_figure(fids, **kwargs)
-        self.body = "\n\n".join((self.body, fig))
-
-    def add_pagebreak(self):
-        """Add a pagebreak."""
-        self.add_text("\\pagebreak")
-
-    def set_variable(self, var_name, var_val):
-        """
-        Set a value for a variable in LaTeX file denoted
-        by ``~{VARIABLE_NAME}~`` in LaTeX file.
-
-        Parameters
-        ----------
-        var_name: str
-            Name of variable in LaTeX file.
-        var_val: str or scalar
-            Value to set variable equal to.
-        """
-        regex = f"~{{{var_name}}}~"
-        self.body = re.sub(regex, str(var_val), self.body)
+        self._add_to_body("\BgThispage")
 
     @property
     def doc(self):
@@ -577,6 +758,34 @@ class Document:
                 os.remove(f"{fid}.{extension}")
             except FileNotFoundError:
                 continue
+
+    def create_page(self):
+        """
+        Create a separate :class:`Page` for the current :class:`Document`
+        to be added back later.
+
+        Returns
+        -------
+        :class:`Page`:
+            New separate page.
+        """
+        return Page(
+            path=self.path, fig_dir=self.fig_dir, tab_indent=self._tab_indent
+        )
+
+    def add_page(self, page):
+        """
+        Add created :class:`Page` back into :class:`Document`.
+
+        Parameters
+        ----------
+        page: :class:`Page`
+            Page to be added to document.
+        """
+        if isinstance(page, Page):
+            self._add_to_body(page.body)
+        else:
+            raise TypeError(f"input of type {type(page)} is not a Page.")
 
     def save_tex(self):
         """Save .tex file of current document."""
@@ -649,3 +858,14 @@ class Document:
             If True, save `.tex` as well as `.pdf`.
         """
         self.save(fid, save_tex)
+
+
+class Page(LatexScript):
+    """
+    Separate page(s) of a LaTeX Document, which can be edited
+    apart from a main :class:`Document` and attached later.
+    """
+
+    def __init__(self, path, fig_dir, tab_indent):
+        super().__init__(path=path, fig_dir=fig_dir, tab_indent=tab_indent)
+        self.body = ""
