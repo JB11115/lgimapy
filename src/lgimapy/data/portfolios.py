@@ -102,9 +102,18 @@ class Portfolio:
 
 
 class Account(BondBasket, Portfolio):
-    def __init__(self, df, name, date, constraints=None, market="US"):
-        BondBasket.__init__(self, df, name, constraints, market)
-        Portfolio.__init__(self, date)
+    def __init__(
+        self, df, name, date, market="US", constraints=None, index="CUSIP"
+    ):
+        BondBasket.__init__(
+            self,
+            df=df,
+            name=name,
+            market=market,
+            constraints=constraints,
+            index=index,
+        )
+        Portfolio.__init__(self, date=date)
         self._tsy_bins = [2, 3, 5, 7, 10, 20, 30]
         self.df, self.tsy_df, self.cash_df = self._split_credit_tsy_cash(df)
 
@@ -320,8 +329,23 @@ class Account(BondBasket, Portfolio):
 
 
 class Strategy(BondBasket, Portfolio):
-    def __init__(self, df, name, date, constraints=None, market="US"):
-        BondBasket.__init__(self, df, name, constraints, market)
+    def __init__(
+        self,
+        df,
+        name,
+        date,
+        market="US",
+        constraints=None,
+        index="CUSIP",
+    ):
+        BondBasket.__init__(
+            self,
+            df=df,
+            name=name,
+            market=market,
+            constraints=constraints,
+            index=index,
+        )
         Portfolio.__init__(self, date)
         self.name = name
         self.df = df
@@ -769,7 +793,7 @@ def main():
     strat_name = "US Long Credit"
     strat_name = "Liability Aware Long Duration Credit"
     # strat_name = "US Long A+ Credit"
-    # strat_name = "Custom US Long Credit"
+    strat_name = "US Long Credit - Custom"
     # strat_name = "US High Yield"
 
     # %%
@@ -783,6 +807,9 @@ def main():
     strat = Strategy(strat_df, name=strat_name, date=date)
 
     # %%
-    acnt = db.load_portfolio(account="PMCHY")
+    sorted(strat.df.columns)[:8]
+    from lgimapy.bloomberg import bdh
 
-    acnt.df
+    bdh("LECRTREU", "INDEX", "INDEX_OAD_TSY", start="12/1/2020")
+
+    list(acnt.df)
