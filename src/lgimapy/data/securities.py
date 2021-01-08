@@ -90,12 +90,8 @@ class Bond:
     @lru_cache(maxsize=None)
     def _trade_date_df(self):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
-        return pd.read_csv(
-            root("data/trade_dates.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )
+        fid = root("data/US/trade_dates.parquet")
+        return pd.read_parquet(fid)
 
     def _theoretical_coupon_dates(self):
         """
