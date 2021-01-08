@@ -1,14 +1,14 @@
 from time import sleep
 
 from lgimapy.daily_scripts import (
-    build_movers_sheets,
+    build_issuer_change_report,
     make_credit_snapshots,
     update_credit_snapshots,
 )
 from lgimapy.data import (
     Database,
     update_bloomberg_data,
-    update_feathers,
+    update_market_data_feathers,
     update_account_market_values,
     update_treasury_oad_values,
     update_fed_funds,
@@ -34,13 +34,13 @@ def main():
     print()
     update_fed_funds(trade_dates)
     print("Updated Fed Funds\n")
-    update_trade_dates(trade_dates)
+    update_trade_dates()
     print()
     update_hy_index_members()
-    print("Updated HY Index Flags")
+    print("Updated HY Index Flags\n")
     update_treasury_curve_dates()
 
-    update_feathers()
+    update_market_data_feathers()
     print()
     update_lgima_sectors()
     print("Updated LGIMA sectors\n")
@@ -52,17 +52,18 @@ def main():
     print("Updated Bloomberg Data\n")
     update_dealer_inventory()
     print("Updated Dealer Inventory\n")
-    build_movers_sheets()
-    print("Index Mover Report Complete\n")
+    update_rating_changes()
+    print("Updated Rating Changes\n")
+    build_issuer_change_report()
+    print("Index Change Report Complete\n")
     make_credit_snapshots()
     update_credit_snapshots()
     print("Credit Snaphshots Complete\n")
     update_nonfin_spreads()
     print("Updated Nonfin Sub-Rating Spreads\n")
-    update_rating_changes()
-    print("Updated Rating Changes\n")
-    update_strategy_overweights()
-    print("Updated Strategy Overweights\n")
+
+    # update_strategy_overweights()
+    # print("Updated Strategy Overweights\n")
 
 
 def check_datamart_quality(dates):
