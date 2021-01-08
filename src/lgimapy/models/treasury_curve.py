@@ -815,6 +815,8 @@ def update_treasury_curve_dates(dates=None, verbose=True):
         If True print progress on each fitting to screen.
     """
     # Get list of dates with treasury curves
+    # dates = None
+    # verbose = True
     db = Database()
 
     # Get list of previously scraped dates if it exists.
