@@ -76,10 +76,10 @@ def restart_program(RAM_threshold=90):
     RAM_threshold: int or ``False``, default=90
         Integer percentage threshold for current RAM usage at
         which to quit the program if exceeded. If ``False``
-        ignore RAM usage entirely.
+        ignore RAM usage entirely and do not restart program.
     """
     # Check RAM usage and stop process if above threshold.
-    if RAM_threshold and psutil.virtual_memory().percent > RAM_threshold:
+    if RAM_threshold and (psutil.virtual_memory().percent > RAM_threshold):
         quit()
 
     # Close open files.
