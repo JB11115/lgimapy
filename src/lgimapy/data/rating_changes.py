@@ -15,7 +15,7 @@ def update_rating_changes():
     curr_date = dates[-1]  # init in case loop doesn't run
     df_list = [] if saved_df is None else [saved_df]
 
-    for i, curr_date in tqdm(enumerate(dates[1:1000])):
+    for i, curr_date in enumerate(dates[1:1000]):
         prev_date = dates[i]
         df = db.load_market_data(
             start=prev_date,
@@ -56,7 +56,7 @@ def read_saved_data(fid):
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
     # Start from specified data if required.
-    # start_from_date = pd.to_datetime("9/10/2020")
+    # start_from_date = pd.to_datetime("12/09/2020")
     start_from_date = None
     if start_from_date is not None:
         df = df[df["Date_NEW"] <= start_from_date].copy()
@@ -124,6 +124,7 @@ def get_rating_changes(df, db):
         "USHYReturnsFlag_PREV": "USHYReturnsFlag",
         "FinancialFlag_PREV": "FinancialFlag",
         "MarketValue_PREV": "MarketValue",
+        "AmountOutstanding_PREV": "AmountOutstanding",
         "NumericRating_PREV": "NumericRating_PREV",
         "NumericRating_NEW": "NumericRating_NEW",
         "MoodyRating_PREV": "MoodyRating_PREV",
@@ -177,7 +178,7 @@ def clean_rating_dtypes(df):
             "FitchRating_NEW",
             "FitchRating_CHANGE",
         ],
-        "float32": ["MaturityYears", "MarketValue",],
+        "float32": ["MaturityYears", "MarketValue", "AmountOutstanding"],
         "category": [
             "CUSIP",
             "ISIN",
