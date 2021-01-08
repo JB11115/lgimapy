@@ -83,8 +83,9 @@ def update_regional_trade_dates(market):
     fid = root(f"data/{market}/trade_dates.parquet")
     fid.parents[0].mkdir(parents=True, exist_ok=True)
     basys_fids = get_basys_fids(market)
-    df = pd.DataFrame(index=basys_fids.index)
+    df = basys_fids.to_frame()
     df["holiday"] = 0
+    df["fid"] = df["fid"].astype(str)
     df.to_parquet(fid)
 
 
