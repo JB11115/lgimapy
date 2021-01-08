@@ -360,6 +360,7 @@
     "US_IG": {
         "NAME": "US Market Credit",
         "OAS": "LUCROAS Index",
+        "OAD": "LUCRTRUU Index|INDEX_OAD_TSY",
         "TRET": "LUCRTRUU Index",
         "XSRET": "LUCRER Index",
         "YTW": "LUCRYW Index"
@@ -367,6 +368,7 @@
     "US_IG_1-5": {
         "NAME": "US Credit 1-5 yr",
         "OAS": "LD18OAS Index",
+        "OAD": "LD18TRUU Index|INDEX_OAD_TSY",
         "TRET": "LD18TRUU Index",
         "XSRET": "LD18ER Index",
         "YTW": "LD18YW Index"
@@ -374,6 +376,7 @@
     "US_IG_5-10": {
         "NAME": "US Credit 5-10 yr",
         "OAS": "LD26OAS Index",
+        "OAD": "LD26TRUU Index|INDEX_OAD_TSY",
         "TRET": "LD26TRUU Index",
         "XSRET": "LD26ER Index",
         "YTW": "LD26YW Index"
@@ -381,6 +384,7 @@
     "US_IG_10+": {
         "NAME": "US Long Credit",
         "OAS": "LULCOAS Index",
+        "OAD": "LULCTRUU Index|INDEX_OAD_TSY",
         "TRET": "LULCTRUU Index",
         "XSRET": "LULCER Index",
         "YTW": "LULCYW Index"
@@ -388,6 +392,7 @@
     "GLOBAL_HY": {
         "NAME": "Global HY",
         "OAS": "LG30OAS Index",
+        "OAD": "LG30TRUU Index|INDEX_OAD_TSY",
         "TRET": "LG30TRUU Index",
         "XSRET": "LG30ER Index",
         "YTW": "LG30YW Index"
@@ -395,6 +400,7 @@
     "US_HY": {
         "NAME": "US HY",
         "OAS": "LF98OAS Index",
+        "OAD": "LF98TRUU Index|INDEX_OAD_TSY",
         "TRET": "LF98TRUU Index",
         "XSRET": "LF98ER Index",
         "YTW": "LF98YW Index"
@@ -402,6 +408,7 @@
     "US_CORP": {
         "NAME": "US Corp",
         "OAS": "LUACOAS Index",
+        "OAD": "LUACTRUU Index|INDEX_OAD_TSY",
         "TRET": "LUACTRUU Index",
         "XSRET": "LUACER Index",
         "YTW": "LUACYW Index"
@@ -409,6 +416,7 @@
     "US_CORP_1-5": {
         "NAME": "US Corp 1-5 yr",
         "OAS": "LDC5OAS Index",
+        "OAD": "LDC5TRUU Index|INDEX_OAD_TSY",
         "TRET": "LDC5TRUU Index",
         "XSRET": "LDC5ER Index",
         "YTW": "LDC5YW Index"
@@ -416,6 +424,7 @@
     "US_CORP_5-10": {
         "NAME": "US Corp 5-10 yr",
         "OAS": "BCR5OAS Index",
+        "OAD": "BCR5TRUU Index|INDEX_OAD_TSY",
         "TRET": "BCR5TRUU Index",
         "XSRET": "BCR5ER Index",
         "YTW": "BCR5YW Index"
@@ -423,6 +432,7 @@
     "US_CORP_10+": {
         "NAME": "US Long Corp",
         "OAS": "LD07OAS Index",
+        "OAD": "LD07TRUU Index|INDEX_OAD_TSY",
         "TRET": "LD07TRUU Index",
         "XSRET": "LD07ER Index",
         "YTW": "LD07YW Index"
@@ -430,6 +440,7 @@
     "US_AAA": {
         "NAME": "US AAA",
         "OAS": "LDA3OAS Index",
+        "OAD": "LDA3TRUU Index|INDEX_OAD_TSY",
         "TRET": "LDA3TRUU Index",
         "XSRET": "LDA3ER Index",
         "YTW": "LDA3YW Index"
@@ -437,6 +448,7 @@
     "US_AA": {
         "NAME": "US AA",
         "OAS": "LDA2OAS Index",
+        "OAD": "LDA2TRUU Index|INDEX_OAD_TSY",
         "TRET": "LDA2TRUU Index",
         "XSRET": "LDA2ER Index",
         "YTW": "LDA2YW Index"
@@ -444,6 +456,7 @@
     "US_A": {
         "NAME": "US A",
         "OAS": "LDA1OAS Index",
+        "OAD": "LDA1TRUU Index|INDEX_OAD_TSY",
         "TRET": "LDA1TRUU Index",
         "XSRET": "LDA1ER Index",
         "YTW": "LDA1YW Index"
@@ -451,6 +464,7 @@
     "US_BBB": {
         "NAME": "US BBB",
         "OAS": "LDB1OAS Index",
+        "OAD": "LDB1TRUU Index|INDEX_OAD_TSY",
         "TRET": "LDB1TRUU Index",
         "XSRET": "LDB1ER Index",
         "YTW": "LDB1YW Index"
@@ -458,6 +472,7 @@
     "US_BB": {
         "NAME": "US BB",
         "OAS": "BCBAOAS Index",
+        "OAD": "BCBATRUU Index|INDEX_OAD_TSY",
         "TRET": "BCBATRUU Index",
         "XSRET": "BCBAER Index",
         "YTW": "BCBAYW Index"
@@ -465,6 +480,7 @@
     "US_B": {
         "NAME": "US B",
         "OAS": "BCBHOAS Index",
+        "OAD": "BCBHTRUU Index|INDEX_OAD_TSY",
         "TRET": "BCBHTRUU Index",
         "XSRET": "BCBHER Index",
         "YTW": "BCBHYW Index"
@@ -472,6 +488,7 @@
     "US_CCC": {
         "NAME": "US CCC",
         "OAS": "BCAUOAS Index",
+        "OAD": "BCAUTRUU Index|INDEX_OAD_TSY",
         "TRET": "BCAUTRUU Index",
         "XSRET": "BCAUER Index",
         "YTW": "BCAUYW Index"
@@ -516,6 +533,7 @@
     "EU_IG": {
         "NAME": "EU IG Credit",
         "OAS": "LECROAS Index",
+        "OAD": "LECRTREU Index|INDEX_OAD_TSY",
         "TRET": "LECRTREU Index",
         "XSRET": "LECRER Index",
         "YTW": "LECRYW Index"
@@ -523,6 +541,7 @@
     "EU_IG_1-3": {
         "NAME": "EU IG Credit 1-3 yr",
         "OAS": "LECEOAS Index",
+        "OAD": "LECETREU Index|INDEX_OAD_TSY",
         "TRET": "LECETREU Index",
         "XSRET": "LECEER Index",
         "YTW": "LECEYW Index"
@@ -530,6 +549,7 @@
     "EU_IG_3-5": {
         "NAME": "EU IG Credit 3-5 yr",
         "OAS": "LEC3OAS Index",
+        "OAD": "LEC3TREU Index|INDEX_OAD_TSY",
         "TRET": "LEC3TREU Index",
         "XSRET": "LEC3ER Index",
         "YTW": "LEC3YW Index"
@@ -544,6 +564,7 @@
     "EU_IG_7-10": {
         "NAME": "EU IG Credit 7-10 yr",
         "OAS": "LEC7OAS Index",
+        "OAD": "LEC7TREU Index|INDEX_OAD_TSY",
         "TRET": "LEC7TREU Index",
         "XSRET": "LEC7ER Index",
         "YTW": "LEC7YW Index"
@@ -551,6 +572,7 @@
     "EU_IG_10+": {
         "NAME": "EU IG Long Credit",
         "OAS": "LEC0OAS Index",
+        "OAD": "LEC0TREU Index|INDEX_OAD_TSY",
         "TRET": "LEC0TREU Index",
         "XSRET": "LEC0ER Index",
         "YTW": "LEC0YW Index"
@@ -558,6 +580,7 @@
     "EU_HY": {
         "NAME": "EU HY",
         "OAS": "LP01OAS Index",
+        "OAD": "LP01TREU Index|INDEX_OAD_TSY",
         "TRET": "LP01TREU Index",
         "XSRET": "LP01ER Index",
         "YTW": "LP01YW Index"
@@ -565,6 +588,7 @@
     "EU_CORP": {
         "NAME": "EU Corp",
         "OAS": "LECPOAS Index",
+        "OAD": "LECPTREU Index|INDEX_OAD_TSY",
         "TRET": "LECPTREU Index",
         "XSRET": "LECPER Index",
         "YTW": "LECPYW Index"
@@ -572,6 +596,7 @@
     "EU_AA": {
         "NAME": "EU AA",
         "OAS": "LEC8OAS Index",
+        "OAD": "LEC8TREU Index|INDEX_OAD_TSY",
         "TRET": "LEC8TREU Index",
         "XSRET": "LEC8ER Index",
         "YTW": "LEC8YW Index"
@@ -579,6 +604,7 @@
     "EU_A": {
         "NAME": "EU A",
         "OAS": "LEC9OAS Index",
+        "OAD": "LEC9TREU Index|INDEX_OAD_TSY",
         "TRET": "LEC9TREU Index",
         "XSRET": "LEC9ER Index",
         "YTW": "LEC9YW Index"
@@ -586,6 +612,7 @@
     "EU_BBB": {
         "NAME": "EU BBB",
         "OAS": "LECBOAS Index",
+        "OAD": "LECBTREU Index|INDEX_OAD_TSY",
         "TRET": "LECBTREU Index",
         "XSRET": "LECBER Index",
         "YTW": "LECBYW Index"
@@ -593,6 +620,7 @@
     "EU_BB": {
         "NAME": "EU BB",
         "OAS": "LP07OAS Index",
+        "OAD": "LP07TREU Index|INDEX_OAD_TSY",
         "TRET": "LP07TREU Index",
         "XSRET": "LP07ER Index",
         "YTW": "LP07YW Index"
@@ -600,6 +628,7 @@
     "EU_B": {
         "NAME": "EU B",
         "OAS": "LHYBOAS Index",
+        "OAD": "LHYBTREU Index|INDEX_OAD_TSY",
         "TRET": "LHYBTREU Index",
         "XSRET": "LHYBER Index",
         "YTW": "LHYBYW Index"
@@ -607,6 +636,7 @@
     "EU_CCC": {
         "NAME": "EU CCC",
         "OAS": "BEYHOAS Index",
+        "OAD": "BEYHTREU Index|INDEX_OAD_TSY",
         "TRET": "BEYHTREU Index",
         "XSRET": "BEYHER Index",
         "YTW": "BEYHYW Index"
@@ -656,6 +686,7 @@
     "GBP_CORP": {
         "NAME": "GBP Corp",
         "OAS": "LC61OAS Index",
+        "OAD": "LC61TRGU Index|INDEX_OAD_TSY",
         "TRET": "LC61TRGU Index",
         "XSRET": "LC61ER Index",
         "YTW": "LC61YW Index"
@@ -687,6 +718,7 @@
     "EM_IG": {
         "NAME": "EM IG",
         "OAS": "BEHGOAS Index",
+        "OAD": "BEHGTRUU Index|INDEX_OAD_TSY",
         "TRET": "BEHGTRUU Index",
         "XSRET": "BEHGER Index",
         "YTW": "BEHGYW Index"
@@ -694,6 +726,7 @@
     "EM_HY": {
         "NAME": "EM HY",
         "OAS": "BEBGOAS Index",
+        "OAD": "BEBGTRUU Index|INDEX_OAD_TSY",
         "TRET": "BEBGTRUU Index",
         "XSRET": "BEBGER Index",
         "YTW": "BEBGYW Index"
@@ -708,6 +741,7 @@
     "EM_SOV": {
         "NAME": "EM Sov",
         "OAS": "BSSUOAS Index",
+        "OAD": "BSSUTRUU Index|INDEX_OAD_TSY",
         "TRET": "BSSUTRUU Index",
         "XSRET": "BSSUER Index",
         "YTW": "BSSUYW Index"
@@ -715,6 +749,7 @@
     "EM_QUASISOV": {
         "NAME": "EM Quasi-sov",
         "OAS": "BESQOAS Index",
+        "OAD": "BESQTRUU Index|INDEX_OAD_TSY",
         "TRET": "BESQTRUU Index",
         "XSRET": "BESQER Index",
         "YTW": "BESQYW Index"
@@ -722,6 +757,7 @@
     "EM_IG_QUASISOV": {
         "NAME": "EM IG Quasi-Sov",
         "OAS": "BQIGOAS Index",
+        "OAD": "BQIGTRUU Index|INDEX_OAD_TSY",
         "TRET": "BQIGTRUU Index",
         "XSRET": "BQIGER Index",
         "YTW": "BQIGYW Index"
@@ -729,6 +765,7 @@
     "EM_HY_QUASISOV": {
         "NAME": "EM HY Quasi-Sov",
         "OAS": "BQHYOAS Index",
+        "OAD": "BQHYTRUU Index|INDEX_OAD_TSY",
         "TRET": "BQHYTRUU Index",
         "XSRET": "BQHYER Index",
         "YTW": "BQHYYW Index"
@@ -736,6 +773,7 @@
     "EM_LATAM_SOV": {
         "NAME": "EM LatAm Sov",
         "OAS": "BSSSOAS Index",
+        "OAD": "BSSSTRUU Index|INDEX_OAD_TSY",
         "TRET": "BSSSTRUU Index",
         "XSRET": "BSSSER Index",
         "YTW": "BSSSYW Index"
@@ -743,6 +781,7 @@
     "EM_LATAM_QUASISOV": {
         "NAME": "EM LatAm Quasi-Sov",
         "OAS": "BQAMOAS Index",
+        "OAD": "BQAMTRUU Index|INDEX_OAD_TSY",
         "TRET": "BQAMTRUU Index",
         "XSRET": "BQAMER Index",
         "YTW": "BQAMYW Index"
@@ -750,6 +789,7 @@
     "EM_LATAM_CORP": {
         "NAME": "EM LatAm Corp",
         "OAS": "BUCROAS Index",
+        "OAD": "BUCRTRUU Index|INDEX_OAD_TSY",
         "TRET": "BUCRTRUU Index",
         "XSRET": "BUCRER Index",
         "YTW": "BUCRYW Index"
@@ -757,6 +797,7 @@
     "EM_ASIA_SOV": {
         "NAME": "EM Asia Sov",
         "OAS": "BSSAOAS Index",
+        "OAD": "BSSATRUU Index|INDEX_OAD_TSY",
         "TRET": "BSSATRUU Index",
         "XSRET": "BSSAER Index",
         "YTW": "BSSAYW Index"
@@ -764,6 +805,7 @@
     "EM_ASIA_QUASISOV": {
         "NAME": "EM Asia Quasi-Sov",
         "OAS": "BQASOAS Index",
+        "OAD": "BQASTRUU Index|INDEX_OAD_TSY",
         "TRET": "BQASTRUU Index",
         "XSRET": "BQASER Index",
         "YTW": "BQASYW Index"
@@ -771,6 +813,7 @@
     "EM_ASIA_CORP": {
         "NAME": "EM Asia Corp",
         "OAS": "BUCSOAS Index",
+        "OAD": "BUCSTRUU Index|INDEX_OAD_TSY",
         "TRET": "BUCSTRUU Index",
         "XSRET": "BUCSER Index",
         "YTW": "BUCSYW Index"
@@ -778,6 +821,7 @@
     "EM_EMEA_SOV": {
         "NAME": "EM EMEA Sov",
         "OAS": "BSSEOAS Index",
+        "OAD": "BSSETRUU Index|INDEX_OAD_TSY",
         "TRET": "BSSETRUU Index",
         "XSRET": "BSSEER Index",
         "YTW": "BSSEYW Index"
@@ -785,6 +829,7 @@
     "EM_EMEA_QUASISOV": {
         "NAME": "EM EMEA Quasi-Sov",
         "OAS": "BQEMOAS Index",
+        "OAD": "BQEMTRUU Index|INDEX_OAD_TSY",
         "TRET": "BQEMTRUU Index",
         "XSRET": "BQEMER Index",
         "YTW": "BQEMYW Index"
@@ -792,6 +837,7 @@
     "EM_EMEA_CORP": {
         "NAME": "EM EMEA Corp",
         "OAS": "BUCMOAS Index",
+        "OAD": "BUCMTRUU Index|INDEX_OAD_TSY",
         "TRET": "BUCMTRUU Index",
         "XSRET": "BUCMER Index",
         "YTW": "BUCMYW Index"

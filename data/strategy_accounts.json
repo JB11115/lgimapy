@@ -13,6 +13,7 @@
         "CATBNM",
         "CBNM",
         "CDTBNM",
+        "CFMBNM",
         "DBRBNM",
         "DBRSBNM",
         "DELBNM",
@@ -79,7 +80,8 @@
     ],
     "US Government: Long": [
         "AEELG",
-        "HWMLG"
+        "HWMLG",
+        "UNPLG"
     ],
     "US Long Credit": [
         "AETLD",
@@ -100,6 +102,7 @@
         "CLECLD",
         "CLECOLD",
         "CNPLD",
+        "DCLD",
         "DTELD",
         "ERICLD",
         "FELD",
@@ -155,8 +158,7 @@
         "HARMBNM",
         "NVSBNM",
         "SESLBNM",
-        "SEULBNM",
-        "TRNBNM"
+        "SEULBNM"
     ],
     "US Government": [
         "AHGOVI"
@@ -166,6 +168,7 @@
         "AXPMC",
         "CITMC",
         "CSMC",
+        "DCMC",
         "ERICMC",
         "MYMC",
         "NFLMC",

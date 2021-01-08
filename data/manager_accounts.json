@@ -14,6 +14,7 @@
         "CATBNM",
         "CBNM",
         "CDTBNM",
+        "CFMBNM",
         "COOPBBNM",
         "COOPSBNM",
         "DBRBNM",
@@ -80,7 +81,6 @@
         "TIBNM",
         "TIOXBNM",
         "TRIBNM",
-        "TRNBNM",
         "UL1BNM",
         "UL2BNM",
         "UUBNM",
@@ -94,6 +94,8 @@
         "CITLA",
         "CITMC",
         "CSMC",
+        "DCLD",
+        "DCMC",
         "DUKE-RS",
         "EHGRLA",
         "EHLA",
@@ -136,7 +138,8 @@
         "RLDRSTRP",
         "RLUKIG",
         "RLUKSTRP",
-        "ULSTRP"
+        "ULSTRP",
+        "UNPLG"
     ],
     "Jeff Koch": [
         "AETLD",

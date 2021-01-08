@@ -1268,6 +1268,40 @@
         "in_stats_index": true,
         "special_rules": "~Subsector & ~Ticker"
     },
+    "CONSUMER_NON_CYCLICAL_EX_HEALTHCARE": {
+        "name": "Consumer Non-Cyclical",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SUPERMARKETS",
+            "TOBACCO",
+            "FOOD_AND_BEVERAGE",
+            "CONSUMER_PRODUCTS"
+        ],
+        "in_stats_index": true
+    },
+    "HEALTHCARE_PHARMA": {
+        "name": "Healthcare/Pharma",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE",
+            "HEALTH_INSURANCE",
+            "PHARMACEUTICALS"
+        ],
+        "subsector": [
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector & ~Ticker"
+    },
     "WIRELINES_WIRELESS": {
         "name": "Wirelines/Wireless",
         "OAS": [
@@ -2389,5 +2423,25 @@
             "ZBH"
         ],
         "special_rules": "~Ticker"
+    },
+    "H0A0": {
+        "name": "H0A0",
+        "in_H0A0_index": true
+    },
+    "H4UN": {
+        "name": "H4UN",
+        "in_H4UN_index": true
+    },
+    "HC1N": {
+        "name": "HC1N",
+        "in_HC1N_index": true
+    },
+    "HUC2": {
+        "name": "HUC2",
+        "in_HUC2_index": true
+    },
+    "HUC3": {
+        "name": "HUC3",
+        "in_HUC3_index": true
     }
 }
