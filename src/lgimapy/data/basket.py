@@ -14,6 +14,7 @@ from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import Bond, concat_index_dfs, new_issue_mask, TreasuryCurve
 from lgimapy.utils import (
     check_all_equal,
+    check_market,
     dump_json,
     load_json,
     mkdir,
@@ -60,10 +61,12 @@ def groupby(df, cols):
         "OAS",
         "OASD",
         "OAD",
+        "DTS",
         "DirtyPrice",
         "CleanPrice",
         "PX_Adj_OAS",
         "NumericRating",
+        "AnalystRating",
     ]
     mv_agg_rules = {}
     df_cols = set(df)
@@ -74,6 +77,19 @@ def groupby(df, cols):
                 continue
             df_to_group[f"MV_{col}"] = df["MarketValue"] * df[col]
             mv_agg_rules[f"MV_{col}"] = np.sum
+
+    # Collect columns that should be market value weighted using
+    # previous day's market value and create a mv weighted column
+    # for each column that is present.
+    prev_mv_weight_cols = ["TRet", "XSRet"]
+    prev_mv_agg_rules = {}
+    any_prev_mv_cols_present = len(set(prev_mv_weight_cols) & df_cols)
+    if any_prev_mv_cols_present and "PrevMarketValue" in df_cols:
+        for col in prev_mv_weight_cols:
+            if col not in df_cols:
+                continue
+            df_to_group[f"PMV_{col}"] = df["PrevMarketValue"] * df[col]
+            prev_mv_agg_rules[f"PMV_{col}"] = np.sum
 
     # Combine aggregation rules for all columns.
     agg_rules = {
@@ -87,6 +103,7 @@ def groupby(df, cols):
         "BM_OAD": np.sum,
         "AmountOutstanding": np.sum,
         "MarketValue": np.sum,
+        "PrevMarketValue": np.sum,
         "P_AssetValue": np.sum,
         "BM_AssetValue": np.sum,
         "P_Weight": np.sum,
@@ -97,6 +114,7 @@ def groupby(df, cols):
         "DTS_Diff": np.sum,
         "DTS_Contrib": np.sum,
         **mv_agg_rules,
+        **prev_mv_agg_rules,
     }
     # Apply aggregation of present columns.
     agg_cols = {
@@ -112,6 +130,9 @@ def groupby(df, cols):
     for col in mv_agg_rules.keys():
         gdf[col] = gdf[col] / gdf["MarketValue"]
         col_names[col] = col[3:]
+    for col in prev_mv_agg_rules.keys():
+        gdf[col] = gdf[col] / gdf["PrevMarketValue"]
+        col_names[col] = col[4:]
 
     return gdf.rename(columns=col_names)
 
@@ -127,15 +148,31 @@ class BondBasket:
         DataFrame with each row representing an individual CUSIP.
     name: str, opitional
         Name for basket.
+    market: ``{"US", "EUR", "GBP"}``, default="US"
+        Market to get trade dates for.
+    index: str or None, default='CUSIP'
+        Column to use as index for :attr:`BondBasket.df`.
     constraints: dict, optional
         Key: value pairs of the constraints used in
         :meth:`BondBasket.subset` to create
         current :class:`BondBasket`.
     """
 
-    def __init__(self, df, name=None, constraints=None):
-        self.df = df.set_index("CUSIP", drop=False)
+    def __init__(
+        self,
+        df,
+        name=None,
+        market="US",
+        index="CUSIP",
+        constraints=None,
+    ):
+        self.index = index
+        if index is not None:
+            self.df = df.set_index(index, drop=False)
+        else:
+            self.df = df.copy()
         self.name = "" if name is None else name
+        self.market = check_market(market)
         self._constraints = dict() if constraints is None else constraints
 
     @property
@@ -203,12 +240,8 @@ class BondBasket:
     @lru_cache(maxsize=None)
     def _trade_date_df(self):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
-        return pd.read_csv(
-            root("data/trade_dates.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )
+        fid = root(f"data/{self.market}/trade_dates.parquet")
+        return pd.read_parquet(fid)
 
     @property
     @lru_cache(maxsize=None)
@@ -248,6 +281,7 @@ class BondBasket:
         start=None,
         end=None,
         rating=(None, None),
+        analyst_rating=(None, None),
         currency=None,
         cusip=None,
         isin=None,
@@ -257,6 +291,8 @@ class BondBasket:
         sector=None,
         subsector=None,
         LGIMA_sector=None,
+        BAML_top_level_sector=None,
+        BAML_sector=None,
         drop_treasuries=True,
         drop_municipals=False,
         maturity=(None, None),
@@ -276,6 +312,9 @@ class BondBasket:
         OAD=(None, None),
         OAS=(None, None),
         OASD=(None, None),
+        DTS=(None, None),
+        mod_dur_to_worst=(None, None),
+        mod_dur_to_mat=(None, None),
         liquidity_score=(None, None),
         in_stats_index=None,
         in_returns_index=None,
@@ -322,11 +361,13 @@ class BondBasket:
             * str: ``'HY'``, ``'IG'``, ``'AAA'``, ``'Aa1'``, etc.
             * Tuple[str, str]: ``('AAA', 'BB')`` uses all bonds in
               specified inclusive range.
+        analyst_rating: Tuple[float, float], default=(None, None)
+            Range of analyst ratings to include.
         currency: str, List[str], optional
             Currency or list of currencies to include, default is all.
-        cusip: str, List[str]: optional,
+        cusip: str, List[str]: optional
             CUSIP or list of CUSIPs to include, default is all.
-        isin: str, List[str]: optional,
+        isin: str, List[str]: optional
             ISIN or list of ISINs to include, default is all.
         issuer: str, List[str], optional
             Issuer, or list of issuers to include, default is all.
@@ -340,6 +381,10 @@ class BondBasket:
             to include, default is all.
         subsector: str, List[str], optional
             Subsector or list of subsectors to include, default is all.
+        BAML_top_level_sector: str, List[str], optional
+            BAML top level sector or list of sectors to include in index.
+        BAML_sector: str, List[str], optional
+            BAML sector or list of sectors to include in index.
         LGIMA_sector: str, List[str], optional
             LGIMA custom sector(s) to include, default is all.
         drop_treasuries: bool, default=True
@@ -354,13 +399,13 @@ class BondBasket:
             * 10: 6-11
             * 20: 11-25
             * 30: 25 - 31
-        original_maturity: Tuple[float, float], default=(None, None).
+        original_maturity: Tuple[float, float], default=(None, None)
             Range of original bond maturities to include.
-        clean_price: Tuple[float, float]), default=(None, None).
+        clean_price: Tuple[float, float]), default=(None, None)
             Clean price range of bonds to include, default is all.
-        dirty_price: Tuple[float, float]), default=(None, None).
+        dirty_price: Tuple[float, float]), default=(None, None)
             Dirty price range of bonds to include, default is all.
-        coupon_rate: Tuple[float, float]), default=(None, None).
+        coupon_rate: Tuple[float, float]), default=(None, None)
             Coupon rate range of bonds to include, default is all.
         coupon_type: str or List[str], optional
             Coupon types ``{'FIXED', 'ZERO COUPON', 'STEP CPN', etc.)``
@@ -373,28 +418,36 @@ class BondBasket:
         country_of_risk: str, List[str], optional
             Country or list of countries wherer risk is centered
             to include in index, default is all.
-        amount_outstanding: Tuple[float, float], default=(None, None).
+        amount_outstanding: Tuple[float, float], default=(None, None)
             Range of amount outstanding to include in index (Millions).
-        market_value: Tuple[float, float], default=(None, None).
+        market_value: Tuple[float, float], default=(None, None)
             Range of market values to include in index (Millions).
-        issue_years: Tuple[float, float], default=(None, None).
+        issue_years: Tuple[float, float], default=(None, None)
             Range of years since issue to include in index,
             default is all.
         collateral_type: str, List[str], optional
             Collateral type or list of types to include,
             default is all.
-        yield_to_worst: Tuple[float, float], default=(None, None).
+        yield_to_worst: Tuple[float, float], default=(None, None)
             Range of yields (to worst) to include, default is all.
-        OAD: Tuple[float, float], default=(None, None).
+        OAD: Tuple[float, float], default=(None, None)
             Range of option adjusted durations to include,
             default is all.
-        OAS: Tuple[float, float], default=(None, None).
+        OAS: Tuple[float, float], default=(None, None)
             Range of option adjusted spreads to include,
             default is all.
-        OASD:  Tuple[float, float], default=(None, None).
+        OASD: Tuple[float, float], default=(None, None)
             Range of option adjusted spread durations,
             default is all.
-        liquidity_score: Tuple[float, float], default=(None, None).
+        DTS: Tuple[float, float], default=(None, None)
+            Range of DTS to include, default is all.
+        mod_dur_to_worst: Tuple[float, float], default=(None, None)
+            Range of modified durations to worst date,
+            default is all.
+        mod_dur_to_mat: Tuple[float, float], default=(None, None)
+            Range of modified durations to maturity date,
+            default is all.
+        liquidity_score: Tuple[float, float], default=(None, None)
             Range of liquidty scores to use, default is all.
         in_stats_index: bool, optional
             If ``True``, only include bonds in stats index.
@@ -491,19 +544,8 @@ class BondBasket:
         # Convert rating to range of inclusive ratings.
         if rating == (None, None):
             pass
-        elif isinstance(rating, str):
-            if rating == "IG":
-                rating = (1, 10)
-            elif rating == "HY":
-                rating = (11, 21)
-            else:
-                # Single rating value.
-                rating = (self._ratings[rating], self._ratings[rating])
         else:
-            rating = (
-                self._ratings[str(rating[0])],
-                self._ratings[str(rating[1])],
-            )
+            rating = self.convert_input_ratings(rating)
 
         # Convert all category constraints to lists.
         account = to_list(account, dtype=str, sort=True)
@@ -521,6 +563,10 @@ class BondBasket:
         L3 = to_list(L3, dtype=str, sort=True)
         sector = to_list(sector, dtype=str, sort=True)
         subsector = to_list(subsector, dtype=str, sort=True)
+        BAML_sector = to_list(BAML_sector, dtype=str, sort=True)
+        BAML_top_level_sector = to_list(
+            BAML_top_level_sector, dtype=str, sort=True
+        )
         LGIMA_sector = to_list(LGIMA_sector, dtype=str, sort=True)
 
         # Convert all flag constraints to int.
@@ -581,6 +627,11 @@ class BondBasket:
             "L3": ("L3", L3),
             "sector": ("Sector", sector),
             "subsector": ("Subsector", subsector),
+            "BAML_sector": ("BAMLSector", BAML_sector),
+            "BAML_top_level_sector": (
+                "BAMLTopLevelSector",
+                BAML_top_level_sector,
+            ),
             "LGIMA_sector": ("LGIMASector", LGIMA_sector),
             "market_of_issue": ("MarketOfIssue", market_of_issue),
             "country_of_domicile": ("CountryOfDomicile", country_of_domicile),
@@ -623,12 +674,16 @@ class BondBasket:
             "dirty_price": ("DirtyPrice", dirty_price),
             "coupon_rate": ("CouponRate", coupon_rate),
             "rating": ("NumericRating", rating),
+            "analyst_rating": ("AnalystRating", analyst_rating),
             "amount_outstanding": ("AmountOutstanding", amount_outstanding),
             "market_value": ("MarketValue", market_value),
             "yield_to_worst": ("YieldToWorst", yield_to_worst),
             "OAD": ("OAD", OAD),
             "OAS": ("OAS", OAS),
             "OASD": ("OASD", OASD),
+            "DTS": ("DTS", DTS),
+            "mod_dur_to_worst": ("ModDurtoWorst", mod_dur_to_worst),
+            "mod_dur_to_mat": ("ModDurtoMat", mod_dur_to_mat),
             "liquidity_score": ("LQA", liquidity_score),
         }
         self._range_vals = {}
@@ -774,6 +829,7 @@ class BondBasket:
                 name=name,
                 constraints=subset_index_constraints,
                 market=self.market,
+                index=self.index,
             )
         elif class_name in {"Account", "Strategy"}:
             child_class = getattr(import_module("lgimapy.data"), class_name)
@@ -783,6 +839,7 @@ class BondBasket:
                 date=self.date,
                 constraints=subset_index_constraints,
                 market=self.market,
+                index=self.index,
             )
         else:
             child_class = getattr(import_module("lgimapy.data"), class_name)
@@ -791,6 +848,7 @@ class BondBasket:
                 name=name,
                 constraints=subset_index_constraints,
                 market=self.market,
+                index=self.index,
             )
 
     def _add_category_input(self, input_val, col_name):
@@ -866,3 +924,41 @@ class BondBasket:
         self.df["PX_Adj_OAS"] = self.df["OAS"] - multiplier * (
             self.df["CleanPrice"] - 100
         )
+
+    def cusip_to_bond_name_map(self):
+        """dict[str: str]: Mapping of cusip to formatted bond name."""
+        cols = ["Ticker", "CouponRate", "MaturityDate"]
+        bond_name_map = {}
+        for cusip, ticker, coupon, maturity in self.df[cols].itertuples():
+            if cusip in bond_name_map:
+                continue
+            bond = f"{ticker} {coupon:.2f} `{maturity.strftime('%y')}"
+            bond_name_map[cusip] = bond
+
+        return bond_name_map
+
+    def _convert_single_input_rating(self, rating, nan_val=None):
+        """int: Convert single input rating to numeric rating."""
+        if rating is None:
+            return nan_val
+
+        try:
+            return self._ratings[str(rating)]
+        except KeyError:
+            raise KeyError(f"'{rating}' is not an allowable rating.")
+
+    def convert_input_ratings(self, rating_range):
+        """tuple[int]: Convert input ratings to a numeric ratings."""
+        if isinstance(rating_range, str):
+            if rating_range == "IG":
+                return (1, 10)
+            elif rating_range == "HY":
+                return (11, 21)
+            else:
+                # Single rating provided.
+                rating = self._convert_single_input_rating(rating_range)
+                return (rating, rating)
+        else:
+            min_rating = self._convert_single_input_rating(rating_range[0], 0)
+            max_rating = self._convert_single_input_rating(rating_range[1], 23)
+            return (min_rating, max_rating)
