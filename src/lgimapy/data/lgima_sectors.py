@@ -12,7 +12,7 @@ def save_lgima_sectors(date):
     """
 
     db = Database()
-    df = db.load_market_data(date=(date), clean=False, ret_df=True)
+    df = db.load_market_data(date=(date), clean=False, ret_df=True, local=False)
     basket = BondBasket(df)
 
     industrial_sectors = {
@@ -64,7 +64,10 @@ def save_lgima_sectors(date):
     }
 
     all_sectors = (
-        industrial_sectors | financial_sectors | utility_sectors | non_corp_sectors
+        industrial_sectors
+        | financial_sectors
+        | utility_sectors
+        | non_corp_sectors
     )
 
     # Make a map of each cusip to respective LGIMA sector.
@@ -74,7 +77,9 @@ def save_lgima_sectors(date):
     lgiam_top_level_sector_map = {}
     for sector_key in all_sectors:
         kwargs = {
-            k: v for k, v in indexes[sector_key].items() if k not in unused_constraints
+            k: v
+            for k, v in indexes[sector_key].items()
+            if k not in unused_constraints
         }
         sector = kwargs["name"]
         cusips = basket.subset(**kwargs).cusips
