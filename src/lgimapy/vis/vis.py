@@ -139,6 +139,7 @@ def colors(color):
         "y": "#FDD302",
         "green": "#09933C",
         "g": "#09933C",
+        "ryb": ["#752333", "#0438A3", "#8E5C1D"],
     }[color.lower()]
 
 
@@ -795,7 +796,7 @@ def plot_timeseries(
         if mean_line_kws is not None:
             mean_line_kwargs.update(**mean_line_kws)
         prec = mean_line_kwargs.pop("prec")
-        mean_line_kwargs["label"] = f"Median: {avg:.{prec}{f}}"
+        mean_line_kwargs["label"] = f"Mean: {avg:.{prec}{f}}"
         ax.axhline(avg, **mean_line_kwargs)
 
     if median_line is not False:
