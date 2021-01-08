@@ -24,14 +24,14 @@ def update_cover_page(fid, db):
     fig_dir = root("reports/valuation_pack/fig")
 
     ix_d = {}
-    db = Database()
-    db.load_market_data(local=True, start=db.date("5y"))
+    # db = Database()
+    # db.load_market_data(start=db.date("5y"))
     ix_d["mc"] = db.build_market_index(in_stats_index=True)
     ix_d["lc"] = db.build_market_index(in_stats_index=True, maturity=(10, None))
     ix_d["10y"] = db.build_market_index(in_stats_index=True, maturity=(8, 12))
     ix_d["30y"] = db.build_market_index(in_stats_index=True, maturity=(25, 32))
 
-    update_credit_overview(fig_dir, ix_d, save=False)
+    update_credit_overview(fig_dir, ix_d, save=True)
     # %%
     update_bbb_a_ratios(fig_dir, ix_d)
     update_hy_ig_ratios(fig_dir, ix_d)
@@ -102,7 +102,11 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         """
     )
     vis.plot_timeseries(
-        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
+        oas,
+        start=df.index[0],
+        color="steelblue",
+        label=lbl,
+        ax=axes[0],
     )
 
     vis.plot_timeseries(
@@ -177,7 +181,11 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         """
     )
     vis.plot_timeseries(
-        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
+        oas,
+        start=df.index[0],
+        color="steelblue",
+        label=lbl,
+        ax=axes[0],
     )
 
     vis.plot_timeseries(
