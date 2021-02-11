@@ -19,6 +19,7 @@ from lgimapy.data import (
     update_rating_changes,
     update_strategy_overweights,
     update_hy_index_members,
+    save_bond_wishlist,
 )
 from lgimapy.models.treasury_curve import update_treasury_curve_dates
 
@@ -61,7 +62,7 @@ def main():
     print("Credit Snaphshots Complete\n")
     update_nonfin_spreads()
     print("Updated Nonfin Sub-Rating Spreads\n")
-
+    save_bond_wishlist()
     # update_strategy_overweights()
     # print("Updated Strategy Overweights\n")
 
@@ -82,13 +83,14 @@ def check_datamart_quality(dates):
     date = dates[-1]
     print(date.strftime("%m/%d/%Y"))
     db.load_market_data(date=date, local=False)
+    len(db.df)
     ix = db.build_market_index()
 
     # Make sure data is fully populated.
     n_bonds = len(ix.df)
     change = 0
     while True:
-        if n_bonds > 17_000 and change == 0:
+        if n_bonds > 12_000 and change == 0:
             print("Datamart Quality Confirmed")
             break
         else:
