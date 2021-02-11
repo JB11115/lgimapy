@@ -51,7 +51,7 @@ def get_unique_fid(fid_map):
         n_digits_in_fid = 18
         max_val = int(10 ** n_digits_in_fid - 1)
         fid_val = np.random.randint(0, max_val, dtype="int64")
-        fid = f"{str(fid_val).zfill(n_digits_in_fid)}.csv"
+        fid = f"{str(fid_val).zfill(n_digits_in_fid)}.parquet"
         return fid
 
     while True:
@@ -380,11 +380,11 @@ class Index(BondBasket):
             difference values.
         """
         key = "|".join([f"{k}: {v}" for k, v in self.constraints.items()])
-        json_dir = root("data/synthetic_difference/file_maps")
-        history_dir = root("data/synthetic_difference/history")
+        json_dir = root("data/US/synthetic_difference/file_maps")
+        history_dir = root("data/US/synthetic_difference/history")
         mkdir(json_dir)
         mkdir(history_dir)
-        json_fid = f"synthetic_difference/file_maps/{col}"
+        json_fid = f"US/synthetic_difference/file_maps/{col}"
         fid_map = load_json(json_fid, empty_on_error=True)
         try:
             # Find fid if key exists in file.
@@ -401,17 +401,8 @@ class Index(BondBasket):
         else:
             fid = history_dir / filename
             try:
-                history = (
-                    pd.read_csv(
-                        fid,
-                        index_col=0,
-                        parse_dates=True,
-                        infer_datetime_format=True,
-                    )
-                    .iloc[:, 0]
-                    .to_dict()
-                )
-            except FileNotFoundError:
+                history = pd.read_parquet(fid).squeeze().to_dict()
+            except (FileNotFoundError, OSError):
                 history = {}
             return fid, history
 
@@ -437,7 +428,7 @@ class Index(BondBasket):
         Returns
         -------
         pd.Series
-            Series of sythetically differenced market value
+            Series of synthetically differenced market value
             weighting for specified column.
         """
         self._get_prev_market_value_history()
@@ -482,8 +473,8 @@ class Index(BondBasket):
 
         if not force_calculations:
             # Save synthetic difference history to file.
-            new_history = pd.DataFrame(pd.Series(saved_history))
-            new_history.to_csv(fid)
+            new_history = pd.Series(saved_history, name="-").to_frame()
+            new_history.to_parquet(fid)
 
         # pd.DataFrame(calculated_s).to_csv(fid)
         # Add the the cumulative synthetic differences to the current
@@ -1344,28 +1335,6 @@ class Index(BondBasket):
             self.df[col] = self.df[col].cat.add_categories(new_cats)
             self.df[col] = self.df[col].fillna(self.df["CUSIP"].map(bbg_d))
 
-    def _add_hy_index_flags(self):
-        """Add index flags for HY indexes to :attr:`df`."""
-        ix_date_isins = self.df.set_index("Date")["ISIN"]
-        start = ix_date_isins.index[0]
-        end = ix_date_isins.index[-1]
-
-        indexes = ["H4UN", "H0A0", "HC1N", "HUC2", "HUC3"]
-        for index in indexes:
-            # Load flag data and subset to correct dates.
-            fid = root(f"data/index_members/{index}.parquet")
-            flag_df = pd.read_parquet(fid)
-            flag_d = flag_df[
-                (flag_df.index >= start) & (flag_df.index <= end)
-            ].T.to_dict()
-            flags = np.zeros(len(ix_date_isins))
-            for i, (date, isin) in enumerate(ix_date_isins.items()):
-                try:
-                    flags[i] = flag_d[date].get(isin, 0)
-                except KeyError:
-                    flags[i] = 0
-            self.df[f"{index}Flag"] = flags.astype("int8")
-
 
 # %%
 def main():
@@ -1380,20 +1349,9 @@ def main():
     vis.style()
     db = Database()
     db.display_all_columns()
-    # db.load_market_data(start="5/1/2019", end="12/1/2019", local=True)
-    # db.load_market_data(start="7/1/2020", local=True)
-
-    db.load_market_data(start="12/10/2020")
-    db.add_hy_index_flags()
-    self = db.build_market_index()
-
     # %%
-    ix_full = db.build_market_index(in_H4UN_index=True)
-    tickers = ix_full.tickers[5:15]
-    ix = db.build_market_index(in_H4UN_index=True, ticker=tickers)
 
-    # %%
-    issuer_ix = ix.issuer_index()
-    issuer_ix.accumulate_individual_total_returns().sort_index()
+    db.load_market_data(start="1/1/2020")
+    self = db.build_market_index(in_stats_index=True, maturity=(5, 7))
 
     # %%
