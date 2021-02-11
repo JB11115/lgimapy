@@ -19,7 +19,7 @@ def update_voltility_model():
     db = Database()
     start = "1/1/2010"
     y_var = "US_IG_10+"
-    x_vars = ["VIX_3M", "VIX_6M", "VIX_9M", "OIL_VOL", "VVIX", "MOVE"]
+    x_vars = ["VIX", "VIX_3M", "VIX_9M", "OIL_VOL", "VVIX", "MOVE"]
 
     y_temp = db.load_bbg_data(y_var, "OAS", start=start)
     x_temp = db.load_bbg_data(x_vars, "price", start=start)
@@ -45,7 +45,8 @@ def update_voltility_model():
         ylabel="OAS (bp)",
         ax=axes[0],
     )
-    axes[0].legend(fancybox=True, shadow=True)
+    axes[0].legend(fancybox=True, shadow=True, loc="upper left")
+    axes[0].set_ylim(None, 250)
     axes[1].fill_between(
         y.index,
         0,
@@ -113,7 +114,6 @@ def find_best_model():
     res_df = (
         pd.DataFrame(d).sort_values("adj_R^2", ascending=False).reset_index()
     )
-    res.summary()
     x_var_best = res_df["X"][0].split(", ")
     return x_var_best
 
