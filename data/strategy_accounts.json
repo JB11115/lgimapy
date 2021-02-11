@@ -26,6 +26,7 @@
         "GSK3BNM",
         "GSKUSBNM",
         "HJBNM",
+        "HOFBNM",
         "HONBNM",
         "HPBNM",
         "HPDBNM",
@@ -48,6 +49,7 @@
         "OBSBNM",
         "PCBNM",
         "PRLBNM",
+        "PROVBNM",
         "PWCBNM",
         "ROLLSBNM",
         "RRHBNM",
@@ -123,6 +125,7 @@
         "ONCRLD",
         "P-LD",
         "PAHLD",
+        "PBILD",
         "PCALD",
         "PFELD",
         "PGELD",
@@ -316,7 +319,8 @@
         "RLUKSTRP"
     ],
     "US Intermediate Credit": [
-        "CNPIC"
+        "CNPIC",
+        "PBIIC"
     ],
     "Barclays-Russell LDI Custom - DE": [
         "DUKE-RS"

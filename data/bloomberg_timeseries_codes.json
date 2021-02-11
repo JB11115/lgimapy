@@ -496,20 +496,22 @@
     "CDX_IG": {
         "NAME": "CDX IG",
         "OAS": "CDX IG CDSI GEN 5Y Corp",
-        "TRET": "LX01TRUU Index",
-        "XSRET": "UISYMI5E Index"
+        "TRET": "CDXTIL15 Index",
+        "XSRET": "UISYMI5E Index",
+        "PRICE": "CDX IG CDSI GEN 5Y PRC Corp"
     },
     "CDX_HY": {
         "NAME": "CDX HY",
         "OAS": "CDX HY CDSI GEN 5Y SPRD Corp",
-        "TRET": "LX07TRUU Index",
+        "TRET": "CDXTHL15 Index",
         "XSRET": "UISYMH5E Index",
         "PRICE": "CDX HY CDSI GEN 5Y PRC Corp"
     },
     "CDX_EM": {
         "NAME": "CDX EM",
         "OAS": "CDX EM CDSI GEN 5Y SPRD Corp",
-        "TRET": "LX10TRUU Index",
+        "TRET": "CDXTEL15 Index",
+        "XSRET": "UISYME5E Index",
         "PRICE": "CDX EM CDSI GEN 5Y PRC Corp"
     },
     "ITRAXX_MAIN": {
