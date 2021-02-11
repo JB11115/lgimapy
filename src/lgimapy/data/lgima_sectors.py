@@ -2,7 +2,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from lgimapy.data import Database, BondBasket
-from lgimapy.utils import dump_json, load_json, mkdir, root
+from lgimapy.utils import dump_json, mkdir, root
 
 # %%
 def save_lgima_sectors(date):
@@ -71,25 +71,20 @@ def save_lgima_sectors(date):
     )
 
     # Make a map of each cusip to respective LGIMA sector.
-    indexes = load_json("indexes")
-    unused_constraints = {"in_stats_index", "maturity"}
     lgima_sector_map = {}
     lgiam_top_level_sector_map = {}
-    for sector_key in all_sectors:
-        kwargs = {
-            k: v
-            for k, v in indexes[sector_key].items()
-            if k not in unused_constraints
-        }
-        sector = kwargs["name"]
+    for sector in all_sectors:
+        kwargs = db.index_kwargs(
+            sector, unused_constraints=["in_stats_index", "maturity"]
+        )
         cusips = basket.subset(**kwargs).cusips
         for cusip in cusips:
-            lgima_sector_map[cusip] = sector
-            if sector_key in industrial_sectors:
+            lgima_sector_map[cusip] = kwargs["name"]
+            if sector in industrial_sectors:
                 lgiam_top_level_sector_map[cusip] = "Industrials"
-            elif sector_key in financial_sectors:
+            elif sector in financial_sectors:
                 lgiam_top_level_sector_map[cusip] = "Financials"
-            elif sector_key in utility_sectors:
+            elif sector in utility_sectors:
                 lgiam_top_level_sector_map[cusip] = "Utilities"
             else:
                 lgiam_top_level_sector_map[cusip] = "Non-Corp"
