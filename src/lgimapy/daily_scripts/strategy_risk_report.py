@@ -15,6 +15,7 @@ def main():
     db.update_portfolio_account_data()
     date = db.date("today")
     prev_date = db.date("1w")
+    # prev_date = pd.to_datetime("1/7/2021")
 
     # date = db.date("MONTH_START")
     # prev_date = db.date("MONTH_START", "7/15/2020")
@@ -24,7 +25,7 @@ def main():
 
     strategy = "US Long Credit"
     strategy = "US Long Corporate"
-    strategy = "US Intermediate Credit"
+    strategy = "US Long Credit Plus"
 
     n_table_rows = 10
 
@@ -76,12 +77,32 @@ def main():
     fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
     # fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q3_2020"
     doc = Document(fid, path=pdf_path, fig_dir=True)
-    doc.add_preamble(margin=1, bookmarks=True, bar_size=7)
+    doc.add_preamble(
+        bookmarks=True,
+        bar_size=7,
+        margin={
+            "left": 0.5,
+            "right": 0.5,
+            "top": 0.3,
+            "bottom": 0.2,
+            "paperheight": 29.5,
+        },
+        header=doc.header(
+            left="Strategy Risk Report",
+            right=f"EOD {date.strftime('%B %#d, %Y')}",
+        ),
+        footer=doc.footer(logo="LG_umbrella"),
+    )
     res = []
 
     for strategy in tqdm(strategies):
         res.append(
-            get_single_latex_risk_page(strategy, date, prev_date, pdf_path,)
+            get_single_latex_risk_page(
+                strategy,
+                date,
+                prev_date,
+                pdf_path,
+            )
         )
 
     df = (
@@ -266,9 +287,6 @@ def get_single_latex_risk_page(
 
     # Build bond change in overweight table.
     n = n_table_rows
-    curr_strat.bond_overweights(ow_metric).rename("curr")
-    prev_strat.bond_overweights(ow_metric).rename("prev")
-
     bond_ow_df = pd.concat(
         [
             curr_strat.bond_overweights(ow_metric).rename("curr"),
