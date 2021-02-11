@@ -58,7 +58,7 @@ class XSRETPerformance:
         required_dates = set(
             self.db.trade_dates(start=self.predict_from_date, end=date)
         )
-        if not required_dates < set(self.db._loaded_dates):
+        if not required_dates < set(self.db.loaded_dates):
             # Database is not loaded with all required dates.
             raise IndexError("Database does not have required dates loaded")
 
@@ -158,7 +158,8 @@ class XSRETPerformance:
             fcast_df = pd.concat(
                 (
                     date_df.loc[
-                        date_df["CUSIP"].isin(bonds_to_forecast), cols,
+                        date_df["CUSIP"].isin(bonds_to_forecast),
+                        cols,
                     ],
                     xsrets,
                     weights.rename("weight"),
