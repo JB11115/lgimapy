@@ -12,12 +12,119 @@ from lgimapy.utils import root, mkdir
 # %%
 
 
-def get_raw_data(market):
+def build_issuer_change_report():
+    # ---------------------------------- #
+    sort_column = "month"
+    tights_date = pd.to_datetime("12/30/2019")
+    tights_date_label = "$\\Delta$YE'19"
+    # tights_date_label = None
+    # ---------------------------------- #
+
+    n_cols = 4
+    col_length_thresh = 100
+
+    markets = ["US", "EUR", "GBP"]
+    markets = ["US"]
+    maturities = ["10y", "30y"]
+    units = ["abs", "pct"]
+    page_types = ["nonfin", "fin"]
+
+    market = "US"
+    maturity = "30y"
+    unit = "abs"
+    page = "nonfin"
+
+    # Build date formatting func for column labels.
+    if tights_date_label is None:
+        date_fmt_d = {}
+    else:
+        date_fmt_d = {tights_date: tights_date_label}
+    date_formatter = lambda x: date_fmt_d.get(
+        x, f"$\\Delta${x.strftime('%#m/%d')}"
+    )
+
+    today = Database(market="US").date("today")
+    fid = f"{today.strftime('%Y_%m_%d')}_Issuer_Change_Report"
+    doc = Document(fid, path="reports/issuer_change")
+    doc.add_preamble(
+        margin={
+            "paperheight": 30,
+            "left": 0.5,
+            "right": 0.5,
+            "top": 0.5,
+            "bottom": 0.2,
+        },
+        bookmarks=True,
+        ignore_bottom_margin=True,
+        header=doc.header(
+            left="Issuer Change Report",
+            right=f"EOD {today.strftime('%B %#d, %Y')}",
+        ),
+        footer=doc.footer(logo="LG_umbrella"),
+    )
+
+    page_names = {
+        "nonfin": "Non-Financials",
+        "fin": "Financials, Utilities, Non Corp",
+    }
+    excel = pd.ExcelWriter(doc.path / "Issuer_Change_Data.xlsx")
+    # %%
+    for market in markets:
+        doc.add_section(market)
+        data_d, dates_d = get_raw_data(market, tights_date)
+        for maturity in maturities:
+            for unit in units:
+                doc.add_subsection(f"{maturity} {unit} change")
+                for page in page_types:
+                    # Get table layout for current page.
+                    doc.add_text(f"\\textbf{{{page_names[page]}}}")
+                    table_layout, sector_dfs = get_table_layout(
+                        data_d,
+                        market,
+                        maturity,
+                        unit,
+                        page,
+                        n_cols,
+                        col_length_thresh,
+                    )
+                    # Save data to excel.
+                    clean_data = pd.concat(sector_dfs.values())
+                    clean_data.to_excel(
+                        excel, sheet_name=f"{market}_{maturity}"
+                    )
+                    # Format PDF page.
+                    midrule = calculate_midrule(
+                        clean_data, sort_column, market, unit, page
+                    )
+                    columns = doc.add_subfigures(n=4, valign="t")
+                    for i, (col, column_edit) in enumerate(
+                        zip(table_layout.columns, columns)
+                    ):
+                        with doc.start_edit(column_edit):
+                            for table_name in table_layout[col].dropna():
+                                sector_df = sector_dfs[table_name]
+                                table = format_table(
+                                    sector_df,
+                                    table_name,
+                                    unit,
+                                    sort_column,
+                                    dates_d,
+                                    midrule,
+                                    date_formatter,
+                                )
+                                doc.add_table(table)
+                    doc.add_pagebreak()
+
+    add_methodology_section(doc)
+    doc.save(save_tex=False)
+    excel.save()
+
+
+def get_raw_data(market, tights_date):
     db = Database(market=market)
 
     # Make dict of dates to analyze and then choose nearest traded dates.
     today = db.date("today")
-    tights_date = "12/30/2020"
     mtd_date = db.date("MTD")
     if today.day < 10:
         mtd_date = db.date("MTD", mtd_date)
@@ -63,6 +170,7 @@ def get_raw_data(market):
             df[f"{date}_abs_change"] = df["OAS"] - df[date]
             df[f"{date}_pct_change"] = df["OAS"] / df[date] - 1
         df_d[maturity] = df.copy()
+
     return df_d, dates
 
 
@@ -229,13 +337,13 @@ def optimize_table_layout(sector_length_d, n_cols, col_length_thresh):
     return column_tables_df
 
 
-def format_table(df, sector, unit, sort_col, dates, midrule):
+def format_table(df, sector, unit, sort_col, dates, midrule, date_formatter):
     periods = ["week", "month", "tights"]
     cols = ["OAS", "DTS", *[f"{period}_{unit}_change" for period in periods]]
     new_cols = [
         "OAS",
         "DTS",
-        *[f"$\\Delta${dates[period].strftime('%#m/%d')}" for period in periods],
+        *[date_formatter(dates[period]) for period in periods],
     ]
     new_sort_col = new_cols[periods.index(sort_col) + 2]
     table = df.sort_values(f"{sort_col}_{unit}_change", ascending=False).copy()
@@ -315,8 +423,9 @@ def add_methodology_section(doc):
         (market value weighted) percentage of the overall sector.
         As such, a large issuer with high DTS will have a large
         sector DTS \\% in the table.
-        Due to the market value weighting, a large issuer with low DTS will
-        tend to have a higher sector DTS \\% than a small isser with high DTS.
+        Due to the market value weighting, a large issuer with
+        low DTS will tend to have a higher sector DTS \\% than
+        a small issuer with high DTS.
 
         \\item
         Bold tickers represented A-rated issuers
@@ -333,112 +442,6 @@ def add_methodology_section(doc):
     )
 
 
-def build_issuer_change_report():
-    sort_column = "month"
-
-    markets = ["US", "EUR", "GBP"]
-    markets = ["US"]
-    maturities = ["10y", "30y"]
-    units = ["abs", "pct"]
-    page_types = ["nonfin", "fin"]
-    n_cols = 4
-    col_length_thresh = 100
-
-    market = "US"
-    maturity = "30y"
-    unit = "abs"
-    page = "nonfin"
-
-    today = Database(market=market).date("today").strftime("%Y_%m_%d")
-    fid = f"{today}_Issuer_Change_Report"
-    doc = Document(fid, path="reports/issuer_change")
-    doc.add_preamble(
-        margin={
-            "paperheight": 30,
-            "left": 0.5,
-            "right": 0.5,
-            "top": 0.5,
-            "bottom": 0.2,
-        },
-        bookmarks=True,
-        ignore_bottom_margin=True,
-    )
-    # Create fancy footer.
-    footer = """
-        \\fancyhf{}
-        \\setlength{\\headheight}{2cm}
-        \\setlength\\footskip{0pt}
-        \\fancyhead[L]{Issuer Change Report}
-        \\fancyhead[R]{\\today}
-        \\fancyfoot[L]{\\thepage}
-        \\fancyfoot[R]{
-        	\\raisebox{2cm}[0pt][0pt]
-        	{\\includegraphics[width=0.065\\textwidth]
-            {"X:/Credit Strategy/lgimapy/fig/logos/LG_umbrella"}}
-        }
-        \pagestyle{fancy}
-        """
-    doc.preamble = "\n\n".join([doc.preamble, footer])
-    page_names = {
-        "nonfin": "Non-Financials",
-        "fin": "Financials, Utilities, Non Corp",
-    }
-    excel = pd.ExcelWriter(doc.path / "Issuer_Change_Data.xlsx")
-    # %%
-    for market in markets:
-        doc.add_section(market)
-        data_d, dates_d = get_raw_data(market)
-        for maturity in maturities:
-            for unit in units:
-                doc.add_subsection(f"{maturity} {unit} change")
-                for page in page_types:
-                    # Get table layout for current page.
-                    doc.add_text(f"\\textbf{{{page_names[page]}}}")
-                    table_layout, sector_dfs = get_table_layout(
-                        data_d,
-                        market,
-                        maturity,
-                        unit,
-                        page,
-                        n_cols,
-                        col_length_thresh,
-                    )
-                    # Save data to excel.
-                    clean_data = pd.concat(sector_dfs.values())
-                    clean_data.to_excel(
-                        excel, sheet_name=f"{market}_{maturity}"
-                    )
-                    # Format PDF page.
-                    midrule = calculate_midrule(
-                        clean_data, sort_column, market, unit, page
-                    )
-                    columns = doc.add_subfigures(n=4, valign="t")
-                    for i, (col, column_edit) in enumerate(
-                        zip(table_layout.columns, columns)
-                    ):
-                        with doc.start_edit(column_edit):
-                            for table_name in table_layout[col].dropna():
-                                sector_df = sector_dfs[table_name]
-                                table = format_table(
-                                    sector_df,
-                                    table_name,
-                                    unit,
-                                    sort_column,
-                                    dates_d,
-                                    midrule,
-                                )
-                                doc.add_table(table)
-                    doc.add_pagebreak()
-
-    add_methodology_section(doc)
-    doc.save(save_tex=False)
-    excel.save()
-
-
 # %%
 if __name__ == "__main__":
     build_issuer_change_report()
-
-    market
-    maturity
-    df_d = data_d.copy()
