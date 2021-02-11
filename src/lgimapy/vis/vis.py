@@ -796,7 +796,9 @@ def plot_timeseries(
         if mean_line_kws is not None:
             mean_line_kwargs.update(**mean_line_kws)
         prec = mean_line_kwargs.pop("prec")
-        mean_line_kwargs["label"] = f"Mean: {avg:.{prec}{f}}"
+        if "label" not in mean_line_kwargs:
+            mean_line_kwargs["label"] = f"Mean: {avg:.{prec}{f}}"
+
         ax.axhline(avg, **mean_line_kwargs)
 
     if median_line is not False:
@@ -810,7 +812,8 @@ def plot_timeseries(
         if median_line_kws is not None:
             median_line_kwargs.update(**median_line_kws)
         prec = median_line_kwargs.pop("prec")
-        median_line_kwargs["label"] = f"Median: {med:.{prec}{f}}"
+        if "label" not in median_line_kwargs:
+            median_line_kwargs["label"] = f"Median: {med:.{prec}{f}}"
         ax.axhline(med, **median_line_kwargs)
 
     if pct_lines:
