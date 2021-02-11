@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime as dt
 from dateutil.relativedelta import relativedelta
 
@@ -31,9 +32,7 @@ def main():
         "US High Yield",
     }
 
-    strategies = []
-    extensions = []
-    managers = []
+    d = defaultdict(list)
     for strategy, accounts in tqdm(strategy_accounts.items()):
         if strategy in stragies_with_no_benchmark:
             continue
@@ -42,26 +41,25 @@ def main():
             try:
                 df_ret = db.load_portfolio(universe="returns", **kwargs)
                 df_stats = db.load_portfolio(universe="stats", **kwargs)
-            except ValueError:
+            except (ValueError):
+                # except (ValueError, pd.io.sql.DatabaseError):
                 continue
             else:
-                strategies.append(strategy.replace("_", " "))
-                managers.append(account_manager[account])
-                extensions.append(oad(df_stats, strategy) - oad(df_ret))
+                pm = account_manager[account]
+                next_oad, next_dts = port_metrics(df_stats, strategy)
+                curr_oad, curr_dts = port_metrics(df_ret)
+
+                d["PM"].append(pm)
+                d["Strategy"].append(strategy.replace("_", " "))
+                d["last_name"].append(pm.split()[1])
+                d["OAD"].append(next_oad - curr_oad)
+                d["DTS"].append(next_dts - curr_dts)
                 break
 
-    last_names = [name.split()[1] for name in managers]
     ext_df = (
-        pd.DataFrame(
-            {
-                "PM": managers,
-                "Strategy": strategies,
-                "Extension": extensions,
-                "last_names": last_names,
-            }
-        )
-        .sort_values(["last_names", "Strategy"])
-        .drop("last_names", axis=1)
+        pd.DataFrame(d)
+        .sort_values(["last_name", "Strategy"])
+        .drop("last_name", axis=1)
         .reset_index(drop=True)
     )
 
@@ -78,27 +76,44 @@ def main():
     ext_df["PM"] = unique_vals
 
     midrule_locs = [i for i, v in enumerate(unique_vals) if v != " "][1:]
-    fid = f"month_end_extensions_{dt.today().strftime('%Y-%m-%d')}"
+    today = dt.today()
+    fid = f"month_end_extensions_{today.strftime('%Y-%m-%d')}"
     doc = Document(fid, path="reports/month_end_extensions")
-    doc.add_preamble(ignore_bottom_margin=True)
+    doc.add_preamble(
+        ignore_bottom_margin=True,
+        margin={
+            "left": 0.5,
+            "right": 0.5,
+            "top": 0.5,
+            "bottom": 0.2,
+        },
+        header=doc.header(
+            left="Month End Extensions",
+            right=today.strftime("%B %Y"),
+        ),
+        footer=doc.footer(logo="LG_umbrella"),
+    )
     doc.add_table(
         ext_df,
-        prec=3,
+        prec={"OAD": "2f", "DTS": "0f"},
         hide_index=True,
-        col_fmt="llrc",
+        col_fmt="llrc|c",
         midrule_locs=midrule_locs,
         alternating_colors=(None, "lightgray"),
     )
     doc.save()
 
 
-def oad(df, strategy=None):
+def port_metrics(df, strategy=None):
     """
     Perform special rules for specifying return index
-    for next month from current stats index.
+    for next month from current stats index, and return
+    OAD and DTS for benchmark portfolio.
     """
     if strategy is None:
-        return np.sum(df["BM_OAD"])
+        bm_oad = df["BM_OAD"].sum()
+        bm_dts = (df["BM_OASD"] * df["OAS"]).sum()
+        return bm_oad, bm_dts
 
     maturity_min = {
         "US Credit ex Subordinated 5+": 5,
@@ -150,6 +165,7 @@ def oad(df, strategy=None):
         "BofA ML 10+ Year AAA-A US Corp Const": 10,
     }
     df["DataMart_OAD"] = df["BM_OAD"] / df["BM_Weight"]
+    df["DataMart_OASD"] = df["BM_OASD"] / df["BM_Weight"]
     df["MaturityMonth"] = pd.to_datetime(
         df["MaturityDate"], errors="coerce"
     ).dt.to_period("M")
@@ -164,7 +180,13 @@ def oad(df, strategy=None):
         * next_month_ret_df["BM_Weight"]
         / next_month_ret_df["BM_Weight"].sum()
     ).sum()
-    return bm_oad
+    bm_dts = (
+        next_month_ret_df["OAS"]
+        * next_month_ret_df["DataMart_OASD"]
+        * next_month_ret_df["BM_Weight"]
+        / next_month_ret_df["BM_Weight"].sum()
+    ).sum()
+    return bm_oad, bm_dts
 
 
 # %%
