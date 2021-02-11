@@ -9,9 +9,12 @@ from lgimapy.latex import Document
 vis.style()
 db = Database()
 doc = Document("HY_Valuations", path="reports/HY", fig_dir=True)
+date = db.date("today").strftime("%B %#d, %Y")
 doc.add_preamble(
     margin={"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2},
     table_caption_justification="c",
+    header=doc.header(left="HY Valuations", right=f"EOD {date}"),
+    footer=doc.footer(logo="LG_umbrella"),
 )
 
 start = "1/1/2020"
@@ -113,6 +116,7 @@ for section, ix in ixs.items():
     doc.add_table(
         table,
         col_fmt="l|cc|cc|cc",
+        font_size="scriptsize",
         prec=prec,
         multi_row_header=True,
         caption=cap,
@@ -129,5 +133,5 @@ for section, ix in ixs.items():
     df.to_excel(writer, sheet_name=section)
 
 # %%
-doc.save()
+doc.save(save_tex=True)
 writer.save()
