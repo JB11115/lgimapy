@@ -10,7 +10,7 @@ from lgimapy.latex.table import (
     latex_table,
 )
 from lgimapy.latex.figure import latex_figure
-from lgimapy.latex.document import Document
+from lgimapy.latex.document import Document, merge_pdfs
 
 
 __all__ = [
@@ -23,4 +23,5 @@ __all__ = [
     "latex_table",
     "latex_figure",
     "Document",
+    "merge_pdfs",
 ]

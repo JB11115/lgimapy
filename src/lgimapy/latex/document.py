@@ -6,6 +6,8 @@ import time
 from inspect import cleandoc
 from pathlib import Path
 
+import pdfrw
+
 import lgimapy.vis as vis
 from lgimapy.latex import latex_array, latex_matrix, latex_table, latex_figure
 from lgimapy.utils import mkdir, root, to_list
@@ -501,6 +503,8 @@ class Document(LatexScript):
         font_size=12,
         margin=None,
         margin_unit="cm",
+        header=None,
+        footer=None,
         bookmarks=False,
         page_numbers=False,
         ignore_bottom_margin=False,
@@ -527,6 +531,10 @@ class Document(LatexScript):
             *``margin={'top': 1, 'bottom': 0.5, 'left': 0.3, 'right': 0.3}``
         margin_unit: str, default='cm'
             Unit for margin size(s).
+        header: :attr:`header`, optional
+            Header kwargs.
+        footer: :attr:`footer`, optional
+            Footer kwargs.
         bookmarks: bool, default=False,
             If ``True`` automatically create bookmarks for chapters,
             sections, and subsections. Open the bookmark toolbar
@@ -599,6 +607,15 @@ class Document(LatexScript):
         else:
             all_packages = default_packages
         use_packages = ",\n\t\t".join(all_packages)
+
+        if header is not None or footer is not None:
+            header = "" if header is None else header
+            footer = "" if footer is None else footer
+            header_footer = "\n".join(
+                ("\\fancyhf{}", header, footer, "\\pagestyle{fancy}")
+            )
+        else:
+            header_footer = ""
 
         self.preamble = cleandoc(
             f"""
@@ -686,8 +703,31 @@ class Document(LatexScript):
 
             {page_numbers}
             {ignore_bmargin}
+            {header_footer}
             """
         )
+
+    def header(self, left=None, right=None, height=2):
+        """str: formatted header."""
+        header = f"\\setlength{{\\headheight}}{{{height}cm}}"
+        if left is not None:
+            newline = f"\\fancyhead[L]{{{left}}}"
+            header = "\n".join((header, newline))
+        if right is not None:
+            newline = f"\\fancyhead[R]{{{right}}}"
+            header = "\n".join((header, newline))
+        return header
+
+    def footer(self, logo, height=2, width=0.065):
+        """str: formatted footer"""
+        return f"""
+            \\setlength\\footskip{{0pt}}
+            \\fancyfoot[R]{{
+            	\\raisebox{{{height}cm}}[0pt][0pt]
+            	{{\\includegraphics[width={width}\\textwidth]
+                {{"X:/Credit Strategy/lgimapy/fig/logos/{logo}"}}}}
+            }}
+            """
 
     def add_bibliography(self):
         """TODO"""
@@ -885,3 +925,81 @@ class Page(LatexScript):
     def __init__(self, path, fig_dir, tab_indent):
         super().__init__(path=path, fig_dir=fig_dir, tab_indent=tab_indent)
         self.body = ""
+
+
+# %%
+def pdf_fid(fid):
+    """
+    Convert input fid into a PDF fid if necessary.
+
+    Parameters
+    ----------
+    fid: Path or str
+        Input fid.
+
+    Returns
+    -------
+    Path or str:
+        PDF fid.
+    """
+    if isinstance(fid, str):
+        if fid.endswith(".pdf"):
+            return fid
+        else:
+            return f"{fid}.pdf"
+    elif isinstance(fid, Path):
+        if fid.stem.endswith(".pdf"):
+            return fid
+        else:
+            return fid.with_suffix(".pdf")
+
+
+def merge_pdfs(merged_fid, fids, path=None, read_path=None, write_path=None):
+    """
+    Merge PDF files together and save to a new combined PDF.
+
+    Parameters
+    ----------
+    merged_fid: Path or str
+        Filename for merged PDF.
+    fids: List[Path] or List[str]
+        Filenames for individual PDFs to merge.
+    path: Path, optional
+        Universal path for reading and writing PDFs.
+    old_path: Path, optional
+        Path for reading individual PDFs to merge.
+    new_path: Path, optional
+        Path for writing merged PDF.
+    """
+    # Format fids to individual PDFs.
+    if path is None and read_path is None:
+        pdf_fids = [pdf_fid(fid) for fid in fids]
+    elif read_path is not None:
+        if isinstance(read_path, str):
+            read_path = root(read_path)
+        pdf_fids = [read_path / pdf_fid(fid) for fid in fids]
+    elif path is not None:
+        if isinstance(path, str):
+            path = root(path)
+        pdf_fids = [path / pdf_fid(fid) for fid in fids]
+
+    # Format fid to merged PDF.
+    if path is None and write_path is None:
+        merged_pdf_fid = pdf_fid(merged_fid)
+    elif write_path is not None:
+        if isinstance(write_path, str):
+            write_path = root(write_path)
+        merged_pdf_fid = write_path / pdf_fid(merged_fid)
+    elif path is not None:
+        if isinstance(path, str):
+            path = root(path)
+        merged_pdf_fid = path / pdf_fid(merged_fid)
+
+    # Merge and write new PDF.
+    pdf_writer = pdfrw.PdfWriter()
+    for fid in pdf_fids:
+        pdf = pdfrw.PdfReader(fid)
+        pdf_writer.addpages(pdf.pages)
+    for __ in range(2):
+        # Run twice to properly create transparent images.
+        pdf_writer.write(merged_pdf_fid)
