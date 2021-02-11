@@ -52,7 +52,7 @@ def update_market_review(fid):
         adjust=True,
         caption="\\large Commodities \\normalfont - Price (\$)",
         col_fmt="lrclrr",
-        midrule_locs=db.bbg_names("OIL"),
+        midrule_locs=db.bbg_names(["OIL", "USD_TW"]),
         prec={
             "$\\Delta$ 1M (%)": "1%",
             "$\\Delta$ YTD (%)": "1%",
@@ -188,7 +188,7 @@ def calculate_market_review_tables():
         s = df_sec[col].dropna()
         d["Name"].append(db.bbg_names(col))
         d["Last"].append(f"{s[-1]:,.0f}")
-        d["1Y Range"].append(f"({np.min(s):.0f}, {np.max(s):.0f})")
+        d["1Y Range"].append(f"({np.min(s):,.0f}, {np.max(s):,.0f})")
         last_year = s[
             s.index >= nearest_date(db.date("1Y"), s.index, after=False)
         ]
@@ -452,6 +452,7 @@ def secuirites():
             "SILVER",
             "COPPER",
             "IRON",
+            "USD_TW",
             "BITCOIN",
         ],
         "credit": [
