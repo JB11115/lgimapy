@@ -793,23 +793,24 @@ def main():
     strat_name = "US Long Credit"
     strat_name = "Liability Aware Long Duration Credit"
     # strat_name = "US Long A+ Credit"
-    strat_name = "US Long Credit - Custom"
-    # strat_name = "US High Yield"
+    strat_name = "US Long Credit Plus"
+    strat_name = "Custom RBS"
 
     # %%
     strat_df = db.load_portfolio(
         strategy=strat_name,
         date=date,
-        market_cols=True,
+        # market_cols=True,
         ret_df=True,
         # universe="stats",
     )
-    strat = Strategy(strat_df, name=strat_name, date=date)
-
+    strat = Strategy(strat_df, name=strat_name, date="1/6/2021")
+    strat = Strategy(strat_df, name=strat_name, date=db.date("today"))
     # %%
-    sorted(strat.df.columns)[:8]
-    from lgimapy.bloomberg import bdh
 
-    bdh("LECRTREU", "INDEX", "INDEX_OAD_TSY", start="12/1/2020")
-
-    list(acnt.df)
+    self = db.load_portfolio(
+        strategy=strat_name, date="1/6/2021", universe="returns"
+    )
+    self.bond_overweights("OASD")
+    # %%
+    df = self.df[~self.df["MaturityDate"].isna()]
