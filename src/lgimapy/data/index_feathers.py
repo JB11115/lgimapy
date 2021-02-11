@@ -46,9 +46,6 @@ def create_feather(fid, db):
         if first_of_month < pd.to_datetime("11/1/2018"):
             ix._fill_missing_columns_with_bbg_data()
 
-        # Add HY index Flags.
-        ix._add_hy_index_flags()
-
         # Compute MTD total and excess returns.
         ix.compute_excess_returns()
 
