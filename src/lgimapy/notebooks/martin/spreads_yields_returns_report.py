@@ -114,11 +114,18 @@ def main():
 
     # %%
     doc = Document("HY_spreads_yields_returns", path="reports/HY")
+    date = spreads_df.index[-1]
     doc.add_preamble(
         orientation="landscape",
         font_size=15,
         table_caption_justification="c",
         margin={"left": 0.5, "right": 0.5, "top": 1.5, "bottom": 1},
+        header=doc.header(
+            left="HY Spreads, Yields, and Returns",
+            right=f"EOD {date.strftime('%B %#d, %Y')}",
+            height=0.5,
+        ),
+        footer=doc.footer(logo="LG_umbrella", height=-0.5, width=0.05),
     )
 
     # Add percentile tables for spreads and yields.
