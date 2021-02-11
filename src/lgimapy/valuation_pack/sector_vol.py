@@ -14,7 +14,7 @@ from lgimapy import vis
 from lgimapy.data import Database, convert_sectors_to_fin_flags
 from lgimapy.latex import Document
 from lgimapy.models import rolling_zscore, XSRETPerformance
-from lgimapy.utils import load_json, root, get_ordinal
+from lgimapy.utils import root, get_ordinal
 
 from volatility import update_voltility_model
 
@@ -33,9 +33,7 @@ def update_sector_models(fid, db):
     doc = Document(
         fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
     )
-    fid = "val_pack_temp"
-    db = Database()
-    db.load_market_data(start=db.date("1y"))
+    # fid = "val_pack_temp"
     for page, maturity in page_maturities.items():
         table_df = get_sector_table(maturity, path=path, db=db)
         plot_sector_spread_vs_vol(table_df, maturity, path=path)
@@ -107,7 +105,6 @@ def get_sector_table(maturity, path, db):
     ]
 
     ratings = {"A": ("AAA", "A-"), "BBB": ("BBB+", "BBB-")}
-    kwargs = load_json("indexes")
 
     warnings.simplefilter(action="ignore", category=FutureWarning)
     ix = db.build_market_index(
@@ -118,7 +115,7 @@ def get_sector_table(maturity, path, db):
     top_level_sector = "Industrials"
     for sector in sectors:
         for rating, rating_kws in ratings.items():
-            ix_sector = ix.subset(**kwargs[sector], rating=rating_kws)
+            ix_sector = ix.subset(**db.index_kwargs(sector, rating=rating_kws))
             # Get top level sector.
             if sector == "SIFI_BANKS_SR":
                 top_level_sector = "Financials"
@@ -187,7 +184,7 @@ def get_sector_table(maturity, path, db):
     table_df["vol_model"] = -vol_model
 
     # Add xsret model results to table.
-    xs_ret_z_scores_df = xsret_model_zscores(sectors, maturity, db, n_months=9)
+    xs_ret_z_scores_df = xsret_model_zscores(sectors, maturity, db, n_months=6)
     xs_ret_d, xs_ret_change_d = {}, {}
     for idx, vals in xs_ret_z_scores_df.iterrows():
         key = tuple(idx.split("|"))
@@ -494,9 +491,6 @@ def make_forward_looking_sector_table(sector_df, name, doc):
         "XSRet*Model": "1f",
         "Model*Change": "0f",
     }
-    # df_ = table_df.copy()
-    # df = df_.copy()
-    kwargs = load_json("indexes")
 
     df = sector_df.copy()
     df["fin"] = convert_sectors_to_fin_flags(df["raw_sector"])
@@ -561,6 +555,7 @@ def make_forward_looking_sector_table(sector_df, name, doc):
 
             locs = tuple(
                 table.loc[table["raw_sector"].isin(bottom_sector_names)].index
+                + 1
             )
             if locs:
                 sector_locs[locs] = color
@@ -581,7 +576,10 @@ def make_forward_looking_sector_table(sector_df, name, doc):
             row_color=sector_locs,
             col_style={"YTD*%tile": "\pctbar{6}"},
             gradient_cell_col=["Vol*Model", "XSRet*Model"],
-            gradient_cell_kws={"cmax": "orchid", "cmin": "orange",},
+            gradient_cell_kws={
+                "cmax": "orchid",
+                "cmin": "orange",
+            },
             arrow_col="Model*Change",
             arrow_kws={
                 "cmax": "orange",
@@ -766,7 +764,6 @@ def xsret_model_zscores(sectors, maturity, db, n_months=6, lookback="1m"):
     """
     n = int(n_months * 21)
     ratings = {"A": ("AAA", "A-"), "BBB": ("BBB+", "BBB-")}
-    kwargs = load_json("indexes")
     ix = db.build_market_index(in_stats_index=True, maturity=maturity)
     prev_date = db.date(lookback)
 
@@ -783,7 +780,9 @@ def xsret_model_zscores(sectors, maturity, db, n_months=6, lookback="1m"):
         for rating, rating_kws in ratings.items():
             # Get current z-score
             try:
-                ix_sector = ix.subset(**kwargs[sector], rating=rating_kws)
+                ix_sector = ix.subset(
+                    **db.index_kwargs(sector, rating=rating_kws)
+                )
                 ix_sector_current = ix_sector.subset_current_universe()
             except IndexError:
                 continue
