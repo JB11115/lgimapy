@@ -1,19 +1,20 @@
 import pandas as pd
 
 from lgimapy.data import Database
-from lgimapy.utils import load_json, root
+from lgimapy.utils import root
 
 
 def update_nonfin_spreads():
     db = Database()
     ratings = db.convert_numeric_ratings(pd.Series(range(1, 11)))
 
-    kwargs = load_json("indexes")
     db.load_market_data(start=db.date("1y"), local=True)
     mc_oas_list = []
     lc_oas_list = []
     for rating in ratings:
-        ix_mc = db.build_market_index(rating=rating, **kwargs["INDUSTRIALS"])
+        ix_mc = db.build_market_index(
+            rating=rating, **db.index_kwargs("INDUSTRIALS")
+        )
         ix_lc = ix_mc.subset(maturity=(10, None))
         mc_oas_list.append(ix_mc.market_value_weight("OAS").rename(rating))
         lc_oas_list.append(ix_lc.market_value_weight("OAS").rename(rating))
