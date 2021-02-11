@@ -5,7 +5,6 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
-from scipy.stats import linregress
 from tqdm import tqdm
 
 from lgimapy import vis
@@ -150,6 +149,8 @@ def add_overview_table(page, sector, strategy_d, n):
     for col in table.columns:
         if "BM %" in col:
             prec[col] = "2%"
+        elif "DTS" in col:
+            prec[col] = "1%"
         elif "OAD OW" in col:
             ow_cols.append(col)
             prec[col] = "2f"
@@ -162,7 +163,7 @@ def add_overview_table(page, sector, strategy_d, n):
         page.add_table(
             table,
             table_notes=footnote,
-            col_fmt="llc|cc|cccc",
+            col_fmt="llcc|cc|cccc",
             multi_row_header=True,
             midrule_locs=[table.index[3], "Other"],
             prec=prec,
@@ -192,6 +193,7 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
     table_cols = [
         "Rating",
         "Analyst*Score",
+        "Sector*DTS",
         "BM %*US LC",
         "BM %*US MC",
         "US LC*OAD OW",
@@ -225,7 +227,10 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
     ratings = np.mean(pd.DataFrame(ratings_list)).round(0).astype(int)
     df_list.append(Database().convert_numeric_ratings(ratings).rename("Rating"))
     df = pd.DataFrame(df_list).T.rename_axis(None)
-    df["Analyst*Score"] = strat.ticker_df["AnalystRating"][df.index].round(0)
+    ticker_df = strategy_d["US MC"].ticker_df.copy()
+    df["Analyst*Score"] = ticker_df["AnalystRating"][df.index].round(0)
+    mv_weighted_dts = (ticker_df["DTS"] * ticker_df["MarketValue"])[df.index]
+    df["Sector*DTS"] = mv_weighted_dts / mv_weighted_dts.sum()
 
     # Find total overweight over all strategies.
     ow_cols = [col for col in df.columns if "OAD OW" in col]
