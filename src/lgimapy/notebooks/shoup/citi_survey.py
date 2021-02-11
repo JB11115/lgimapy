@@ -8,14 +8,7 @@ from lgimapy.data import Database, Index
 from lgimapy.utils import load_json, root, Time
 
 # %%
-positions = {}
 db = Database()
-
-# Get sector kwargs.
-raw_kwargs = load_json("indexes")
-kwargs = {}
-for key, val in raw_kwargs.items():
-    kwargs[key] = {k: val[k] for k in set(val.keys()) - set(["in_stats_index"])}
 
 
 def get_position(oad=None, dts=None):
@@ -61,10 +54,13 @@ df = db.load_portfolio(
     ret_df=True,
 )
 db.load_market_data(data=df)
+positions = {}
 for sector in pld_sectors:
-    ix = db.build_market_index(**kwargs[sector])
+    ix = db.build_market_index(
+        **db.index_kwargs(sector, unused_constraints="in_stats_index")
+    )
     oad = np.sum(ix.df["OAD_Diff"])
-    positions[kwargs[sector]["name"]] = get_position(oad=oad)
+    positions[ix.name] = get_position(oad=oad)
 
 # Get positions for overall credit.
 dts = np.sum(df["P_DTS"]) / np.sum(df["BM_DTS"])
@@ -73,9 +69,11 @@ positions["Overall in Credit"] = get_position(dts=dts)
 
 # Get position for ABS/CMBS.
 df = db.load_portfolio(account="CITMC", market_cols=True, ret_df=True)
-ix = db.build_market_index(**kwargs["ABS_CMBS"])
+ix = db.build_market_index(
+    **db.index_kwargs("ABS_CMBS", unused_constraints="in_stats_index")
+)
 oad = np.sum(ix.df["OAD_Diff"])
-positions[kwargs["ABS_CMBS"]["name"]] = get_position(oad=oad)
+positions[ix.name] = get_position(oad=oad)
 
 # Add Nans.
 positions["Hybrids"] = "N/A"
