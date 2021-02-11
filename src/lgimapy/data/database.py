@@ -378,11 +378,20 @@ class Database:
         fid = root(f"data/{market}/trade_dates.parquet")
         return pd.read_parquet(fid)
 
-    @property
     @lru_cache(maxsize=None)
-    def _index_kwargs_dict(self):
+    def _index_kwargs_dict(self, source=None):
         """dict[str: dict]: keyword arguments for saved indexes."""
-        return load_json("indexes")
+        if source is None:
+            source = "bloomberg" if self.market == "US" else "iboxx"
+        source = source.lower()
+        allowable_sources = {"bloomberg", "iboxx", "baml"}
+        if source in allowable_sources:
+            return load_json(f"index_kwargs/{source}")
+        else:
+            raise ValueError(
+                f"'{source}' not in allowable sources. "
+                f"Please select one of {allowable_sources}."
+            )
 
     @property
     @lru_cache(maxsize=None)
@@ -457,7 +466,7 @@ class Database:
 
         return df
 
-    def index_kwargs(self, key, unused_constraints=None, **kwargs):
+    def index_kwargs(self, key, unused_constraints=None, source=None, **kwargs):
         """
         Index keyword arguments for saved indexes,
         with ability to override/add/remove arguments.
@@ -468,6 +477,9 @@ class Database:
             Key of stored index in `indexes.json`.
         unused_constraints: str or List[str], optional
             Constraintes to remove from kwargs list if present.
+        source: ``{"bloomberg", "iboxx", "baml"}``, optional
+            Source for index kwargs. Defaults based on current
+            :attr:`market`.
         kwargs:
             Keyword arguments to override or add to index.
 
@@ -477,8 +489,10 @@ class Database:
             Keyword arguments and respective constraints
             for specified index.
         """
+        if source is None:
+            source = "bloomberg" if self.market == "US" else "iboxx"
         try:
-            d = self._index_kwargs_dict[key].copy()
+            d = self._index_kwargs_dict(source)[key].copy()
         except KeyError:
             raise KeyError(f"{key} is not a stored Index.")
 
@@ -530,6 +544,8 @@ class Database:
 
         if date_delta == "PORTFOLIO_START":
             return pd.to_datetime("9/1/2018")
+        if date_delta == "HY_START":
+            return pd.to_datetime("6/1/2020")
         if date_delta == "MARKET_START":
             return {
                 "US": pd.to_datetime("2/2/1998"),
@@ -637,6 +653,19 @@ class Database:
     def _manager_to_accounts(self):
         """Dict[str: str]: Respective accounts for each PM."""
         return load_json("manager_accounts")
+
+    @property
+    @lru_cache(maxsize=None)
+    def DM_countries(self):
+        """Set[str]: Developed market country codes."""
+        fid = root("data/DM_countries.parquet")
+        return set(pd.read_parquet(fid).squeeze())
+
+    @lru_cache(maxsize=None)
+    def _hy_index_flags(self, index):
+        """pd.DaataFrame: Index flag boolean for ISIN vs date."""
+        fid = root(f"data/index_members/{index}.parquet")
+        return pd.read_parquet(fid)
 
     def load_trade_dates(self):
         """List[datetime]: Dates with credit data."""
@@ -804,8 +833,7 @@ class Database:
         df.reset_index(inplace=True, drop=True)
         return df
 
-    @staticmethod
-    def _preprocess_market_data(df):
+    def _preprocess_market_data(self, df):
         """
         Convert dtypes for columns in sql_df to save memory.
         Column names are corrected and values in categorical
@@ -850,6 +878,9 @@ class Database:
 
         # Map sectors to standard values.
         df["Sector"] = df["Sector"].str.replace(" ", "_")
+        for col in ["BAMLSector", "BAMLTopLevelSector"]:
+            df[col] = self._clean_sector(df[col])
+
         sector_map = {"OTHER_FINANCIAL": "FINANCIAL_OTHER"}
         for old_val, sector in sector_map.items():
             df.loc[df["Sector"] == old_val, "Sector"] = sector
@@ -923,6 +954,13 @@ class Database:
         # Add bloomberg subsector.
         df["Subsector"] = get_bloomberg_subsector(df["CUSIP"].values)
         return clean_dtypes(df)
+
+    def _clean_sector(self, sector):
+        """Clean sector names so they can be saved as a fid."""
+        pattern = "|".join([" - ", "-", "/", " "])
+        return (
+            sector.str.upper().str.replace("&", "AND").str.replace(pattern, "_")
+        )
 
     def _preprocess_basys_data(self, df):
         # Fill missing sectors and subsectors.
@@ -1113,7 +1151,7 @@ class Database:
             Cleaned DataFrame.
         """
         # List rules for bonds to keep and drop.
-        coupontypes = {
+        allowed_coupon_types = {
             "FIXED",
             "VARIABLE",
             "STEP CPN",
@@ -1123,7 +1161,7 @@ class Database:
             "HYBRID VARIABLE",
             "DEFAULTED",
         }
-        calltypes = {
+        allowed_call_types = {
             "NONCALL",
             "MKWHOLE",
             "CALL/NR",
@@ -1131,7 +1169,10 @@ class Database:
             "EUROCAL",
             np.nan,
         }
-        bad_sectors = {
+        disallowed_sectors = {
+            "NON_AGENCY_CMBS",
+            "AGENCY_CMBS",
+            "ABS_OTHER",
             "STRANDED_UTILITY",
             "GOVERNMENT_SPONSORED",
             "CAR_LOAN",
@@ -1143,7 +1184,7 @@ class Database:
             "PFANDBRIEFE_JUMBO_OEFFENLICHE",
             "PSLOAN_NON_PFANDBRIEFE",
             "CONVENTIONAL_15_YR",
-            "CONVENTIONAL_15_YR",
+            "CONVENTIONAL_20_YR",
             "CONVENTIONAL_30_YR",
             "5/1_ARM",
             "7/1_ARM",
@@ -1152,11 +1193,17 @@ class Database:
             "GNMA_30_YR",
             "NA",
         }
-        bad_tickers = {"TVA", "FNMA", "FHLMC"}
-        bad_pay_ranks = {"CERT OF DEPOSIT", "GOVT LIQUID GTD", "INSURED"}
+        disallowed_tickers = {"TVA", "FNMA", "FHLMC", "FN", "FR"}
+        disallowed_collateral_types = {
+            "CERT OF DEPOSIT",
+            "GOVT LIQUID GTD",
+            "INSURED",
+            "FNCL",
+            "FNCN",
+            "FNHLCR",
+        }
 
         # Drop rows with the required columns.
-        # TODO: add 'Issuer' back in
         required_cols = [
             "Date",
             "CUSIP",
@@ -1164,7 +1211,6 @@ class Database:
             "CollateralType",
             "CouponRate",
             "MaturityDate",
-            "CallType",
         ]
         df.dropna(subset=required_cols, how="any", inplace=True)
 
@@ -1172,14 +1218,56 @@ class Database:
         rating_cols = ["MoodyRating", "SPRating", "FitchRating"]
         df["NumericRating"] = self._get_numeric_ratings(df, rating_cols)
 
-        # Define maturites and issues (yrs) and drop maturites above 150 yrs.
+        # Set perpetuals to a constant maturity date of 1/1/2220.
+        df.loc[df["MaturityDate"].isna(), "MaturityDate"] = pd.to_datetime(
+            "1/1/2220"
+        )
+
+        # Replace maturities on bonds with variable coupon type and
+        # maturity less call below 1 yr (e.g., 11NC10).
+        # TODO: Decide if this is best way to deal with these bonds.
+        variable_bonds = df["CouponType"] == "VARIABLE"
         day = "timedelta64[D]"
+        df.loc[
+            variable_bonds
+            & ((df["MaturityDate"] - df["NextCallDate"]).astype(day) <= 370),
+            "MaturityDate",
+        ] = df["NextCallDate"]
+
+        # Define time to maturity and since issuance in years.
         df["MaturityYears"] = (df["MaturityDate"] - df["Date"]).astype(
             day
         ) / 365
+        # For variable coupon bonds, make this measure until the next
+        # call date, which is the date when the coupon type changes.
+        # For fixed variable to float bonds, this will be the relevant
+        # date for determining index eligibility.
+        df.loc[variable_bonds, "MaturityYears"] = (
+            df.loc[variable_bonds, "NextCallDate"]
+            - df.loc[variable_bonds, "Date"]
+        ).astype(day) / 365
         df["IssueYears"] = (df["Date"] - df["IssueDate"]).astype(day) / 365
 
-        # Find columns to be kept.
+        # Add HY Index Flags
+        df = self._add_hy_index_flags(df)
+
+        # Find bonds that are in any of the tracked indexes.
+        ignored_flag_cols = {
+            "FinancialFlag",
+            "Eligibility144AFlag",
+            "AnyIndexFlag",
+            "USAggReturnsFlag",
+            "USAggStatisticsFlag",
+        }
+        index_flag_cols = [
+            col
+            for col in df.columns
+            if "flag" in col.lower() and col not in ignored_flag_cols
+        ]
+        df[index_flag_cols] = df[index_flag_cols].replace(-1, 0)
+        is_index_bond = df[index_flag_cols].sum(axis=1).astype(bool)
+
+        # Find columns to keep by ignoring unnecessary columns.
         drop_cols = {
             "Delta",
             "Gamma",
@@ -1200,30 +1288,21 @@ class Database:
 
         # Subset DataFrame by specified rules.
         df = df[
-            (df["CouponType"].isin(coupontypes))
-            & (df["CallType"].isin(calltypes))
-            & (~df["Sector"].isin(bad_sectors))
-            & (~df["Ticker"].isin(bad_tickers))
-            & (~df["CollateralType"].isin(bad_pay_ranks))
-            & (df["MaturityYears"] < 150)
-            & (df["NumericRating"] <= 22)
-            & (
-                (df["CouponType"] != "VARIABLE")
-                | ((df["MaturityDate"] - df["NextCallDate"]).astype(day) < 370)
+            is_index_bond
+            | (
+                (df["CouponType"].isin(allowed_coupon_types))
+                & (df["CallType"].isin(allowed_call_types))
+                & (~df["Sector"].isin(disallowed_sectors))
+                & (~df["Ticker"].isin(disallowed_tickers))
+                & (~df["CollateralType"].isin(disallowed_collateral_types))
+                & (df["CountryOfRisk"].isin(self.DM_countries))
+                & (df["Currency"] == "USD")
+                & (df["NumericRating"] <= 22)
             )
         ][keep_cols].copy()
 
         # Convert outstading from $ to $M.
         df["AmountOutstanding"] /= 1e6
-
-        # Replace matuirities on bonds with variable coupon type and
-        # maturity less call below 1 yr (e.g., 11NC10).
-        # TODO: Decide if this is best way to deal with these bonds.
-        df.loc[
-            (df["CouponType"] == "VARIABLE")
-            & ((df["MaturityDate"] - df["NextCallDate"]).astype(day) <= 370),
-            "MaturityDate",
-        ] = df["NextCallDate"]
 
         # Determine original maturity as int.
         # TODO: Think about modifying for a Long 10 which should be 10.5.
@@ -1232,60 +1311,10 @@ class Database:
         ).astype("int8")
 
         # Calculate dirty price.
-        df.eval("DirtyPrice = CleanPrice + AccruedInterest", inplace=True)
+        df["DirtyPrice"] = df["CleanPrice"] + df["AccruedInterest"]
 
         # Use dirty price to calculate market value.
-        df.eval(
-            "MarketValue = AmountOutstanding * DirtyPrice / 100", inplace=True
-        )
-
-        # TEMP: Calculate HY Flags.
-        hy_eliginble_countries = {
-            "AU",
-            "BE",
-            "CA",
-            "CH",
-            "CY",
-            "DE",
-            "DK",
-            "ES",
-            "FI",
-            "FR",
-            "GB",
-            "GR",
-            "HK",
-            "IE",
-            "IT",
-            "JE",
-            "LU",
-            "MO",
-            "NL",
-            "NO",
-            "NZ",
-            "PR",
-            "SE",
-            "SG",
-            "US",
-        }
-        non_hy_sectors = [
-            "OWNED_NO_GUARANTEE",
-            "SOVEREIGN",
-            "SUPRANATIONAL",
-            "LOCAL_AUTHORITIES",
-        ]
-        df.loc[
-            ((df["USHYStatisticsFlag"] == -1) | (df["USHYReturnsFlag"] == -1))
-            & (df["NumericRating"] >= 11)
-            & (df["NumericRating"] <= 21)
-            & (df["Currency"] == "USD")
-            & (~df["Sector"].isin(non_hy_sectors))
-            & (df["AmountOutstanding"] >= 150)
-            & (df["CountryOfRisk"].isin(hy_eliginble_countries))
-            & (df["AnyIndexFlag"] == 1),
-            ["USHYStatisticsFlag", "USHYReturnsFlag"],
-        ] = 1
-        df.loc[df["USHYStatisticsFlag"] == -1, "USHYStatisticsFlag"] = 0
-        df.loc[df["USHYReturnsFlag"] == -1, "USHYReturnsFlag"] = 0
+        df["MarketValue"] = df["AmountOutstanding"] * df["DirtyPrice"] / 100
 
         # Make new fields categories and drop duplicates.
         return clean_dtypes(df).drop_duplicates(subset=["CUSIP", "Date"])
@@ -1307,8 +1336,7 @@ class Database:
             "feather": pd.read_feather,
             "parquet": pd.read_parquet,
         }[self._fid_extension]
-        raw_df = concat_index_dfs([read_func(f) for f in fids])
-        df = clean_dtypes(raw_df)
+        df = concat_index_dfs([clean_dtypes(read_func(f)) for f in fids])
         df = df[(df["Date"] >= start) & (df["Date"] <= end)]
         return df
 
@@ -2086,10 +2114,10 @@ class Database:
             day
         ) / 365
 
-        # Drop bonds without maturity dates (perpetuals).
-        is_cash = df["Sector"] == "CASH"
-        has_maturity_date = ~df["MaturityDate"].isna()
-        df = df[is_cash | has_maturity_date].copy()
+        # Set perpetuals to a constant maturity date of 1/1/2220.
+        df.loc[df["MaturityDate"].isna(), "MaturityDate"] = pd.to_datetime(
+            "1/1/2220"
+        )
 
         # Clean analyst ratings.
         df["AnalystRating"] = df["AnalystRating"].replace("NR", np.nan)
@@ -2526,6 +2554,29 @@ class Database:
             max_rating = self._convert_single_input_rating(rating_range[1], 23)
             return (min_rating, max_rating)
 
+    def _add_hy_index_flags(self, df):
+        """pd.DataFrame: Add index flags for HY indexes to Dataframe."""
+        ix_date_isins = df.set_index("Date")["ISIN"]
+        start = ix_date_isins.index[0]
+        end = ix_date_isins.index[-1]
+
+        indexes = ["H4UN", "H0A0", "HC1N", "HUC2", "HUC3"]
+        for index in indexes:
+            # Load flag data and subset to correct dates.
+            flag_df = self._hy_index_flags(index)
+            flag_d = flag_df[
+                (flag_df.index >= start) & (flag_df.index <= end)
+            ].T.to_dict()
+            flags = np.zeros(len(ix_date_isins))
+            for i, (date, isin) in enumerate(ix_date_isins.items()):
+                try:
+                    flags[i] = flag_d[date].get(isin, 0)
+                except KeyError:
+                    continue
+            df[f"{index}Flag"] = flags.astype("int8")
+
+        return df
+
 
 # %%
 def main():
@@ -2543,120 +2594,15 @@ def main():
 
     # %%
     db = Database()
-    date = pd.to_datetime("12/1/2020")
-    db.date("+35d", date, fcast=True)
+    db.load_market_data()
 
     # %%
+    mc = db.build_market_index(in_returns_index=True)
+    lc = mc.subset(maturity=(10, None))
+    mc.OAS().squeeze()
+    lc.OAS().squeeze()
 
-    db.load_market_data(date=db.nearest_date("6/1/2020"), local=False)
-    db.add_hy_index_flags()
+    # %%
     ix = db.build_market_index(in_H4UN_index=True)
-
-    lev3 = sorted(ix.df["BAMLTopLevelSector"].unique())
-    lev3
-    lev3
-    # %%
-    sec = "Utility"
-    df = ix.df[ix.df["BAMLTopLevelSector"] == sec]
-    sectors = sorted(df["BAMLSector"].unique())
-
-    # %%
-    db = Database(market="EUR")
-    db.load_market_data(start="12/30/2020", local=False)
-    self._market = "EUR"
-    self._start = pd.to_datetime("12/30/2020")
-    self._end = None
-    trade_dates = self._trade_date_df(self._market)
-    trade_dates = trade_dates[trade_dates["holiday"] == 0]
-    if self._start is not None:
-        trade_dates = trade_dates[trade_dates.index >= self._start]
-    if self._end is not None:
-        trade_dates = trade_dates[trade_dates.index <= self._end]
-    trade_dates["fid"]
-    df = pd.concat(df_list).sort_values(["Date", "Ticker"])
-    list(df)
-    list(df_raw)
-    db.display_all_columns()
-    df.iloc[-1, :].T
-    isin = df["ISIN"].iloc[-1]
-    bdh(isin, "Corp", "OAS_SPREAD_DUR_BID", start="12/20/2020")
-    bdp(isin, "Corp", "OAS_SPREAD_DUR_BID")
-    db.display_all_rows(200)
-    df_raw.sort_values(["Date", "Ticker"]).iloc[-1, :].to_csv(
-        "basys_example.csv"
-    )
-    df_float = df_raw[df_raw["Is FRN"] == 1]
-
-    df_raw["Is FRN"].sum()
-
-    # %%
-    db = Database(market="GBP")
-    db.load_market_data(start=db.date("market_start"), end="11/25/2014")
-    ix = db.build_market_index()
-    ix.df["CUSIP"].isna().sum()
-    len(ix.df)
-    ix.df.dropna(subset=required_cols, how="any", inplace=True)
-
-    # %%
-    self = Database(market="EUR")
-    self.load_market_data(start="12/1/2014", end="1/15/2015")
-    ix = self.build_market_index()
-    ix.df["Sector"] = ix.df["MLSector"]
-    ix.sectors
-
-    # %%
-    db = Database()
-    accnt = db.load_portfolio(account="FLD", hy_duration_adjustment=1)
-    accnt.df["P_OAD"].sum() + accnt.tsy_df["P_OAD"].sum()
-
-    # %%
-    db = Database()
-    df_list = []
-    dates = ["1/6/2021", "1/7/2021"]
-    for date in dates:
-        db.load_market_data(date=date)
-        ix = db.build_market_index(
-            # **db.index_kwargs('MUNIS', unused_constraints='in_stats_index')
-        )
-        df = ix.df["Sector"].value_counts()
-        df_list.append(df[df > 0].rename(date))
-
-    df = pd.concat(df_list, axis=1).fillna(0)
-    df["diff"] = df[dates[1]] - df[dates[0]]
-    df = df[df["diff"] != 0]
-    df.sort_values("diff").to_csv("datamart_sectors_change.csv")
-    df.sort_values("diff")
-
-    # %%
-    cusips = [
-        "651229AY2",
-        "92564RAE5",
-        "15135BAT8",
-        "126307BB2",
-        "1248EPCK7",
-        "98421MAB2",
-        "35671DBC8",
-        "12527GAE3",
-        "552676AQ1",
-        "86765LAR8",
-        "81180WBB6",
-        "81180WBA8",
-        "958667AA5",
-        "50077LAY2",
-    ]
-    df = accnt.df[accnt.df["CUSIP"].isin(cusips)]
-    df = (
-        df[["CUSIP", "P_OAD", "OAD_Diff"]]
-        .set_index("CUSIP")
-        .reindex(cusips)
-        .rename_axis(None)
-    )
-    df["P_OAD_adj"] = 0.65 * df["P_OAD"]
-    df["OAD_Diff_adj"] = 0.65 * df["OAD_Diff"]
-    df.round(3).to_csv("select_HY_cusips_OAD_adjustment.csv")
-    df.round(3)
-
-    acnt = db.load_portfolio(account="FLD", hy_duration_adjustment=0.65)
-    acnt.df[acnt.df["CUSIP"].isin(cusips)].set_index("CUSIP").reindex(cusips)[
-        ["P_OAD", "NumericRating"]
-    ].round(3)
+    ix.OAS().squeeze()
+    ix.market_value_weight("YieldToWorst").squeeze()
