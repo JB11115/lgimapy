@@ -10,7 +10,7 @@ import pandas as pd
 
 from lgimapy.bloomberg import get_bloomberg_subsector
 from lgimapy.data import Database, Index
-from lgimapy.latex import Document, latex_table
+from lgimapy.latex import Document, latex_table, merge_pdfs
 from lgimapy.utils import load_json, mkdir, root, Time, restart_program
 
 # %%
@@ -18,12 +18,16 @@ from lgimapy.utils import load_json, mkdir, root, Time, restart_program
 
 def make_credit_snapshots(date=None, include_portfolio=True):
     """Build credit snapshots and sitch them together."""
-    indexes = ["US_IG", "US_IG_10+"]
-    # indexes = ["US_IG"]
+    indexes = ["US_IG_10+", "US_IG", "US_HY"]
+    indexes = ["US_IG_10+", "US_IG"]
+    fids = []
     for index in indexes:
-        build_credit_snapshot(
+        fid = build_credit_snapshot(
             index, date=date, include_portfolio_positions=include_portfolio
         )
+        fids.append(fid)
+    pdf_path = "reports/credit_snapshots"
+    merge_pdfs("Credit_Snapshot", fids, path=pdf_path)
 
 
 def update_credit_snapshots():
@@ -70,9 +74,16 @@ class SnapshotConfig:
 
     @property
     def rep_account(self):
-        return {"US_IG": "CITMC", "US_IG_10+": "P-LD", "US_HY": None}[
+        return {"US_IG": "CITMC", "US_IG_10+": "P-LD", "US_HY": "PMCHY"}[
             self.index
         ]
+
+    @property
+    def horizon(self):
+        if self.index in {"US_IG", "US_IG_10+"}:
+            return 6
+        elif self.index == "US_HY":
+            return 7
 
     @property
     def overview_sectors(self):
@@ -107,7 +118,7 @@ class SnapshotConfig:
                 "~BBB_NON_FIN_EX_TOP_30_10+",
                 "~BBB_NON_CORP",
             ],
-            "US_HY": ["STATS_HY", "~BB", "~B", "~CCC"],
+            "US_HY": [],
         }[self.index]
 
     @property
@@ -164,46 +175,52 @@ class SnapshotConfig:
             ]
         elif self.index == "US_HY":
             return [
-                "INDUSTRIALS",  # Industrials
+                "H4UN",
+                "~BB",
+                "~B",
+                "HUC3_CCC",
+                "LDB1_BBB",
+                "AUTOMOTIVE",
+                "~AUTOMAKERS",
+                "~AUTOPARTS",
                 "BASICS",
+                "~HOME_BUILDERS",
+                "~BUILDING_MATERIALS",
                 "~CHEMICALS",
                 "~METALS_AND_MINING",
-                "~PACKAGING",
-                "HOME_CONSTRUCTION",
                 "CAPITAL_GOODS",
-                "COMMUNICATIONS",
-                "~CABLE_SATELLITE",
-                "~MEDIA_ENTERTAINMENT",
-                "~WIRELINES_WIRELESS",
-                "CONSUMER_CYCLICAL",
-                "CONSUMER_PRODUCTS",
-                "~CONSUMER_CYCLICAL_SERVICES",
-                "~AUTOMOTIVE",
-                "~RETAILERS",
-                "~LEISURE",
-                "~LODGING",
-                "~GAMING",
-                "CONSUMER_NON_CYCLICAL",
-                "~FOOD_AND_BEVERAGE",
-                "~HEALTHCARE_EX_MANAGED_CARE",
-                "~MANAGED_CARE",
-                "~PHARMACEUTICALS",
+                "~AEROSPACE_DEFENSE",
+                "~DIVERSIFIED_CAPITAL_GOODS",
+                "~PACKAGING",
+                "BEVERAGE",
+                "FOOD",
+                "PERSONAL_AND_HOUSEHOLD_PRODUCTS",
                 "ENERGY",
-                "~INDEPENDENT",
-                "~INTEGRATED",
-                "~OIL_FIELD_SERVICES",
-                "~REFINING",
-                "~MIDSTREAM",
-                "ENVIRONMENTAL_IND_OTHER",
+                "~ENERGY_EXPLORATION_AND_PRODUCTION",
+                "~GAS_DISTRIBUTION",
+                "~OIL_REFINING_AND_MARKETING",
+                "HEALTHCARE",
+                "~HEALTH_FACILITIES",
+                "~MANAGED_CARE",
+                "~PHARMA",
+                "GAMING",
+                "HOTELS",
+                "RECREATION_AND_TRAVEL",
+                "REAL_ESTATE",
+                "~REITS",
+                "ENVIRONMENTAL",
+                "SUPPORT_SERVICES",
+                "TMT",
+                "~CABLE_SATELLITE",
+                "~MEDIA_CONTENT",
+                "~TELECOM_SATELLITE",
+                "~TELECOM_WIRELESS",
                 "TECHNOLOGY",
+                "~SOFTWARE",
+                "~HARDWARE",
                 "TRANSPORTATION",
-                "FINANCIALS",  # Financials
-                "BANKS",
-                "FINANCE_COMPANIES",
-                "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-                "P&C",
-                "REITS",
-                "UTILITY",  # Utilities
+                "~AIRLINES",
+                "UTILITY",
             ]
 
     @property
@@ -233,39 +250,155 @@ class SnapshotConfig:
             ]
         elif self.index == "US_HY":
             return [
-                "AAA",
-                "BBB",
                 "Basics",
                 "Capital Goods",
-                "Communications",
-                "Consumer Cyclical",
-                "Consumer Non-Cyclical",
+                "Beverage",
                 "Energy",
-                "Env/Ind. Other",
+                "Healthcare",
+                "Gaming",
+                "Real Estate",
+                "Environmental",
+                "TMT",
                 "Technology",
                 "Transportation",
-                "Banks",
-                "Brokers/Asset Mngr",
-                "REITs",
+                "Utilities",
             ]
+
+    @property
+    def title(self):
+        if self.index in {"US_IG", "US_IG_10+"}:
+            return "IG"
+        elif self.index == "US_HY":
+            return "HY"
+
+    @property
+    def table_types(self):
+        if self.index in {"US_IG", "US_IG_10+"}:
+            return ["sector", "sector"]
+        elif self.index == "US_HY":
+            return [
+                "cross-asset",
+                "sector",
+                "gainers_losers",
+                "sector_not_corrected",
+            ]
+
+    @property
+    def footnote(self):
+        if self.index in {"US_IG", "US_IG_10+"}:
+            return [None, None]
+        elif self.index == "US_HY":
+            return [
+                (
+                    "\\tiny Summary statistics and \\%tiles use a 5yr "
+                    "history for credit, rates, and LIBOR with a "
+                    "1yr history for equity indexes and the VIX."
+                ),
+                (
+                    "\\tiny Historical spreads and yields corrected "
+                    "to reflect current investable universe."
+                ),
+                None,
+                "\\tiny Raw historical spreads and yields.",
+            ]
+
+    def captions(self, dates_key, colors_key):
+        if self.index == "US_IG":
+            return (
+                (
+                    f"Market Credit IG Overview \hspace{{4.2cm}} "
+                    f"\\normalfont{{{dates_key}}}"
+                ),
+                (
+                    f"Market Credit IG Sectors  \hspace{{6.8cm}} "
+                    f"\\normalfont{{{colors_key}}}"
+                ),
+            )
+        elif self.index == "US_IG_10+":
+            return (
+                (
+                    f"Long Credit IG Overview \hspace{{4.6cm}} "
+                    f"\\normalfont{{{dates_key}}}"
+                ),
+                (
+                    f"Long Credit IG Sectors  \hspace{{7.2cm}} "
+                    f"\\normalfont{{{colors_key}}}"
+                ),
+            )
+        elif self.index == "US_HY":
+            return (
+                (
+                    f"Cross-Asset Overview \hspace{{5.2cm}} "
+                    f"\\normalfont{{{dates_key}}}"
+                ),
+                (
+                    f"{self.title} Sectors  \hspace{{9.2cm}} "
+                    f"\\normalfont{{{colors_key}}}"
+                ),
+                f"H4UN Gainers/Losers",
+                (
+                    f"{self.title} Sectors  \hspace{{9.2cm}} "
+                    f"\\normalfont{{{colors_key}}}"
+                ),
+            )
+
+    @property
+    def table_sectors(self):
+        if self.index in {"US_IG", "US_IG_10+"}:
+            return [self.overview_sectors, self.sectors]
+        elif self.index == "US_HY":
+            return [None, self.sectors, None, self.sectors]
 
     @property
     def kwarg_updates(self):
         return {
-            "US_IG": {"in_stats_index": True},
-            "US_IG_10+": {"in_stats_index": True, "maturity": (10, None)},
+            "US_IG": {
+                "source": "bloomberg",
+                "in_stats_index": True,
+                "OAS": (0, 3000),
+            },
+            "US_IG_10+": {
+                "source": "bloomberg",
+                "in_stats_index": True,
+                "maturity": (10, None),
+                "OAS": (0, 3000),
+            },
             "US_HY": {
-                "in_stats_index": None,
-                "oas": (-10, None),
+                "source": "baml",
+                "in_H4UN_index": True,
+                "OAS": (0, None),
             },
         }[self.index]
+
+    @property
+    def return_type(self):
+        return {"US_IG": "XSRet", "US_IG_10+": "XSRet", "US_HY": "OAS"}[
+            self.index
+        ]
+
+    @property
+    def umbrella_vshift(self):
+        return {"US_IG": 1, "US_IG_10+": 1, "US_HY": -1}[self.index]
+
+    @property
+    def margin(self):
+        if self.index in {"US_IG", "US_IG_10+"}:
+            return {"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2}
+        elif self.index == "US_HY":
+            return {
+                "left": 0.5,
+                "right": 0.5,
+                "top": 0.5,
+                "bottom": 0.2,
+                "paperheight": 32,
+            }
 
 
 def build_credit_snapshot(
     index, date=None, pdf=True, include_portfolio_positions=True
 ):
     """
-    Create snapshot for respective index.
+    Create snapshot for respective indexg.
 
     Parameters
     ----------
@@ -295,35 +428,30 @@ def build_credit_snapshot(
     # Store dates not to be used in table with a `~` before them.
     dates_dict = {
         "~today": today,
-        "~6m": db.date("6m", today),
-        "~12m": db.date("12m", today),
         "Daily": db.date("yesterday", today),
         "WTD": db.date("WTD", today),
         "MTD": db.date("MTD", today),
         # "QTD": db.nearest_date(pd.to_datetime("6/29/2019")),
         "YTD": db.date("YTD", today),
+        f"~{config.horizon}m": db.date(f"{config.horizon}m", today),
     }
 
     # Create indexes for all sectors.
     dates_dict["~start"] = min(dates_dict.values())
-    kwargs = load_json("indexes")
-    # for key in kwargs.keys():
-    #     kwargs[key].update({"rating": ("AAA", "AA-")})
     db.load_market_data(start=dates_dict["~start"], end=today)
     all_sectors = config.overview_sectors + config.sectors
-    ix_dict = {
-        sector: db.build_market_index(
-            **{**kwargs[sector.strip("^~")], **config.kwarg_updates}
-        )
-        for sector in all_sectors
-    }
+    ix_dict = {}
+    for sector in all_sectors:
+        kwargs = db.index_kwargs(sector.strip("^~"), **config.kwarg_updates)
+        if sector in {"LDB1_BBB", "HUC3_CCC"}:
+            kwargs.pop("in_H4UN_index")
+        ix_dict[sector] = db.build_market_index(**kwargs)
 
     # Get current market value of the entire long credit index.
-    bm_name = config.overview_sectors[0]
-    full_ix_today = ix_dict[bm_name].subset(date=today)
-    ix_mv = full_ix_today.total_value()[0]
-    ix_xsrets = ix_dict[bm_name].market_value_weight("XSRet")
-    ix_xsrets_6m = ix_xsrets[ix_xsrets.index > dates_dict["~6m"]]
+    bm_name = all_sectors[0]
+    bm_ix_today = ix_dict[bm_name].subset(date=today)
+    bm_mv = bm_ix_today.total_value()[0]
+    bm_rets = ix_dict[bm_name].market_value_weight(config.return_type)
 
     # Get current state of portfolio.
     if include_portfolio_positions:
@@ -335,7 +463,15 @@ def build_credit_snapshot(
     results = [
         pool.apply_async(
             get_snapshot_values,
-            args=(ix_dict[sector], dates_dict, ix_mv, ix_xsrets, rep_account),
+            args=(
+                ix_dict[sector],
+                dates_dict,
+                bm_mv,
+                bm_rets,
+                rep_account,
+                True,  # perform historical index corrections
+                config,
+            ),
         )
         for sector in all_sectors
     ]
@@ -347,6 +483,24 @@ def build_credit_snapshot(
     if not pdf:
         return
 
+    if config.index == "US_HY":
+        results = [
+            pool.apply_async(
+                get_snapshot_values,
+                args=(
+                    ix_dict[sector],
+                    dates_dict,
+                    bm_mv,
+                    bm_rets,
+                    rep_account,
+                    False,  # Don't perform historical index corrections
+                    config,
+                ),
+            )
+            for sector in all_sectors
+        ]
+        rows = [p.get() for p in results]
+        no_historical_correction_table_df = pd.concat(rows, sort=False)
     # Make table captions.
     dates_fmt = [f"Close: {dates_dict['~today'].strftime('%m/%d/%Y')}"]
     dates_fmt += [
@@ -354,50 +508,96 @@ def build_credit_snapshot(
         for k in "Daily WTD MTD".split()
         # for k in "Daily MTD QTD".split()
     ]
-
     dates_key = ", \hspace{0.2cm} ".join(dates_fmt)
     colors_key = (
-        "Color Key: 2-Z move \color{blue}tighter \color{black} ("
-        "\color{red}wider\color{black}) relative to the Index"
+        "Color Key: 2-Z move \color{blue}tighter \color{black} "
+        "(\color{red}wider\color{black}) relative to the Index"
     )
-
-    captions = [
-        f"Market Sectors \hspace{{6.2cm}} \\normalfont{{{dates_key}}}",
-        f"IG Sectors  \hspace{{9.2cm}} \\normalfont{{{colors_key}}}",
-    ]
 
     # Create daily snapshot tables and save to pdf.
     doc = Document(fid, path=pdf_path)
     doc.add_preamble(
-        margin={"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2},
+        margin=config.margin,
         ignore_bottom_margin=True,
     )
-    doc.add_background_image("umbrella", scale=1.1, vshift=1, alpha=0.04)
+    doc.add_background_image(
+        "umbrella", scale=1.1, vshift=config.umbrella_vshift, alpha=0.04
+    )
+
+    if config.index in {"US_IG", "US_IG_10+"}:
+        table_dfs = [table_df, table_df]
+    elif config.index == "US_HY":
+        table_dfs = [
+            get_cross_asset_table(db, dates_dict),
+            table_df,
+            get_h4un_gainers_losers_table(db, dates_dict, n=10),
+            no_historical_correction_table_df,
+        ]
+
     # doc.add_background_image("xmas_tree", scale=1.1, vshift=2, alpha=0.08)
-    sector_list = [config.overview_sectors, config.sectors]
-    for sector_subset, cap in zip(sector_list, captions):
+    for table_type, df, sector_subset, cap, footnote in zip(
+        config.table_types,
+        table_dfs,
+        config.table_sectors,
+        config.captions(dates_key, colors_key),
+        config.footnote,
+    ):
+        if table_type == "sector_not_corrected":
+            doc.add_pagebreak()
         doc.add_table(
-            make_table(
-                index,
-                table_df,
+            make_latex_table(
+                table_type,
+                df,
                 sector_subset,
                 cap,
-                kwargs,
+                footnote,
+                db._index_kwargs_dict(config.kwarg_updates["source"]),
                 include_portfolio_positions,
+                config,
             )
         )
-    doc.save()
+    doc.save(save_tex=False)
+    return doc.fid
 
 
-def make_table(
-    index, full_df, sectors, caption, ix_kwargs, include_overweights
+def make_latex_table(
+    table_type,
+    table_df,
+    sectors,
+    caption,
+    footnote,
+    ix_kwargs,
+    include_overweights,
+    config,
+):
+    if config.index in {"US_IG", "US_IG_10+"}:
+        return make_ig_table(
+            table_df, sectors, caption, ix_kwargs, include_overweights, config
+        )
+    elif config.index == "US_HY":
+        if table_type == "cross-asset":
+            return make_cross_asset_table(table_df, caption, footnote)
+        elif table_type.startswith("sector"):
+            return make_hy_sector_table(
+                table_df,
+                sectors,
+                caption,
+                footnote,
+                ix_kwargs,
+                include_overweights,
+                config,
+            )
+        elif table_type == "gainers_losers":
+            return make_hy_gainers_loser_table(table_df, caption)
+
+
+def make_ig_table(
+    full_df, sectors, caption, ix_kwargs, include_overweights, config
 ):
     """
     Subset full DataFrame to specific sectors and build
     LaTeX formatted table.
     """
-    config = SnapshotConfig(index)
-
     # Sort Index to desired order.
     sorted_ix = [ix_kwargs[s.strip("^~")]["name"] for s in sectors]
     df = full_df[full_df.index.isin(sorted_ix)].copy()
@@ -461,9 +661,9 @@ def make_table(
         "YTD*Price": "1f",
         "OAD": "1f",
         "YTD*XSRet": "0f",
-        "6m*Min": "0f",
-        "6m*Max": "0f",
-        "6m*%tile": "0f",
+        f"{config.horizon}m*Min": "0f",
+        f"{config.horizon}m*Max": "0f",
+        f"{config.horizon}m*%tile": "0f",
     }
     col_fmt = "l|cc|cc|cc|cc|cc|c|c|c|ccl"
     if include_overweights:
@@ -480,16 +680,191 @@ def make_table(
         specialrule_locs=major_sectors,
         row_color={"header": "darkgray", tuple(major_sectors): "lightgray"},
         row_font={"header": "\color{white}\\bfseries"},
-        col_style={"6m*%tile": "\pctbar"},
+        col_style={f"{config.horizon}m*%tile": "\pctbar"},
         loc_style=color_locs,
         multi_row_header=True,
         adjust=True,
         greeks=False,
     )
+
     return table
 
 
-def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
+def make_hy_sector_table(
+    full_df, sectors, caption, footnote, ix_kwargs, include_overweights, config
+):
+    """
+    Subset full DataFrame to specific sectors and build
+    LaTeX formatted table.
+    """
+    # Sort Index to desired order.
+    sorted_ix = [ix_kwargs[s.strip("^~")]["name"] for s in sectors]
+    df = full_df[full_df.index.isin(sorted_ix)].copy()
+    df = df.reindex(sorted_ix)
+
+    # Find colors locations for daily changes with greater than 2-Z move.
+    col = list(df.columns).index("Daily*OAS")
+    df_colors = df[~df["color"].isna()]
+    color_locs = {
+        (list(df.index).index(sector), col): f"\color{{{color}}}"
+        for sector, color in zip(df_colors.index, df_colors["color"])
+    }
+    df.drop("color", axis=1, inplace=True)
+    df.drop("z", axis=1, inplace=True)
+    ow_col = [col for col in df.columns if "*OW" in col][0]
+    if not include_overweights:
+        df.drop(ow_col, axis=1, inplace=True)
+
+    # Add indent to index column for subsectors.
+    final_ix = []
+    for i, (ix, s) in enumerate(zip(df.index, sectors)):
+        if s.startswith("~"):
+            try:
+                if sectors[i + 1].startswith("~"):
+                    final_ix.append("\hspace{1mm} $\\vdash$ " + ix)
+                else:
+                    final_ix.append("\hspace{1mm} $\lefthalfcup$ " + ix)
+            except IndexError:
+                # Last item in table, must be halfcup.
+                final_ix.append("\hspace{1mm} $\lefthalfcup$ " + ix)
+        else:
+            final_ix.append(ix)
+    df.index = final_ix
+
+    # Find location for major sector formatting and sector bars.
+    major_sectors = [
+        df.index[0],
+        "Autos",
+    ]
+
+    # Format market cap by precision by value for 2 sig figs.
+    df["Mkt*Cap"] = [
+        f"{v:.1%}" if v < 0.1 else f"{v:.0%}" for v in df["Mkt*Cap"]
+    ]
+    # Format remaining columns.
+    prec = {
+        "Close*OAS": "0f",
+        "Close*YTW": "2%",
+        "Daily*OAS": "1f",
+        "Daily*YTW": "2%",
+        "WTD*OAS": "1f",
+        "WTD*YTW": "2%",
+        "MTD*OAS": "0f",
+        "MTD*YTW": "2%",
+        # "QTD*OAS": "0f",
+        # "QTD*YTW": "2%",
+        "YTD*OAS": "0f",
+        "YTD*YTW": "2%",
+        "Mod Dur*to Worst": "1f",
+        "MTD*TRet": "2%",
+        "YTD*TRet": "2%",
+        f"{config.horizon}m*Min": "0f",
+        f"{config.horizon}m*Med": "0f",
+        f"{config.horizon}m*Max": "0f",
+        f"{config.horizon}m*%tile": "0f",
+    }
+    col_fmt = "l|cc|cc|cc|cc|cc|c|cc|c|ccc|l"
+    if include_overweights:
+        col_fmt = f"{col_fmt}|c"
+        prec[ow_col] = "1%"
+
+    table = latex_table(
+        df,
+        caption=caption,
+        table_notes=footnote,
+        font_size="footnotesize",
+        col_fmt=col_fmt,
+        prec=prec,
+        midrule_locs=config.midrule_locs,
+        specialrule_locs=major_sectors,
+        row_font={"header": "\\bfseries"},
+        col_style={f"{config.horizon}m*%tile": "\pctbar"},
+        loc_style=color_locs,
+        multi_row_header=True,
+        adjust=True,
+        greeks=False,
+    )
+
+    return table
+
+
+def make_hy_gainers_loser_table(table_df, cap):
+    bar_cols = ["MTD Return", " MTD Return", " MTD Return ", "MTD  Return"]
+    table = latex_table(
+        table_df,
+        caption=cap,
+        col_fmt="r|lr|lr|lr|lr",
+        adjust=True,
+        row_font={"header": "\\bfseries"},
+        prec={col: "1%" for col in bar_cols},
+        div_bar_col=bar_cols,
+        div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
+        multi_row_header=True,
+    )
+    return table
+
+
+def make_cross_asset_table(table_df, cap, footnote):
+    prec = {
+        "Daily*%tile": "1%",
+        "WTD*%tile": "1%",
+        "MTD*%tile": "0%",
+        "YTD*%tile": "0%",
+        f"%tile": "0f",
+    }
+    # Custom set precision for columns with varrying precision by row.
+    formatted_table_df = table_df.copy()
+    cols = ["Close", "Daily", "WTD", "MTD", "YTD", "Min", "Median", "Max"]
+    change_cols = ["Daily", "WTD", "MTD", "YTD"]
+    d = defaultdict(list)
+    for asset, row in table_df.iterrows():
+        for col in cols:
+            if row["asset_class"] == "credit":
+                d[col].append(f"{row[col]:.0f}")
+            elif row["asset_class"] == "rates":
+                d[col].append(f"{row[col]:.2%}")
+            elif row["asset_class"] == "equities":
+                if col in change_cols:
+                    d[col].append(f"{row[col]:.1%}")
+                else:
+                    d[col].append(f"{row[col]:,.0f}")
+            elif row["asset_class"] == "vix":
+                d[col].append(f"{row[col]:,.1f}")
+
+    for col in cols:
+        formatted_table_df[col] = d[col]
+
+    col_fmt = "l|c|cc|cc|cc|cc|ccc|l"
+    midrule_locs = ["UST 10Y", "S\\&P 500", "Vix"]
+    table = latex_table(
+        formatted_table_df.drop("asset_class", axis=1),
+        caption=cap,
+        table_notes=footnote,
+        col_fmt=col_fmt,
+        midrule_locs=midrule_locs,
+        prec=prec,
+        adjust=True,
+        col_style={f"%tile": "\pctbar"},
+        row_font={"header": "\\bfseries"},
+        multi_row_header=True,
+    )
+    return table
+
+
+def get_snapshot_values(
+    ix, dates, bm_mv, bm_rets, portfolio, corrected, config
+):
+    if config.index in {"US_IG", "US_IG_10+"}:
+        return get_ig_snapshot_values(
+            ix, dates, bm_mv, bm_rets, portfolio, config
+        )
+    elif config.index == "US_HY":
+        return get_hy_snapshot_values(
+            ix, dates, bm_mv, bm_rets, portfolio, corrected, config
+        )
+
+
+def get_ig_snapshot_values(ix, dates, bm_mv, bm_rets, portfolio, config):
     """
     Get single row from IG snapshot table for
     specified sector.
@@ -500,10 +875,10 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
         Index of the sector for current row.
     dates: Dict[str: datetime].
         Dict of pertinent dates for constructing row.
-    index_mv: float
+    bm_mv: float
         Current total IG Long Credit Index market value.
-    index_xsrets: pd.Series
-        Excess return series for index.
+    bm_rets: pd.Series
+        Excess or total return series for the benchmark index.
     portfolio: :class:`Index`
         Current state of representative account portfolio
         as an :class:`Index`.
@@ -530,19 +905,19 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
         d["OAD"] = np.nan
         d["YTD*XSRet"] = np.nan
         d["Mkt*Cap"] = 0
-        d["6m*Min"] = np.nan
-        d["6m*Max"] = np.nan
-        d["6m*%tile"] = 0
+        d[f"{config.horizon}m*Min"] = np.nan
+        d[f"{config.horizon}m*Max"] = np.nan
+        d[f"{config.horizon}m*%tile"] = 0
         d["z"] = None
         d[ow_col] = np.nan
         return pd.DataFrame(d, index=[ix.name])
 
-    # Get current state of the index and 6 month OAS/XSRet history.
+    # Get current state of the index and month OAS/XSRet history.
     ix_today = ix.subset(date=dates["~today"])
-    oas_6m = oas[oas.index > dates["~6m"]]
-    sector_xsrets = ix.market_value_weight("XSRet")
-    sector_xsrets_6m = sector_xsrets[sector_xsrets.index > dates["~6m"]]
-    xsrets = sector_xsrets_6m - index_xsrets
+    oas_horizon = oas[oas.index > dates[f"~{config.horizon}m"]]
+    sector_rets = ix.market_value_weight(config.return_type)
+    xsrets = sector_rets - bm_rets
+    xsrets = xsrets[xsrets.index >= dates[f"~{config.horizon}m"]]
     xsret_z_scores = (xsrets - np.mean(xsrets)) / np.std(xsrets)
     z = xsret_z_scores[-1]
     z = 0 if np.isnan(z) else z
@@ -561,10 +936,10 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
 
     d["OAD"] = ix_today.market_value_weight("OAD")[0]
     d["YTD*XSRet"] = 1e4 * ix.aggregate_excess_returns(start_date=dates["YTD"])
-    d["Mkt*Cap"] = ix_today.total_value()[0] / index_mv
-    d["6m*Min"] = np.min(oas_6m)
-    d["6m*Max"] = np.max(oas_6m)
-    d["6m*%tile"] = 100 * oas_6m.rank(pct=True)[-1]
+    d["Mkt*Cap"] = ix_today.total_value()[0] / bm_mv
+    d[f"{config.horizon}m*Min"] = np.min(oas_horizon)
+    d[f"{config.horizon}m*Max"] = np.max(oas_horizon)
+    d[f"{config.horizon}m*%tile"] = 100 * oas_horizon.rank(pct=True)[-1]
     d["z"] = z
     d["color"] = "blue" if z > 2 else "red" if z < -2 else None
 
@@ -587,125 +962,8 @@ def get_snapshot_values(ix, dates, index_mv, index_xsrets, portfolio):
     return pd.DataFrame(d, index=[ix.name])
 
 
-# %%
-
-if __name__ == "__main__":
-    date = "8/31/2020"
-    date = Database().date("today")
-    with Time():
-        make_credit_snapshots(date)
-        update_credit_snapshots()
-
-
-# %%
-# index = "US_HY"
-# date = None
-# from lgimapy.utils import Time
-#
-# with Time():
-#     db.add_hy_index_flags()
-# ix_full = db.build_market_index()
-# ix = ix_full.subset(in_H4UN_index=True)
-
-
-# %%
-
-
-# dates_d = dates_dict.copy()
-# n = 10
-
-
-def get_h4un_top_performer_table(db, dates_d, n=10):
-    """pd.DataFrame: top and worst ``n`` bonds and issuers in H4UN MTD."""
-    ix = db.build_market_index(in_H4UN_index=True, start=dates_d["MTD"])
-    cusip_trets = ix.accumulate_individual_total_returns().sort_values()
-
-    issuer_ix = ix.issuer_index()
-    issuer_trets = issuer_ix.accumulate_individual_total_returns().sort_values()
-
-    df = pd.DataFrame()
-    map = ix.cusip_to_bond_name_map()
-    df["Top*Bonds"] = pd.Series(cusip_trets[::-1][:10].index).map(map)
-    df["MTD*Return"] = cusip_trets[::-1][:10].values
-    df["Worst*Bonds"] = pd.Series(cusip_trets[:10].index).map(map)
-    df["MTD *Return"] = cusip_trets[:10].values
-    df["Top*Issuers"] = issuer_trets[::-1][:10].index
-    df[" MTD*Return"] = issuer_trets[::-1][:10].values
-    df["Worst*Issuers"] = issuer_trets[::-1][:10].index
-    df[" MTD *Return"] = issuer_trets[:10].values
-    return df
-
-    # bar_cols = ["MTD*Return", "MTD *Return", " MTD*Return", " MTD *Return"]
-    # doc.add_table(
-    #     h4un_performers,
-    #     caption="MTD H4UN Extreme Performers",
-    #     col_fmt="lrlrlrlr",
-    #     adjust=True,
-    #     hide_index=True,
-    #     prec={col: "1%" for col in bar_cols},
-    #     div_bar_col=bar_cols,
-    #     div_bar_kws={"cmin": "firebrick", "cmax": "steelblue"},
-    # )
-
-
-# dates_d
-
-
-# %%
-
-
-def get_cross_asset_table(db, dates_d):
-    """pd.DataFrame: Cross asset table of values, ranges, and percentiles"""
-    today = dates_d["~today"]
-    security_d = {
-        "credit": (["US_BBB", "US_BB", "US_B"], "OAS", "5y"),
-        "rates": (["UST_10Y", "UST_30Y", "LIBOR"], "YTW", "5y"),
-        "equities": (
-            ["SP500", "DOWJONES", "RUSSELL_2000", "VIX"],
-            "PRICE",
-            "1y",
-        ),
-    }
-    d = defaultdict(list)
-    for asset, (securities, field, horizon) in security_d.items():
-        df = db.load_bbg_data(
-            securities,
-            field,
-            start=db.date(horizon, reference_date=today),
-            end=today,
-            nan="ffill",
-        )
-        if asset == "credit":
-            df["BBB-BB"] = df["US_BBB"] - df["US_BB"]
-            df["BB-B"] = df["US_BB"] - df["US_B"]
-            df = df[["BBB-BB", "BB-B"]]
-        else:
-            df.columns = db.bbg_names(df.columns)
-        for col in df.columns:
-            s = df[col].dropna()
-            pct_s = s.rank(pct=True)
-            today_val = s.iloc[-1]
-            today_pct = pct_s.iloc[-1]
-            d["name"].append(col)
-            d["asset"].append(asset)
-            d["Close"].append(today_val)
-            for label, date in dates_d.items():
-                if label.startswith("~"):
-                    continue
-                d[label].append(today_val - s.loc[date])
-                d[f"{label}*%tile"].append(today_pct - pct_s.loc[date])
-
-            d["Min"].append(np.min(s))
-            d["Median"].append(np.median(s))
-            d["Max"].append(np.max(s))
-            d["%tile"].append(100 * pct_s.iloc[-1])
-    df = pd.DataFrame(d).set_index("name", drop=True).rename_axis(None)
-    return df
-
-
-# %%
 def get_hy_snapshot_values(
-    ix, dates, index_mv, index_xsrets, portfolio, horizon=6
+    ix, dates, bm_mv, bm_rets, portfolio, corrected, config
 ):
     """
     Get single row for HY snapshot table for specified sector.
@@ -716,9 +974,9 @@ def get_hy_snapshot_values(
         Index of the sector for current row.
     dates: Dict[str: datetime].
         Dict of pertinent dates for constructing row.
-    index_mv: float
+    bm_mv: float
         Current total IG Long Credit Index market value.
-    index_xsrets: pd.Series
+    bm_rets: pd.Series
         Excess return series for index.
     portfolio: :class:`Index`
         Current state of representative account portfolio
@@ -732,16 +990,17 @@ def get_hy_snapshot_values(
     # Get synthetic OAS and price histories.
     ow_col = "-*OW" if portfolio is None else f"{portfolio.name}*OW"
     if corrected:
-        allowable_ratings = {
-            "H4UN": ("BB+", "B-"),
-            "HC1N": ("BB+", "BB-"),
-            "HUC2": ("B+", "B-"),
-            "HUC3": ("CCC+", "C"),
-        }.get(ix.name, ("BB+", "B-"))
+        try:
+            allowable_ratings = ix.constraints["rating"]
+        except KeyError:
+            allowable_ratings = ("BB+", "B-")
         try:
             ix_corrected = ix.drop_ratings_migrations(allowable_ratings)
             oas = ix_corrected.get_synthetic_differenced_history("OAS")
-            ytw = ix_corrected.get_synthetic_differenced_history("YTW")
+            ytw = (
+                ix_corrected.get_synthetic_differenced_history("YieldToWorst")
+                / 100
+            )
         except UnboundLocalError:
             # DataFrame is emtpy.
             d = OrderedDict([("Close*OAS", np.nan), ("Close*Price", np.nan)])
@@ -750,29 +1009,28 @@ def get_hy_snapshot_values(
                     continue
                 d[f"{col_name}*OAS"] = np.nan
                 d[f"{col_name}*Price"] = np.nan
-            d["OAD"] = np.nan
-            d["YTD*XSRet"] = np.nan
+            d["Mod Dur*to Worst"] = np.nan
+            d["MTD*TRet"] = np.nan
+            d["YTD*TRet"] = np.nan
             d["Mkt*Cap"] = 0
-            d["6m*Min"] = np.nan
-            d["6m*Max"] = np.nan
-            d["6m*%tile"] = 0
+            d[f"{config.horizon}m*Min"] = np.nan
+            d[f"{config.horizon}m*Med"] = np.nan
+            d[f"{config.horizon}m*Max"] = np.nan
+            d[f"{config.horizon}m*%tile"] = 0
             d["z"] = None
             d[ow_col] = np.nan
             return pd.DataFrame(d, index=[ix.name])
     else:
         oas = ix.OAS()
-        ytw = ix.market_value_weight("YieldToWorst")
+        ytw = ix.market_value_weight("YieldToWorst") / 100
 
     # Get current state of the index and 6 month OAS/XSRet history.
     ix_today = ix.subset(date=dates["~today"])
-    oas_horizon = oas[oas.index > dates[f"~{horizon}m"]]
-    sector_xsrets = ix.market_value_weight("XSRet")
-    sector_xsrets_horizon = sector_xsrets[
-        sector_xsrets.index > dates[f"~{horizon}m"]
-    ]
-    xsrets = sector_xsrets_horizon - index_xsrets
-    xsret_z_scores = (xsrets - np.mean(xsrets)) / np.std(xsrets)
-    z = xsret_z_scores[-1]
+    oas_horizon = oas[oas.index > dates[f"~{config.horizon}m"]]
+    rel_oas = -(oas.diff() - bm_rets.diff())
+    rel_oas = rel_oas[rel_oas.index > dates[f"~{config.horizon}m"]]
+    rel_z = (rel_oas - np.mean(rel_oas)) / np.std(rel_oas)
+    z = rel_z.iloc[-1]
     z = 0 if np.isnan(z) else z
 
     # Builid row of the table.
@@ -787,12 +1045,16 @@ def get_hy_snapshot_values(
             d[f"{col_name}*OAS"] = np.nan
             d[f"{col_name}*YTW"] = np.nan
 
-    d["Mod Dur*Worst"] = ix_today.market_value_weight("ModDurtoWorst")[0]
-    d["YTD*XSRet"] = 1e4 * ix.aggregate_excess_returns(start_date=dates["YTD"])
-    d["Mkt*Cap"] = ix_today.total_value()[0] / index_mv
-    d[f"{horizon}m*Min"] = np.min(oas_horizon)
-    d[f"{horizon}m*Max"] = np.max(oas_horizon)
-    d[f"{horizon}m*%tile"] = 100 * oas_horizon.rank(pct=True)[-1]
+    d["Mod Dur*to Worst"] = ix_today.market_value_weight("ModDurtoWorst").iloc[
+        0
+    ]
+    d["MTD*TRet"] = ix.aggregate_total_returns(start_date=dates["MTD"])
+    d["YTD*TRet"] = ix.aggregate_total_returns(start_date=dates["YTD"])
+    d["Mkt*Cap"] = ix_today.total_value().iloc[0] / bm_mv
+    d[f"{config.horizon}m*Min"] = np.min(oas_horizon)
+    d[f"{config.horizon}m*Med"] = np.median(oas_horizon)
+    d[f"{config.horizon}m*Max"] = np.max(oas_horizon)
+    d[f"{config.horizon}m*%tile"] = 100 * oas_horizon.rank(pct=True)[-1]
     d["z"] = z
     d["color"] = "blue" if z > 2 else "red" if z < -2 else None
 
@@ -800,7 +1062,12 @@ def get_hy_snapshot_values(
     if portfolio is not None:
         # Find all CUSIPs that fit current sector, whether they
         # are index eligible or not.
-        unused_constraints = {"in_stats_index", "maturity", "name"}
+        unused_constraints = {
+            "in_stats_index",
+            "in_H4UN_index",
+            "in_HUC3_index",
+            "name",
+        }
         constraints = {
             k: v
             for k, v in ix.constraints.items()
@@ -813,3 +1080,94 @@ def get_hy_snapshot_values(
         d[ow_col] = np.nan
 
     return pd.DataFrame(d, index=[ix.name])
+
+
+def get_h4un_gainers_losers_table(db, dates_d, n=10):
+    """pd.DataFrame: top and worst ``n`` bonds and issuers in H4UN MTD."""
+    ix = db.build_market_index(in_H4UN_index=True, start=dates_d["MTD"])
+    cusip_trets = ix.accumulate_individual_total_returns().sort_values()
+
+    issuer_ix = ix.issuer_index()
+    issuer_trets = issuer_ix.accumulate_individual_total_returns().sort_values()
+
+    df = pd.DataFrame()
+    map = ix.cusip_to_bond_name_map()
+    df["Top*Bonds"] = pd.Series(cusip_trets[::-1][:10].index).map(map)
+    df["MTD Return"] = cusip_trets[::-1][:10].values
+    df["Worst*Bonds"] = pd.Series(cusip_trets[:10].index).map(map)
+    df[" MTD Return"] = cusip_trets[:10].values
+    df["Top*Issuers"] = issuer_trets[::-1][:10].index
+    df[" MTD Return "] = issuer_trets[::-1][:10].values
+    df["Worst*Issuers"] = issuer_trets[:10].index
+    df["MTD  Return"] = issuer_trets[:10].values
+    df.index += 1
+    return df
+
+
+def get_cross_asset_table(db, dates_d):
+    """pd.DataFrame: Cross asset table of values, ranges, and percentiles"""
+    today = dates_d["~today"]
+    security_d = {
+        "credit": (["US_BBB", "US_BB", "US_B"], "OAS", "5y"),
+        "rates": (["UST_10Y", "UST_30Y", "LIBOR"], "YTW", "5y"),
+        "equities": (
+            ["SP500", "DOWJONES", "RUSSELL_2000"],
+            "PRICE",
+            "1y",
+        ),
+        "vix": (["VIX"], "PRICE", "1y"),
+    }
+    d = defaultdict(list)
+    for asset_class, (securities, field, horizon) in security_d.items():
+        df = db.load_bbg_data(
+            securities,
+            field,
+            start=db.date(horizon, reference_date=today),
+            end=today,
+            nan="ffill",
+        )
+        if isinstance(df, pd.Series):
+            df = df.to_frame()
+        if asset_class == "credit":
+            df["BBB-BB"] = df["US_BBB"] - df["US_BB"]
+            df["BB-B"] = df["US_BB"] - df["US_B"]
+            df = df[["BBB-BB", "BB-B"]]
+        elif asset_class == "vix":
+            df.columns = [db.bbg_names(df.columns)]
+        else:
+            df.columns = db.bbg_names(df.columns)
+        for col in df.columns:
+            s = df[col].dropna()
+            pct_s = s.rank(pct=True)
+            today_val = s.iloc[-1]
+            today_pct = pct_s.iloc[-1]
+            d["name"].append(col)
+            d["asset_class"].append(asset_class)
+            d["Close"].append(today_val)
+            for label, date in dates_d.items():
+                if label.startswith("~"):
+                    continue
+                if asset_class == "equities":
+                    # Percent changes.
+                    d[label].append((today_val / s.loc[date]) - 1)
+                else:
+                    # Absolute changes.
+                    d[label].append(today_val - s.loc[date])
+                d[f"{label}*%tile"].append(today_pct - pct_s.loc[date])
+
+            d["Min"].append(np.min(s))
+            d["Median"].append(np.median(s))
+            d["Max"].append(np.max(s))
+            d["%tile"].append(100 * pct_s.iloc[-1])
+    df = pd.DataFrame(d).set_index("name", drop=True).rename_axis(None)
+    return df
+
+
+# %%
+
+if __name__ == "__main__":
+    date = "8/31/2020"
+    date = Database().date("today")
+    with Time():
+        make_credit_snapshots(date)
+        update_credit_snapshots()
