@@ -56,7 +56,7 @@ def main():
     update_rating_changes()
     print("Updated Rating Changes\n")
     build_issuer_change_report()
-    print("Index Change Report Complete\n")
+    print("Issuer Change Report Complete\n")
     make_credit_snapshots()
     update_credit_snapshots()
     print("Credit Snaphshots Complete\n")
