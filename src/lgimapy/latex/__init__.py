@@ -2,6 +2,7 @@ from lgimapy.latex.latex_utils import (
     find_max_locs,
     find_min_locs,
     greeks_to_latex,
+    drop_consecutive_duplicates,
 )
 from lgimapy.latex.table import (
     combine_error_table,
@@ -17,6 +18,7 @@ __all__ = [
     "find_max_locs",
     "find_min_locs",
     "greeks_to_latex",
+    "drop_consecutive_duplicates",
     "combine_error_table",
     "latex_array",
     "latex_matrix",

@@ -889,13 +889,25 @@ class Document(LatexScript):
 
         # Documents with transparent images must be compiled twice.
         n = 2 if "\\transparent" in doc else 1
-        for _ in range(n):
-            subprocess.check_call(
-                ["pdflatex", f"{fid}.tex", "-interaction=nonstopmode"],
-                shell=False,
-                stderr=subprocess.STDOUT,
-                stdout=subprocess.DEVNULL,
-            )
+        while True:
+            try:
+                for _ in range(n):
+                    subprocess.check_call(
+                        ["pdflatex", f"{fid}.tex", "-interaction=nonstopmode"],
+                        shell=False,
+                        stderr=subprocess.STDOUT,
+                        stdout=subprocess.DEVNULL,
+                    )
+            except (PermissionError, subprocess.CalledProcessError):
+                print(f"\nPermissionError:\n{full_fid} may be open.")
+                msg = "  [Y] Retry\n  [N] Exit\n"
+                retry = str(input(msg)).upper()
+                if retry == "Y":
+                    continue
+                else:
+                    break
+            else:
+                break
 
         # Clean up temporary files.
         if not save_tex and not self._loaded_file:
@@ -1000,6 +1012,19 @@ def merge_pdfs(merged_fid, fids, path=None, read_path=None, write_path=None):
     for fid in pdf_fids:
         pdf = pdfrw.PdfReader(fid)
         pdf_writer.addpages(pdf.pages)
-    for __ in range(2):
-        # Run twice to properly create transparent images.
-        pdf_writer.write(merged_pdf_fid)
+
+    while True:
+        try:
+            # Run twice to properly create transparent images.
+            for _ in range(2):
+                pdf_writer.write(merged_pdf_fid)
+        except PermissionError:
+            print(f"\nPermissionError:\n{merged_pdf_fid} is open.")
+            msg = "  [Y] Retry\n  [N] Exit\n"
+            retry = str(input(msg)).upper()
+            if retry == "Y":
+                continue
+            else:
+                break
+        else:
+            break
