@@ -180,3 +180,31 @@ def find_min_locs(df, axis=0):
                 if num_df[j, i] == i_min:
                     ij_min.append((j, i))
     return ij_min
+
+
+def drop_consecutive_duplicates(vals):
+    """
+    Replace consecutive duplicate names in a list
+    with empty strings.
+
+    Parameters
+    ----------
+    vals: array_like
+        Values with duplicates.
+
+    Returns
+    -------
+    unique_vals: list
+        Unique values from list, filled with empty strings where
+        duplicated values used to be.
+    """
+    vals = list(vals)
+    prev = vals[0]
+    unique_vals = [prev]
+    for val in vals[1:]:
+        if val == prev:
+            unique_vals.append(" ")
+        else:
+            unique_vals.append(val)
+            prev = val
+    return unique_vals
