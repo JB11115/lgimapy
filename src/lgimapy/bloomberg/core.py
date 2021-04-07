@@ -6,7 +6,11 @@ from datetime import datetime as dt
 import pandas as pd
 import pybbg
 
-from lgimapy.utils import to_list
+from lgimapy.utils import to_list, to_datetime
+
+
+def fmt_bbg_dt(date):
+    return to_datetime(date).strftime("%Y%m%d")
 
 
 class BBGInputConverter:
@@ -20,24 +24,19 @@ class BBGInputConverter:
         self.yellow_key = yellow_key
         self.fields = to_list(fields, dtype=str)
 
-        self._datefmt = "%Y%m%d"
         self._start = start
         self._end = end
 
     @property
     def start(self):
-        return (
-            None
-            if self._start is None
-            else pd.to_datetime(self._start).strftime(self._datefmt)
-        )
+        return None if self._start is None else fmt_bbg_dt(self._start)
 
     @property
     def end(self):
         return (
-            dt.today().strftime(self._datefmt)
+            fmt_bbg_dt(dt.today())
             if self._end is None
-            else pd.to_datetime(self._end).strftime(self._datefmt)
+            else fmt_bbg_dt(self._end)
         )
 
     @property
