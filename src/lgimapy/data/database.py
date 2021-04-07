@@ -17,7 +17,13 @@ import pyodbc
 
 from lgimapy.bloomberg import bdp, get_bloomberg_subsector
 from lgimapy.data import (
+    clean_dtypes,
     concat_index_dfs,
+    convert_sectors_to_fin_flags,
+    credit_sectors,
+    HY_sectors,
+    IG_sectors,
+    IG_market_segments,
     Index,
     new_issue_mask,
     Account,
@@ -38,212 +44,6 @@ from lgimapy.utils import (
 )
 
 # %%
-
-
-def clean_dtypes(df):
-    """pd.DataFrame: Convert dtypes columns to proper dtype."""
-    reverse_dtype_dict = {
-        "float32": [
-            "CouponRate",
-            "CleanPrice",
-            "OAD",
-            "OAS",
-            "OASD",
-            "ZSpread",
-            "DTS",
-            "DTS_Libor",
-            "OAS_1W",
-            "OAS_1M",
-            "OAS_3M",
-            "OAS_6M",
-            "OAS_12M",
-            "LiquidityCostScore",
-            "AccruedInterest",
-            "AmountOutstanding",
-            "LQA",
-            "KRD06mo",
-            "KRD02yr",
-            "KRD05yr",
-            "KRD10yr",
-            "KRD20yr",
-            "KRD30yr",
-            "YieldToWorst",
-            "YieldToMat",
-            "ModDurationToWorst",
-            "ModDurationToMat",
-            "ModDurtoMat",
-            "ModDurtoMat",
-            "NumericRating",
-            "MaturityYears",
-            "TRet",
-            "XSRet",
-            "MTDXSRet",
-            "MTDLiborXSRet",
-            "IssueYears",
-            "DirtyPrice",
-            "MarketValue",
-            "PrevMarketValue",
-            "Quantity",
-            "AccountWeight",
-            "BenchmarkWeight",
-            "AnalystRating",
-        ],
-        "float16": [
-            "AnalystRating",
-        ],
-        "int8": [
-            "OriginalMaturity",
-            "FinancialFlag",
-            "Eligibility144AFlag",
-            "AnyIndexFlag",
-            "USCreditReturnsFlag",
-            "USCreditStatisticsFlag",
-            "USAggReturnsFlag",
-            "USAggStatisticsFlag",
-            "USHYReturnsFlag",
-            "USHYStatisticsFlag",
-            "H0A0Flag",
-            "H4UNFlag",
-            "HC1NFlag",
-            "HUC2Flag",
-            "HUC3Flag",
-        ],
-        "category": [
-            "CUSIP",
-            "ISIN",
-            "Ticker",
-            "Issuer",
-            "RiskEntity",
-            "Sector",
-            "Subsector",
-            "MLSector",
-            "MLSubsector",
-            "BAMLTopLevelSector",
-            "BAMLSector",
-            "CompositeRating",
-            "MoodyRating",
-            "SPRating",
-            "FitchRating",
-            "CollateralType",
-            "CouponType",
-            "CallType",
-            "Currency",
-            "CountryOfRisk",
-            "CountryOfDomicile",
-            "MarketOfIssue",
-            "Account",
-        ],
-    }
-    # Build col:dtype dict and apply to input DataFrame.
-    df_columns = set(df.columns)
-    dtype_dict = {}
-    for dtype, col_names in reverse_dtype_dict.items():
-        for col in col_names:
-            if col in df_columns:
-                dtype_dict[col] = dtype
-            else:
-                continue
-    return df.astype(dtype_dict)
-
-
-def convert_sectors_to_fin_flags(sectors):
-    """
-    Convert sectors to flag indicating if they
-    are non-financial (0), financial (1), or other (2).
-
-    Parameters
-    ----------
-    sectors: pd.Series
-        Sectors
-
-    Returns
-    -------
-    fin_flags: nd.array
-        Array of values indicating if sectors are non-financial (0),
-        financial (1), or other (Treasuries, Sovs, Govt owned).
-    """
-
-    financials = {
-        "P&C",
-        "LIFE",
-        "APARTMENT_REITS",
-        "BANKING",
-        "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-        "RETAIL_REITS",
-        "HEALTHCARE_REITS",
-        "OTHER_REITS",
-        "FINANCIAL_OTHER",
-        "FINANCE_COMPANIES",
-        "OFFICE_REITS",
-        "SIFI_BANKS_SR",
-        "SIFI_BANKS_SUB",
-        "YANKEE_BANKS",
-        "REITS",
-        "US_REGIONAL_BANKS",
-        # Merrill Lynch Sectors
-        "BANKS",
-        "GENERAL_FINANCIAL",
-        "GUARANTEED_FINANCIALS",
-        "LIFE_INSURANCE",
-        "NONLIFE_INSURANCE",
-        "PUBLIC_BANKS",
-        "REAL_ESTATE_INVESTMENT_&_SERVICES",
-        "REAL_ESTATE_INVESTMENT_TRUSTS",
-        "REGIONS",
-    }
-    other = {
-        "TREASURIES",
-        "LOCAL_AUTHORITIES",
-        "SOVEREIGN",
-        "SUPRANATIONAL",
-        "INDUSTRIAL_OTHER",
-        "GOVERNMENT_GUARANTEE",
-        "OWNED_NO_GUARANTEE",
-        "HOSPITALS",
-        "MUNIS",
-        "UNIVERSITY",
-        "UTILITY",
-        "UTILITY_OTHER",
-        "NATURAL_GAS",
-        "ELECTRIC",
-        # Merrill Lynch Sectors
-        "AGENCIES",
-        "AUSTRALIA_COVERED",
-        "AUSTRIA_COVERED",
-        "BELGIUM_COVERED",
-        "CANADA_COVERED",
-        "DENMARK_COVERED",
-        "ELECTRICITY",
-        "FINLAND_COVERED",
-        "FRANCE_COVERED_LEGAL",
-        "FRANCE_COVERED_SFH",
-        "FRANCE_COVERED_STRUCTURED",
-        "GAS_/_WATER_&_MULTIUTILITIE",
-        "HYPOTHEKENPFANDBRIEFE",
-        "IRELAND_COVERED",
-        "ITALY_COVERED",
-        "LUXEMBOURG_COVERED",
-        "NETHERLANDS_COVERED",
-        "NEW_ZEALAND_COVERED",
-        "NORWAY_COVERED",
-        "OEFFENTLICHE_PFANDBRIEFE",
-        "OTHER_COLLATERALIZED",
-        "OTHER_PFANDBRIEFE",
-        "OTHER_SOVEREIGNS",
-        "POOLED_CEDULAS",
-        "PORTUGAL_COVERED",
-        "SECURITIZED",
-        "SINGLE_CEDULAS",
-        "SOVEREIGNS",
-        "SWEDEN_COVERED",
-        "SWITZERLAND_COVERED",
-        "UK_COVERED",
-        "US_COVERED",
-    }
-    fin_flags = np.zeros(len(sectors))
-    fin_flags[sectors.isin(financials)] = 1
-    fin_flags[sectors.isin(other)] = 2
-    return fin_flags
 
 
 def get_basys_fids(market):
@@ -291,7 +91,6 @@ class Database:
     def __init__(self, server="LIVE", market="US"):
         self.market = check_market(market)
         # Load mapping from standard ratings to numeric values.
-        self._ratings = load_json("ratings")
         self._bbg_dfs = {}
         n = 1 if server.upper() == "LIVE" else 2
         self._conn = pyodbc.connect(
@@ -310,6 +109,15 @@ class Database:
         be pickled and used in multiprocessing/multithreading.
         """
         del self._conn
+
+    @property
+    @lru_cache(maxsize=None)
+    def _ratings(self):
+        """Dict[str: int]: Memoized rating map."""
+        ratings_map = load_json("ratings")
+        for i in range(23):
+            ratings_map[i] = i
+        return ratings_map
 
     @property
     @lru_cache(maxsize=None)
@@ -384,7 +192,7 @@ class Database:
         if source is None:
             source = "bloomberg" if self.market == "US" else "iboxx"
         source = source.lower()
-        allowable_sources = {"bloomberg", "iboxx", "baml"}
+        allowable_sources = {"bloomberg", "iboxx", "baml", "bloomberg_js"}
         if source in allowable_sources:
             return load_json(f"index_kwargs/{source}")
         else:
@@ -407,6 +215,18 @@ class Database:
         fid = root("data/long_corp_sectors.parquet")
         sector_df = pd.read_parquet(fid)
         return sorted(sector_df["Sector"].values)
+
+    def credit_sectors(self, *args, **kwargs):
+        return credit_sectors(*args, **kwargs)
+
+    def HY_sectors(self, *args, **kwargs):
+        return HY_sectors(*args, **kwargs)
+
+    def IG_sectors(self, *args, **kwargs):
+        return IG_sectors(*args, **kwargs)
+
+    def IG_market_segments(self, *args, **kwargs):
+        return IG_market_segments(*args, **kwargs)
 
     def rating_changes(
         self,
@@ -753,8 +573,13 @@ class Database:
         market: ``{"US", "EUR", "GBP"}``, optional
             Market to get trade dates for.
             Defaults to :attr:`Database.market`.
-        kwargs:
-            Keyword arguments for :func:`nearest_date`.
+        inclusive: bool, default=True
+            Whether to include to specified reference date in
+            the searchable list.
+        before: bool, default=True
+            Whether to include dates before the reference date.
+        after: bool, default=True
+            Whether to include dates after the reference date.
 
         Returns
         -------
@@ -1210,7 +1035,6 @@ class Database:
             "Ticker",
             "CollateralType",
             "CouponRate",
-            "MaturityDate",
         ]
         df.dropna(subset=required_cols, how="any", inplace=True)
 
@@ -2133,6 +1957,7 @@ class Database:
         name=None,
         account=None,
         strategy=None,
+        ignored_accounts=None,
         manager=None,
         universe="returns",
         drop_cash=True,
@@ -2290,12 +2115,22 @@ class Database:
             return df
         if start == end:
             if sql_strategy != "NULL":
-                return Strategy(df, name=sql_strategy.strip("'"), date=start)
+                return Strategy(
+                    df,
+                    name=sql_strategy.strip("'"),
+                    date=start,
+                    ignored_accounts=ignored_accounts,
+                )
             elif sql_account != "NULL":
                 if len(acnts) == 1:
                     return Account(df, sql_account.strip("'"), date=start)
                 else:
-                    return Strategy(df, sql_account, date=start)
+                    return Strategy(
+                        df,
+                        sql_account,
+                        date=start,
+                        ignored_accounts=ignored_accounts,
+                    )
             else:
                 return df
         else:
@@ -2585,9 +2420,11 @@ def main():
     from collections import defaultdict
     from lgimapy import vis
     from lgimapy.utils import Time, load_json, dump_json
-    from lgimapy.bloomberg import bdp
+    from lgimapy.bloomberg import bdp, bdh
     from tqdm import tqdm
     from lgimapy.data import groupby
+
+    from lgimapy.data import IG_sectors, HY_sectors
 
     vis.style()
     self = Database()
@@ -2595,14 +2432,43 @@ def main():
     # %%
     db = Database()
     db.load_market_data()
+    ix_lc = db.build_market_index(in_H4UN_index=True)
+    # %%
+    isins = set()
+    for sector in HY_sectors():
+        ix = ix_lc.subset(**db.index_kwargs(sector, source="baml"))
+        isins |= set(ix.isins)
+
+    ix = ix_lc.subset(isin=isins, special_rules="~ISIN")
+    len(ix.df)
+    sorted(ix.df["BAMLSector"].unique())
 
     # %%
-    mc = db.build_market_index(in_returns_index=True)
-    lc = mc.subset(maturity=(10, None))
-    mc.OAS().squeeze()
-    lc.OAS().squeeze()
+    db.load_market_data(start="1/1/2020")
+    # %%
+    cusips = ["03523TBV9", "21036PBD9", "60871RAH3", "423012AG8"]
+    ix = db.build_market_index(cusip=cusips, start="3/31/2020")
+    ix.get_value_history("OAS").to_csv("spreads_for_My.csv")
+    # %%
+    df = db.rating_changes(start="3/1/2021")
+    df = df[
+        (df["NumericRating_CHANGE"] < 0)
+        | (df["SPRating_CHANGE"] < 0)
+        | (df["MoodyRating_CHANGE"] < 0)
+        | (df["FitchRating_CHANGE"] < 0)
+    ]
+    port = db.load_portfolio(account="CITLD")
+    bm = port.df["BM_DTS"].sum()
+    p = port.df["P_DTS"].sum()
+    p / bm
+    p * 0.95 / bm
+    port.dts("pct")
+
+    weeks = (db.date("today") - pd.to_datetime("1/1/2021")).days / 7
+    132 / weeks
 
     # %%
-    ix = db.build_market_index(in_H4UN_index=True)
-    ix.OAS().squeeze()
-    ix.market_value_weight("YieldToWorst").squeeze()
+    name = 'I00039'
+    start = '4/1/2021'
+    fields = ['INDEX_OAS_TSY', 'INDEX_OAD_TSY', 'INDEX_VALUE', 'INDEX_EXCESS_RETURN_MTD', 'INDEX_YIELD_TO_WORST', 'INDEX_MARKET_VALUE']
+    bdh(name, yellow_key="Index", fields=fields, start=start).T
