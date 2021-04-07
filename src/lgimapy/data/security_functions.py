@@ -1,6 +1,218 @@
+from functools import lru_cache
+
 import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype, union_categoricals
+
+from lgimapy.utils import load_json, to_set
+
+# %%
+
+
+def clean_dtypes(df):
+    """pd.DataFrame: Convert dtypes columns to proper dtype."""
+    reverse_dtype_dict = {
+        "float32": [
+            "CouponRate",
+            "CleanPrice",
+            "OAD",
+            "OAS",
+            "OASD",
+            "ZSpread",
+            "DTS",
+            "DTS_Libor",
+            "OAS_1W",
+            "OAS_1M",
+            "OAS_3M",
+            "OAS_6M",
+            "OAS_12M",
+            "LiquidityCostScore",
+            "AccruedInterest",
+            "AmountOutstanding",
+            "LQA",
+            "KRD06mo",
+            "KRD02yr",
+            "KRD05yr",
+            "KRD10yr",
+            "KRD20yr",
+            "KRD30yr",
+            "YieldToWorst",
+            "YieldToMat",
+            "ModDurationToWorst",
+            "ModDurationToMat",
+            "ModDurtoMat",
+            "ModDurtoMat",
+            "NumericRating",
+            "MaturityYears",
+            "TRet",
+            "XSRet",
+            "MTDXSRet",
+            "MTDLiborXSRet",
+            "IssueYears",
+            "DirtyPrice",
+            "MarketValue",
+            "PrevMarketValue",
+            "Quantity",
+            "AccountWeight",
+            "BenchmarkWeight",
+            "AnalystRating",
+        ],
+        "float16": [
+            "AnalystRating",
+        ],
+        "int8": [
+            "OriginalMaturity",
+            "FinancialFlag",
+            "Eligibility144AFlag",
+            "AnyIndexFlag",
+            "USCreditReturnsFlag",
+            "USCreditStatisticsFlag",
+            "USAggReturnsFlag",
+            "USAggStatisticsFlag",
+            "USHYReturnsFlag",
+            "USHYStatisticsFlag",
+            "H0A0Flag",
+            "H4UNFlag",
+            "HC1NFlag",
+            "HUC2Flag",
+            "HUC3Flag",
+        ],
+        "category": [
+            "CUSIP",
+            "ISIN",
+            "Ticker",
+            "Issuer",
+            "RiskEntity",
+            "Sector",
+            "Subsector",
+            "MLSector",
+            "MLSubsector",
+            "BAMLTopLevelSector",
+            "BAMLSector",
+            "CompositeRating",
+            "MoodyRating",
+            "SPRating",
+            "FitchRating",
+            "CollateralType",
+            "CouponType",
+            "CallType",
+            "Currency",
+            "CountryOfRisk",
+            "CountryOfDomicile",
+            "MarketOfIssue",
+            "Account",
+        ],
+    }
+    # Build col:dtype dict and apply to input DataFrame.
+    df_columns = set(df.columns)
+    dtype_dict = {}
+    for dtype, col_names in reverse_dtype_dict.items():
+        for col in col_names:
+            if col in df_columns:
+                dtype_dict[col] = dtype
+            else:
+                continue
+    return df.astype(dtype_dict)
+
+
+def convert_sectors_to_fin_flags(sectors):
+    """
+    Convert sectors to flag indicating if they
+    are non-financial (0), financial (1), or other (2).
+
+    Parameters
+    ----------
+    sectors: pd.Series
+        Sectors
+
+    Returns
+    -------
+    fin_flags: nd.array
+        Array of values indicating if sectors are non-financial (0),
+        financial (1), or other (Treasuries, Sovs, Govt owned).
+    """
+
+    financials = {
+        "P&C",
+        "LIFE",
+        "APARTMENT_REITS",
+        "BANKING",
+        "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+        "RETAIL_REITS",
+        "HEALTHCARE_REITS",
+        "OTHER_REITS",
+        "FINANCIAL_OTHER",
+        "FINANCE_COMPANIES",
+        "OFFICE_REITS",
+        "SIFI_BANKS_SR",
+        "SIFI_BANKS_SUB",
+        "YANKEE_BANKS",
+        "REITS",
+        "US_REGIONAL_BANKS",
+        # Merrill Lynch Sectors
+        "BANKS",
+        "GENERAL_FINANCIAL",
+        "GUARANTEED_FINANCIALS",
+        "LIFE_INSURANCE",
+        "NONLIFE_INSURANCE",
+        "PUBLIC_BANKS",
+        "REAL_ESTATE_INVESTMENT_&_SERVICES",
+        "REAL_ESTATE_INVESTMENT_TRUSTS",
+        "REGIONS",
+    }
+    other = {
+        "TREASURIES",
+        "LOCAL_AUTHORITIES",
+        "SOVEREIGN",
+        "SUPRANATIONAL",
+        "INDUSTRIAL_OTHER",
+        "GOVERNMENT_GUARANTEE",
+        "OWNED_NO_GUARANTEE",
+        "HOSPITALS",
+        "MUNIS",
+        "UNIVERSITY",
+        "UTILITY",
+        "UTILITY_OTHER",
+        "NATURAL_GAS",
+        "ELECTRIC",
+        # Merrill Lynch Sectors
+        "AGENCIES",
+        "AUSTRALIA_COVERED",
+        "AUSTRIA_COVERED",
+        "BELGIUM_COVERED",
+        "CANADA_COVERED",
+        "DENMARK_COVERED",
+        "ELECTRICITY",
+        "FINLAND_COVERED",
+        "FRANCE_COVERED_LEGAL",
+        "FRANCE_COVERED_SFH",
+        "FRANCE_COVERED_STRUCTURED",
+        "GAS_/_WATER_&_MULTIUTILITIE",
+        "HYPOTHEKENPFANDBRIEFE",
+        "IRELAND_COVERED",
+        "ITALY_COVERED",
+        "LUXEMBOURG_COVERED",
+        "NETHERLANDS_COVERED",
+        "NEW_ZEALAND_COVERED",
+        "NORWAY_COVERED",
+        "OEFFENTLICHE_PFANDBRIEFE",
+        "OTHER_COLLATERALIZED",
+        "OTHER_PFANDBRIEFE",
+        "OTHER_SOVEREIGNS",
+        "POOLED_CEDULAS",
+        "PORTUGAL_COVERED",
+        "SECURITIZED",
+        "SINGLE_CEDULAS",
+        "SOVEREIGNS",
+        "SWEDEN_COVERED",
+        "SWITZERLAND_COVERED",
+        "UK_COVERED",
+        "US_COVERED",
+    }
+    fin_flags = np.zeros(len(sectors))
+    fin_flags[sectors.isin(financials)] = 1
+    fin_flags[sectors.isin(other)] = 2
+    return fin_flags
 
 
 def standardize_cusips(df):
@@ -152,3 +364,53 @@ def new_issue_mask(df):
         (idt.month, idt.year) == (dt.month, dt.year)
         for idt, dt in zip(df["IssueDate"], df["Date"])
     ]
+
+
+@lru_cache(maxsize=None)
+def index_kwargs_dict(source):
+    source = source.lower()
+    allowable_sources = {"bloomberg", "iboxx", "baml", "bloomberg_js"}
+    if source in allowable_sources:
+        return load_json(f"index_kwargs/{source}")
+    else:
+        raise ValueError(
+            f"'{source}' not in allowable sources. "
+            f"Please select one of {allowable_sources}."
+        )
+
+
+def index_kwargs(key, unused_constraints=None, source=None, **kwargs):
+    """
+    Index keyword arguments for saved indexes,
+    with ability to override/add/remove arguments.
+
+    Parameters
+    ----------
+    key: str
+        Key of stored index in `indexes.json`.
+    unused_constraints: str or List[str], optional
+        Constraintes to remove from kwargs list if present.
+    source: ``{"bloomberg", "iboxx", "baml"}``, optional
+        Source for index kwargs. Defaults based on current
+        :attr:`market`.
+    kwargs:
+        Keyword arguments to override or add to index.
+
+    Returns
+    -------
+    dict:
+        Keyword arguments and respective constraints
+        for specified index.
+    """
+    source = "bloomberg" if source is None else source
+    try:
+        d = index_kwargs_dict(source)[key].copy()
+    except KeyError:
+        raise KeyError(f"{key} is not a stored Index.")
+
+    if unused_constraints is not None:
+        unused_cons = to_set(unused_constraints, dtype=str)
+        d = {k: v for k, v in d.items() if k not in unused_cons}
+
+    d.update(**kwargs)
+    return d
