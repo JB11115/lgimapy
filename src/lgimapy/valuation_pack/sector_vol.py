@@ -33,6 +33,10 @@ def update_sector_models(fid, db):
     doc = Document(
         fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
     )
+    # db = Database()
+    # db.load_market_data(start=db.date('1.2y'))
+    # maturity = (10, None)
+    # name = 'Long Credit'
     # fid = "val_pack_temp"
     for page, maturity in page_maturities.items():
         table_df = get_sector_table(maturity, path=path, db=db)
@@ -180,8 +184,14 @@ def get_sector_table(maturity, path, db):
     vol_model = np.full(len(table_df), np.NaN)
     for i, key in enumerate(table_df.set_index("name")["rating"].items()):
         vol_model[i] = vol_z_scores.get(key, np.NaN)
-    # Make negative to have same sign as xsret model.
-    table_df["vol_model"] = -vol_model
+    table_df["vol_model"] = vol_model
+
+    # Add sector vs median results to table.
+    median_z_scores = historical_sector_median_zscore(sectors, maturity, db)
+    median_model = np.full(len(table_df), np.NaN)
+    for i, key in enumerate(table_df.set_index("name")["rating"].items()):
+        median_model[i] = median_z_scores.get(key, np.NaN)
+    table_df["carry_model"] = median_model
 
     # Add xsret model results to table.
     xs_ret_z_scores_df = xsret_model_zscores(sectors, maturity, db, n_months=6)
@@ -196,11 +206,13 @@ def get_sector_table(maturity, path, db):
     for i, key in enumerate(table_df.set_index("raw_sector")["rating"].items()):
         curr_xs_rets[i] = xs_ret_d.get(key, np.NaN)
         prev_xs_rets[i] = xs_ret_change_d.get(key, np.NaN)
-    table_df["xsret_model"] = curr_xs_rets
-    table_df["xsret_prev"] = prev_xs_rets
+    # Make negative so positive is cheaper, negative richer.
+    table_df["xsret_model"] = -curr_xs_rets
+    table_df["xsret_prev"] = -prev_xs_rets
+    table_df.dropna(subset=["xsret_model", "vol_model"], inplace=True)
     # temp_fid = root("src/lgimapy/valuation_pack/temp.csv")
     # table_df.dropna(subset=["xsret_model", "vol_model"]).to_csv(temp_fid)
-    return table_df.dropna(subset=["xsret_model", "vol_model"])
+    return table_df
 
 
 def plot_sector_spread_vs_vol(df, maturity, path):
@@ -411,11 +423,8 @@ def plot_sector_xsret_vs_oad(sector_df):
     """
     Plot YTD excess returns vs duration for each sector.
     """
-    # %%
 
     df = sector_df.copy()
-
-    # %%
 
     df["\nMarket Value ($B)"] = (df["market_val"]).astype(int)
     df["\nRating"] = df["rating"]
@@ -473,7 +482,8 @@ def make_forward_looking_sector_table(sector_df, name, doc):
         "XSRet": "YTD*XSRet",
         "vol": "$\\sigma$*(bp)",
         "vol_model": "Vol*Model",
-        "xsret_model": "XSRet*Model",
+        "carry_model": "Carry*Model",
+        "xsret_model": "Momentum*Model",
         "xsret_prev": "xsret_prev",
     }
     prec = {
@@ -488,10 +498,11 @@ def make_forward_looking_sector_table(sector_df, name, doc):
         "YTD*XSRet": "0f",
         "$\\sigma$*(bp)": "1f",
         "Vol*Model": "1f",
-        "XSRet*Model": "1f",
+        "Carry*Model": "1f",
+        "Momentum*Model": "1f",
         "Model*Change": "0f",
     }
-
+    # df = table_df.copy()
     df = sector_df.copy()
     df["fin"] = convert_sectors_to_fin_flags(df["raw_sector"])
     df["oas_%tile"] = 100 * df["oas_%tile"].values
@@ -505,7 +516,7 @@ def make_forward_looking_sector_table(sector_df, name, doc):
     for caption, fin_flag in fin_flags.items():
         table = (
             df[df["fin"] == fin_flag][col_map.keys()]
-            .sort_values("xsret_model")
+            .sort_values("xsret_model", ascending=False)
             .rename(columns=col_map)
             .reset_index(drop=True)
         )
@@ -559,26 +570,36 @@ def make_forward_looking_sector_table(sector_df, name, doc):
             )
             if locs:
                 sector_locs[locs] = color
-        table["Model*Change"] = -rank_change(table, "XSRet*Model", "xsret_prev")
+        table["Model*Change"] = rank_change(
+            table, "Momentum*Model", "xsret_prev"
+        )
         table.drop(["raw_sector", "xsret_prev"], axis=1, inplace=True)
         table.index += 1
+        footnote = """
+            \\tiny
+            Sectors which screen \\color{orange} \\textbf{cheap}
+            \\color{black} are at the top of the table while sectors
+            which screen \\color{orchid} \\textbf{rich}
+            \\color{black} are at the bottom.
+            """
 
         doc.start_edit(f"{name.replace(' ', '_')}_{fin_flag}_sector_table")
         doc.add_table(
             table,
             # hide_index=True,
             prec=prec,
-            col_fmt="llc|cccccl|cccc|ccl",
+            col_fmt="llc|cccccl|cccc|cccl",
             caption=caption,
+            table_notes=footnote,
             adjust=True,
             font_size="scriptsize",
             multi_row_header=True,
             row_color=sector_locs,
             col_style={"YTD*%tile": "\pctbar{6}"},
-            gradient_cell_col=["Vol*Model", "XSRet*Model"],
+            gradient_cell_col=["Vol*Model", "Carry*Model", "Momentum*Model"],
             gradient_cell_kws={
-                "cmax": "orchid",
-                "cmin": "orange",
+                "cmax": "orange",
+                "cmin": "orchid",
             },
             arrow_col="Model*Change",
             arrow_kws={
@@ -695,16 +716,11 @@ def make_performance_tables(maturity, name, doc, db):
         doc.end_edit()
 
 
-# %%
-
-
 def plot_sector_ytd_exsret_heat_scatter(df):
     db = Database()
     ix_oas = db.load_bbg_data("US_IG_10+", "OAS", start="1/1/2020")
     ix_oas_start = ix_oas.iloc[0]
     start_date = ix_oas.index[0].strftime("%m/%d/%Y")
-
-    # %%
 
     df = long_credit_df.copy()
     fig, ax = vis.subplots()
@@ -721,7 +737,6 @@ def plot_sector_ytd_exsret_heat_scatter(df):
     os.getcwd()
     df.sort_values("XSRet")
 
-    # %%
     fig, ax = vis.subplots()
     sns.regplot(
         x=df["oas_ytd_chg"],
@@ -805,7 +820,6 @@ def xsret_model_zscores(sectors, maturity, db, n_months=6, lookback="1m"):
             current_zscores[f"{sector}|{rating}"] = (curr_z, prev_z)
 
     df = pd.DataFrame(current_zscores, index=["current", "prev"]).T
-    df["change"] = -rank_change(df)
     return df
 
 
@@ -817,6 +831,31 @@ def rank_change(df, current="current", prev="prev"):
     comb_df = pd.concat((curr_ranks, prev_ranks), axis=1)
     comb_df["change"] = comb_df["curr"] - comb_df["prev"]
     return comb_df["change"]
+
+
+def historical_sector_median_zscore(sectors, maturity, db):
+    ratings = {"A": ("AAA", "A-"), "BBB": ("BBB+", "BBB-")}
+    full_ix = db.build_market_index(in_stats_index=True, maturity=maturity)
+    ix_rating = {
+        rating: full_ix.subset(rating=rating_kws)
+        for rating, rating_kws in ratings.items()
+    }
+    ix_oas = {rating: ix.OAS() for rating, ix in ix_rating.items()}
+    historical_median_z_scores = {}
+    for sector in sectors:
+        for rating in ratings.keys():
+            ix_sector = ix_rating[rating].subset(**db.index_kwargs(sector))
+            ix_sector_oas = ix_sector.OAS()
+            abs_diff = (ix_sector_oas - ix_oas[rating]).dropna()
+            ratio = (ix_sector_oas / ix_oas[rating]).dropna()
+            abs_z = (abs_diff - abs_diff.mean()) / abs_diff.std()
+            ratio_z = (ratio - ratio.mean()) / ratio.std()
+            try:
+                z = (abs_z.iloc[-1] + ratio_z.iloc[-1]) / 2
+            except IndexError:
+                continue
+            historical_median_z_scores[(ix_sector.name, rating)] = z
+    return historical_median_z_scores
 
 
 # %%
