@@ -38,13 +38,16 @@ def main():
 
 
 def estimate_performance(account, date):
-    # Load data for current and previous days.
+    # Load data for current day.
     db = Database()
+    curr_df = db.load_portfolio(account=account, date=date).df.set_index("ISIN")
+
+    # Use stats index for previous date if it's the 1st of the month.
     prev_date = db.date("yesterday", date)
-    curr_df, prev_df = [
-        db.load_portfolio(account=account, date=dt).df.set_index("CUSIP")
-        for dt in [date, prev_date]
-    ]
+    prev_universe = "stats" if prev_date == db.date("MTD", date) else "returns"
+    prev_df = db.load_portfolio(
+        account=account, date=prev_date, universe=prev_universe
+    ).df.set_index("ISIN")
 
     # Estimate performance from spread change and average duration over
     # the two day period.
