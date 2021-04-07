@@ -1,4 +1,4 @@
-from lgimapy.bloomberg.core import bdh, bdp, bds
+from lgimapy.bloomberg.core import bdh, bdp, bds, fmt_bbg_dt
 from lgimapy.bloomberg.id_to_cusip import id_to_cusip, id_to_isin
 from lgimapy.bloomberg.subsectors import (
     update_subsector_json,
@@ -16,6 +16,7 @@ __all__ = [
     "bdh",
     "bdp",
     "bds",
+    "fmt_bbg_dt",
     "get_bloomberg_ticker",
     "get_bloomberg_subsector",
     "update_subsector_json",

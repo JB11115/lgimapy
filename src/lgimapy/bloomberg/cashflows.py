@@ -2,11 +2,13 @@ import numpy as np
 import pandas as pd
 from blpapi import NotFoundException
 
-from lgimapy.utils import root
-from lgimapy.bloomberg import bds
+from lgimapy.utils import root, mkdir
+from lgimapy.bloomberg import bds, fmt_bbg_dt
+
+# %%
 
 
-def get_cashflows(cusip):
+def get_cashflows(cusip, maturity_date=None):
     """
     Get cash flows and respective dates for specified cusip.
 
@@ -20,24 +22,18 @@ def get_cashflows(cusip):
     pd.Series:
         Cash flows with datetime index.
     """
+    fid = root(f"data/cashflows/{cusip}.parquet")
     try:
-        return pd.read_csv(
-            root(f"data/coupons/{cusip}.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )["cash_flow"]
-    except FileNotFoundError:
-        scrape_cash_flows(cusip)
-        return pd.read_csv(
-            root(f"data/coupons/{cusip}.csv"),
-            index_col=0,
-            parse_dates=True,
-            infer_datetime_format=True,
-        )["cash_flow"]
+        cash_flows_df = pd.read_parquet(fid)
+    except (FileNotFoundError, OSError):
+        # Scrape and save cash flows.
+        cash_flows_df = scrape_cash_flows(cusip, maturity_date)
+        mkdir(fid.parent)
+        cash_flows_df.to_parquet(fid)
+    return cash_flows_df["cash_flows"]
 
 
-def scrape_cash_flows(cusip):
+def scrape_cash_flows(cusip, maturity_date=None):
     """
     Scrapes specified cusip's cash flows and create
     a .csv file in the data directory with the result.
@@ -49,6 +45,10 @@ def scrape_cash_flows(cusip):
     """
     # Override date to before data collection began.
     ovrd = {"USER_LOCAL_TRADE_DATE": "19501010"}
+    if maturity_date is not None:
+        # Ensure maturity date is actual maturity and not a call date.
+        ovrd["WORKOUT_DT_BID"] = fmt_bbg_dt(maturity_date)
+        ovrd["WORKOUT_PX_BID"] = 100
 
     # Try list of keys to match given security.
     for yellow_key in ["Corp", "Muni", "Govt"]:
@@ -60,5 +60,9 @@ def scrape_cash_flows(cusip):
             break
 
     # Compute cash flows and save.
-    df["cash_flow"] = np.sum(df, axis=1) / 1e4
-    df["cash_flow"].to_csv(root(f"data/coupons/{cusip}.csv"), header=True)
+    return (
+        (np.sum(df, axis=1) / 1e4)
+        .to_frame()
+        .rename_axis(None)
+        .rename(columns={0: "cash_flows"})
+    )
