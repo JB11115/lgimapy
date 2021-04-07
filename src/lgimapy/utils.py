@@ -7,6 +7,7 @@ from bisect import bisect_left, bisect_right
 from collections import defaultdict, OrderedDict
 from datetime import timedelta
 from functools import lru_cache
+from numbers import Number
 from pathlib import Path
 from time import perf_counter
 from types import GeneratorType
@@ -285,7 +286,7 @@ def to_list(obj, dtype=None, sort=False):
     if dtype is not None:
         # Compare to specific dtype.
         if isinstance(obj, dtype):
-            if dtype == str:
+            if dtype in {float, int, Number, str}:
                 list_obj = [obj]
             else:
                 list_obj = list(obj)
