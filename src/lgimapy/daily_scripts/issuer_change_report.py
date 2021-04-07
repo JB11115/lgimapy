@@ -4,9 +4,8 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from lgimapy.data import Database, BondBasket
+from lgimapy.data import Database, BondBasket, weighted_percentile
 from lgimapy.latex import Document, latex_table
-from lgimapy.models import weighted_percentile
 from lgimapy.utils import root, mkdir
 
 # %%
