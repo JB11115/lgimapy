@@ -8,10 +8,7 @@
     "AEELG": "US Government: Long",
     "AETLD": "US Long Credit",
     "AGRBNM": "BNM - US Long A+ Credit",
-    "AHGOVI": "US Government",
     "AHLD": "US Long Credit",
-    "AHMC": "US Credit",
-    "AHSEC": "US Agg Securitized Passive",
     "AIBBNM": "US Credit ex Subordinated 5+",
     "AIGLD": "US Long Credit",
     "AILGC": "US Long GC 70/30",
@@ -26,6 +23,7 @@
     "BABBNM": "US Credit ex Subordinated 5+",
     "BACLGC": "US Long Government/Credit",
     "BAGC": "US Long GC 75/25",
+    "BCBSBNM": "US Credit ex Subordinated 5+",
     "BCBSIC": "US Intermediate Credit A or better",
     "BCBSLD": "US Long Credit",
     "BETUSHY": "US High Yield",
@@ -206,7 +204,6 @@
     "NFLMC": "US Credit",
     "NG1BNM": "US Credit ex Subordinated 5+",
     "NG2BNM": "US Credit ex Subordinated 5+",
-    "NG3BNM": "US Credit ex Subordinated 5+",
     "NSKBNM": "US Credit ex Subordinated 5+",
     "NVSBNM": "BNM - US Long A+ Credit",
     "OBSBNM": "US Credit ex Subordinated 5+",
@@ -243,7 +240,6 @@
     "RAILD": "US Long Credit",
     "RBSBNM": "RBS BNMs",
     "RDTNLD1": "Custom RBS",
-    "REDLD": "US Long Credit",
     "REXAMLD": "US Long Credit",
     "RFAGC": "US Long Government/Credit",
     "RFCGC": "US Long Government/Credit",
@@ -308,5 +304,6 @@
     "WPSP": "Custom Management No Benchmark",
     "WRKLD": "US Long Credit",
     "WTWLD": "US Long Credit",
-    "XRXLD": "US Long Credit"
+    "XRXLD": "US Long Credit",
+    "YCBBNM": "US Credit ex Subordinated 5+"
 }

@@ -8,6 +8,7 @@
         "AIBBNM",
         "APBNM",
         "BABBNM",
+        "BCBSBNM",
         "BNM",
         "BUPABNM",
         "CATBNM",
@@ -44,7 +45,6 @@
         "NESBNM",
         "NG1BNM",
         "NG2BNM",
-        "NG3BNM",
         "NSKBNM",
         "OBSBNM",
         "PCBNM",
@@ -69,7 +69,8 @@
         "TIOXBNM",
         "TRIBNM",
         "UUBNM",
-        "UUEBNM"
+        "UUEBNM",
+        "YCBBNM"
     ],
     "Liability Aware Long Duration Credit": [
         "AEELA",
@@ -136,7 +137,6 @@
         "PNWLD",
         "PREMLD",
         "RAILD",
-        "REDLD",
         "REXAMLD",
         "SEMLD",
         "SRELD",
@@ -163,23 +163,6 @@
         "SESLBNM",
         "SEULBNM"
     ],
-    "US Government": [
-        "AHGOVI"
-    ],
-    "US Credit": [
-        "AHMC",
-        "AXPMC",
-        "CITMC",
-        "CSMC",
-        "DCMC",
-        "ERICMC",
-        "MYMC",
-        "NFLMC",
-        "PMCALL"
-    ],
-    "US Agg Securitized Passive": [
-        "AHSEC"
-    ],
     "US Long GC 70/30": [
         "AILGC",
         "BEULGC",
@@ -197,6 +180,16 @@
         "SALD",
         "SALD2",
         "SAULD"
+    ],
+    "US Credit": [
+        "AXPMC",
+        "CITMC",
+        "CSMC",
+        "DCMC",
+        "ERICMC",
+        "MYMC",
+        "NFLMC",
+        "PMCALL"
     ],
     "US Long Government/Credit": [
         "BACLGC",

@@ -359,139 +359,156 @@
     },
     "US_IG": {
         "NAME": "US Market Credit",
-        "OAS": "LUCROAS Index",
-        "OAD": "LUCRTRUU Index|INDEX_OAD_TSY",
-        "TRET": "LUCRTRUU Index",
-        "XSRET": "LUCRER Index",
-        "YTW": "LUCRYW Index"
+        "OAS": "I00011US Index|INDEX_OAS_TSY",
+        "OAD": "I00011US Index|INDEX_OAD_TSY",
+        "TRET": "I00011US Index|INDEX_VALUE",
+        "XSRET": "I00011US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00011US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00011US Index|INDEX_MARKET_VALUE"
     },
     "US_IG_1-5": {
         "NAME": "US Credit 1-5 yr",
-        "OAS": "LD18OAS Index",
-        "OAD": "LD18TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LD18TRUU Index",
-        "XSRET": "LD18ER Index",
-        "YTW": "LD18YW Index"
+        "OAS": "I00643US Index|INDEX_OAS_TSY",
+        "OAD": "I00643US Index|INDEX_OAD_TSY",
+        "TRET": "I00643US Index|INDEX_VALUE",
+        "XSRET": "I00643US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00643US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00643US Index|INDEX_MARKET_VALUE"
     },
     "US_IG_5-10": {
         "NAME": "US Credit 5-10 yr",
-        "OAS": "LD26OAS Index",
-        "OAD": "LD26TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LD26TRUU Index",
-        "XSRET": "LD26ER Index",
-        "YTW": "LD26YW Index"
+        "OAS": "I00648US Index|INDEX_OAS_TSY",
+        "OAD": "I00648US Index|INDEX_OAD_TSY",
+        "TRET": "I00648US Index|INDEX_VALUE",
+        "XSRET": "I00648US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00648US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00648US Index|INDEX_MARKET_VALUE"
     },
     "US_IG_10+": {
         "NAME": "US Long Credit",
-        "OAS": "LULCOAS Index",
-        "OAD": "LULCTRUU Index|INDEX_OAD_TSY",
-        "TRET": "LULCTRUU Index",
-        "XSRET": "LULCER Index",
-        "YTW": "LULCYW Index"
+        "OAS": "I00152US Index|INDEX_OAS_TSY",
+        "OAD": "I00152US Index|INDEX_OAD_TSY",
+        "TRET": "I00152US Index|INDEX_VALUE",
+        "XSRET": "I00152US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00152US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00152US Index|INDEX_MARKET_VALUE"
     },
     "GLOBAL_HY": {
         "NAME": "Global HY",
-        "OAS": "LG30OAS Index",
-        "OAD": "LG30TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LG30TRUU Index",
-        "XSRET": "LG30ER Index",
-        "YTW": "LG30YW Index"
+        "OAS": "I00039 Index|INDEX_OAS_TSY",
+        "OAD": "I00039 Index|INDEX_OAD_TSY",
+        "TRET": "I00039 Index|INDEX_VALUE",
+        "XSRET": "I00039 Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00039 Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00039 Index|INDEX_MARKET_VALUE"
     },
     "US_HY": {
         "NAME": "US HY",
-        "OAS": "LF98OAS Index",
-        "OAD": "LF98TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LF98TRUU Index",
-        "XSRET": "LF98ER Index",
-        "YTW": "LF98YW Index"
+        "OAS": "I00012US Index|INDEX_OAS_TSY",
+        "OAD": "I00012US Index|INDEX_OAD_TSY",
+        "TRET": "I00012US Index|INDEX_VALUE",
+        "XSRET": "I00012US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00012US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00012US Index|INDEX_MARKET_VALUE"
     },
     "US_CORP": {
         "NAME": "US Corp",
-        "OAS": "LUACOAS Index",
-        "OAD": "LUACTRUU Index|INDEX_OAD_TSY",
-        "TRET": "LUACTRUU Index",
-        "XSRET": "LUACER Index",
-        "YTW": "LUACYW Index"
+        "OAS": "I02765US Index|INDEX_OAS_TSY",
+        "OAD": "I02765US Index|INDEX_OAD_TSY",
+        "TRET": "I02765US Index|INDEX_VALUE",
+        "XSRET": "I02765US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02765US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02765US Index|INDEX_MARKET_VALUE"
     },
     "US_CORP_1-5": {
         "NAME": "US Corp 1-5 yr",
-        "OAS": "LDC5OAS Index",
-        "OAD": "LDC5TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LDC5TRUU Index",
-        "XSRET": "LDC5ER Index",
-        "YTW": "LDC5YW Index"
+        "OAS": "I06728US Index|INDEX_OAS_TSY",
+        "OAD": "I06728US Index|INDEX_OAD_TSY",
+        "TRET": "I06728US Index|INDEX_VALUE",
+        "XSRET": "I06728US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I06728US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I06728US Index|INDEX_MARKET_VALUE"
     },
     "US_CORP_5-10": {
         "NAME": "US Corp 5-10 yr",
-        "OAS": "BCR5OAS Index",
-        "OAD": "BCR5TRUU Index|INDEX_OAD_TSY",
-        "TRET": "BCR5TRUU Index",
-        "XSRET": "BCR5ER Index",
-        "YTW": "BCR5YW Index"
+        "OAS": "I21098US Index|INDEX_OAS_TSY",
+        "OAD": "I21098US Index|INDEX_OAD_TSY",
+        "TRET": "I21098US Index|INDEX_VALUE",
+        "XSRET": "I21098US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I21098US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I21098US Index|INDEX_MARKET_VALUE"
     },
     "US_CORP_10+": {
         "NAME": "US Long Corp",
-        "OAS": "LD07OAS Index",
-        "OAD": "LD07TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LD07TRUU Index",
-        "XSRET": "LD07ER Index",
-        "YTW": "LD07YW Index"
+        "OAS": "I02783US Index|INDEX_OAS_TSY",
+        "OAD": "I02783US Index|INDEX_OAD_TSY",
+        "TRET": "I02783US Index|INDEX_VALUE",
+        "XSRET": "I02783US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02783US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02783US Index|INDEX_MARKET_VALUE"
     },
     "US_AAA": {
         "NAME": "US AAA",
-        "OAS": "LDA3OAS Index",
-        "OAD": "LDA3TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LDA3TRUU Index",
-        "XSRET": "LDA3ER Index",
-        "YTW": "LDA3YW Index"
+        "OAS": "I02768US Index|INDEX_OAS_TSY",
+        "OAD": "I02768US Index|INDEX_OAD_TSY",
+        "TRET": "I02768US Index|INDEX_VALUE",
+        "XSRET": "I02768US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02768US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02768US Index|INDEX_MARKET_VALUE"
     },
     "US_AA": {
         "NAME": "US AA",
-        "OAS": "LDA2OAS Index",
-        "OAD": "LDA2TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LDA2TRUU Index",
-        "XSRET": "LDA2ER Index",
-        "YTW": "LDA2YW Index"
+        "OAS": "I02767US Index|INDEX_OAS_TSY",
+        "OAD": "I02767US Index|INDEX_OAD_TSY",
+        "TRET": "I02767US Index|INDEX_VALUE",
+        "XSRET": "I02767US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02767US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02767US Index|INDEX_MARKET_VALUE"
     },
     "US_A": {
         "NAME": "US A",
-        "OAS": "LDA1OAS Index",
-        "OAD": "LDA1TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LDA1TRUU Index",
-        "XSRET": "LDA1ER Index",
-        "YTW": "LDA1YW Index"
+        "OAS": "I02766US Index|INDEX_OAS_TSY",
+        "OAD": "I02766US Index|INDEX_OAD_TSY",
+        "TRET": "I02766US Index|INDEX_VALUE",
+        "XSRET": "I02766US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02766US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02766US Index|INDEX_MARKET_VALUE"
     },
     "US_BBB": {
         "NAME": "US BBB",
-        "OAS": "LDB1OAS Index",
-        "OAD": "LDB1TRUU Index|INDEX_OAD_TSY",
-        "TRET": "LDB1TRUU Index",
-        "XSRET": "LDB1ER Index",
-        "YTW": "LDB1YW Index"
+        "OAS": "I02769US Index|INDEX_OAS_TSY",
+        "OAD": "I02769US Index|INDEX_OAD_TSY",
+        "TRET": "I02769US Index|INDEX_VALUE",
+        "XSRET": "I02769US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02769US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02769US Index|INDEX_MARKET_VALUE"
     },
     "US_BB": {
         "NAME": "US BB",
-        "OAS": "BCBAOAS Index",
-        "OAD": "BCBATRUU Index|INDEX_OAD_TSY",
-        "TRET": "BCBATRUU Index",
-        "XSRET": "BCBAER Index",
-        "YTW": "BCBAYW Index"
+        "OAS": "I00182US Index|INDEX_OAS_TSY",
+        "OAD": "I00182US Index|INDEX_OAD_TSY",
+        "TRET": "I00182US Index|INDEX_VALUE",
+        "XSRET": "I00182US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00182US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00182US Index|INDEX_MARKET_VALUE"
     },
     "US_B": {
         "NAME": "US B",
-        "OAS": "BCBHOAS Index",
-        "OAD": "BCBHTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BCBHTRUU Index",
-        "XSRET": "BCBHER Index",
-        "YTW": "BCBHYW Index"
+        "OAS": "I00185US Index|INDEX_OAS_TSY",
+        "OAD": "I00185US Index|INDEX_OAD_TSY",
+        "TRET": "I00185US Index|INDEX_VALUE",
+        "XSRET": "I00185US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00185US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00185US Index|INDEX_MARKET_VALUE"
     },
     "US_CCC": {
         "NAME": "US CCC",
-        "OAS": "BCAUOAS Index",
-        "OAD": "BCAUTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BCAUTRUU Index",
-        "XSRET": "BCAUER Index",
-        "YTW": "BCAUYW Index"
+        "OAS": "I00188US Index|INDEX_OAS_TSY",
+        "OAD": "I00188US Index|INDEX_OAD_TSY",
+        "TRET": "I00188US Index|INDEX_VALUE",
+        "XSRET": "I00188US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00188US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00188US Index|INDEX_MARKET_VALUE"
     },
     "CDX_IG": {
         "NAME": "CDX IG",
@@ -534,204 +551,246 @@
     },
     "EU_IG": {
         "NAME": "EU IG Credit",
-        "OAS": "LECROAS Index",
-        "OAD": "LECRTREU Index|INDEX_OAD_TSY",
-        "TRET": "LECRTREU Index",
-        "XSRET": "LECRER Index",
-        "YTW": "LECRYW Index"
+        "OAS": "I03099EU Index|INDEX_OAS_TSY",
+        "OAD": "I03099EU Index|INDEX_OAD_TSY",
+        "TRET": "I03099EU Index|INDEX_VALUE",
+        "XSRET": "I03099EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I03099EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I03099EU Index|INDEX_MARKET_VALUE"
     },
     "EU_IG_1-3": {
         "NAME": "EU IG Credit 1-3 yr",
-        "OAS": "LECEOAS Index",
-        "OAD": "LECETREU Index|INDEX_OAD_TSY",
-        "TRET": "LECETREU Index",
-        "XSRET": "LECEER Index",
-        "YTW": "LECEYW Index"
+        "OAS": "I22819EU Index|INDEX_OAS_TSY",
+        "OAD": "I22819EU Index|INDEX_OAD_TSY",
+        "TRET": "I22819EU Index|INDEX_VALUE",
+        "XSRET": "I22819EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I22819EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I22819EU Index|INDEX_MARKET_VALUE"
     },
     "EU_IG_3-5": {
         "NAME": "EU IG Credit 3-5 yr",
-        "OAS": "LEC3OAS Index",
-        "OAD": "LEC3TREU Index|INDEX_OAD_TSY",
-        "TRET": "LEC3TREU Index",
-        "XSRET": "LEC3ER Index",
-        "YTW": "LEC3YW Index"
+        "OAS": "I02135EU Index|INDEX_OAS_TSY",
+        "OAD": "I02135EU Index|INDEX_OAD_TSY",
+        "TRET": "I02135EU Index|INDEX_VALUE",
+        "XSRET": "I02135EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02135EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02135EU Index|INDEX_MARKET_VALUE"
     },
     "EU_IG_5-7": {
         "NAME": "EU IG Credit 5-7 yr",
-        "OAS": "LEC5OAS Index",
-        "TRET": "LEC5TREU Index",
-        "XSRET": "LEC5ER Index",
-        "YTW": "LEC5YW Index"
+        "OAS": "I02136EU Index|INDEX_OAS_TSY",
+        "OAD": "I02136EU Index|INDEX_OAD_TSY",
+        "TRET": "I02136EU Index|INDEX_VALUE",
+        "XSRET": "I02136EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02136EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02136EU Index|INDEX_MARKET_VALUE"
     },
     "EU_IG_7-10": {
         "NAME": "EU IG Credit 7-10 yr",
-        "OAS": "LEC7OAS Index",
-        "OAD": "LEC7TREU Index|INDEX_OAD_TSY",
-        "TRET": "LEC7TREU Index",
-        "XSRET": "LEC7ER Index",
-        "YTW": "LEC7YW Index"
+        "OAS": "I02137EU Index|INDEX_OAS_TSY",
+        "OAD": "I02137EU Index|INDEX_OAD_TSY",
+        "TRET": "I02137EU Index|INDEX_VALUE",
+        "XSRET": "I02137EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02137EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02137EU Index|INDEX_MARKET_VALUE"
     },
     "EU_IG_10+": {
         "NAME": "EU IG Long Credit",
-        "OAS": "LEC0OAS Index",
-        "OAD": "LEC0TREU Index|INDEX_OAD_TSY",
-        "TRET": "LEC0TREU Index",
-        "XSRET": "LEC0ER Index",
-        "YTW": "LEC0YW Index"
+        "OAS": "I02138EU Index|INDEX_OAS_TSY",
+        "OAD": "I02138EU Index|INDEX_OAD_TSY",
+        "TRET": "I02138EU Index|INDEX_VALUE",
+        "XSRET": "I02138EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02138EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02138EU Index|INDEX_MARKET_VALUE"
     },
     "EU_HY": {
         "NAME": "EU HY",
-        "OAS": "LP01OAS Index",
-        "OAD": "LP01TREU Index|INDEX_OAD_TSY",
-        "TRET": "LP01TREU Index",
-        "XSRET": "LP01ER Index",
-        "YTW": "LP01YW Index"
+        "OAS": "I02500EU Index|INDEX_OAS_TSY",
+        "OAD": "I02500EU Index|INDEX_OAD_TSY",
+        "TRET": "I02500EU Index|INDEX_VALUE",
+        "XSRET": "I02500EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02500EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02500EU Index|INDEX_MARKET_VALUE"
     },
     "EU_CORP": {
         "NAME": "EU Corp",
-        "OAS": "LECPOAS Index",
-        "OAD": "LECPTREU Index|INDEX_OAD_TSY",
-        "TRET": "LECPTREU Index",
-        "XSRET": "LECPER Index",
-        "YTW": "LECPYW Index"
+        "OAS": "I02002EU Index|INDEX_OAS_TSY",
+        "OAD": "I02002EU Index|INDEX_OAD_TSY",
+        "TRET": "I02002EU Index|INDEX_VALUE",
+        "XSRET": "I02002EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02002EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02002EU Index|INDEX_MARKET_VALUE"
     },
     "EU_AA": {
         "NAME": "EU AA",
-        "OAS": "LEC8OAS Index",
-        "OAD": "LEC8TREU Index|INDEX_OAD_TSY",
-        "TRET": "LEC8TREU Index",
-        "XSRET": "LEC8ER Index",
-        "YTW": "LEC8YW Index"
+        "OAS": "I02200EU Index|INDEX_OAS_TSY",
+        "OAD": "I02200EU Index|INDEX_OAD_TSY",
+        "TRET": "I02200EU Index|INDEX_VALUE",
+        "XSRET": "I02200EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02200EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02200EU Index|INDEX_MARKET_VALUE"
     },
     "EU_A": {
         "NAME": "EU A",
-        "OAS": "LEC9OAS Index",
-        "OAD": "LEC9TREU Index|INDEX_OAD_TSY",
-        "TRET": "LEC9TREU Index",
-        "XSRET": "LEC9ER Index",
-        "YTW": "LEC9YW Index"
+        "OAS": "I02201EU Index|INDEX_OAS_TSY",
+        "OAD": "I02201EU Index|INDEX_OAD_TSY",
+        "TRET": "I02201EU Index|INDEX_VALUE",
+        "XSRET": "I02201EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02201EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02201EU Index|INDEX_MARKET_VALUE"
     },
     "EU_BBB": {
         "NAME": "EU BBB",
-        "OAS": "LECBOAS Index",
-        "OAD": "LECBTREU Index|INDEX_OAD_TSY",
-        "TRET": "LECBTREU Index",
-        "XSRET": "LECBER Index",
-        "YTW": "LECBYW Index"
+        "OAS": "I02202EU Index|INDEX_OAS_TSY",
+        "OAD": "I02202EU Index|INDEX_OAD_TSY",
+        "TRET": "I02202EU Index|INDEX_VALUE",
+        "XSRET": "I02202EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02202EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02202EU Index|INDEX_MARKET_VALUE"
     },
     "EU_BB": {
         "NAME": "EU BB",
-        "OAS": "LP07OAS Index",
-        "OAD": "LP07TREU Index|INDEX_OAD_TSY",
-        "TRET": "LP07TREU Index",
-        "XSRET": "LP07ER Index",
-        "YTW": "LP07YW Index"
+        "OAS": "I05443EU Index|INDEX_OAS_TSY",
+        "OAD": "I05443EU Index|INDEX_OAD_TSY",
+        "TRET": "I05443EU Index|INDEX_VALUE",
+        "XSRET": "I05443EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I05443EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I05443EU Index|INDEX_MARKET_VALUE"
     },
     "EU_B": {
         "NAME": "EU B",
-        "OAS": "LHYBOAS Index",
-        "OAD": "LHYBTREU Index|INDEX_OAD_TSY",
-        "TRET": "LHYBTREU Index",
-        "XSRET": "LHYBER Index",
-        "YTW": "LHYBYW Index"
+        "OAS": "I05442EU Index|INDEX_OAS_TSY",
+        "OAD": "I05442EU Index|INDEX_OAD_TSY",
+        "TRET": "I05442EU Index|INDEX_VALUE",
+        "XSRET": "I05442EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I05442EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I05442EU Index|INDEX_MARKET_VALUE"
     },
     "EU_CCC": {
         "NAME": "EU CCC",
-        "OAS": "BEYHOAS Index",
-        "OAD": "BEYHTREU Index|INDEX_OAD_TSY",
-        "TRET": "BEYHTREU Index",
-        "XSRET": "BEYHER Index",
-        "YTW": "BEYHYW Index"
+        "OAS": "I05444EU Index|INDEX_OAS_TSY",
+        "OAD": "I05444EU Index|INDEX_OAD_TSY",
+        "TRET": "I05444EU Index|INDEX_VALUE",
+        "XSRET": "I05444EU Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I05444EU Index|INDEX_YIELD_TO_WORST",
+        "MV": "I05444EU Index|INDEX_MARKET_VALUE"
     },
     "GBP_IG": {
         "NAME": "GBP IG Credit",
-        "OAS": "LC84OAS Index",
-        "XSRET": "LC84ER Index",
-        "YTW": "LC84YW Index"
+        "OAS": "I05201GB Index|INDEX_OAS_TSY",
+        "OAD": "I05201GB Index|INDEX_OAD_TSY",
+        "TRET": "I05201GB Index|INDEX_VALUE",
+        "XSRET": "I05201GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I05201GB Index|INDEX_YIELD_TO_WORST",
+        "MV": "I05201GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_IG_1-3": {
         "NAME": "GBP IG Credit 1-3 yr",
-        "OAS": "LF62OAS Index",
-        "XSRET": "LF62ER Index",
-        "YTW": "LF62YW Index"
+        "OAS": "I08055GB Index|INDEX_OAS_TSY",
+        "OAD": "I08055GB Index|INDEX_OAD_TSY",
+        "TRET": "I08055GB Index|INDEX_VALUE",
+        "XSRET": "I08055GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I08055GB Index|INDEX_YIELD_TO_WORST",
+        "MV": "I08055GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_IG_3-5": {
         "NAME": "GBP IG Credit 3-5 yr",
-        "OAS": "LF63OAS Index",
-        "XSRET": "LF63ER Index",
-        "YTW": "LF63YW Index"
+        "OAS": "I08056GB Index|INDEX_OAS_TSY",
+        "TRET": "I08056GB Index|INDEX_VALUE",
+        "XSRET": "I08056GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I08056GB Index|YIELD_TO_WORST",
+        "MV": "I08056GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_IG_5-7": {
         "NAME": "GBP IG Credit 5-7 yr",
-        "OAS": "LF64OAS Index",
-        "XSRET": "LF64ER Index",
-        "YTW": "LF64YW Index"
+        "OAS": "I08057GB Index|INDEX_OAS_TSY",
+        "TRET": "I08057GB Index|INDEX_VALUE",
+        "XSRET": "I08057GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I08057GB Index|YIELD_TO_WORST",
+        "MV": "I08057GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_IG_7-10": {
         "NAME": "GBP IG Credit 7-10 yr",
-        "OAS": "LF65OAS Index",
-        "XSRET": "LF65ER Index",
-        "YTW": "LF65YW Index"
+        "OAS": "I08058GB Index|INDEX_OAS_TSY",
+        "TRET": "I08058GB Index|INDEX_VALUE",
+        "XSRET": "I08058GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I08058GB Index|YIELD_TO_WORST",
+        "MV": "I08058GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_IG_10-15": {
         "NAME": "GBP IG Credit 10-15 yr",
-        "OAS": "LF66OAS Index",
-        "XSRET": "LF66ER Index",
-        "YTW": "LF66YW Index"
+        "OAS": "I08059GB Index|INDEX_OAS_TSY",
+        "TRET": "I08059GB Index|INDEX_VALUE",
+        "XSRET": "I08059GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I08059GB Index|YIELD_TO_WORST",
+        "MV": "I08059GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_IG_15+": {
         "NAME": "GBP IG Credit 15+ yr",
-        "OAS": "LF67OAS Index",
-        "XSRET": "LF67ER Index",
-        "YTW": "LF67YW Index"
+        "OAS": "I08060GB Index|INDEX_OAS_TSY",
+        "TRET": "I08060GB Index|INDEX_VALUE",
+        "XSRET": "I08060GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I08060GB Index|YIELD_TO_WORST",
+        "MV": "I08060GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_CORP": {
         "NAME": "GBP Corp",
-        "OAS": "LC61OAS Index",
-        "OAD": "LC61TRGU Index|INDEX_OAD_TSY",
-        "TRET": "LC61TRGU Index",
-        "XSRET": "LC61ER Index",
-        "YTW": "LC61YW Index"
+        "OAS": "I02571GB Index|INDEX_OAS_TSY",
+        "OAD": "I02571GB Index|INDEX_OAD_TSY",
+        "TRET": "I02571GB Index|INDEX_VALUE",
+        "XSRET": "I02571GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I02571GB Index|INDEX_YIELD_TO_WORST",
+        "MV": "I02571GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_AAA": {
         "NAME": "GBP AAA",
-        "OAS": "LF79OAS Index",
-        "XSRET": "LF79ER Index",
-        "YTW": "LF79YW Index"
+        "OAS": "I09074GB Index|INDEX_OAS_TSY",
+        "TRET": "I09074GB Index|INDEX_VALUE",
+        "XSRET": "I09074GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I09074GB Index|YIELD_TO_WORST",
+        "MV": "I09074GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_AA": {
         "NAME": "GBP AA",
-        "OAS": "LF80OAS Index",
-        "XSRET": "LF80ER Index",
-        "YTW": "LF80YW Index"
+        "OAS": "I09075GB Index|INDEX_OAS_TSY",
+        "TRET": "I09075GB Index|INDEX_VALUE",
+        "XSRET": "I09075GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I09075GB Index|YIELD_TO_WORST",
+        "MV": "I09075GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_A": {
         "NAME": "GBP A",
-        "OAS": "LF81OAS Index",
-        "XSRET": "LF81ER Index",
-        "YTW": "LF81YW Index"
+        "OAS": "I09076GB Index|INDEX_OAS_TSY",
+        "TRET": "I09076GB Index|INDEX_VALUE",
+        "XSRET": "I09076GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I09076GB Index|YIELD_TO_WORST",
+        "MV": "I09076GB Index|INDEX_MARKET_VALUE"
     },
     "GBP_BBB": {
         "NAME": "GBP BBB",
-        "OAS": "LF82OAS Index",
-        "XSRET": "LF82ER Index",
-        "YTW": "LF82YW Index"
+        "OAS": "I09077GB Index|INDEX_OAS_TSY",
+        "TRET": "I09077GB Index|INDEX_VALUE",
+        "XSRET": "I09077GB Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I09077GB Index|YIELD_TO_WORST",
+        "MV": "I09077GB Index|INDEX_MARKET_VALUE"
     },
     "EM_IG": {
         "NAME": "EM IG",
-        "OAS": "BEHGOAS Index",
-        "OAD": "BEHGTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BEHGTRUU Index",
-        "XSRET": "BEHGER Index",
-        "YTW": "BEHGYW Index"
+        "OAS": "I04276US Index|INDEX_OAS_TSY",
+        "OAD": "I04276US Index|INDEX_OAD_TSY",
+        "TRET": "I04276US Index|INDEX_VALUE",
+        "XSRET": "I04276US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I04276US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I04276US Index|INDEX_MARKET_VALUE"
     },
     "EM_HY": {
         "NAME": "EM HY",
-        "OAS": "BEBGOAS Index",
-        "OAD": "BEBGTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BEBGTRUU Index",
-        "XSRET": "BEBGER Index",
-        "YTW": "BEBGYW Index"
+        "OAS": "I01478US Index|INDEX_OAS_TSY",
+        "OAD": "I01478US Index|INDEX_OAD_TSY",
+        "TRET": "I01478US Index|INDEX_VALUE",
+        "XSRET": "I01478US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I01478US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I01478US Index|INDEX_MARKET_VALUE"
     },
     "EM_CORP": {
         "NAME": "EM Corp",
@@ -742,107 +801,120 @@
     },
     "EM_SOV": {
         "NAME": "EM Sov",
-        "OAS": "BSSUOAS Index",
-        "OAD": "BSSUTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BSSUTRUU Index",
-        "XSRET": "BSSUER Index",
-        "YTW": "BSSUYW Index"
+        "OAS": "I12875US Index|INDEX_OAS_TSY",
+        "OAD": "I12875US Index|INDEX_OAD_TSY",
+        "TRET": "I12875US Index|INDEX_VALUE",
+        "XSRET": "I12875US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I12875US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I12875US Index|INDEX_MARKET_VALUE"
     },
     "EM_QUASISOV": {
         "NAME": "EM Quasi-sov",
-        "OAS": "BESQOAS Index",
-        "OAD": "BESQTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BESQTRUU Index",
-        "XSRET": "BESQER Index",
-        "YTW": "BESQYW Index"
+        "OAS": "I30182US Index|INDEX_OAS_TSY",
+        "OAD": "I30182US Index|INDEX_OAD_TSY",
+        "TRET": "I30182US Index|INDEX_VALUE",
+        "XSRET": "I30182US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I30182US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I30182US Index|INDEX_MARKET_VALUE"
     },
     "EM_IG_QUASISOV": {
         "NAME": "EM IG Quasi-Sov",
-        "OAS": "BQIGOAS Index",
-        "OAD": "BQIGTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BQIGTRUU Index",
-        "XSRET": "BQIGER Index",
-        "YTW": "BQIGYW Index"
+        "OAS": "I30402US Index|INDEX_OAS_TSY",
+        "OAD": "I30402US Index|INDEX_OAD_TSY",
+        "TRET": "I30402US Index|INDEX_VALUE",
+        "XSRET": "I30402US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I30402US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I30402US Index|INDEX_MARKET_VALUE"
     },
     "EM_HY_QUASISOV": {
         "NAME": "EM HY Quasi-Sov",
-        "OAS": "BQHYOAS Index",
-        "OAD": "BQHYTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BQHYTRUU Index",
-        "XSRET": "BQHYER Index",
-        "YTW": "BQHYYW Index"
+        "OAS": "I30407US Index|INDEX_OAS_TSY",
+        "OAD": "I30407US Index|INDEX_OAD_TSY",
+        "TRET": "I30407US Index|INDEX_VALUE",
+        "XSRET": "I30407US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I30407US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I30407US Index|INDEX_MARKET_VALUE"
     },
     "EM_LATAM_SOV": {
         "NAME": "EM LatAm Sov",
-        "OAS": "BSSSOAS Index",
-        "OAD": "BSSSTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BSSSTRUU Index",
-        "XSRET": "BSSSER Index",
-        "YTW": "BSSSYW Index"
+        "OAS": "I22321US Index|INDEX_OAS_TSY",
+        "OAD": "I22321US Index|INDEX_OAD_TSY",
+        "TRET": "I22321US Index|INDEX_VALUE",
+        "XSRET": "I22321US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I22321US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I22321US Index|INDEX_MARKET_VALUE"
     },
     "EM_LATAM_QUASISOV": {
         "NAME": "EM LatAm Quasi-Sov",
-        "OAS": "BQAMOAS Index",
-        "OAD": "BQAMTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BQAMTRUU Index",
-        "XSRET": "BQAMER Index",
-        "YTW": "BQAMYW Index"
+        "OAS": "I30351US Index|INDEX_OAS_TSY",
+        "OAD": "I30351US Index|INDEX_OAD_TSY",
+        "TRET": "I30351US Index|INDEX_VALUE",
+        "XSRET": "I30351US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I30351US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I30351US Index|INDEX_MARKET_VALUE"
     },
     "EM_LATAM_CORP": {
         "NAME": "EM LatAm Corp",
-        "OAS": "BUCROAS Index",
-        "OAD": "BUCRTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BUCRTRUU Index",
-        "XSRET": "BUCRER Index",
-        "YTW": "BUCRYW Index"
+        "OAS": "I29070US Index|INDEX_OAS_TSY",
+        "OAD": "I29070US Index|INDEX_OAD_TSY",
+        "TRET": "I29070US Index|INDEX_VALUE",
+        "XSRET": "I29070US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I29070US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I29070US Index|INDEX_MARKET_VALUE"
     },
     "EM_ASIA_SOV": {
         "NAME": "EM Asia Sov",
-        "OAS": "BSSAOAS Index",
-        "OAD": "BSSATRUU Index|INDEX_OAD_TSY",
-        "TRET": "BSSATRUU Index",
-        "XSRET": "BSSAER Index",
-        "YTW": "BSSAYW Index"
+        "OAS": "I22320US Index|INDEX_OAS_TSY",
+        "OAD": "I22320US Index|INDEX_OAD_TSY",
+        "TRET": "I22320US Index|INDEX_VALUE",
+        "XSRET": "I22320US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I22320US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I22320US Index|INDEX_MARKET_VALUE"
     },
     "EM_ASIA_QUASISOV": {
         "NAME": "EM Asia Quasi-Sov",
-        "OAS": "BQASOAS Index",
-        "OAD": "BQASTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BQASTRUU Index",
-        "XSRET": "BQASER Index",
-        "YTW": "BQASYW Index"
+        "OAS": "I30389US Index|INDEX_OAS_TSY",
+        "OAD": "I30389US Index|INDEX_OAD_TSY",
+        "TRET": "I30389US Index|INDEX_VALUE",
+        "XSRET": "I30389US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I30389US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I30389US Index|INDEX_MARKET_VALUE"
     },
     "EM_ASIA_CORP": {
         "NAME": "EM Asia Corp",
-        "OAS": "BUCSOAS Index",
-        "OAD": "BUCSTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BUCSTRUU Index",
-        "XSRET": "BUCSER Index",
-        "YTW": "BUCSYW Index"
+        "OAS": "I29089US Index|INDEX_OAS_TSY",
+        "OAD": "I29089US Index|INDEX_OAD_TSY",
+        "TRET": "I29089US Index|INDEX_VALUE",
+        "XSRET": "I29089US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I29089US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I29089US Index|INDEX_MARKET_VALUE"
     },
     "EM_EMEA_SOV": {
         "NAME": "EM EMEA Sov",
-        "OAS": "BSSEOAS Index",
-        "OAD": "BSSETRUU Index|INDEX_OAD_TSY",
-        "TRET": "BSSETRUU Index",
-        "XSRET": "BSSEER Index",
-        "YTW": "BSSEYW Index"
+        "OAS": "I22297US Index|INDEX_OAS_TSY",
+        "OAD": "I22297US Index|INDEX_OAD_TSY",
+        "TRET": "I22297US Index|INDEX_VALUE",
+        "XSRET": "I22297US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I22297US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I22297US Index|INDEX_MARKET_VALUE"
     },
     "EM_EMEA_QUASISOV": {
         "NAME": "EM EMEA Quasi-Sov",
-        "OAS": "BQEMOAS Index",
-        "OAD": "BQEMTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BQEMTRUU Index",
-        "XSRET": "BQEMER Index",
-        "YTW": "BQEMYW Index"
+        "OAS": "I30183US Index|INDEX_OAS_TSY",
+        "OAD": "I30183US Index|INDEX_OAD_TSY",
+        "TRET": "I30183US Index|INDEX_VALUE",
+        "XSRET": "I30183US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I30183US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I30183US Index|INDEX_MARKET_VALUE"
     },
     "EM_EMEA_CORP": {
         "NAME": "EM EMEA Corp",
-        "OAS": "BUCMOAS Index",
-        "OAD": "BUCMTRUU Index|INDEX_OAD_TSY",
-        "TRET": "BUCMTRUU Index",
-        "XSRET": "BUCMER Index",
-        "YTW": "BUCMYW Index"
+        "OAS": "I29080US Index|INDEX_OAS_TSY",
+        "OAD": "I29080US Index|INDEX_OAD_TSY",
+        "TRET": "I29080US Index|INDEX_VALUE",
+        "XSRET": "I29080US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I29080US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I29080US Index|INDEX_MARKET_VALUE"
     },
     "LIBOR": {
         "NAME": "LIBOR",
