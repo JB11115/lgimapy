@@ -13,7 +13,6 @@ def get_treasury_oad_values(date):
     ix = db.build_market_index(
         sector="TREASURIES", ticker="T", drop_treasuries=False
     )
-    dfs = {mat: df for mat, df in ix.df.groupby("OriginalMaturity")}
     on_the_run_cusips = ix.df.groupby("OriginalMaturity").idxmax()["IssueDate"]
     oad_vals = (
         ix.df.loc[on_the_run_cusips.values][["OriginalMaturity", "OAD"]]
