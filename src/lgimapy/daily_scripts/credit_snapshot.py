@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from lgimapy.bloomberg import get_bloomberg_subsector
-from lgimapy.data import Database, Index
+from lgimapy.data import Database, Index, IG_sectors, HY_sectors
 from lgimapy.latex import Document, latex_table, merge_pdfs
 from lgimapy.utils import load_json, mkdir, root, Time, restart_program
 
@@ -124,104 +124,9 @@ class SnapshotConfig:
     @property
     def sectors(self):
         if self.index in {"US_IG", "US_IG_10+"}:
-            return [
-                "INDUSTRIALS",  # Industrials
-                "BASICS",
-                "~CHEMICALS",
-                "~METALS_AND_MINING",
-                "CAPITAL_GOODS",
-                "COMMUNICATIONS",
-                "~CABLE_SATELLITE",
-                "~MEDIA_ENTERTAINMENT",
-                "~WIRELINES_WIRELESS",
-                "CONSUMER_CYCLICAL",
-                "~AUTOMOTIVE",
-                "~RETAILERS",
-                "CONSUMER_NON_CYCLICAL",
-                "~FOOD_AND_BEVERAGE",
-                "~HEALTHCARE_EX_MANAGED_CARE",
-                "~MANAGED_CARE",
-                "~PHARMACEUTICALS",
-                "~TOBACCO",
-                "ENERGY",
-                "~INDEPENDENT",
-                "~INTEGRATED",
-                "~OIL_FIELD_SERVICES",
-                "~REFINING",
-                "~MIDSTREAM",
-                "ENVIRONMENTAL_IND_OTHER",
-                "TECHNOLOGY",
-                "TRANSPORTATION",
-                "~RAILROADS",
-                "FINANCIALS",  # Financials
-                "BANKS",
-                "~SIFI_BANKS_SR",
-                "~SIFI_BANKS_SUB",
-                "~US_REGIONAL_BANKS",
-                "~YANKEE_BANKS",
-                "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-                "LIFE",
-                "P&C",
-                "REITS",
-                "UTILITY",  # Utilities
-                "NON_CORP",  # Non-Corp
-                "OWNED_NO_GUARANTEE",
-                "GOVERNMENT_GUARANTEE",
-                "HOSPITALS",
-                "MUNIS",
-                "SOVEREIGN",
-                "SUPRANATIONAL",
-                "UNIVERSITY",
-            ]
+            return IG_sectors(with_tildes=True)
         elif self.index == "US_HY":
-            return [
-                "H4UN",
-                "~BB",
-                "~B",
-                "HUC3_CCC",
-                "LDB1_BBB",
-                "AUTOMOTIVE",
-                "~AUTOMAKERS",
-                "~AUTOPARTS",
-                "BASICS",
-                "~HOME_BUILDERS",
-                "~BUILDING_MATERIALS",
-                "~CHEMICALS",
-                "~METALS_AND_MINING",
-                "CAPITAL_GOODS",
-                "~AEROSPACE_DEFENSE",
-                "~DIVERSIFIED_CAPITAL_GOODS",
-                "~PACKAGING",
-                "BEVERAGE",
-                "FOOD",
-                "PERSONAL_AND_HOUSEHOLD_PRODUCTS",
-                "ENERGY",
-                "~ENERGY_EXPLORATION_AND_PRODUCTION",
-                "~GAS_DISTRIBUTION",
-                "~OIL_REFINING_AND_MARKETING",
-                "HEALTHCARE",
-                "~HEALTH_FACILITIES",
-                "~MANAGED_CARE",
-                "~PHARMA",
-                "GAMING",
-                "HOTELS",
-                "RECREATION_AND_TRAVEL",
-                "REAL_ESTATE",
-                "~REITS",
-                "ENVIRONMENTAL",
-                "SUPPORT_SERVICES",
-                "TMT",
-                "~CABLE_SATELLITE",
-                "~MEDIA_CONTENT",
-                "~TELECOM_SATELLITE",
-                "~TELECOM_WIRELESS",
-                "TECHNOLOGY",
-                "~SOFTWARE",
-                "~HARDWARE",
-                "TRANSPORTATION",
-                "~AIRLINES",
-                "UTILITY",
-            ]
+            return HY_sectors(with_tildes=True, sectors_only=False)
 
     @property
     def midrule_locs(self):
