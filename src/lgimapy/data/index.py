@@ -16,9 +16,9 @@ from lgimapy.data import (
     groupby,
     new_issue_mask,
     TreasuryCurve,
+    weighted_percentile,
 )
 
-from lgimapy.models import weighted_percentile
 from lgimapy.utils import (
     check_all_equal,
     dump_json,
@@ -1330,7 +1330,7 @@ class Index(BondBasket):
         for col in cols:
             bbg_d = load_json(f"bbg_jsons/{col}")
             new_cats = set(bbg_d.values()) - set(self.df[col].cat.categories)
-            # Add new values as categories than fill missing
+            # Add new values as categories then fill missing
             # data using bloomberg data.
             self.df[col] = self.df[col].cat.add_categories(new_cats)
             self.df[col] = self.df[col].fillna(self.df["CUSIP"].map(bbg_d))
