@@ -152,11 +152,18 @@ def get_single_latex_risk_page(
         prev_universe = "stats"
 
     # current_universe = prev_universe = "returns"
+    ignored_accounts = ["REDLD", "DCLD", "DCMC"]
     curr_strat = db.load_portfolio(
-        strategy=strategy, date=date, universe=current_universe
+        strategy=strategy,
+        date=date,
+        universe=current_universe,
+        ignored_accounts=ignored_accounts,
     )
     prev_strat = db.load_portfolio(
-        strategy=strategy, date=prev_date, universe=prev_universe
+        strategy=strategy,
+        date=prev_date,
+        universe=prev_universe,
+        ignored_accounts=ignored_accounts,
     )
 
     date_fmt = date.strftime("%#m/%#d")
