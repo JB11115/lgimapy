@@ -1,0 +1,258 @@
+\documentclass[12pt]{article}
+\usepackage[left=0.5cm, right=0.5cm, top=0.5cm, bottom=0.2cm]{geometry}
+\usepackage[table]{xcolor}
+%\usepackage[draft]{graphicx}
+\usepackage{graphicx}
+\usepackage{
+    amsmath,
+    amsthm,
+    amssymb,
+    adjustbox,
+    array,
+    background,
+    booktabs,
+    bm,
+    caption,
+    colortbl,
+    dsfont,
+    enumitem,
+    epigraph,
+    fancyhdr,
+    float,
+    makecell,
+    marvosym,
+    MnSymbol,
+    nicefrac,
+    ragged2e,
+    subcaption,
+    tabu,
+    titlesec,
+    transparent,
+    xcolor
+}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\backgroundsetup{contents={}}
+
+%% Define default caption settings for figures and tables.
+\captionsetup{
+    justification=centering,
+    singlelinecheck=false,
+    font={footnotesize, bf},
+    aboveskip=0pt,
+    belowskip=0pt,
+    labelformat=empty
+}
+\captionsetup[subfigure]{
+    justification=raggedright,
+    singlelinecheck=false,
+    font={footnotesize, bf},
+    aboveskip=0pt,
+    belowskip=0pt,
+    labelformat=empty
+}
+%% Define columns with fixed widths for tables.
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+%% Change separations distances for better presentation.
+\setlength{\textfloatsep}{0.1mm}
+\setlength{\floatsep}{1mm}
+\setlength{\intextsep}{2mm}
+
+%% Declare operators for mathematical expressions.
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\setcounter{MaxMatrixCols}{20}
+
+%% Define custom colors.
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{steelblue}{HTML}{0C70D5}
+\definecolor{firebrick}{HTML}{E85650}
+\definecolor{orchid}{HTML}{9A2BE6}
+\definecolor{orange}{HTML}{E69A2B}
+\definecolor{babyblue}{HTML}{85C7DB}
+\definecolor{salmon}{HTML}{DB8585}
+\definecolor{eggplant}{HTML}{815a71}
+\definecolor{mauve}{HTML}{a78197}
+
+%% Define function for perctile bars in tables.
+\newlength{\barw}
+\setlength{\barw}{0.15mm}
+\def\pctbar#1#2{%%
+    {\color{gray}\rule{#2\barw}{#1pt}} #2\%}
+
+%% Define function for divergent bars in tables.
+\def\bar#1#2{%
+    \color{#2}\rule{#1\barw}{10pt}
+}
+
+\def\divbar#1#2{%
+    \ifnum#1<0{%
+            \bar{\the\numexpr50+#1}{white}
+        \bar{-#1}{#2}
+        \bar{50}{white}
+    }
+    \else{%
+            \bar{50}{white}
+        \bar{#1}{#2}
+        \bar{\the\numexpr50-#1}{white}
+    }
+    \fi
+}
+
+\pagenumbering{gobble}
+
+
+
+
+
+\begin{document}
+
+
+
+\section{Spread Dispersion Overview}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.7\textwidth]{fig/Current_Percentiles}
+	\caption{RSD normalized using average current spread, DCV and QCV by median.\\ Low percentiles represent low dispersion.}
+\end{figure}
+
+\begin{figure}[H]
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/1_Week_Percentile_Change}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/1_Month_Percentile_Change}
+	\end{subfigure}
+\end{figure}
+\vfill
+\begin{figure}[H]
+	\centering
+	%\caption{}
+	\includegraphics[width=0.95\textwidth]{fig/current_histograms}
+\end{figure}
+\vfill
+\pagebreak
+
+
+%%
+\section{A-Rated Market Value Weighted Spread Dispersion}
+\begin{figure}[H]
+	\centering
+	%\caption{}
+	\includegraphics[width=0.9\textwidth]{fig/MV_A_timeseries}
+\end{figure}
+\begin{figure}[H]
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/MV_A_abs_jointplot}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/MV_A_rel_jointplot}
+	\end{subfigure}
+\end{figure}
+\pagebreak
+
+\section{A-Rated Issuer Weighted Spread Dispersion}
+\begin{figure}[H]
+	\centering
+	%\caption{}
+	\includegraphics[width=0.9\textwidth]{fig/Issuer_A_timeseries}
+\end{figure}
+\begin{figure}[H]
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/Issuer_A_abs_jointplot}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/Issuer_A_rel_jointplot}
+	\end{subfigure}
+\end{figure}
+\pagebreak
+
+\section{BBB Market Value Weighted Spread Dispersion}
+\begin{figure}[H]
+	\centering
+	%\caption{}
+	\includegraphics[width=0.9\textwidth]{fig/MV_BBB_timeseries}
+\end{figure}
+\begin{figure}[H]
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/MV_BBB_abs_jointplot}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/MV_BBB_rel_jointplot}
+	\end{subfigure}
+\end{figure}
+\pagebreak
+
+\section{BBB Issuer Weighted Spread Dispersion}
+\begin{figure}[H]
+	\centering
+	%\caption{}
+	\includegraphics[width=0.9\textwidth]{fig/Issuer_BBB_timeseries}
+\end{figure}
+\begin{figure}[H]
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/Issuer_BBB_abs_jointplot}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.48\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/Issuer_BBB_rel_jointplot}
+	\end{subfigure}
+\end{figure}
+\pagebreak
+
+\section{Decile Tables}
+	%%\begin{decile_table}
+	%%\end{decile_table}
+
+\pagebreak
+\section{Methodology}
+Data used for timeseries and percentiles is from 1/3/2000 to present.\bigskip
+
+\begin{table}[H]
+	\caption{}
+	\centering
+	\begin{tabu} to \linewidth{c|c|p{11cm}}
+		\toprule
+		{} &      Equation  &        Description \\
+		\midrule
+		Mean - Median      &  $\mu - \tilde{x}$ &  Larger numbers indicate a significant tail which causes the mean to be skewed wider. \\
+			\midrule
+		Std Dev        &  $\sigma$ & Standard deviation of spreads. Prone to outliers. \\
+			\midrule
+		IDR       &  $q_{90} - q_{10}$ & Inter decile range, or the range between the 90th and 10th percentiles of spreads. Less
+		prone to outliers than $\sigma$. \\
+			\midrule
+		IQR       &  $q_{75} - q_{25}$ & Inter quartile range, nearly unaffected by outliers, measures dispersion among the central
+		distribution of spreads.\\
+			\midrule
+		RSD      & $\dfrac{\sigma}{\mu}$ & Relative standard deviation, a normalized version of standard deviation that scales
+		with level of spreads. Still prone to outliers.   \\
+			\midrule
+		DCV      & $\dfrac{IDR}{\tilde{x}}$ & Decile coefficient of variation, normalized IDR. Less prone to outliers than RSD.   \\
+			\midrule
+		QCV      & $\dfrac{IQR}{\tilde{x}}$ & Quartile coefficient of variation, normalized IQR. Nearly unaffected by outliers, 
+		measures dispersion among the central distribution of spreads relative to spread level.   \\
+		\bottomrule
+	\end{tabu}
+\end{table}
+
+\end{document}
