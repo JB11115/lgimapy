@@ -2,12 +2,19 @@ import pandas as pd
 from tqdm import tqdm
 
 from lgimapy.bloomberg import get_bloomberg_subsector
-from lgimapy.data import Database, clean_dtypes, convert_sectors_to_fin_flags
-from lgimapy.utils import root
+from lgimapy.data import (
+    clean_dtypes,
+    convert_sectors_to_fin_flags,
+    Database,
+    Index,
+)
+from lgimapy.utils import root, restart_program
 
 
 # %%
-def update_rating_changes():
+
+
+def update_rating_changes(max_dates=100):
     fid = root("data/rating_changes.csv")
     db = Database()
     saved_df, last_saved_date = read_saved_data(fid)
@@ -15,7 +22,7 @@ def update_rating_changes():
     curr_date = dates[-1]  # init in case loop doesn't run
     df_list = [] if saved_df is None else [saved_df]
 
-    for i, curr_date in enumerate(dates[1:1000]):
+    for i, curr_date in enumerate(dates[1:max_dates]):
         prev_date = dates[i]
         df = db.load_market_data(
             start=prev_date,
@@ -26,6 +33,11 @@ def update_rating_changes():
         )
         # Remove holidays.
         df = df[df["Date"].isin({prev_date, curr_date})].copy()
+        df = db._add_hy_index_flags(df)
+        if curr_date < pd.to_datetime("11/1/2018"):
+            ix = Index(clean_dtypes(df))
+            ix._fill_missing_columns_with_bbg_data()
+            df = ix.df.reset_index(drop=True)
         df_list.append(get_rating_changes(df, db))
 
     # Combine saved data with newly computed data, and append
@@ -40,10 +52,14 @@ def update_rating_changes():
     df_parquet = clean_rating_dtypes(updated_df.iloc[:-1])
     df_parquet.to_parquet(fid.parent / f"{fid.stem}.parquet")
 
+    last_date = updated_df["Date_NEW"].iloc[-1].strftime("%m/%d/%Y")
+    return last_date
+
 
 def read_saved_data(fid):
     try:
         df = pd.read_csv(fid, index_col=0)
+
     except FileNotFoundError:
         df = None
         last_date = Database().date("MARKET_START")
@@ -94,8 +110,8 @@ def get_rating_changes(df, db):
 
     # Calculate market value.
     df["AmountOutstanding"] /= 1e6
-    df.eval("DirtyPrice = CleanPrice + AccruedInterest", inplace=True)
-    df.eval("MarketValue = AmountOutstanding * DirtyPrice / 100", inplace=True)
+    df["DirtyPrice"] = df["CleanPrice"] + df["AccruedInterest"]
+    df["MarketValue"] = df["AmountOutstanding"] * df["DirtyPrice"] / 100
 
     # Get subsector and financial flag.
     df["Subsector"] = get_bloomberg_subsector(df["CUSIP"].values)
@@ -122,6 +138,8 @@ def get_rating_changes(df, db):
         "MaturityYears_NEW": "MaturityYears",
         "USCreditReturnsFlag_PREV": "USCreditReturnsFlag",
         "USHYReturnsFlag_PREV": "USHYReturnsFlag",
+        "H0A0Flag_PREV": "H0A0Flag",
+        "H4UNFlag_PREV": "H4UNFlag",
         "FinancialFlag_PREV": "FinancialFlag",
         "MarketValue_PREV": "MarketValue",
         "AmountOutstanding_PREV": "AmountOutstanding",
@@ -164,6 +182,8 @@ def clean_rating_dtypes(df):
         "Int8": [
             "USCreditReturnsFlag",
             "USHYReturnsFlag",
+            "H4UNFlag",
+            "H0A0Flag",
             "FinancialFlag",
             "NumericRating_PREV",
             "NumericRating_NEW",
@@ -202,4 +222,12 @@ def clean_rating_dtypes(df):
 
 # %%
 if __name__ == "__main__":
-    update_rating_changes()
+    import psutil
+    from time import sleep
+
+    while True:
+        last_date = update_rating_changes(max_dates=20)
+        sleep(5)
+        print(last_date)
+        if psutil.virtual_memory().percent > 90:
+            quit()
