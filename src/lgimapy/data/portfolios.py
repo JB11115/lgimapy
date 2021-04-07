@@ -5,8 +5,21 @@ import numpy as np
 import pandas as pd
 
 import lgimapy.vis as vis
-from lgimapy.data import BondBasket, groupby
-from lgimapy.utils import replace_multiple, root, to_datetime, to_list
+from lgimapy.data import (
+    BondBasket,
+    groupby,
+    HY_sectors,
+    IG_sectors,
+    IG_market_segments,
+    index_kwargs,
+)
+from lgimapy.utils import (
+    replace_multiple,
+    root,
+    to_datetime,
+    to_list,
+    to_set,
+)
 
 
 # %%
@@ -115,6 +128,7 @@ class Account(BondBasket, Portfolio):
         )
         Portfolio.__init__(self, date=date)
         self._tsy_bins = [2, 3, 5, 7, 10, 20, 30]
+        self.full_df = df.copy()
         self.df, self.tsy_df, self.cash_df = self._split_credit_tsy_cash(df)
 
     def _split_credit_tsy_cash(self, df):
@@ -238,7 +252,9 @@ class Account(BondBasket, Portfolio):
             + " "
             + self.df["Coupon"].apply(lambda x: f"{x:.2f}")
             + " "
-            + self.df["MaturityDate"].apply(lambda x: f"`{x.strftime('%y')}")
+            + self.df["MaturityDate"]
+            .apply(lambda x: f"`{x.strftime('%y')}")
+            .astype(str)
             + "#"
             + self.df["CUSIP"].astype(str)
         ).values
@@ -261,6 +277,32 @@ class Account(BondBasket, Portfolio):
     def HY_ticker_overweights(self, by="OAD", sort=True):
         hy_account = self.subset(rating="HY")
         return hy_account.ticker_overweights(by=by, sort=True)
+
+    def IG_sector_overweights(self, sectors=None, by="OAD", sort=True):
+        sectors = IG_sectors() if sectors is None else sectors
+        d = {}
+        for sector in sectors:
+            kwargs = index_kwargs(sector, unused_constraints="in_stats_index")
+            df = self.subset(**kwargs).df
+            d[kwargs["name"]] = df[f"{by}_Diff"].sum()
+        s = pd.Series(d)
+        if sort:
+            return s.sort_values(ascending=False)
+        else:
+            return s
+
+    def IG_market_segment_overweights(self, segments=None, by="OAD", sort=True):
+        segments = IG_market_segments() if segments is None else segments
+        d = {}
+        for segment in segments:
+            kwargs = index_kwargs(segment, unused_constraints="in_stats_index")
+            df = self.subset(**kwargs).df
+            d[kwargs["name"]] = df[f"{by}_Diff"].sum()
+        s = pd.Series(d)
+        if sort:
+            return s.sort_values(ascending=False)
+        else:
+            return s
 
     def sector_overweights(self, by="OAD", sort=True):
         if sort:
@@ -337,7 +379,11 @@ class Strategy(BondBasket, Portfolio):
         market="US",
         constraints=None,
         index="CUSIP",
+        ignored_accounts=None,
     ):
+        if ignored_accounts is not None:
+            ignored_accounts = to_set(ignored_accounts, dtype=str)
+            df = df[~df["Account"].isin(ignored_accounts)].copy()
         BondBasket.__init__(
             self,
             df=df,
@@ -357,7 +403,14 @@ class Strategy(BondBasket, Portfolio):
 
     @property
     def fid(self):
+        """str: Filename safe version of strategy name."""
         repl = {" ": "_", "/": "_", "%": "pct"}
+        return replace_multiple(self.name, repl)
+
+    @property
+    def latex_name(self):
+        """str: LaTeX safe version of strategy name."""
+        repl = {"%": "\%", "_": " "}
         return replace_multiple(self.name, repl)
 
     def _split_accounts(self):
@@ -733,6 +786,47 @@ class Strategy(BondBasket, Portfolio):
             lambda x: x.bond_overweights(sort=False, by=by)
         )
 
+    def account_ticker_overweights_comp(self, by="OAD", n=20):
+        df = self.calculate_account_values(
+            lambda x: x.ticker_overweights(sort=False, by=by)
+        ).T.rename_axis(None)
+        return self._largest_variation(df, n)
+
+    def account_IG_sector_overweights_comp(self, sectors=None, by="OAD", n=20):
+        df = self.calculate_account_values(
+            lambda x: x.IG_sector_overweights(
+                sectors=sectors, sort=False, by=by
+            )
+        ).T
+        return self._largest_variation(df, n)
+
+    def account_IG_market_segments_overweights_comp(
+        self, segments=None, by="OAD", n=20
+    ):
+        df = self.calculate_account_values(
+            lambda x: x.IG_market_segment_overweights(
+                segments=segments, sort=False, by=by
+            )
+        ).T
+        return self._largest_variation(df, n)
+
+    def _largest_variation(self, df, n):
+        """
+        pd.DatFrame:
+            Find top ``n`` rows with largest variation between portfolios.
+        """
+        # Find index of rows with most variation among portfolios.
+        avg = df.fillna(0).mean(axis=1)
+        std = df.fillna(0).std(axis=1).sort_values()
+        if n is not None:
+            idx = std[-n:].index[::-1]
+        else:
+            idx = std.index[::-1]
+        table = df.loc[idx]
+        table["Avg"] = avg
+        cols = list(table.columns[-1:]) + list(table.columns[:-1])
+        return table[cols]
+
     def tsy_weights(self):
         tsy_df = self.df[self.df["Sector"] == "TREASURIES"].copy()
 
@@ -760,13 +854,16 @@ def main():
     from collections import defaultdict
     from tqdm import tqdm
     from lgimapy.data import Database
-    from lgimapy.utils import Time, load_json
+    from lgimapy.utils import Time
 
     db = Database()
     db.display_all_columns()
 
     # %%
+
+    # %%
     date = db.date("today")
+    # date = db.date("1w")
 
     # date = pd.to_datetime("2/24/2020")
     # date = db.date("1w", reference_date=date)
@@ -776,8 +873,8 @@ def main():
     # act_name = "NFLLA"
     # act_name = "SEIC"
     # act_name = "LIB150"
-    act_name = "P-LD"
-    act_name = "HITHY"
+    act_name = "CARGLC"
+    # act_name = "HITHY"
     act_df = db.load_portfolio(
         account=act_name,
         date=date,
@@ -786,16 +883,20 @@ def main():
         universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
+    list(acnt.df)
+
+    # %%
+    acnt.IG_market_segment_overweights()
 
     # %%
 
     # strat_name = "US Credit"
-    strat_name = "US Long Credit"
     strat_name = "Liability Aware Long Duration Credit"
     # strat_name = "US Long A+ Credit"
     strat_name = "US Long Credit Plus"
     strat_name = "Custom RBS"
-
+    strat_name = "US Long Credit"
+    strat_name = "US Long Corporate A or better"
     # %%
     strat_df = db.load_portfolio(
         strategy=strat_name,
@@ -804,13 +905,10 @@ def main():
         ret_df=True,
         # universe="stats",
     )
-    strat = Strategy(strat_df, name=strat_name, date="1/6/2021")
-    strat = Strategy(strat_df, name=strat_name, date=db.date("today"))
+    # strat = Strategy(strat_df, name=strat_name, date="1/6/2021")
+    strat = Strategy(strat_df, name=strat_name, date=date)
     # %%
 
-    self = db.load_portfolio(
-        strategy=strat_name, date="1/6/2021", universe="returns"
-    )
-    self.bond_overweights("OASD")
-    # %%
-    df = self.df[~self.df["MaturityDate"].isna()]
+    strat.account_ticker_overweights_comp(by="DTS")
+    strat.account_IG_sector_overweights_comp(by="DTS")
+    strat.account_IG_market_segments_overweights_comp(by="DTS")
