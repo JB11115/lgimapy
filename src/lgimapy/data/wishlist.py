@@ -30,7 +30,9 @@ def save_bond_wishlist():
         isin_wishlist.update(current_isins.index)
 
     # Find missing ISINs, convert to CUSIPs, and save.
-    missing_isins = pd.Series(list(isin_wishlist - database_isins)).to_frame()
+    bad_isins = set(["US87612BBP67"])
+    missing_isins_list = list(isin_wishlist - database_isins - bad_isins)
+    missing_isins = pd.Series(missing_isins_list).to_frame()
     missing_isins.to_excel(fid)
     print(f"Updated Bond Wishlist: {len(missing_isins)} bonds")
 
