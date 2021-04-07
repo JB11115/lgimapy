@@ -99,9 +99,9 @@ def subplots(*args, **kwargs):
 
     Parameters
     ----------
-    args:
+    *args:
         Positional arguments for ``matplotlib.pyplot.subplots``
-    kwargs:
+    **kwargs:
         Keyword arguments for ``matplotlib.pyplot.subplots``
 
     Returns
@@ -750,7 +750,7 @@ def plot_timeseries(
         For non-default parameters pass kwargs to ``Axes.legend()``.
     ax: matplotlib Axes, optional
         Axes in which to draw plot, otherwise activate Axes.
-    kwargs: dict, optional
+    **kwargs: dict, optional
         Kwargs for ``matplotlib.Axes.plot()``.
     """
     if ax is None:
@@ -927,7 +927,7 @@ def plot_multiple_timeseries(
         If False, hide legend. If True, show legend defaulting
         to names of ``s_left`` and ``s_right`` with default parameters.
         For non-default parameters pass kwargs to ``Axes.legend()``.
-    kwargs: dict, optional
+    **kwargs: dict, optional
         Kwargs for ``matplotlib.Axes.plot()``.
     """
     # Set default plot params and update with specified params.
