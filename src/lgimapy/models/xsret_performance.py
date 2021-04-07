@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
-from lgimapy.models import weighted_percentile
+from lgimapy.data import weighted_percentile
 from lgimapy.utils import to_list, root
 
 
