@@ -15,10 +15,8 @@ from lgimapy.bloomberg import (
     get_cashflows,
     get_settlement_date,
 )
-from lgimapy.data import concat_index_dfs
+from lgimapy.data import clean_dtypes, concat_index_dfs
 from lgimapy.utils import load_json, root
-
-plt.style.use("fivethirtyeight")
 
 
 # %%
@@ -34,14 +32,20 @@ class Bond:
     """
 
     def __init__(self, s):
-        self.s = s
+        self.s = s.copy()
         self.__dict__.update(s.to_dict())
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}({self.cusip} - "
-            f"{self.Date.strftime('%m/%d/%Y')})"
+            f"{self.__class__.__name__}"
+            f"({self.Ticker} {self.CouponRate:.2f} `{self.MaturityDate:%y}: "
+            f"{self.cusip}) - {self.Date:%m/%d/%Y}"
         )
+
+    @property
+    @lru_cache(maxsize=None)
+    def df(self):
+        return clean_dtypes(self.s.to_frame().T)
 
     @property
     def cusip(self):
@@ -49,15 +53,46 @@ class Bond:
         return self.CUSIP
 
     @property
+    def isin(self):
+        """str: Cusip of :class:`Bond`."""
+        return self.ISIN
+
+    @property
+    @lru_cache(maxsize=None)
+    def all_cash_flows(self):
+        """pd.Series: Load/scrape all cash flows with datetime index."""
+        return get_cashflows(self.cusip, maturity_date=self.MaturityDate)
+
+    @property
     @lru_cache(maxsize=None)
     def cash_flows(self):
         """
         pd.Series:
-            Load/scrape cash flows with datetime index for
-            the bond from current bond date.
+            Get future cashflows from current date. Check settlement
+            date to verify the next coupon is correct.
         """
-        cash_flows = get_cashflows(self.cusip)
+        # Get temporary next coupon date.
+        cash_flows = self.all_cash_flows
         return cash_flows[cash_flows.index > self.Date]
+
+    @property
+    @lru_cache(maxsize=None)
+    def _cf(self):
+        """
+        [n x 1] np.array:
+            Future cash flow values.
+        """
+        # Get temporary next coupon date.
+        return self.cash_flows.values
+
+    @property
+    def _t(self):
+        """
+        [n x 1] ndarray:
+            Memoized time in years from :attr:`Bond.Date`
+            for all coupons.
+        """
+        return self.coupon_years
 
     @property
     @lru_cache(maxsize=None)
@@ -66,12 +101,7 @@ class Bond:
         List[datetime]:
             Memoized list of timestamps for all coupons.
         """
-        # TODO: use scraped dates when apporiate.
-        # coupon_dates = get_coupon_dates(self.CUSIP)
-        # return coupon_dates[coupon_dates > self.Date]
-
-        return self._theoretical_coupon_dates()
-        # return self.cash_flows.index
+        return list(self.cash_flows.index)
 
     @property
     @lru_cache(maxsize=None)
@@ -155,14 +185,7 @@ class Bond:
 
     def _ytm_func(self, y, price=None):
         """float: Yield to maturity error function for solver."""
-        error = (
-            sum(
-                cf * np.exp(-y * t)
-                for cf, t in zip(self.cash_flows, self.coupon_years)
-            )
-            - price
-        )
-        return error
+        return (self._cf @ np.exp(-y * self._t)) - price
 
     @property
     @lru_cache(maxsize=None)
@@ -240,10 +263,7 @@ class TBond(Bond):
         float:
             Theoretical price ($) of :class:`TBond`.
         """
-        return sum(
-            cf * np.exp(-rfr * t)
-            for cf, t in zip(self.cash_flows, self.coupon_years)
-        )
+        return self._cf @ np.exp(-rfr * self._t)
 
     def calculate_price_with_curve(self, curve):
         """
@@ -260,11 +280,8 @@ class TBond(Bond):
         float:
             Theoretical price ($) of :class:`TBond`.
         """
-        yields = np.interp(self.coupon_years, curve.index, curve.values)
-        return sum(
-            cf * np.exp(-y * t)
-            for cf, t, y in zip(self.cash_flows, self.coupon_years, yields)
-        )
+        yields = np.interp(self._t, curve.index, curve.values)
+        return self._cf @ np.exp(-yields * self._t)
 
     @property
     @lru_cache(maxsize=None)
@@ -299,15 +316,6 @@ class TBond(Bond):
             self._day_offset = 1
 
         return cash_flows[cash_flows.index > self._day_count_dt]
-
-    @property
-    @lru_cache(maxsize=None)
-    def coupon_dates(self):
-        """
-        List[datetime]:
-            Memoized list of timestamps for all coupons.
-        """
-        return list(self.cash_flows.index)
 
     @property
     @lru_cache(maxsize=None)
@@ -360,13 +368,14 @@ class SyntheticTBill:
         self.coupon_years = np.array([self.MaturityYears])
         self.coupon_dates = [self.Date + timedelta(days_to_maturity)]
         self.cash_flows = pd.Series([100], index=self.coupon_dates)
+
         self.BTicker = self.Ticker = "B"
         self.cusip = f"{days_to_maturity}D"
 
     def __repr__(self):
         return (
-            f"{self.__class__.__name__}({self.cusip} - "
-            f"{self.Date.strftime('%m/%d/%Y')})"
+            f"{self.__class__.__name__}"
+            f"({self.cusip}) - {self.Date:%m/%d/%Y}"
         )
 
     @property
@@ -381,21 +390,11 @@ class SyntheticTBill:
         float:
             Theoretical price ($) of :class:`TBond`.
         """
-        return sum(
-            cf * np.exp(-self.ytm * t)
-            for cf, t in zip(self.cash_flows, self.coupon_years)
-        )
+        return self._cf @ np.exp(-self.ytm * self._t)
 
     def _ytm_func(self, y, price=None):
         """float: Yield to maturity error function for solver."""
-        error = (
-            sum(
-                cf * np.exp(-y * t)
-                for cf, t in zip(self.cash_flows, self.coupon_years)
-            )
-            - price
-        )
-        return error
+        return (self._cf @ np.exp(-y * self._t)) - price
 
     def theoretical_ytm(self, price):
         """
@@ -433,11 +432,27 @@ class SyntheticTBill:
         float:
             Theoretical price ($) of :class:`TBond`.
         """
-        yields = np.interp(self.coupon_years, curve.index, curve.values)
-        return sum(
-            cf * np.exp(-y * t)
-            for cf, t, y in zip(self.cash_flows, self.coupon_years, yields)
-        )
+        yields = np.interp(self._t, curve.index, curve.values)
+        return self._cf @ np.exp(-yields * self._t)
+
+    @property
+    @lru_cache(maxsize=None)
+    def _cf(self):
+        """
+        [n x 1] np.array:
+            Future cash flow values.
+        """
+        # Get temporary next coupon date.
+        return self.cash_flows.values
+
+    @property
+    def _t(self):
+        """
+        [n x 1] ndarray:
+            Memoized time in years from :attr:`Bond.Date`
+            for all coupons.
+        """
+        return self.coupon_years
 
 
 class TreasuryCurve:
@@ -619,25 +634,31 @@ class TreasuryCurve:
         ax.set_xlim(trange)
 
 
-class NewBond:
-    def __init__(self, maturity_years, coupon):
-        self.coupon = coupon
-        self.maturity_years = maturity_years
+class SyntheticBond:
+    def __init__(self, maturity, coupon, price=100):
+        self.MaturityYears = maturity
+        self.CouponRate = coupon
+        self.DirtyPrice = price
+        self.CleanPrice = price
 
-        self.coupon_years = np.arange(0.5, maturity_years + 0.5, 0.5)
-        self.cash_flows = coupon / 2 * np.ones(int(maturity_years * 2))
+        self.coupon_years = np.arange(0.5, maturity + 0.5, 0.5)
+        self.cash_flows = coupon / 2 * np.ones(int(maturity * 2))
         self.cash_flows[-1] += 100
+        self.OASD = 1  # placeholder
+
+        self._cf = self.cash_flows
+        self._t = self.coupon_years
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}"
+            f"(coupon={self.CouponRate:.2f} "
+            f"maturity={self.MaturityYears:.1f})"
+        )
 
     def _ytm_func(self, y, price):
         """float: Yield to maturity error function for solver."""
-        error = (
-            sum(
-                cf * np.exp(-y * t)
-                for cf, t in zip(self.cash_flows, self.coupon_years)
-            )
-            - price
-        )
-        return error
+        return (self._cf @ np.exp(-y * self._t)) - price
 
     @property
     def ytm(self):
@@ -648,31 +669,53 @@ class NewBond:
         """
         x0 = 0.02  # initial guess
         warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        ytm = fsolve(self._ytm_func, x0, args=(100))[0]
+        ytm = fsolve(self._ytm_func, x0, args=(self.DirtyPrice))[0]
+        warnings.simplefilter(action="default", category=RuntimeWarning)
+        return ytm
+
+    def theoretical_ytm(self, price):
+        """
+        Calculate yield to maturity of the bond using true coupon
+        values and dates and specified price.
+
+        Parameters
+        ----------
+        price: float:
+            Price of the bond to use when calculating yield to maturity.
+
+        Returns
+        -------
+        ytm: float
+            Yield to maturity of the bond at specified price.
+        """
+        x0 = 0.02  # initial guess
+        warnings.simplefilter(action="ignore", category=RuntimeWarning)
+        ytm = fsolve(self._ytm_func, x0, args=(price))[0]
         warnings.simplefilter(action="default", category=RuntimeWarning)
         return ytm
 
     @property
     def duration(self):
-        cash_flow_number = np.arange(1, int(2 * self.maturity_years) + 1)
-        return (
-            np.sum(
-                self.cash_flows
-                / (1 + self.ytm / 2) ** cash_flow_number
-                * self.coupon_years
-            )
-            / 100
-        )
+        i = np.arange(1, int(2 * self.MaturityYears) + 1)
+        return (self._cf / (1 + self.ytm / 2) ** i) @ self._t / 100
 
 
+# %%
 def main():
+    pass
+    # %%
     from lgimapy.data import Database
     from lgimapy.utils import Time
 
     # %%
     db = Database()
-    db.load_market_data(local=True)
+    db.load_market_data()
     ix = db.build_market_index(rating="AAA")
     bond = ix.bonds[0]
-    bond.MaturityDate
-    bond.OAD
+    bond.df
+    self = bond
+    y = 0.02
+
+    # %%
+    self = SyntheticBond(30, 2.5)
+    self.duration
