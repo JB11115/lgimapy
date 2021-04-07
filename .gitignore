@@ -55,6 +55,7 @@ venv/
 __pycache__/
 .pytest_cache/
 *.pyc
+/src/**/_*.py
 
 # R files #
 ###########
