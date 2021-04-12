@@ -1,0 +1,3732 @@
+{
+    "IG_all": {
+        "maturity_splits": [
+            "all",
+            5,
+            10,
+            20,
+            30
+        ],
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": "IG"
+    },
+    "IG_long_credit": {
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": "IG",
+        "maturity": [
+            10,
+            null
+        ]
+    },
+    "IG_liquid": {
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": "IG",
+        "issue_years": [
+            null,
+            2
+        ]
+    },
+    "A_all": {
+        "name": "A",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "AAA",
+            "A-"
+        ],
+        "in_stats_index": true
+    },
+    "AAA": {
+        "name": "AAA",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": "AAA",
+        "in_stats_index": true
+    },
+    "AA": {
+        "name": "AA",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "AA+",
+            "AA-"
+        ],
+        "in_stats_index": true
+    },
+    "A": {
+        "name": "A",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "in_stats_index": true
+    },
+    "BBB": {
+        "name": "BBB",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "in_stats_index": true
+    },
+    "BB": {
+        "name": "BB",
+        "OAS": [
+            -10,
+            null
+        ],
+        "rating": [
+            "BB+",
+            "BB-"
+        ],
+        "in_hy_stats_index": true
+    },
+    "B": {
+        "name": "B",
+        "OAS": [
+            -10,
+            null
+        ],
+        "rating": [
+            "B+",
+            "B-"
+        ],
+        "in_hy_stats_index": true
+    },
+    "CCC": {
+        "name": "CCC",
+        "OAS": [
+            -10,
+            null
+        ],
+        "rating": [
+            "CCC+",
+            "CCC-"
+        ],
+        "in_hy_stats_index": true
+    },
+    "A_FIN": {
+        "name": "A Financial",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": true,
+        "in_stats_index": true
+    },
+    "A_NON_CORP": {
+        "name": "A Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": 2,
+        "in_stats_index": true
+    },
+    "A_NON_FIN_EX_TOP_30_10+": {
+        "name": "A Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_TOP_30_10+": {
+        "name": "A Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ]
+    },
+    "A_NON_FIN_EX_TOP_30": {
+        "name": "A Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "BMY",
+            "DIS",
+            "UNH",
+            "IBM",
+            "PFE",
+            "HD",
+            "AMZN",
+            "INTC",
+            "PEP",
+            "BPLN",
+            "TOYOTA",
+            "CAT",
+            "MRK",
+            "BNSF",
+            "DE",
+            "KO",
+            "PM",
+            "UPS",
+            "GSK",
+            "ABT",
+            "QCOM",
+            "MMM",
+            "COP",
+            "LMT",
+            "HNDA",
+            "HON",
+            "TGT",
+            "CSCO",
+            "MA"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_TOP_30": {
+        "name": "A Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "BMY",
+            "DIS",
+            "UNH",
+            "IBM",
+            "PFE",
+            "HD",
+            "AMZN",
+            "INTC",
+            "PEP",
+            "BPLN",
+            "TOYOTA",
+            "CAT",
+            "MRK",
+            "BNSF",
+            "DE",
+            "KO",
+            "PM",
+            "UPS",
+            "GSK",
+            "ABT",
+            "QCOM",
+            "MMM",
+            "COP",
+            "LMT",
+            "HNDA",
+            "HON",
+            "TGT",
+            "CSCO",
+            "MA"
+        ]
+    },
+    "BBB_FIN": {
+        "name": "BBB Financial",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": true,
+        "in_stats_index": true
+    },
+    "BBB_NON_CORP": {
+        "name": "BBB Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": 2,
+        "in_stats_index": true
+    },
+    "BBB_NON_FIN_EX_TOP_30_10+": {
+        "name": "BBB Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_TOP_30_10+": {
+        "name": "BBB Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ]
+    },
+    "BBB_NON_FIN_EX_TOP_30": {
+        "name": "BBB Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "VZ",
+            "ABIBB",
+            "ABBV",
+            "CVS",
+            "BA",
+            "GM",
+            "CHTR",
+            "AVGO",
+            "ETP",
+            "TMUS",
+            "BATSLN",
+            "RTX",
+            "AMGN",
+            "CI",
+            "EPD",
+            "GILD",
+            "KMI",
+            "UNP",
+            "GE",
+            "MCD",
+            "MO",
+            "VOD",
+            "WMB",
+            "DELL",
+            "ANTM",
+            "VIAC",
+            "MPLX",
+            "LOW",
+            "AMT",
+            "FDX"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_TOP_30": {
+        "name": "BBB Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "VZ",
+            "ABIBB",
+            "ABBV",
+            "CVS",
+            "BA",
+            "GM",
+            "CHTR",
+            "AVGO",
+            "ETP",
+            "TMUS",
+            "BATSLN",
+            "RTX",
+            "AMGN",
+            "CI",
+            "EPD",
+            "GILD",
+            "KMI",
+            "UNP",
+            "GE",
+            "MCD",
+            "MO",
+            "VOD",
+            "WMB",
+            "DELL",
+            "ANTM",
+            "VIAC",
+            "MPLX",
+            "LOW",
+            "AMT",
+            "FDX"
+        ]
+    },
+    "COVID_19_SENSATIVE": {
+        "name": "Covid-19 Sensative",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_stats_index": true,
+        "ticker": [
+            "AAPL",
+            "APD",
+            "BKNG",
+            "CAT",
+            "CMI",
+            "CVX",
+            "DE",
+            "EMR",
+            "EXPE",
+            "GLW",
+            "GM",
+            "HES",
+            "LVS",
+            "MCD",
+            "MU",
+            "NKE",
+            "PXD",
+            "QCOM",
+            "RCL",
+            "SBUX",
+            "SUCN",
+            "TPR",
+            "TXN",
+            "WMT",
+            "XOM"
+        ]
+    },
+    "IG_most_trade_exposed": {
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": "IG",
+        "sector": [
+            "TECHNOLOGY",
+            "CONSUMER_PRODUCTS",
+            "CHEMICALS",
+            "RETAILERS",
+            "DIVERSIFIED_MANUFACTURING"
+        ]
+    },
+    "IG_least_trade_exposed": {
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": "IG",
+        "sector": [
+            "MEDIA_ENTERTAINMENT",
+            "TOBACCO",
+            "WIRELINES",
+            "WIRELESS"
+        ],
+        "subsector": "Oil Comp-Explor&Prodtn",
+        "special_rules": "Sector | Subsector"
+    },
+    "SIFI_BANKS": {
+        "name": "US SIFI Banks",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "JPM",
+            "C",
+            "GS",
+            "MS",
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
+        ],
+        "collateral_type": [
+            "LIMITD GUARANTEE"
+        ],
+        "special_rules": "(~CollateralType)"
+    },
+    "SIFI_BANKS_SR": {
+        "name": "US SIFI Banks (Sr)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "JPM",
+            "C",
+            "GS",
+            "MS",
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
+        ],
+        "collateral_type": [
+            "UNSECURED"
+        ]
+    },
+    "SIFI_BANKS_SUB": {
+        "name": "US SIFI Banks (Sub)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "JPM",
+            "C",
+            "GS",
+            "MS",
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
+        ],
+        "collateral_type": [
+            "SUBORDINATED"
+        ]
+    },
+    "SIFI_BANKS_PREF": {
+        "name": "US SIFI Banks (Pref)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "JPM",
+            "C",
+            "GS",
+            "MS",
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
+        ],
+        "collateral_type": [
+            "JR SUBORDINATED"
+        ]
+    },
+    "US_BANKS_SR": {
+        "name": "US Banks (Sr)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "collateral_type": [
+            "UNSECURED"
+        ]
+    },
+    "US_BANKS_SUB": {
+        "name": "US Banks (Sub)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "collateral_type": [
+            "SUBORDINATED"
+        ]
+    },
+    "US_BANKS_PREF": {
+        "name": "US Banks (Pref)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "collateral_type": [
+            "JR SUBORDINATED"
+        ]
+    },
+    "BANKS_SR": {
+        "name": "Banks (Sr)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "collateral_type": [
+            "UNSECURED"
+        ]
+    },
+    "BANKS_SUB": {
+        "name": "Banks (Sub)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "collateral_type": [
+            "SUBORDINATED"
+        ]
+    },
+    "BANKS_PREF": {
+        "name": "Banks (Pref)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "collateral_type": [
+            "JR SUBORDINATED"
+        ]
+    },
+    "STATS_all": {
+        "name": "US Stats Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_stats_index": true
+    },
+    "STATS_US_IG": {
+        "name": "US Market Credit Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_stats_index": true
+    },
+    "STATS_US_IG_10+": {
+        "name": "US Long Credit Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "maturity": [
+            10,
+            null
+        ],
+        "in_stats_index": true
+    },
+    "STATS_HY": {
+        "name": "US HY Credit Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_hy_stats_index": true
+    },
+    "RETURNS_all": {
+        "name": "US Returns Index",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "in_returns_index": true
+    },
+    "FINANCIALS": {
+        "name": "Financials",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C",
+            "LIFE",
+            "APARTMENT_REITS",
+            "BANKING",
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "RETAIL_REITS",
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "FINANCIAL_OTHER",
+            "FINANCE_COMPANIES",
+            "OFFICE_REITS"
+        ],
+        "in_stats_index": true
+    },
+    "INDUSTRIALS": {
+        "name": "Industrials",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C",
+            "LIFE",
+            "APARTMENT_REITS",
+            "BANKING",
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "RETAIL_REITS",
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "FINANCIAL_OTHER",
+            "FINANCE_COMPANIES",
+            "OFFICE_REITS",
+            "LOCAL_AUTHORITIES",
+            "TREASURIES",
+            "SOVEREIGN",
+            "SUPRANATIONAL",
+            "GOVERNMENT_GUARANTEE",
+            "OWNED_NO_GUARANTEE",
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "subsector": [
+            "Medical-Hospitals",
+            "Schools"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Sector & ~Subsector & ~Ticker"
+    },
+    "INDUSTRIALS_EX_ENERGY_MM": {
+        "name": "ex Energy & M/M",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C",
+            "LIFE",
+            "APARTMENT_REITS",
+            "BANKING",
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "RETAIL_REITS",
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "FINANCIAL_OTHER",
+            "FINANCE_COMPANIES",
+            "OFFICE_REITS",
+            "LOCAL_AUTHORITIES",
+            "TREASURIES",
+            "SOVEREIGN",
+            "SUPRANATIONAL",
+            "GOVERNMENT_GUARANTEE",
+            "OWNED_NO_GUARANTEE",
+            "INDEPENDENT",
+            "REFINING",
+            "OIL_FIELD_SERVICES",
+            "INTEGRATED",
+            "MIDSTREAM",
+            "METALS_AND_MINING",
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "subsector": [
+            "Medical-Hospitals",
+            "Schools"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Sector & ~Subsector & ~Ticker"
+    },
+    "NON_CORP": {
+        "name": "Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GOVERNMENT_GUARANTEE",
+            "LOCAL_AUTHORITIES",
+            "OWNED_NO_GUARANTEE",
+            "SOVEREIGN",
+            "SUPRANATIONAL"
+        ],
+        "subsector": [
+            "Medical-Hospitals",
+            "Schools"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "Sector | Subsector | Ticker"
+    },
+    "NON_CORP_OTHER": {
+        "name": "Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GOVERNMENT_GUARANTEE",
+            "LOCAL_AUTHORITIES",
+            "OWNED_NO_GUARANTEE",
+            "SUPRANATIONAL"
+        ],
+        "subsector": [
+            "Medical-Hospitals",
+            "Schools"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "Sector | Subsector | Ticker"
+    },
+    "CYCLICAL_FOR_CITI_SURVEY": {
+        "name": "Cyclical (Citi)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "METALS_AND_MINING",
+            "CHEMICALS",
+            "PACKAGING",
+            "PAPER",
+            "AIRLINES",
+            "RAILROADS",
+            "TRANSPORTATION_SERVICES",
+            "CONSUMER_CYCLICAL_SERVICES",
+            "RETAILERS",
+            "AUTOMOTIVE",
+            "LEISURE",
+            "GAMING",
+            "LODGING",
+            "HOME_CONSTRUCTION",
+            "RESTAURANTS",
+            "MEDIA_ENTERTAINMENT"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
+    },
+    "INDUSTRIALS_FOR_CITI_SURVEY": {
+        "name": "Industrials (Citi)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDUSTRIAL_OTHER",
+            "ENVIRONMENTAL",
+            "DIVERSIFIED_MANUFACTURING",
+            "BUILDING_MATERIALS",
+            "AEROSPACE/DEFENSE",
+            "CONSTRUCTION_MACHINERY",
+            "TECHNOLOGY"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE",
+            "GE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
+    "BASICS": {
+        "name": "Basics",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "METALS_AND_MINING",
+            "CHEMICALS",
+            "PACKAGING",
+            "PAPER"
+        ],
+        "in_stats_index": true
+    },
+    "CHEMICALS": {
+        "name": "Chemicals",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CHEMICALS"
+        ],
+        "in_stats_index": true
+    },
+    "PACKAGING": {
+        "name": "Packaging",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "PACKAGING"
+        ],
+        "in_stats_index": true
+    },
+    "METALS_AND_MINING": {
+        "name": "Metals & Mining",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "METALS_AND_MINING"
+        ],
+        "in_stats_index": true
+    },
+    "CONSTRUCTION": {
+        "name": "Construction",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HOME_CONSTRUCTION",
+            "CONSTRUCTION_MACHINERY",
+            "BUILDING_MATERIALS"
+        ],
+        "in_stats_index": true
+    },
+    "CAPITAL_GOODS": {
+        "name": "Capital Goods",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "DIVERSIFIED_MANUFACTURING",
+            "BUILDING_MATERIALS",
+            "AEROSPACE/DEFENSE",
+            "CONSTRUCTION_MACHINERY"
+        ],
+        "ticker": [
+            "GE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
+    "DIVERSIFIED_MANUFACTURING": {
+        "name": "Div Manufacturing",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "DIVERSIFIED_MANUFACTURING"
+        ],
+        "ticker": [
+            "GE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
+    "ENERGY": {
+        "name": "Energy",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDEPENDENT",
+            "REFINING",
+            "OIL_FIELD_SERVICES",
+            "INTEGRATED",
+            "MIDSTREAM"
+        ],
+        "in_stats_index": true
+    },
+    "EX_ENERGY": {
+        "name": "Ex-Energy",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDEPENDENT",
+            "REFINING",
+            "OIL_FIELD_SERVICES",
+            "INTEGRATED",
+            "MIDSTREAM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Sector"
+    },
+    "ENERGY_EX_MIDSTREAM": {
+        "name": "Energy ex Midstream",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDEPENDENT",
+            "REFINING",
+            "OIL_FIELD_SERVICES",
+            "INTEGRATED"
+        ],
+        "in_stats_index": true
+    },
+    "UPSTREAM_HIGH_FEDERAL_LAND_DEP": {
+        "name": "Upsteam with High Federal Land % of Revenue",
+        "ticker": [
+            "CXO",
+            "DVN",
+            "APC",
+            "XEC",
+            "HES",
+            "NBL"
+        ],
+        "in_stats_index": true
+    },
+    "UPSTREAM_MEDIUM_FEDERAL_LAND_DEP": {
+        "name": "Upsteam with Medium Federal Land % of Revenue",
+        "ticker": [
+            "EOG",
+            "CLR",
+            "OXY",
+            "ECACN"
+        ],
+        "in_stats_index": true
+    },
+    "UPSTREAM_LOW_FEDERAL_LAND_DEP": {
+        "name": "Upsteam with Low Federal Land % of Revenue",
+        "ticker": [
+            "MRO",
+            "APA",
+            "XOM",
+            "CVX",
+            "COP",
+            "FANG",
+            "PXD",
+            "EQT"
+        ],
+        "in_stats_index": true
+    },
+    "MIDSTREAM": {
+        "name": "Midstream",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "MIDSTREAM"
+        ],
+        "in_stats_index": true
+    },
+    "INDEPENDENT": {
+        "name": "Independent",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDEPENDENT"
+        ],
+        "in_stats_index": true
+    },
+    "REFINING": {
+        "name": "Refining",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "REFINING"
+        ],
+        "in_stats_index": true
+    },
+    "OIL_FIELD_SERVICES": {
+        "name": "Oil Field Services",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "OIL_FIELD_SERVICES"
+        ],
+        "in_stats_index": true
+    },
+    "INTEGRATED": {
+        "name": "Integrated",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INTEGRATED"
+        ],
+        "in_stats_index": true
+    },
+    "HOSPITALITY": {
+        "name": "Hospitality",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LEISURE",
+            "GAMING",
+            "LODGING"
+        ],
+        "in_stats_index": true
+    },
+    "LEISURE": {
+        "name": "Leisure",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LEISURE"
+        ],
+        "in_stats_index": true
+    },
+    "GAMING": {
+        "name": "Gaming",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GAMING"
+        ],
+        "in_stats_index": true
+    },
+    "LODGING": {
+        "name": "Lodging",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LODGING"
+        ],
+        "in_stats_index": true
+    },
+    "REITS": {
+        "name": "REITs",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE_REITS",
+            "OTHER_REITS",
+            "APARTMENT_REITS",
+            "RETAIL_REITS",
+            "OFFICE_REITS"
+        ],
+        "in_stats_index": true
+    },
+    "TECHNOLOGY": {
+        "name": "Technology",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "TECHNOLOGY"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "(Sector | Ticker)"
+    },
+    "CONSUMER_CYCLICAL": {
+        "name": "Consumer Cyclical",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONSUMER_CYCLICAL_SERVICES",
+            "RETAILERS",
+            "AUTOMOTIVE",
+            "LEISURE",
+            "GAMING",
+            "LODGING",
+            "HOME_CONSTRUCTION",
+            "RESTAURANTS"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
+    },
+    "CONSUMER_CYCLICAL_EX_AUTOS_RETAILERS": {
+        "name": "Consumer Cyclical Other",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONSUMER_CYCLICAL_SERVICES",
+            "LEISURE",
+            "GAMING",
+            "LODGING",
+            "HOME_CONSTRUCTION",
+            "RESTAURANTS"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
+    },
+    "CONSUMER_CYCLICAL_SERVICES": {
+        "name": "Consumer Cylical Services",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONSUMER_CYCLICAL_SERVICES"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
+    },
+    "CONSUMER_NON_CYCLICAL": {
+        "name": "Consumer Non-Cyclical",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE",
+            "HEALTH_INSURANCE",
+            "PHARMACEUTICALS",
+            "SUPERMARKETS",
+            "TOBACCO",
+            "FOOD_AND_BEVERAGE",
+            "CONSUMER_PRODUCTS"
+        ],
+        "subsector": [
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector & ~Ticker"
+    },
+    "CONSUMER_PRODUCTS_FOOD_AND_BEVERAGE": {
+        "name": "Consumer Products/Food & Bev",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SUPERMARKETS",
+            "FOOD_AND_BEVERAGE",
+            "CONSUMER_PRODUCTS"
+        ],
+        "in_stats_index": true
+    },
+    "CONSUMER_NON_CYCLICAL_EX_HEALTHCARE": {
+        "name": "Consumer Non-Cyclical",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SUPERMARKETS",
+            "TOBACCO",
+            "FOOD_AND_BEVERAGE",
+            "CONSUMER_PRODUCTS"
+        ],
+        "in_stats_index": true
+    },
+    "CONSUMER_NON_CYCLICAL_OTHER": {
+        "name": "Consumer Non-Cyclical Other",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SUPERMARKETS",
+            "TOBACCO",
+            "CONSUMER_PRODUCTS"
+        ],
+        "in_stats_index": true
+    },
+    "HEALTHCARE_PHARMA": {
+        "name": "Healthcare/Pharma",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE",
+            "PHARMACEUTICALS"
+        ],
+        "subsector": [
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector & ~Ticker"
+    },
+    "WIRELINES_WIRELESS": {
+        "name": "Wirelines/Wireless",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "WIRELESS",
+            "WIRELINES"
+        ],
+        "in_stats_index": true
+    },
+    "TELECOM": {
+        "name": "Telecom",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "WIRELESS",
+            "WIRELINES",
+            "CABLE_SATELLITE"
+        ],
+        "in_stats_index": true
+    },
+    "CABLE_SATELLITE": {
+        "name": "Cable Satellite",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CABLE_SATELLITE"
+        ],
+        "in_stats_index": true
+    },
+    "UNIVERSITY": {
+        "name": "Universities",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDUSTRIAL_OTHER"
+        ],
+        "subsector": "Schools",
+        "in_stats_index": true
+    },
+    "ENVIRONMENTAL_IND_OTHER": {
+        "name": "Env/Ind. Other",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDUSTRIAL_OTHER",
+            "ENVIRONMENTAL"
+        ],
+        "subsector": "Schools",
+        "in_stats_index": true,
+        "special_rules": "~Subsector"
+    },
+    "OTHER_INDUSTRIAL": {
+        "name": "Other Industrials",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INDUSTRIAL_OTHER",
+            "ENVIRONMENTAL",
+            "PACKAGING",
+            "PAPER"
+        ],
+        "subsector": "Schools",
+        "in_stats_index": true,
+        "special_rules": "~Subsector"
+    },
+    "UTILITY": {
+        "name": "Utilities",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "in_stats_index": true
+    },
+    "UTILITY_HOLDCO": {
+        "name": "Unsecured/Holdco",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "collateral_type": [
+            "UNSECURED",
+            "JR SUBORDINATED"
+        ],
+        "in_stats_index": true
+    },
+    "UTILITY_1ST_MORTGAGE": {
+        "name": "1st Mortgage",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER"
+        ],
+        "collateral_type": [
+            "1ST MORTGAGE",
+            "MORTGAGE",
+            "SECURED",
+            "COLLATERAL TRUST"
+        ],
+        "in_stats_index": true
+    },
+    "NATURAL_GAS": {
+        "name": "Natural Gas",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NATURAL_GAS"
+        ],
+        "in_stats_index": true
+    },
+    "ELECTRIC": {
+        "name": "Electric",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "ELECTRIC"
+        ],
+        "in_stats_index": true
+    },
+    "UTILITY_OTHER": {
+        "name": "Other Utilities",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "UTILITY_OTHER"
+        ],
+        "in_stats_index": true
+    },
+    "AERO/DEFENSE": {
+        "name": "Aero/Defense",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AEROSPACE/DEFENSE"
+        ],
+        "in_stats_index": true
+    },
+    "AIRLINES": {
+        "name": "Airlines",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AIRLINES"
+        ],
+        "in_stats_index": true
+    },
+    "AUTOMOTIVE": {
+        "name": "Autos",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AUTOMOTIVE"
+        ],
+        "in_stats_index": true
+    },
+    "US_BANKS": {
+        "name": "US Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "in_stats_index": true
+    },
+    "BANKS": {
+        "name": "Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "in_stats_index": true
+    },
+    "BANKS_SR": {
+        "name": "Banks (Sr)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "collateral_type": [
+            "UNSECURED"
+        ],
+        "in_stats_index": true
+    },
+    "BANKS_SUB": {
+        "name": "Banks (Sub)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "collateral_type": [
+            "SUBORDINATED"
+        ],
+        "in_stats_index": true
+    },
+    "US_REGIONAL_BANKS": {
+        "name": "US Regional Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "C",
+            "GS",
+            "JPM",
+            "BAC",
+            "MS",
+            "WFC"
+        ],
+        "special_rules": "~Ticker",
+        "in_stats_index": true
+    },
+    "NON-US_BANKS": {
+        "name": "Non-US Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "special_rules": "~CountryOfRisk",
+        "in_stats_index": true
+    },
+    "YANKEE_BANKS": {
+        "name": "Yankee Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BANKING"
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "C",
+            "GS",
+            "JPM",
+            "BAC",
+            "MS",
+            "WFC"
+        ],
+        "special_rules": "(~CountryOfRisk & ~Ticker)",
+        "in_stats_index": true
+    },
+    "BROKERAGE_ASSETMANAGERS_EXCHANGES": {
+        "name": "Brokers/Asset Mngr",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES"
+        ],
+        "in_stats_index": true
+    },
+    "CONSUMER_PRODUCTS": {
+        "name": "Consumer Products",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONSUMER_PRODUCTS"
+        ],
+        "in_stats_index": true
+    },
+    "FINANCE_COMPANIES": {
+        "name": "Fin. Companies",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "FINANCE_COMPANIES"
+        ],
+        "ticker": [
+            "GE"
+        ],
+        "special_rules": "~Ticker",
+        "in_stats_index": true
+    },
+    "FINANCIAL_OTHER": {
+        "name": "Financial Other",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "FINANCIAL_OTHER"
+        ],
+        "in_stats_index": true
+    },
+    "OTHER_FIN": {
+        "name": "Other Financial",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "FINANCE_COMPANIES",
+            "FINANCIAL_OTHER"
+        ],
+        "ticker": [
+            "GE"
+        ],
+        "special_rules": "~Ticker",
+        "in_stats_index": true
+    },
+
+    "FOOD_AND_BEVERAGE": {
+        "name": "Food & Bev",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "FOOD_AND_BEVERAGE"
+        ],
+        "in_stats_index": true
+    },
+    "HEALTH_INSURANCE": {
+        "name": "Health Insurance",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTH_INSURANCE"
+        ],
+        "in_stats_index": true
+    },
+    "HEALTHCARE": {
+        "name": "Healthcare",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE"
+        ],
+        "subsector": [
+            "Medical-HMO",
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector & ~Ticker"
+    },
+    "HEALTHCARE_EX_MANAGED_CARE": {
+        "name": "Healthcare ex Managed",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE"
+        ],
+        "subsector": [
+            "Medical-HMO",
+            "Medical-Hospitals"
+        ],
+        "ticker": [
+            "AET",
+            "CI",
+            "CVS",
+            "ANTM",
+            "HUM",
+            "UNH",
+            "KPERM"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Subsector & ~Ticker"
+    },
+    "HOSPITALS": {
+        "name": "Hospitals",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "HEALTHCARE"
+        ],
+        "subsector": [
+            "Medical-HMO",
+            "Medical-Hospitals"
+        ],
+        "in_stats_index": true
+    },
+    "MANAGED_CARE": {
+        "name": "Managed Care",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "ticker": [
+            "AET",
+            "CI",
+            "CVS",
+            "ANTM",
+            "HUM",
+            "UNH"
+        ],
+        "in_stats_index": true
+    },
+    "LIFE": {
+        "name": "Life",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE"
+        ],
+        "in_stats_index": true
+    },
+    "FAANG": {
+        "name": "FAANG",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "ticker": [
+            "AAPL",
+            "AMAZON",
+            "NFLX",
+            "GOOGL"
+        ],
+        "in_stats_index": true
+    },
+    "COMMUNICATIONS": {
+        "name": "Communications",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "WIRELESS",
+            "WIRELINES",
+            "CABLE_SATELLITE",
+            "MEDIA_ENTERTAINMENT"
+        ],
+        "in_stats_index": true
+    },
+    "MEDIA_ENTERTAINMENT": {
+        "name": "Media",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "MEDIA_ENTERTAINMENT"
+        ],
+        "in_stats_index": true
+    },
+    "MUNIS": {
+        "name": "Munis",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LOCAL_AUTHORITIES"
+        ],
+        "in_stats_index": true
+    },
+    "OWNED_NO_GUARANTEE": {
+        "name": "Gov Owned, No Guar",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "OWNED_NO_GUARANTEE"
+        ],
+        "in_stats_index": true
+    },
+    "PHARMACEUTICALS": {
+        "name": "Pharma",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "PHARMACEUTICALS"
+        ],
+        "in_stats_index": true
+    },
+    "INSURANCE": {
+        "name": "Insurance",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE",
+            "P&C",
+            "HEALTH_INSURANCE"
+        ],
+        "in_stats_index": true
+    },
+    "P&C": {
+        "name": "P&C",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "P&C"
+        ],
+        "in_stats_index": true
+    },
+    "RAILROADS": {
+        "name": "Railroads",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "RAILROADS"
+        ],
+        "in_stats_index": true
+    },
+    "RETAILERS": {
+        "name": "Retailers",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "RETAILERS"
+        ],
+        "in_stats_index": true
+    },
+    "RESTAURANTS": {
+        "name": "Restaurants",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "RESTAURANTS"
+        ],
+        "in_stats_index": true
+    },
+    "SOVEREIGN": {
+        "name": "Sovereigns",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SOVEREIGN"
+        ],
+        "in_stats_index": true
+    },
+    "TOBACCO": {
+        "name": "Tobacco",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "TOBACCO"
+        ],
+        "in_stats_index": true
+    },
+    "TRANSPORTATION": {
+        "name": "Transportation",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AIRLINES",
+            "RAILROADS",
+            "TRANSPORTATION_SERVICES"
+        ],
+        "in_stats_index": true
+    },
+    "TRANSPORTATION_SERVICES": {
+        "name": "Transport Services",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "TRANSPORTATION_SERVICES"
+        ],
+        "in_stats_index": true
+    },
+    "SUPRANATIONAL": {
+        "name": "Supranational",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SUPRANATIONAL"
+        ],
+        "in_stats_index": true
+    },
+    "GOVERNMENT_GUARANTEE": {
+        "name": "Gov Guarantee",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GOVERNMENT_GUARANTEE"
+        ],
+        "in_stats_index": true
+    },
+    "EMERGING_MARKETS": {
+        "name": "Emerging Markets",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "GOVERNMENT_GUARANTEE",
+            "SOVEREIGN"
+        ],
+        "in_stats_index": true
+    },
+    "ABS_CMBS": {
+        "name": "ABS/CMBS/Non-Agency RMBS",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "ABS_OTHER",
+            "NON_AGENCY_CMBS"
+        ],
+        "in_stats_index": true
+    },
+    "COVID_SENSITIVE_10": {
+        "in_stats_index": true,
+        "maturity": [
+            8.25,
+            11
+        ],
+        "name": "Covid Insensitive",
+        "ticker": [
+            "AAL",
+            "AIG",
+            "AIZ",
+            "AL",
+            "ALB",
+            "ALLE",
+            "AMH",
+            "APA",
+            "APTV",
+            "AVGO",
+            "BA",
+            "BACR",
+            "BAMACN",
+            "BBY",
+            "BDN",
+            "BHI",
+            "BKNG",
+            "BRO",
+            "BRX",
+            "BWP",
+            "BXP",
+            "CATMED",
+            "CB",
+            "CBT",
+            "CHCOCH",
+            "CHH",
+            "CMA",
+            "CNA",
+            "CNO",
+            "COLOM",
+            "CONE",
+            "CXO",
+            "DELL",
+            "DFS",
+            "DISCA",
+            "ENBCN",
+            "ENBL",
+            "EPD",
+            "EPR",
+            "ESGR",
+            "ETP",
+            "EXPE",
+            "FANG",
+            "FBHS",
+            "FFHCN",
+            "FLEX",
+            "FLR",
+            "FRT",
+            "GL",
+            "GLPI",
+            "GM",
+            "GMT",
+            "H",
+            "HAS",
+            "HES",
+            "HIG",
+            "HIW",
+            "HPP",
+            "HSECN",
+            "HST",
+            "HTA",
+            "HUN",
+            "IFF",
+            "INDON",
+            "IPG",
+            "ITALY",
+            "JEF",
+            "JWN",
+            "KEY",
+            "KMI",
+            "KRC",
+            "LAZ",
+            "LEA",
+            "LEG",
+            "LNC",
+            "LSI",
+            "LVS",
+            "MAR",
+            "MEX",
+            "MPLX",
+            "NBL",
+            "NFG",
+            "NJSDEV",
+            "NJSTRN",
+            "NNN",
+            "NOV",
+            "O",
+            "OC",
+            "OHI",
+            "OKE",
+            "OSK",
+            "PAA",
+            "PANAMA",
+            "PEAK",
+            "PEG",
+            "PSXP",
+            "REG",
+            "RGA",
+            "RPM",
+            "SBRA",
+            "SCS",
+            "SPG",
+            "SPLLLC",
+            "SRC",
+            "STOR",
+            "SUZANO",
+            "SVC",
+            "SYF",
+            "TKR",
+            "TOLHOS",
+            "TRPCN",
+            "TXT",
+            "UAL",
+            "UNM",
+            "VER",
+            "VLO",
+            "VTR",
+            "WAB",
+            "WELL",
+            "WHR",
+            "WMB",
+            "WPC",
+            "WRK",
+            "WY",
+            "XEC",
+            "ZION"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "COVID_INSENSITIVE_10": {
+        "in_stats_index": true,
+        "maturity": [
+            8.25,
+            11
+        ],
+        "name": "Covid Insensitive",
+        "ticker": [
+            "AAL",
+            "AIG",
+            "AIZ",
+            "AL",
+            "ALB",
+            "ALLE",
+            "AMH",
+            "APA",
+            "APTV",
+            "AVGO",
+            "BA",
+            "BACR",
+            "BAMACN",
+            "BBY",
+            "BDN",
+            "BHI",
+            "BKNG",
+            "BRO",
+            "BRX",
+            "BWP",
+            "BXP",
+            "CATMED",
+            "CB",
+            "CBT",
+            "CHCOCH",
+            "CHH",
+            "CMA",
+            "CNA",
+            "CNO",
+            "COLOM",
+            "CONE",
+            "CXO",
+            "DELL",
+            "DFS",
+            "DISCA",
+            "ENBCN",
+            "ENBL",
+            "EPD",
+            "EPR",
+            "ESGR",
+            "ETP",
+            "EXPE",
+            "FANG",
+            "FBHS",
+            "FFHCN",
+            "FLEX",
+            "FLR",
+            "FRT",
+            "GL",
+            "GLPI",
+            "GM",
+            "GMT",
+            "H",
+            "HAS",
+            "HES",
+            "HIG",
+            "HIW",
+            "HPP",
+            "HSECN",
+            "HST",
+            "HTA",
+            "HUN",
+            "IFF",
+            "INDON",
+            "IPG",
+            "ITALY",
+            "JEF",
+            "JWN",
+            "KEY",
+            "KMI",
+            "KRC",
+            "LAZ",
+            "LEA",
+            "LEG",
+            "LNC",
+            "LSI",
+            "LVS",
+            "MAR",
+            "MEX",
+            "MPLX",
+            "NBL",
+            "NFG",
+            "NJSDEV",
+            "NJSTRN",
+            "NNN",
+            "NOV",
+            "O",
+            "OC",
+            "OHI",
+            "OKE",
+            "OSK",
+            "PAA",
+            "PANAMA",
+            "PEAK",
+            "PEG",
+            "PSXP",
+            "REG",
+            "RGA",
+            "RPM",
+            "SBRA",
+            "SCS",
+            "SPG",
+            "SPLLLC",
+            "SRC",
+            "STOR",
+            "SUZANO",
+            "SVC",
+            "SYF",
+            "TKR",
+            "TOLHOS",
+            "TRPCN",
+            "TXT",
+            "UAL",
+            "UNM",
+            "VER",
+            "VLO",
+            "VTR",
+            "WAB",
+            "WELL",
+            "WHR",
+            "WMB",
+            "WPC",
+            "WRK",
+            "WY",
+            "XEC",
+            "ZION"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "COVID_SENSITIVE_10+": {
+        "in_stats_index": true,
+        "maturity": [
+            25,
+            32
+        ],
+        "name": "Covid Insensitive",
+        "ticker": [
+            "ABIBB",
+            "ACGL",
+            "AFG",
+            "AIG",
+            "ALLINA",
+            "AMEPWR",
+            "AMXLMM",
+            "APA",
+            "APTV",
+            "BA",
+            "BAMACN",
+            "BFB",
+            "BHF",
+            "BHI",
+            "BKH",
+            "CATMED",
+            "CELARA",
+            "CHITRN",
+            "CLAAPT",
+            "CNL",
+            "CNQCN",
+            "COLOM",
+            "CPGX",
+            "CR",
+            "CS",
+            "CXO",
+            "DALAPT",
+            "DARTHH",
+            "DELL",
+            "DIS",
+            "DISCA",
+            "DRI",
+            "DVN",
+            "ECOPET",
+            "EMACN",
+            "ENBCN",
+            "EPD",
+            "EQH",
+            "ETP",
+            "GM",
+            "HAL",
+            "HES",
+            "HOG",
+            "HPE",
+            "IFF",
+            "INDON",
+            "IPG",
+            "ITALY",
+            "KIM",
+            "KMI",
+            "KSS",
+            "LEA",
+            "LNC",
+            "LYB",
+            "MAYOCL",
+            "METAPT",
+            "MEX",
+            "MFCCN",
+            "MISHGR",
+            "MLM",
+            "MMP",
+            "MNTEFI",
+            "MPC",
+            "MPLX",
+            "MRO",
+            "NBL",
+            "NNN",
+            "NSHRLI",
+            "NYUHOS",
+            "O",
+            "OGLETH",
+            "OKE",
+            "ORHLTH",
+            "PANAMA",
+            "PRU",
+            "PSXP",
+            "REG",
+            "REGTRN",
+            "RPM",
+            "SIGI",
+            "SPG",
+            "STSGEN",
+            "SUCN",
+            "SYY",
+            "TAP",
+            "TELVIS",
+            "TOLHOS",
+            "UNM",
+            "URUGUA",
+            "VMC",
+            "VTR",
+            "WELL",
+            "WFC",
+            "WHR",
+            "WLK",
+            "XYL",
+            "ZBH"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "COVID_INSENSITIVE_10+": {
+        "in_stats_index": true,
+        "maturity": [
+            25,
+            32
+        ],
+        "name": "Covid Insensitive",
+        "ticker": [
+            "ABIBB",
+            "ACGL",
+            "AFG",
+            "AIG",
+            "ALLINA",
+            "AMEPWR",
+            "AMXLMM",
+            "APA",
+            "APTV",
+            "BA",
+            "BAMACN",
+            "BFB",
+            "BHF",
+            "BHI",
+            "BKH",
+            "CATMED",
+            "CELARA",
+            "CHITRN",
+            "CLAAPT",
+            "CNL",
+            "CNQCN",
+            "COLOM",
+            "CPGX",
+            "CR",
+            "CS",
+            "CXO",
+            "DALAPT",
+            "DARTHH",
+            "DELL",
+            "DIS",
+            "DISCA",
+            "DRI",
+            "DVN",
+            "ECOPET",
+            "EMACN",
+            "ENBCN",
+            "EPD",
+            "EQH",
+            "ETP",
+            "GM",
+            "HAL",
+            "HES",
+            "HOG",
+            "HPE",
+            "IFF",
+            "INDON",
+            "IPG",
+            "ITALY",
+            "KIM",
+            "KMI",
+            "KSS",
+            "LEA",
+            "LNC",
+            "LYB",
+            "MAYOCL",
+            "METAPT",
+            "MEX",
+            "MFCCN",
+            "MISHGR",
+            "MLM",
+            "MMP",
+            "MNTEFI",
+            "MPC",
+            "MPLX",
+            "MRO",
+            "NBL",
+            "NNN",
+            "NSHRLI",
+            "NYUHOS",
+            "O",
+            "OGLETH",
+            "OKE",
+            "ORHLTH",
+            "PANAMA",
+            "PRU",
+            "PSXP",
+            "REG",
+            "REGTRN",
+            "RPM",
+            "SIGI",
+            "SPG",
+            "STSGEN",
+            "SUCN",
+            "SYY",
+            "TAP",
+            "TELVIS",
+            "TOLHOS",
+            "UNM",
+            "URUGUA",
+            "VMC",
+            "VTR",
+            "WELL",
+            "WFC",
+            "WHR",
+            "WLK",
+            "XYL",
+            "ZBH"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "H0A0": {
+        "name": "H0A0",
+        "in_H0A0_index": true
+    },
+    "H4UN": {
+        "name": "H4UN",
+        "in_H4UN_index": true
+    },
+    "HC1N": {
+        "name": "HC1N",
+        "in_HC1N_index": true
+    },
+    "HUC2": {
+        "name": "HUC2",
+        "in_HUC2_index": true
+    },
+    "HUC3": {
+        "name": "HUC3",
+        "in_HUC3_index": true
+    },
+    "A_NON_FIN_EX_TOP_30_10+_HiPX_LT25Y": {
+        "name": "A Non-Fin ex Top 30 HiPx <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			10,
+			25
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_EX_TOP_30_10+_HiPX_GT25Y": {
+        "name": "A Non-Fin ex Top 30 HiPx >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_EX_TOP_30_10+_LowPX_LT25Y": {
+        "name": "A Non-Fin ex Top 30 LowPx <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			10,
+			25
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_EX_TOP_30_10+_LowPX_GT25Y": {
+        "name": "A Non-Fin ex Top 30 LowPx >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "A_NON_FIN_TOP_30_10+": {
+        "name": "A Non-Fin Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ]
+    },
+	"A_NON_FIN_TOP_30_10+_HiPX_LT25Y": {
+        "name": "A Non-Fin Top 30 HiPx <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			10,
+			25
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ]
+    },
+	"A_NON_FIN_TOP_30_10+_LowPX_LT25Y": {
+        "name": "A Non-Fin Top 30 LowPX <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			10,
+			25
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ]
+    },
+	"A_NON_FIN_TOP_30_10+_HiPX_GT25Y": {
+        "name": "A Non-Fin Top 30 HiPX >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ]
+    },
+	"A_NON_FIN_TOP_30_10+_LowPX_GT25Y": {
+        "name": "A Non-Fin Top 30 LowPx >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "A+",
+            "A-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "CMCSA",
+            "ORCL",
+            "DIS",
+            "UNH",
+            "HD",
+            "PFE",
+            "AMZN",
+            "BMY",
+            "BNSF",
+            "INTC",
+            "PEP",
+            "IBM",
+            "MRK",
+            "ABT",
+            "COP",
+            "LMT",
+            "UPS",
+            "PM",
+            "CAT",
+            "AMXLMM",
+            "QCOM",
+            "LLY",
+            "KO",
+            "CSCO",
+            "MMM",
+            "GSK",
+            "BABA",
+            "MDT",
+            "BPLN",
+            "RIOLN",
+            "NKE"
+        ]
+    },
+    "BBB_FIN_10+": {
+        "name": "BBB Financial",
+        "OAS": [
+            -10,
+            3000
+        ],
+		"maturity": [
+			10,
+			null
+		],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": true,
+        "in_stats_index": true
+    },
+	"BBB_NON_CORP_10+": {
+        "name": "BBB Non-Corp",
+        "OAS": [
+            -10,
+            3000
+        ],
+		"maturity": [
+			10,
+			null
+		],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": 2,
+        "in_stats_index": true
+    },
+    "BBB_NON_FIN_EX_TOP_30_10+": {
+        "name": "BBB Non-Fin ex Top 30",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_EX_TOP_30_10+_HiPX_LT25Y": {
+        "name": "BBB Non-Fin ex Top 30 HiPx <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			null,
+			25
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_EX_TOP_30_10+_HiPX_GT25Y": {
+        "name": "BBB Non-Fin ex Top 30 HiPx >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_EX_TOP_30_10+_LowPX_LT25Y": {
+        "name": "BBB Non-Fin ex Top 30 LowPx <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			10,
+			25
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_EX_TOP_30_10+_LowPX_GT25Y": {
+        "name": "BBB Non-Fin ex Top 30 LowPx >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ],
+        "special_rules": "~Ticker"
+    },
+    "BBB_NON_FIN_TOP_30_10+_HiPX_GT25Y": {
+        "name": "BBB Non-Fin Top 30 HiPx >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ]
+    },
+    "BBB_NON_FIN_TOP_30_10+_HiPX_LT25Y": {
+        "name": "BBB Non-Fin Top 30 HiPx <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			10,
+			25
+		],
+		"clean_price": [
+			120.0001,
+			null
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ]
+    },
+    "BBB_NON_FIN_TOP_30_10+_LowPX_GT25Y": {
+        "name": "BBB Non-Fin Top 30 LowPx >25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			25.0001,
+			null
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ]
+    },
+    "BBB_NON_FIN_TOP_30_10+_LowPX_LT25Y": {
+        "name": "BBB Non-Fin Top 30 LowPx <25y",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "rating": [
+            "BBB+",
+            "BBB-"
+        ],
+		"maturity": [
+			10,
+			25
+		],
+		"clean_price": [
+			null,
+			120
+		],
+        "financial_flag": false,
+        "in_stats_index": true,
+        "ticker": [
+            "T",
+            "ABIBB",
+            "VZ",
+            "ABBV",
+            "CVS",
+            "BA",
+            "CHTR",
+            "AMGN",
+            "GE",
+            "EPD",
+            "KMI",
+            "RTX",
+            "ETP",
+            "TMUS",
+            "UNP",
+            "BATSLN",
+            "GILD",
+            "VOD",
+            "MCD",
+            "CSX",
+            "MO",
+            "CI",
+            "TWC",
+            "FDX",
+            "VIAC",
+            "TRPCN",
+            "ANTM",
+            "GM",
+            "TELEFO",
+            "WMB",
+            "NSC"
+        ]
+    }
+}

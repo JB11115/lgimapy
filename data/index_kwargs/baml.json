@@ -1,0 +1,341 @@
+{
+    "H0A0": {
+        "name": "H0A0",
+        "in_H0A0_index": true
+    },
+    "H4UN": {
+        "name": "H4UN",
+        "in_H4UN_index": true
+    },
+    "HC1N": {
+        "name": "HC1N",
+        "in_HC1N_index": true
+    },
+    "HUC2": {
+        "name": "HUC2",
+        "in_HUC2_index": true
+    },
+    "HUC3": {
+        "name": "HUC3",
+        "in_HUC3_index": true
+    },
+    "HC1N_BB": {
+        "name": "HC1N (BB)",
+        "in_HC1N_index": true
+    },
+    "HUC2_B": {
+        "name": "HUC2 (B)",
+        "in_HUC2_index": true
+    },
+    "HUC3_CCC": {
+        "name": "HUC3 (CCC)",
+        "in_HUC3_index": true,
+        "rating": [
+                "CCC+",
+                "CCC-"
+        ]
+    },
+    "LDB1_BBB": {
+        "name": "LDB1 (BBB)",
+        "in_stats_index": true,
+        "rating": [
+                "BBB+",
+                "BBB-"
+        ]
+    },
+    "EX_INDEX": {
+        "name": "Ex-Index",
+        "in_H4UN_index": false,
+        "in_HC1N_index": false,
+        "in_HUC2_index": false,
+        "in_HUC3_index": false
+    },
+    "BBB": {
+        "name": "BBB",
+        "rating": [
+                "BBB+",
+                "BBB-"
+        ]
+    },
+    "BB": {
+        "name": "BB",
+        "rating": [
+                "BB+",
+                "BB-"
+        ]
+    },
+    "B": {
+        "name": "B",
+        "rating": [
+                "B+",
+                "B-"
+        ]
+    },
+    "CCC": {
+        "name": "CCC",
+        "rating": [
+                "CCC+",
+                "CCC-"
+        ]
+    },
+    "AUTOMOTIVE": {
+        "name": "Autos",
+        "BAML_sector": [
+            "AUTOMAKERS",
+            "AUTO_PARTS_AND_EQUIPMENT"
+        ]
+    },
+    "AUTOMAKERS": {
+        "name": "Auto Makers",
+        "BAML_sector": [
+            "AUTOMAKERS"
+        ]
+    },
+    "AUTOPARTS": {
+        "name": "Auto Parts",
+        "BAML_sector": [
+            "AUTO_PARTS_AND_EQUIPMENT"
+        ]
+    },
+    "BASICS": {
+        "name": "Basics",
+        "BAML_sector": [
+            "BUILDING_AND_CONSTRUCTION",
+            "BUILDING_MATERIALS",
+            "CHEMICALS",
+            "FORESTRY_PAPER",
+            "METALS_MINING_EXCLUDING_STEEL",
+            "STEEL_PRODUCERS_PRODUCTS"
+        ]
+    },
+    "HOME_BUILDERS": {
+        "name": "Home Builders",
+        "BAML_sector": [
+            "BUILDING_AND_CONSTRUCTION"
+        ]
+    },
+    "BUILDING_MATERIALS": {
+        "name": "Building Materials",
+        "BAML_sector": [
+            "BUILDING_MATERIALS"
+        ]
+    },
+    "CHEMICALS": {
+        "name": "Chemicals",
+        "BAML_sector": [
+            "CHEMICALS"
+        ]
+    },
+    "METALS_AND_MINING": {
+        "name": "Metals & Mining",
+        "BAML_sector": [
+            "METALS_MINING_EXCLUDING_STEEL",
+            "STEEL_PRODUCERS_PRODUCTS"
+        ]
+    },
+    "CAPITAL_GOODS": {
+        "name": "Capital Goods",
+        "BAML_top_level_sector": [
+            "CAPITAL_GOODS"
+        ]
+    },
+    "AEROSPACE_DEFENSE": {
+        "name": "Aero/Defense",
+        "BAML_sector": [
+            "AEROSPACE_DEFENSE"
+        ]
+    },
+    "DIVERSIFIED_CAPITAL_GOODS": {
+        "name": "Div Cap Goods",
+        "BAML_sector": [
+            "DIVERSIFIED_CAPITAL_GOODS"
+        ]
+    },
+    "PACKAGING": {
+        "name": "Packaging",
+        "BAML_sector": [
+            "PACKAGING"
+        ]
+    },
+    "BEVERAGE": {
+        "name": "Beverage",
+        "BAML_sector": [
+            "BEVERAGE"
+        ]
+    },
+    "FOOD": {
+        "name": "Food",
+        "BAML_sector": [
+            "FOOD_WHOLESALE"
+        ]
+    },
+    "PERSONAL_AND_HOUSEHOLD_PRODUCTS": {
+        "name": "Household Products",
+        "BAML_sector": [
+            "PERSONAL_AND_HOUSEHOLD_PRODUCTS"
+        ]
+    },
+    "ENERGY": {
+        "name": "Energy",
+        "BAML_top_level_sector": [
+            "ENERGY"
+        ]
+    },
+    "ENERGY_EXPLORATION_AND_PRODUCTION": {
+        "name": "Exploration/Production",
+        "BAML_sector": [
+            "ENERGY_EXPLORATION_AND_PRODUCTION"
+        ]
+    },
+    "GAS_DISTRIBUTION": {
+        "name": "Gas Distribution",
+        "BAML_sector": [
+            "GAS_DISTRIBUTION"
+        ]
+    },
+    "INTEGRATED": {
+        "name": "Integrated",
+        "BAML_sector": [
+            "INTEGRATED_ENERGY"
+        ]
+    },
+    "OIL_REFINING_AND_MARKETING": {
+        "name": "Oil Refining",
+        "BAML_sector": [
+            "OIL_REFINING_AND_MARKETING"
+        ]
+    },
+    "HEALTHCARE": {
+        "name": "Healthcare",
+        "BAML_top_level_sector": [
+            "HEALTHCARE"
+        ]
+    },
+    "HEALTH_FACILITIES": {
+        "name": "Health Facilities",
+        "BAML_sector": [
+            "HEALTH_FACILITIES"
+        ]
+    },
+    "MANAGED_CARE": {
+        "name": "Managed Care",
+        "BAML_sector": [
+            "MANAGED_CARE"
+        ]
+    },
+    "PHARMA": {
+        "name": "Pharma",
+        "BAML_sector": [
+            "PHARMACEUTICALS"
+        ]
+    },
+    "GAMING": {
+        "name": "Gaming",
+        "BAML_sector": [
+            "GAMING"
+        ]
+    },
+    "HOTELS": {
+        "name": "Hotels",
+        "BAML_sector": [
+            "HOTELS"
+        ]
+    },
+    "RECREATION_AND_TRAVEL": {
+        "name": "Rec/Travel",
+        "BAML_sector": [
+            "RECREATION_AND_TRAVEL"
+        ]
+    },
+    "TMT": {
+        "name": "TMT",
+        "BAML_top_level_sector": [
+            "MEDIA",
+            "TELECOMMUNICATIONS"
+        ]
+    },
+    "CABLE_SATELLITE": {
+        "name": "Cable/Satellite TV",
+        "BAML_sector": [
+            "CABLE_AND_SATELLITE_TV"
+        ]
+    },
+    "MEDIA_CONTENT": {
+        "name": "Media Content",
+        "BAML_sector": [
+            "MEDIA_CONTENT"
+        ]
+    },
+    "TELECOM_SATELLITE": {
+        "name": "Telecom Satellite",
+        "BAML_sector": [
+            "TELECOM_SATELLITE"
+        ]
+    },
+    "TELECOM_WIRELESS": {
+        "name": "Wireless",
+        "BAML_sector": [
+            "TELECOM_WIRELESS"
+        ]
+    },
+    "REAL_ESTATE": {
+        "name": "Real Estate",
+        "BAML_top_level_sector": [
+            "REAL_ESTATE"
+        ]
+    },
+    "REITS": {
+        "name": "REITs",
+        "BAML_sector": [
+            "REITS"
+        ]
+    },
+    "ENVIRONMENTAL": {
+        "name": "Environmental",
+        "BAML_sector": [
+            "ENVIRONMENTAL"
+        ]
+    },
+    "SUPPORT_SERVICES": {
+        "name": "Support Services",
+        "BAML_sector": [
+            "SUPPORT_SERVICES"
+        ]
+    },
+    "TECHNOLOGY": {
+        "name": "Technology",
+        "BAML_top_level_sector": [
+            "TECHNOLOGY_AND_ELECTRONICS"
+        ]
+    },
+    "SOFTWARE": {
+        "name": "Software",
+        "BAML_sector": [
+            "SOFTWARE_SERVICES"
+        ]
+    },
+    "HARDWARE": {
+        "name": "Hardware",
+        "BAML_sector": [
+            "TECH_HARDWARE_AND_EQUIPMENT"
+        ]
+    },
+    "TRANSPORTATION": {
+        "name": "Transportation",
+        "BAML_top_level_sector": [
+            "TRANSPORTATION"
+        ]
+    },
+    "AIRLINES": {
+        "name": "Airlines",
+        "BAML_sector": [
+            "AIR_TRANSPORTATION"
+        ]
+    },
+    "UTILITY": {
+        "name": "Utilities",
+        "BAML_top_level_sector": [
+            "UTILITY"
+        ]
+    }
+}
