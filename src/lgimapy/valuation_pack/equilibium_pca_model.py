@@ -273,14 +273,15 @@ def plot_pc_vs_factors(df_levels, df_pca, doc):
     start = "1/1/2000"
     df = pd.concat(
         [
-            db.load_bbg_data("GLOBAL_ECO_SURP", "level", start=start),
+            db.load_bbg_data("UST_10Y", "YTW", start=start),
             db.load_bbg_data("UST_10Y_RY", "YTW", start=start),
             db.load_bbg_data("USD_TW", "price", start=start),
             sov_risk.rename("SOV_risk"),
         ],
         axis=1,
     ).fillna(method="ffill")
-    df.columns = ["ECO_SURP", "REAL", "USD", "SOV"]
+    df.columns = ["UST_10Y", "REAL", "USD", "SOV"]
+    df["UST_10Y"] = df["UST_10Y"].diff(12 * 5)  # 12 week change
     n = 250
     for col in df.columns:
         s = df[col]
@@ -288,58 +289,85 @@ def plot_pc_vs_factors(df_levels, df_pca, doc):
 
     # Combine PCA and factor data together.
     df_pca_and_factors = pd.concat(
-        [df, df_pca.rename(columns={f"PCA {i}": f"PC {i}" for i in range(5)}),],
+        [
+            df,
+            df_pca.rename(columns={f"PCA {i}": f"PC {i}" for i in range(5)}),
+        ],
         axis=1,
     ).fillna(method="ffill")
     fig, axes = vis.subplots(2, 2, figsize=(12, 8), sharex=True)
 
     # Build plots, using a scalar to properly scale PC's to factors.
     pca_ID = {
-        "ECO_SURP": (
-            -5,
+        "UST_10Y": (
             "PC 1",
-            "Economic Surprise",
-            "Citi Economic Surprise Index",
+            None,
+            "$\\Delta$10y Yield",
+            "12wk Change in US 10y Yield",
         ),
-        "REAL_Z": (-0.5, "PC 2", "Real Rates", "US Generic 10y Real Yield"),
-        "USD_Z": (0.66, "PC 3", "US Dollar", "US Fed Trade Weighted $ Index"),
+        "REAL_Z": (
+            "PC 2",
+            None,
+            "Real Rates",
+            "1y Rolling Z-Score\nUS Generic 10y Real Yield",
+        ),
+        "USD_Z": (
+            "PC 3",
+            0.66,
+            "US Dollar",
+            "1y Rolling Z-Score\nUS Fed Trade Weighted $ Index",
+        ),
         "SOV_Z": (
-            -1,
             "PC 4",
+            -1,
             "Euro Area Risk",
-            ("$\\dfrac{Spain\ 10y + Italy\ 10y}{2} " "- Bund\ 10y$"),
+            (
+                "1y Rolling Z-Score\n$\\dfrac{Spain\ 10y + Italy\ 10y}{2} "
+                "- Bund\ 10y$"
+            ),
         ),
     }
-    for ax, (factor, (scalar, pc, name, des)) in zip(axes.flat, pca_ID.items()):
-        title = f"{pc} vs {name}\n"
+    for ax, (factor, (pc, scalar, name, des)) in zip(axes.flat, pca_ID.items()):
+        title = f"{pc} vs {name}\n\n"
+        pc_col = f"{pc} (rescaled)"
         df_plot = pd.concat(
             [
-                df_pca_and_factors[pc].rename(f"{pc} (rescaled)") * scalar,
+                df_pca_and_factors[pc].rename(pc_col),
                 df_pca_and_factors[factor].rename(des),
             ],
             axis=1,
             sort=True,
-        )
+        ).dropna()
+
+        # Scale PC's to underlying series.
+        if scalar is None:
+            x = sm.add_constant(df_plot[pc_col])
+            ols = sm.OLS(df_plot[des], x).fit()
+            df_plot[pc_col] = ols.predict(x)
+        else:
+            df_plot[pc_col] *= scalar
+
         vis.set_n_ticks(ax, 5)
         vis.plot_multiple_timeseries(
             df_plot,
             c_list=["black", "darkorchid"],
             ylabel=name,
-            start="1/1/2009",
             title=title,
             xtickfmt="auto",
-            alpha=0.9,
+            alpha=0.8,
             lw=1.2,
             ax=ax,
             legend={
                 "loc": "upper center",
-                "bbox_to_anchor": (0.5, 1.1),
+                "bbox_to_anchor": (0.5, 1.25),
                 "ncol": 2,
                 "fancybox": True,
                 "shadow": True,
                 "fontsize": 10,
             },
         )
+        if factor == "UST_10Y":
+            vis.format_yaxis(ax, ytickfmt=("{x:.1%}"))
     vis.savefig("pca_vs_factors", path=doc.fig_dir)
     vis.close()
 
