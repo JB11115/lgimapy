@@ -11,7 +11,7 @@ def update_top_30_tickers(date):
     """
     db = Database()
     db.load_market_data(local=True, date=date)
-    fid = "indexes"
+    fid = "index_kwargs/bloomberg"
     indexes = load_json(fid)
 
     # Update tickers for long credit.
@@ -85,3 +85,9 @@ def update_top_30_tickers(date):
     indexes["A_NON_FIN_EX_TOP_30"]["ticker"] = top_30_tickers
     # Save changes.
     dump_json(indexes, fid)
+
+
+# %%
+db = Database()
+today = db.date("today")
+update_top_30_tickers(today)
