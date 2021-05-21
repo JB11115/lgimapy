@@ -376,6 +376,7 @@ def update_strategy_scores(fid, fig_dir):
         .fillna(0)
         .astype(int)
     )
+
     # Add short term score to page.
     score = scores_df.loc["Short Term"][-1]
     if score > 0:
@@ -406,11 +407,15 @@ def update_strategy_scores(fid, fig_dir):
     axes[0].set_title("Strategy Scoring\n", fontsize=15, fontweight="bold")
 
     # Load and clean individual scores, recording averages.
-    scores_df = pd.read_excel(
-        root("data/chicago_strategy_meeting_scores.xlsx"),
-        index_col=0,
-        sheet_name="3 Months",
-    ).iloc[:, -2:]
+    scores_df = (
+        pd.read_excel(
+            root("data/chicago_strategy_meeting_scores.xlsx"),
+            index_col=0,
+            sheet_name="3 Months",
+        )
+        .iloc[:, -2:]
+        .dropna(how="all")
+    )
     # Drop non-credit scores.
     scores_df = scores_df[["(" not in name for name in scores_df.index]]
     avg_scores = np.mean(scores_df)
