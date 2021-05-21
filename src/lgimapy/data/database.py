@@ -92,6 +92,7 @@ class Database:
         self.market = check_market(market)
         # Load mapping from standard ratings to numeric values.
         self._bbg_dfs = {}
+        self._baml_dfs = {}
         n = 1 if server.upper() == "LIVE" else 2
         self._conn = pyodbc.connect(
             "Driver={SQL Server};"
@@ -234,6 +235,8 @@ class Database:
         end=None,
         fallen_angels=False,
         rising_stars=False,
+        upgrades=False,
+        downgrades=False,
         isins=None,
     ):
         """
@@ -251,6 +254,12 @@ class Database:
         rising_stars: bool, default=False
             If ``True`` include fallen angels only. If ``fallen_angels``
             is also ``True`` include both.
+        upgrades: bool, default=False
+            If ``True`` subset to upgrades from any agency or
+            upgrade to composite rating.
+        downgrades: bool, default=False
+            If ``True`` subset to downgrades from any agency or
+            downgrade to composite rating.
         isins: List[str], optional
             List of ISINs to subset.
 
@@ -280,6 +289,22 @@ class Database:
                 df = df[is_fallen_angel].copy()
             else:
                 df = df[is_rising_star].copy()
+
+        if upgrades:
+            df = df[
+                (df["NumericRating_CHANGE"] > 0)
+                | (df["SPRating_CHANGE"] > 0)
+                | (df["MoodyRating_CHANGE"] > 0)
+                | (df["FitchRating_CHANGE"] > 0)
+            ].copy()
+
+        if downgrades:
+            df = df[
+                (df["NumericRating_CHANGE"] < 0)
+                | (df["SPRating_CHANGE"] < 0)
+                | (df["MoodyRating_CHANGE"] < 0)
+                | (df["FitchRating_CHANGE"] < 0)
+            ].copy()
 
         if isins is not None:
             df = df[df["ISIN"].isin(isins)].copy()
@@ -327,6 +352,7 @@ class Database:
         self,
         date_delta,
         reference_date=None,
+        trade_dates=None,
         market=None,
         fcast=False,
         **kwargs,
@@ -340,6 +366,9 @@ class Database:
             Difference between reference date and target date.
         reference_date: datetime, optional
             Reference date to use, if None use most recent trade date.
+        trade_dates: List[datetime], optional
+            Trade dates to use in finding date, defaults to IG trade
+            dates for current ``market``.
         market: ``{"US", "EUR", "GBP"}``, optional
             Market to get trade dates for.
             Defaults to :attr:`Database.market`.
@@ -360,18 +389,26 @@ class Database:
         """
         market = self.market if market is None else check_market(market)
         date_delta = date_delta.upper()
-        trade_dates = self.trade_dates(market=market)
+        if trade_dates is None:
+            trade_dates = self.trade_dates(market=market)
 
         if date_delta == "PORTFOLIO_START":
             return pd.to_datetime("9/1/2018")
-        if date_delta == "HY_START":
+        elif date_delta == "HY_START":
             return pd.to_datetime("6/1/2020")
-        if date_delta == "MARKET_START":
+        elif date_delta == "MARKET_START":
             return {
                 "US": pd.to_datetime("2/2/1998"),
                 "EUR": pd.to_datetime("12/1/2014"),
                 "GBP": pd.to_datetime("12/1/2014"),
             }[market]
+        elif date_delta == "MONTH_STARTS":
+            dates = pd.Series(trade_dates, trade_dates)
+            return list(dates.groupby(pd.Grouper(freq="M")).first())[1:]
+        elif date_delta == "MONTH_ENDS":
+            dates = pd.Series(trade_dates, trade_dates)
+            return list(dates.groupby(pd.Grouper(freq="M")).last())[1:]
+
         # Use today as reference date if none is provided,
         # otherwise find closes trading date to reference date.
         if reference_date is None:
@@ -414,9 +451,9 @@ class Database:
             val, unit = sep_str_int(date_delta.strip("+"))
             reverse_kwarg_map = {
                 "days": ["D", "DAY", "DAYS"],
-                "weeks": ["W", "WEEK", "WEEKS"],
-                "months": ["M", "MONTH", "MONTHS"],
-                "years": ["Y", "YEAR", "YEARS"],
+                "weeks": ["W", "WK", "WEEK", "WEEKS"],
+                "months": ["M", "MO", "MONTH", "MONTHS"],
+                "years": ["Y", "YR", "YEAR", "YEARS"],
             }
             dt_kwarg_map = {
                 key: kwarg
@@ -1216,6 +1253,8 @@ class Database:
             trade_dates = trade_dates[trade_dates.index >= self._start]
         if self._end is not None:
             trade_dates = trade_dates[trade_dates.index <= self._end]
+        if self._start is None and self._end is None:
+            trade_dates = trade_dates.iloc[-1].to_frame().T
         df_list = []
         for fid in trade_dates["fid"]:
             df_raw = pd.read_csv(
@@ -2044,7 +2083,9 @@ class Database:
         df = pd.read_sql(sql_base + sql_both, self._conn)
         df = self._preprocess_portfolio_data(df)
         if not len(df):
-            raise ValueError("No data for specified date.")
+            port = strategy or account
+            date_fmt = pd.to_datetime(start).strftime("%m/%d/%Y")
+            raise ValueError(f"No data for {port} {universe} on {date_fmt}.")
 
         if not market_cols:
             df.sort_values(["Date", "Account", "Ticker"], inplace=True)
@@ -2199,11 +2240,261 @@ class Database:
             self._bbg_dfs[field] = df
             return df
 
+    def _clean_baml_df(self, df):
+        """pd.DataFrame: clean columns in BAML decile report DataFrames."""
+        new_df = pd.DataFrame()
+        for col in list(df.columns):
+            if "-" in col:
+                continue
+            elif col.count("*") == 2:
+                split = col.split("*")
+                col0 = split[0]
+                col1 = "_".join(col.upper() for col in split[1:]).replace(
+                    " ", "_"
+                )
+                new_df[col0] = df[col]
+                new_df[col1] = df[col]
+            elif col.count("*") == 1:
+                split = col.split("*")
+                col0 = split[0]
+                col1 = split[1].replace(" ", "_")
+                new_df[col0] = df[col]
+                new_df[col1] = df[col]
+            else:
+                new_df[col] = df[col]
+        return new_df.copy()
+
+    def _read_baml_df(self, field):
+        """
+        Read cached Bloomberg data file. If not cached,
+        load and cache file before returning.
+
+        Parameters
+        ----------
+        field: str, ``{'OAS', 'YTW', 'TRET', 'XSRET', etc.}``
+            Bloomberg field to read.
+
+        Returns
+        -------
+        pd.DataFrame:
+            Bloomberg data for specified field.
+        """
+        fid_d = {"OAS": "report_spreads", "YTW": "report_yields"}
+
+        try:
+            return self._baml_dfs[field]
+        except KeyError:
+            raw_df = pd.read_csv(
+                root(f"data/HY/{fid_d[field]}.csv"),
+                index_col=0,
+                parse_dates=True,
+                infer_datetime_format=True,
+            )
+            df = self._clean_baml_df(raw_df)
+            self._bbg_dfs[field] = df.copy()
+            return df
+
     def load_bbg_data(
-        self, securities, fields, start=None, end=None, nan=None, **kwargs
+        self,
+        securities,
+        fields,
+        start=None,
+        end=None,
+        aggregate=False,
+        nan=None,
+        **kwargs,
     ):
         """
         Load Bloomberg BDH data for given securities.
+
+        Parameters
+        ----------
+        securities: str or List[str].
+            Security or secuirites to load data for.
+        fields: str or list[str], ``{'OAS', 'Price', 'TRET', 'YTW', etc.}``
+            Field(s) of data to load.
+        start: datetime, optional.
+            Inclusive start date for data.
+        end: datetime, optional.
+            Inclusive end date for data.
+        aggregate: bool, default=False
+            If ``True`` aggregate total or excess returns over the
+            specified period.
+        nan: ``{None, 'drop', 'ffill', 'interp'}``, optional
+            Method to use for filling missing values in loaded data.
+            Method 'fbfill' performs a forward fill followed by a
+            backwards fill, useful when aggregating.
+        kwargs:
+            Keyword arguments to pass to interpolating function.
+
+            * method: ``{'linear', 'spline', etc.}``, default='linear'
+                ``'spline'`` and ``'polynomial'`` require an order.
+            * order: int, order for polynomial or spline.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Bloomberg data subset to proper date range and
+            processed missing data.
+        """
+        # Load data for selected securities.
+        fields = [field.upper() for field in to_list(fields, dtype=str)]
+        securities = to_list(securities, dtype=str)
+
+        multiple_securities = len(securities) > 1 or securities == ["all"]
+        if len(fields) > 1 and multiple_securities:
+            raise ValueError(
+                "Cannot have multiple securities and multiple fields."
+            )
+
+        if aggregate is True:
+            if len(fields) > 1:
+                raise ValueError("Cannot aggregate more than 1 field.")
+            return self._aggregate_bbg_returns(
+                securities, fields[0], start, end
+            )
+
+        if len(securities) == 1:
+            securities = securities[0]
+
+        if len(fields) > 1:
+            df = pd.concat(
+                (
+                    self._read_bbg_df(field)[securities].rename(field)
+                    for field in fields
+                ),
+                axis=1,
+            )
+        else:
+            field = fields[0]
+            if securities == "all":
+                df = self._read_bbg_df(field).copy()
+            else:
+                df = self._read_bbg_df(field)[securities].copy()
+
+        # Subset to proper date region
+        if start is not None:
+            df = df[df.index >= to_datetime(start)]
+        if end is not None:
+            df = df[df.index <= to_datetime(end)]
+
+        # Process missing values.
+        df.dropna(how="all", inplace=True)
+        if nan is None:
+            pass
+        elif nan == "drop":
+            df.dropna(inplace=True)
+        elif nan == "ffill":
+            df.fillna(method="ffill", inplace=True)
+        elif nan == "interp":
+            interp_kwargs = {"method": "linear"}
+            interp_kwargs.update(**kwargs)
+            df.interpolate(
+                limit_direction="forward", axis=0, inplace=True, **interp_kwargs
+            )
+        elif nan == "fbfill":
+            df = df.fillna(method="ffill").fillna(method="bfill")
+
+        return df
+
+    def _aggregate_bbg_returns(self, securities, field, start, end):
+        regular_xsret_timeseries_securities = {
+            "SP500",
+            "EURO_STOXX_50",
+            "CDX_HY",
+            "CDX_IG",
+            "ITRAXX_MAIN",
+            "ITRAXX_XOVER",
+        }
+        d = {}
+        for security in securities:
+            if "TRET" in field:
+                tret = self.load_bbg_data(
+                    security, "TRET", nan="drop", start=start, end=end
+                )
+                d[security] = tret.iloc[-1] / tret.iloc[0] - 1
+            elif field == "XSRET":
+                if security in regular_xsret_timeseries_securities:
+                    # Bloomberg has normal index series.
+                    # Treat similar to total returns
+                    xsret = self.load_bbg_data(
+                        security, "XSRET", nan="drop", start=start, end=end
+                    )
+                    d[security] = xsret.iloc[-1] / xsret.iloc[0] - 1
+                else:
+                    # Not a derivative.
+                    # Load entire history for security up to specified end.
+                    df = self.load_bbg_data(
+                        security, ["TRET", "XSRET"], nan="drop", end=end
+                    )
+                    if start is not None:
+                        # Subset data to start at month before specifed
+                        # start date. This is required because Bloomberg
+                        # has MTD excess returns, so the full month of data
+                        # is needed to start aggregation at any point in
+                        # the month.
+                        prev_month_start = self.date(
+                            "LAST_MONTH_END", start, trade_dates=df.index
+                        )
+                        df = df[df.index >= prev_month_start]
+                    d[security] = self._aggregate_bbg_excess_returns(df, start)
+            else:
+                raise KeyError(f"{field} is not a valid field to aggregate.")
+
+        if len(securities) == 1:
+            return d[securities[0]]
+        else:
+            return pd.Series(d, name=field)
+
+    def _aggregate_bbg_excess_returns(self, df, start):
+        """
+        Parameters
+        ----------
+        df: pd.DataFrame
+            DataFrame of total and excess returns.
+        start: datetime, optional
+            Starting date for aggregation.
+        """
+        # Split DataFrame into months.
+        month_dfs = [mdf for _, mdf in df.groupby(pd.Grouper(freq="M"))]
+        tret_ix_0 = month_dfs[0]["TRET"].iloc[-1]  # last value of prev month
+
+        xs_col_month_list = []
+        for mdf in month_dfs[1:]:  # first month is ignored
+            a = np.zeros(len(mdf))
+            for i, row in enumerate(mdf.itertuples()):
+                tret_ix, cum_xsret = row[1], row[2] / 100
+                if i == 0:
+                    a[i] = cum_xsret
+                    tret = (tret_ix - tret_ix_0) / tret_ix_0
+                    prev_tret_ix = tret_ix
+                    prev_cum_rf_ret = 1 + tret - cum_xsret
+                else:
+                    cum_tret = (tret_ix - tret_ix_0) / tret_ix_0
+                    tret = tret_ix / prev_tret_ix - 1
+                    rf_ret = (cum_tret - cum_xsret + 1) / prev_cum_rf_ret - 1
+                    a[i] = tret - rf_ret
+                    prev_tret_ix = tret_ix
+                    prev_cum_rf_ret *= 1 + rf_ret
+
+            tret_ix_0 = tret_ix
+            xs_col_month_list.append(pd.Series(a, index=mdf.index))
+
+        xsret_s = pd.concat(xs_col_month_list, sort=True)
+        tret_s = (df["TRET"] / df["TRET"].shift(1) - 1)[1:]
+        if start is not None:
+            xsret_s = xsret_s[xsret_s.index >= start]
+            tret_s = tret_s[tret_s.index >= start]
+        rf_ret_s = tret_s - xsret_s
+        total_ret = np.prod(1 + tret_s) - 1
+        rf_total_ret = np.prod(1 + rf_ret_s) - 1
+        return total_ret - rf_total_ret
+
+    def load_baml_data(
+        self, securities, fields, start=None, end=None, nan=None, **kwargs
+    ):
+        """
+        Load BAML Index data for given securities.
 
         Parameters
         ----------
@@ -2227,7 +2518,7 @@ class Database:
         Returns
         -------
         df: pd.DataFrame
-            Bloomberg data subset to proper date range and
+            BAML data subset to proper date range and
             processed missing data.
         """
         # Load data for selected securities.
@@ -2247,7 +2538,7 @@ class Database:
         if len(fields) > 1:
             df = pd.concat(
                 (
-                    self._read_bbg_df(field)[securities].rename(field)
+                    self._read_baml_df(field)[securities].rename(field)
                     for field in fields
                 ),
                 axis=1,
@@ -2255,9 +2546,9 @@ class Database:
         else:
             field = fields[0]
             if securities == "all":
-                df = self._read_bbg_df(field).copy()
+                df = self._read_baml_df(field).copy()
             else:
-                df = self._read_bbg_df(field)[securities].copy()
+                df = self._read_baml_df(field)[securities].copy()
 
         # Subset to proper date region
         if start is not None:
@@ -2428,47 +2719,180 @@ def main():
 
     vis.style()
     self = Database()
-
-    # %%
+    self.display_all_columns()
     db = Database()
+
+    # %%
     db.load_market_data()
-    ix_lc = db.build_market_index(in_H4UN_index=True)
-    # %%
-    isins = set()
-    for sector in HY_sectors():
-        ix = ix_lc.subset(**db.index_kwargs(sector, source="baml"))
-        isins |= set(ix.isins)
-
-    ix = ix_lc.subset(isin=isins, special_rules="~ISIN")
-    len(ix.df)
-    sorted(ix.df["BAMLSector"].unique())
 
     # %%
-    db.load_market_data(start="1/1/2020")
+    self = Database(market="EUR")
+    df_raw = self.load_market_data(local=False, clean=False, ret_df=True)
+    df_raw.head()
     # %%
-    cusips = ["03523TBV9", "21036PBD9", "60871RAH3", "423012AG8"]
-    ix = db.build_market_index(cusip=cusips, start="3/31/2020")
-    ix.get_value_history("OAS").to_csv("spreads_for_My.csv")
-    # %%
-    df = db.rating_changes(start="3/1/2021")
-    df = df[
-        (df["NumericRating_CHANGE"] < 0)
-        | (df["SPRating_CHANGE"] < 0)
-        | (df["MoodyRating_CHANGE"] < 0)
-        | (df["FitchRating_CHANGE"] < 0)
-    ]
-    port = db.load_portfolio(account="CITLD")
-    bm = port.df["BM_DTS"].sum()
-    p = port.df["P_DTS"].sum()
-    p / bm
-    p * 0.95 / bm
-    port.dts("pct")
 
-    weeks = (db.date("today") - pd.to_datetime("1/1/2021")).days / 7
-    132 / weeks
 
-    # %%
-    name = 'I00039'
-    start = '4/1/2021'
-    fields = ['INDEX_OAS_TSY', 'INDEX_OAD_TSY', 'INDEX_VALUE', 'INDEX_EXCESS_RETURN_MTD', 'INDEX_YIELD_TO_WORST', 'INDEX_MARKET_VALUE']
-    bdh(name, yellow_key="Index", fields=fields, start=start).T
+#     def _preprocess_basys_data(self, df):
+#         # %%
+#         df = df_raw.copy()
+#         # Fill missing sectors and subsectors.
+#         sector_cols = [f"Level {i}" for i in range(7)]
+#         df[sector_cols] = (
+#             df[sector_cols]
+#             .replace("*", np.nan)
+#             .fillna(method="ffill", axis=1)
+#             .copy()
+#         )
+#         df.loc[df["Level 1"] == "Sovereigns", "Level 5"] = "Sovereigns"
+#
+#         # Fill missing collateral types.
+#         collat_cols = [f"Seniority Level {i+1}" for i in range(3)]
+#         df[collat_cols] = (
+#             df[collat_cols]
+#             .replace("*", np.nan)
+#             .fillna(method="ffill", axis=1)
+#             .copy()
+#         )
+#
+#         col_map = {
+#             "Date": "Date",
+#             "Ticker": "Ticker",
+#             "Issuer": "Issuer",
+#             "ISIN": "ISIN",
+#             "CUSIP": "CUSIP",
+#             "Coupon": "CouponRate",
+#             "Final Maturity": "MaturityDate",
+#             "Workout date": "WorstDate",
+#             "Level 1": "SectorLevel1",
+#             "Level 2": "SectorLevel2",
+#             "Level 3": "SectorLevel3",
+#             "Level 4": "SectorLevel4",
+#             "Level 5": "SectorLevel5",
+#             "Level 6": "SectorLevel6",
+#             "Markit iBoxx Rating": "CompositeRating",
+#             "Seniority Level 2": "CollateralType",
+#             "Notional Amount": "AmountOutstanding",
+#             "Market Value": "MarketValue",
+#             "Next Call Date": "NextCallDate",
+#             "Index Price": "CleanPrice",
+#             "Dirty Index Price": "DirtyPrice",
+#             "Accrued Interest": "AccruedInterest",
+#             "Effective OA duration": "OAD",
+#             "OAS": "OAS",
+#             "Z-Spread Over Libor": "ZSpread",
+#             "Semi-Annual Yield": "YieldToWorst",
+#             "Semi-Annual Yield to Maturity": "YieldToMat",
+#             "Semi-Annual Modified Duration": "ModDurationToWorst",
+#             "Semi-Annual Modified Duration to Maturity": "ModDurationToMat",
+#             "Month-to-date Sovereign Curve Swap Return": "MTDXSRet",
+#             "Month-to-date Libor Swap Return": "MTDLiborXSRet",
+#         }
+#         df = df.rename(columns=col_map)[col_map.values()].copy()
+#
+#         # Convert str time to datetime.
+#         for date_col in ["Date", "MaturityDate", "WorstDate", "NextCallDate"]:
+#             dates = pd.to_datetime(
+#                 df[date_col], format="%Y-%m-%d", errors="coerce"
+#             )
+#             # Find indexes with NaT dates, and use other format.
+#             mask = dates.isna()
+#             clean_dates = pd.to_datetime(
+#                 df.loc[mask, date_col], format="%d/%m/%Y", errors="coerce"
+#             )
+#             dates.loc[mask] = clean_dates
+#             mask = dates.isna()
+#             clean_dates = pd.to_datetime(
+#                 df.loc[mask, date_col], errors="coerce"
+#             )
+#             dates.loc[mask] = clean_dates
+#             df[date_col] = dates
+#
+#         # Set perpetuals to a constant date of 1/1/2220.
+#         df.loc[df["MaturityDate"].isna(), "MaturityDate"] = pd.to_datetime(
+#             "1/1/2220"
+#         )
+#
+#         # Define maturites yearrs.
+#         day = "timedelta64[D]"
+#         df["MaturityYears"] = (df["MaturityDate"] - df["Date"]).astype(
+#             day
+#         ) / 365
+#
+#         # Make sector column NaN. This column is required to be present.
+#         df["Sector"] = np.nan
+#
+#         # Capitalize sectors, and issuers.
+#         for col in ["MLSubsector", "MLSector", "Issuer"]:
+#             df[col] = df[col].str.upper()
+#         df["MLSector"] = df["MLSector"].str.replace(" ", "_")
+#
+#         # Put amount outstanding and market value into $M.
+#         for col in ["AmountOutstanding", "MarketValue"]:
+#             df[col] /= 1e6
+#
+#         # Get numeric ratings from composit ratings.
+#         df["NumericRating"] = self._get_numeric_ratings(df, ["CompositeRating"])
+#
+#         # Add financial flag column.
+#         df["FinancialFlag"] = convert_sectors_to_fin_flags(df["MLSector"])
+#
+#         # Calculate DTS. Approximate OAD ~ OASD.
+#         df["DTS"] = df["OAD"] * df["OAS"]
+#         df["DTS_Libor"] = df["OAD"] * df["ZSpread"]
+#
+#         df["CUSIP"].fillna(df["ISIN"], inplace=True)
+#         return clean_dtypes(df)
+#
+#
+# list(df)
+# df['CollateralType'].value_counts()
+# df_prev = df.copy()
+#
+# df['SectorLevel3'].value_counts().sort_values(ascending=False)[:20]
+# df['SectorLevel4'].value_counts().sort_values(ascending=False)[:20]
+# df['SectorLevel5'].value_counts().sort_values(ascending=False)[:20]
+# df['SectorLevel6'].value_counts().sort_values(ascending=False)[:30]
+#
+# # %%
+# df = df_prev.copy()
+# def _add_EUR_sector_cols(self, df):
+#     df['Sector'] = np.nan
+#     df['Subsector'] = np.nan
+#
+#     direct_replacements =
+#         'Sector' = {
+#             3: {
+#                 'Financial Services': 'FINANCIAL_SERVICES',
+#                 "Real Estate": "REAL_ESTATE",
+#                 "Utilities": "UTILITIES",
+#                 "Industrials": "INDUSTRIALS",
+#                 "Telecommunications": "TELECOMMUNICATIONS",
+#                 "Basic Materials": "BASIC_MATERIALS",
+#             },
+#             4: {
+#                 'Chemicals': 'CHEMICALS',
+#                 'Banks': 'BANKS',
+#                 'Insurance': 'INSURANCE',
+#             },
+#             5: {
+#                 'Pharmaceuticals & Biotechnology': 'PHARMA',
+#                 "Health Care Equipment & Services": "MEDTECH",
+#             },
+#             6: {
+#                 ""
+#             }
+#         },
+#         "Subsector" = {
+#             3: {
+#                 'Financial Services': 'FINANCIAL_SERVICES',
+#                 "Real Estate": "REAL_ESTATE",
+#             },
+#             4: {
+#                 'Chemicals': 'CHEMICALS',
+#             },
+#             6: {
+#                 ""
+#             }
+#         }
+#
+#     df.loc[df['SectorLevel3'] == 'Financial Servi']
