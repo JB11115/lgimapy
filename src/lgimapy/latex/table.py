@@ -140,15 +140,15 @@ def latex_color_gradient(
     symmetric: bool, default=False
         If True, set vmin and vmax to the same distance away
         from the center such that the color scheme diverges
-        symettrically in value.
+        symetrically in value.
 
     Returns
     -------
     gradient_colors: List[str].
         List of colors matching gradient for given input values.
     """
-    vmin = np.min(vals) if vmin is None else vmin
-    vmax = np.max(vals) if vmax is None else vmax
+    vmin = np.nanmin(vals) if vmin is None else vmin
+    vmax = np.nanmax(vals) if vmax is None else vmax
     if symmetric:
         vdist = max(np.abs(vmax - center), np.abs(vmin - center))
         vmin = center - vdist
@@ -163,7 +163,7 @@ def latex_color_gradient(
 
     gradient_colors = []
     for val in vals:
-        if np.isnan(val) or val is None:
+        if np.isnan(val) or pd.isna(val) or val is None:
             gradient_colors.append(f"{{{cmin}!0!{cmid}}}")
         elif val < center:
             val = max(val, vmin)
@@ -735,3 +735,5 @@ def latex_table(
 
 
 # %%
+
+df = pd.DataFrame()
