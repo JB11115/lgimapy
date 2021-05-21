@@ -3,19 +3,19 @@ import pandas as pd
 from lgimapy.data import Database, get_basys_fids
 from lgimapy.utils import root
 
-
+dates = None
 # %%
 
 
 def update_trade_dates(dates=None):
     """Update trade dates in all markets."""
-    update_us_trade_dates(dates)
+    update_US_trade_dates(dates)
     update_regional_trade_dates("EUR")
     update_regional_trade_dates("GBP")
     print("Updated trade dates.")
 
 
-def find_holidays(trade_dates, start_date=None):
+def find_US_holidays(trade_dates, start_date=None):
     """List[datetime]: Find all holidays after given start date."""
     db = Database()
     last_date = trade_dates[-1]
@@ -40,7 +40,7 @@ def find_holidays(trade_dates, start_date=None):
     return holidays
 
 
-def update_us_trade_dates(dates=None):
+def update_US_trade_dates(dates=None):
     """
     Update `trade_dates.parquet` file with all trade dates
     and holidays.
@@ -61,11 +61,13 @@ def update_us_trade_dates(dates=None):
     except (FileNotFoundError, OSError):
         # No file, find all holidays.
         start = pd.to_datetime("1/2/1998")
-        holidays = find_holidays(trade_dates, start_date=start)
+        holidays = find_US_holidays(trade_dates, start_date=start)
     else:
         # Succesfully loaded file, find holidays since last save.
         saved_holidays = list(saved_df[saved_df["holiday"] == 1].index)
-        new_holidays = find_holidays(trade_dates, start_date=saved_df.index[-3])
+        new_holidays = find_US_holidays(
+            trade_dates, start_date=saved_df.index[-3]
+        )
         holidays = list(set(saved_holidays + new_holidays))
         if new_holidays:
             # Print new holidays to the screen.
@@ -74,6 +76,7 @@ def update_us_trade_dates(dates=None):
             print(*fout, sep="\n")
 
     # Set boolean value to 1 for holidays and save to .csv file.
+    holidays.append(pd.to_datetime("5/28/1998"))
     df.loc[df.index.isin(holidays), "holiday"] = 1
     df.to_parquet(fid)
 
