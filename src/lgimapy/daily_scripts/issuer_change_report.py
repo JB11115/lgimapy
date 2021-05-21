@@ -47,7 +47,7 @@ def build_issuer_change_report():
     doc = Document(fid, path="reports/issuer_change")
     doc.add_preamble(
         margin={
-            "paperheight": 30,
+            "paperheight": 31,
             "left": 0.5,
             "right": 0.5,
             "top": 0.5,
