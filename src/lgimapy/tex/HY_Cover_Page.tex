@@ -1,0 +1,156 @@
+\documentclass[12pt]{article}
+\usepackage[top=1.5cm, bottom=2cm, left=0.5cm, right=0.5cm, landscape]{geometry}
+\usepackage[table]{xcolor}
+%\usepackage[draft]{graphicx}
+\usepackage{graphicx}
+\usepackage{
+	amsmath,
+	amsthm,
+	amssymb,
+	adjustbox,
+	array,
+	background,
+	booktabs,
+	bm,
+	caption,
+	colortbl,
+	dsfont,
+	enumitem,
+	epigraph,
+	fancyhdr,
+	float,
+	makecell,
+	MnSymbol,
+	nicefrac,
+	ragged2e,
+	subcaption,
+	tabu,
+	titlesec,
+	transparent,
+	wasysym,
+	xcolor,
+}
+\usepackage[open]{bookmark}
+
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\backgroundsetup{contents={}}
+
+\captionsetup{
+	justification=raggedright,
+	singlelinecheck=false,
+	font={footnotesize, bf},
+	aboveskip=0pt,
+	belowskip=0pt,
+	labelformat=empty
+}
+\captionsetup[subfigure]{labelformat=empty}
+
+%% Change separations distances for better presentation.
+\setlength{\textfloatsep}{0.1mm}
+\setlength{\floatsep}{1mm}
+\setlength{\intextsep}{2mm}
+
+%% Declare operators for mathematical expressions.
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\setcounter{MaxMatrixCols}{20}
+
+%% Define custom colors.
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{steelblue}{HTML}{0C70D5}
+\definecolor{firebrick}{HTML}{E85650}
+\definecolor{orchid}{HTML}{9A2BE6}
+\definecolor{orange}{HTML}{E69A2B}
+\definecolor{navy}{HTML}{192E5B}
+\definecolor{lightpink}{HTML}{FBC2EF}
+\definecolor{mintgreen}{HTML}{D4F0B7}
+\definecolor{lightblue}{HTML}{72A2C0}
+\definecolor{tan}{HTML}{E8D0AC}
+\definecolor{opal}{HTML}{9BC1BC}
+\definecolor{sage}{HTML}{CACAAA}
+\definecolor{oceangreen}{HTML}{59C9A5}
+\definecolor{magicmint}{HTML}{A0EEC0}
+\definecolor{persiangreen}{HTML}{1B998B}
+\definecolor{paleblue}{HTML}{B1DDF1}
+\definecolor{champagne}{HTML}{EEE3AB}
+\definecolor{powderblue}{HTML}{A9D2D5}
+\definecolor{oldmauve}{HTML}{4C243B}
+
+%% Define function for perctile bars in tables.
+\newlength{\barw}
+\setlength{\barw}{0.15mm}
+\def\pctbar#1#2{%%
+	{\color{gray}\rule{#2\barw}{#1pt}} #2\%}
+
+%% Define function for divergent bars in tables.
+\def\bar#1#2{%
+	\color{#2}\rule{#1\barw}{8pt}
+}
+
+\def\divbar#1#2{%
+	\ifnum#1<0{%
+		\bar{\the\numexpr50+#1}{white}
+		\bar{-#1}{#2}
+		\bar{50}{white}
+	}
+	\else{%
+		\bar{50}{white}
+		\bar{#1}{#2}
+		\bar{\the\numexpr50-#1}{white}
+	}
+	\fi
+}
+
+
+
+\fancyhf{}
+\setlength{\headheight}{0.8cm}
+\setlength\footskip{0pt}
+\fancyhead[L]{US HY Credit Markets}
+\fancyhead[R]{\today}
+\fancyfoot[L]{\thepage}
+\fancyfoot[R]{
+	\raisebox{-0.8cm}[0pt][0pt]
+	{\includegraphics[width=0.065\textwidth]{"X:/Credit Strategy/lgimapy/fig/logos/LG_umbrella"}}
+}
+\pagestyle{fancy}
+
+\fancypagestyle{title}{
+	\setlength{\headheight}{3cm}
+	\fancyhf{}
+	\fancyhead[L]{\Huge \textbf{US HY Credit Markets}\\ \LARGE \today}
+	\fancyhead[R]{
+		\includegraphics[width=0.115\textwidth]{"X:/Credit Strategy/lgimapy/fig/logos/Legal_General_umbrella"}
+	}
+}
+
+
+
+\begin{document}
+	
+
+%% Cover Page
+\thispagestyle{title}
+\bookmark[page=1, level=0]{Cover Page}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.485\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/cover_H0A0}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/HY_IG_ratio}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.485\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/cover_H4UN}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/bonds_trading_above_call_price}
+	\end{subfigure}
+
+\end{figure}
