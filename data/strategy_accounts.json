@@ -6,6 +6,7 @@
         "3539BNM",
         "4054BNM",
         "AIBBNM",
+        "AOSBNM",
         "APBNM",
         "BABBNM",
         "BCBSBNM",
@@ -22,6 +23,7 @@
         "DRDBNM",
         "DVNBNM",
         "ECBNM",
+        "FCABNM",
         "GSK1BNM",
         "GSK2BNM",
         "GSK3BNM",
@@ -227,19 +229,11 @@
         "RMMUSHY",
         "SICHY"
     ],
-    "US Long Corporate": [
-        "BGGLC",
-        "GSKLC",
-        "MDLZLC",
-        "MERLC",
-        "SGOLC"
-    ],
     "Custom Management No Benchmark": [
         "BL-ESCR",
         "BL-WHELD",
         "BLFWA",
         "BLWHLDTL",
-        "BLWP-RGA",
         "FBBR3SP",
         "FBBR3TA",
         "FBBR3TL",
@@ -252,7 +246,6 @@
         "LGA-BLTL",
         "LGA-FHLB",
         "LGA-PENS",
-        "LGA-UH",
         "LGA-WP",
         "LGA-WPTL",
         "LGADSA1",
@@ -275,6 +268,8 @@
         "WNT-DR1A",
         "WNT-PU1B",
         "WPFWA",
+        "WPGSAP",
+        "WPPC",
         "WPSP"
     ],
     "US Government: Intermediate": [
@@ -339,6 +334,13 @@
         "GMLT",
         "MERLT"
     ],
+    "US Long Corporate": [
+        "GSKLC",
+        "MDLZLC",
+        "MERLC",
+        "SGOLC",
+        "UBSLC"
+    ],
     "Global Agg USD Corp": [
         "HIC"
     ],
@@ -398,8 +400,5 @@
     ],
     "US Long A+ Credit": [
         "SEIC"
-    ],
-    "US Corporate 7+ Years": [
-        "UBSCC"
     ]
 }

@@ -1,5 +1,5 @@
 {
-    "Connor Tuttle": [
+    "Liz Najor": [
         "2024BNM",
         "2529BNM",
         "3034BNM",
@@ -7,8 +7,10 @@
         "4054BNM",
         "AGRBNM",
         "AIBBNM",
+        "AOSBNM",
         "APBNM",
         "BABBNM",
+        "BCBSBNM",
         "BNM",
         "BUPABNM",
         "CATBNM",
@@ -25,6 +27,7 @@
         "DVNBNM",
         "ECBNM",
         "ELUXBNM",
+        "FCABNM",
         "FWFHBNM",
         "FWFNBNM",
         "GMANBNM",
@@ -85,7 +88,8 @@
         "UL1BNM",
         "UL2BNM",
         "UUBNM",
-        "UUEBNM"
+        "UUEBNM",
+        "YCBBNM"
     ],
     "Patrick Dan": [
         "AEELA",
@@ -183,7 +187,6 @@
         "ONCRLD",
         "P-LD",
         "PAHLD",
-        "PBIIC",
         "PBILD",
         "PCALD",
         "PFELD",
@@ -229,16 +232,13 @@
         "LIB150",
         "LIB350",
         "P-LGC",
+        "PBIIC",
         "PPG",
         "RFAGC",
         "RFCGC",
         "RSURC",
         "SEIGC",
         "USBGC"
-    ],
-    "Liz Najor": [
-        "BCBSBNM",
-        "YCBBNM"
     ],
     "Elizabeth Cassidy": [
         "BETUSHY",
@@ -254,29 +254,11 @@
         "RMMUSHY",
         "SICHY"
     ],
-    "Tim Bacik": [
-        "BGGLC",
-        "BLUELC",
-        "CALLC",
-        "EXCLC",
-        "GMGC",
-        "GSKLC",
-        "HIC",
-        "JNJLC",
-        "MDLZLC",
-        "MERLC",
-        "NAT2",
-        "NATG",
-        "OGCBF",
-        "RDTNLD1",
-        "SGOLC"
-    ],
-    "Joe Tomczak": [
+    "Connor Tuttle": [
         "BL-ESCR",
         "BL-WHELD",
         "BLFWA",
         "BLWHLDTL",
-        "BLWP-RGA",
         "FBB-CA",
         "FBB-CA2",
         "FBBR3SP",
@@ -292,7 +274,6 @@
         "LGA-BLTL",
         "LGA-FHLB",
         "LGA-PENS",
-        "LGA-UH",
         "LGA-WP",
         "LGA-WPTL",
         "LGADSA1",
@@ -315,7 +296,26 @@
         "WNT-DR1A",
         "WNT-PU1B",
         "WPFWA",
+        "WPGSAP",
+        "WPPC",
         "WPSP"
+    ],
+    "Tim Bacik": [
+        "BLUELC",
+        "CALLC",
+        "EXCLC",
+        "GMGC",
+        "GSKLC",
+        "HIC",
+        "JNJLC",
+        "MDLZLC",
+        "MERLC",
+        "NAT2",
+        "NATG",
+        "OGCBF",
+        "RDTNLD1",
+        "SGOLC",
+        "UBSLC"
     ],
     "Jason Shoup": [
         "CARGLC",
@@ -328,8 +328,5 @@
     "Andy Carter": [
         "PIEDHA",
         "TECOHA"
-    ],
-    "Magdalena Szudy": [
-        "UBSCC"
     ]
 }

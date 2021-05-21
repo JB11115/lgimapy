@@ -55,6 +55,10 @@
         "NAME": "UST 10Y Breakeven",
         "YTW": "USGGBE10 Index"
     },
+    "UST_5Y5Y_BE": {
+        "NAME": "UST 5Y5Y Breakeven",
+        "YTW": "USGG5Y5Y Index"
+    },
     "UST_2Y_10Y": {
         "NAME": "UST 2Y/10Y",
         "YTW": "USYC2Y10 Index"
@@ -189,6 +193,13 @@
         "NAME": "Euro Stoxx 50 Put/Call Ratio",
         "PRICE": "SX5EPT Index"
     },
+    "EURO_STOXX_50": {
+        "NAME": "Euro Stoxx 50",
+        "PRICE": "SX5E Index",
+        "TRET": "SX5T Index",
+        "TRET_HEDGED_USD": "SX5DU Index",
+        "XSRET": "SX5ETFER Index"
+    },
     "DOWJONES": {
         "NAME": "Dow Jones",
         "PRICE": "DJI Index",
@@ -200,6 +211,8 @@
         "NAME": "S&P 500",
         "PRICE": "SPX Index",
         "TRET": "SPXT Index",
+        "TRET_HEDGED_USD": "SPXT Index",
+        "XSRET": "SPXFP Index",
         "PE_RATIO": "SPX Index|BEST_PE_RATIO",
         "PB_RATIO": "SPX Index|PX_TO_BOOK_RATIO"
     },
@@ -307,6 +320,30 @@
         "NAME": "Conservative",
         "PRICE": "SPXMRA Index"
     },
+    "SP500_CYC": {
+        "NAME": "Cyclicals",
+        "PRICE": "GSSBCYCL Index",
+        "PE_RATIO": "GSSBCYCL Index|BEST_PE_RATIO",
+        "PB_RATIO": "GSSBCYCL Index|PX_TO_BOOK_RATIO"
+    },
+    "SP500_DEF": {
+        "NAME": "Defensives",
+        "PRICE": "GSSBDEFS Index",
+        "PE_RATIO": "GSSBDEFS Index|BEST_PE_RATIO",
+        "PB_RATIO": "GSSBDEFS Index|PX_TO_BOOK_RATIO"
+    },
+    "SP500_DOM": {
+        "NAME": "Domestic",
+        "PRICE": "GSSBDOMS Index",
+        "PE_RATIO": "GSSBDOMS Index|BEST_PE_RATIO",
+        "PB_RATIO": "GSSBDOMS Index|PX_TO_BOOK_RATIO"
+    },
+    "SP500_GLBL": {
+        "NAME": "Global",
+        "PRICE": "GSSBGLBL Index",
+        "PE_RATIO": "GSSBGLBL Index|BEST_PE_RATIO",
+        "PB_RATIO": "GSSBGLBL Index|PX_TO_BOOK_RATIO"
+    },
     "RUSSELL_1000": {
         "NAME": "Russell 1000",
         "PRICE": "RIY Index",
@@ -349,6 +386,7 @@
         "NAME": "MSCI EM",
         "PRICE": "MXEF Index",
         "TRET": "NDUEEGF Index",
+        "TRET_HEDGED_USD": "M1CXADC Index",
         "PE_RATIO": "MXEF Index|BEST_PE_RATIO",
         "PB_RATIO": "MXEF Index|PX_TO_BOOK_RATIO"
     },
@@ -407,6 +445,7 @@
         "OAS": "I00012US Index|INDEX_OAS_TSY",
         "OAD": "I00012US Index|INDEX_OAD_TSY",
         "TRET": "I00012US Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "I00012US Index|INDEX_VALUE",
         "XSRET": "I00012US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I00012US Index|INDEX_YIELD_TO_WORST",
         "MV": "I00012US Index|INDEX_MARKET_VALUE"
@@ -479,6 +518,7 @@
         "OAS": "I02769US Index|INDEX_OAS_TSY",
         "OAD": "I02769US Index|INDEX_OAD_TSY",
         "TRET": "I02769US Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "I02769US Index|INDEX_VALUE",
         "XSRET": "I02769US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I02769US Index|INDEX_YIELD_TO_WORST",
         "MV": "I02769US Index|INDEX_MARKET_VALUE"
@@ -488,6 +528,7 @@
         "OAS": "I00182US Index|INDEX_OAS_TSY",
         "OAD": "I00182US Index|INDEX_OAD_TSY",
         "TRET": "I00182US Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "I00182US Index|INDEX_VALUE",
         "XSRET": "I00182US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I00182US Index|INDEX_YIELD_TO_WORST",
         "MV": "I00182US Index|INDEX_MARKET_VALUE"
@@ -497,6 +538,7 @@
         "OAS": "I00185US Index|INDEX_OAS_TSY",
         "OAD": "I00185US Index|INDEX_OAD_TSY",
         "TRET": "I00185US Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "I00185US Index|INDEX_VALUE",
         "XSRET": "I00185US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I00185US Index|INDEX_YIELD_TO_WORST",
         "MV": "I00185US Index|INDEX_MARKET_VALUE"
@@ -506,6 +548,7 @@
         "OAS": "I00188US Index|INDEX_OAS_TSY",
         "OAD": "I00188US Index|INDEX_OAD_TSY",
         "TRET": "I00188US Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "I00188US Index|INDEX_VALUE",
         "XSRET": "I00188US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I00188US Index|INDEX_YIELD_TO_WORST",
         "MV": "I00188US Index|INDEX_MARKET_VALUE"
@@ -608,6 +651,7 @@
         "OAS": "I02500EU Index|INDEX_OAS_TSY",
         "OAD": "I02500EU Index|INDEX_OAD_TSY",
         "TRET": "I02500EU Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "H02500US Index|INDEX_VALUE",
         "XSRET": "I02500EU Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I02500EU Index|INDEX_YIELD_TO_WORST",
         "MV": "I02500EU Index|INDEX_MARKET_VALUE"
@@ -644,6 +688,7 @@
         "OAS": "I02202EU Index|INDEX_OAS_TSY",
         "OAD": "I02202EU Index|INDEX_OAD_TSY",
         "TRET": "I02202EU Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "H02202US Index|INDEX_VALUE",
         "XSRET": "I02202EU Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I02202EU Index|INDEX_YIELD_TO_WORST",
         "MV": "I02202EU Index|INDEX_MARKET_VALUE"
@@ -653,6 +698,7 @@
         "OAS": "I05443EU Index|INDEX_OAS_TSY",
         "OAD": "I05443EU Index|INDEX_OAD_TSY",
         "TRET": "I05443EU Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "H05443US Index|INDEX_VALUE",
         "XSRET": "I05443EU Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I05443EU Index|INDEX_YIELD_TO_WORST",
         "MV": "I05443EU Index|INDEX_MARKET_VALUE"
@@ -662,6 +708,7 @@
         "OAS": "I05442EU Index|INDEX_OAS_TSY",
         "OAD": "I05442EU Index|INDEX_OAD_TSY",
         "TRET": "I05442EU Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "H05442US Index|INDEX_VALUE",
         "XSRET": "I05442EU Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I05442EU Index|INDEX_YIELD_TO_WORST",
         "MV": "I05442EU Index|INDEX_MARKET_VALUE"
@@ -788,9 +835,37 @@
         "OAS": "I01478US Index|INDEX_OAS_TSY",
         "OAD": "I01478US Index|INDEX_OAD_TSY",
         "TRET": "I01478US Index|INDEX_VALUE",
+        "TRET_HEDGED_USD": "H04386US Index|INDEX_VALUE",
         "XSRET": "I01478US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I01478US Index|INDEX_YIELD_TO_WORST",
         "MV": "I01478US Index|INDEX_MARKET_VALUE"
+    },
+    "EM_BBB": {
+        "NAME": "EM BBB",
+        "OAS": "I12881US Index|INDEX_OAS_TSY",
+        "OAD": "I12881US Index|INDEX_OAD_TSY",
+        "TRET": "I12881US Index|INDEX_VALUE",
+        "XSRET": "I12881US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I12881US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I12881US Index|INDEX_MARKET_VALUE"
+    },
+    "EM_BB": {
+        "NAME": "EM BB",
+        "OAS": "I05040US Index|INDEX_OAS_TSY",
+        "OAD": "I05040US Index|INDEX_OAD_TSY",
+        "TRET": "I05040US Index|INDEX_VALUE",
+        "XSRET": "I05040US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I05040US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I05040US Index|INDEX_MARKET_VALUE"
+    },
+    "EM_B": {
+        "NAME": "EM B",
+        "OAS": "I05039US Index|INDEX_OAS_TSY",
+        "OAD": "I05039US Index|INDEX_OAD_TSY",
+        "TRET": "I05039US Index|INDEX_VALUE",
+        "XSRET": "I05039US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I05039US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I05039US Index|INDEX_MARKET_VALUE"
     },
     "EM_CORP": {
         "NAME": "EM Corp",
