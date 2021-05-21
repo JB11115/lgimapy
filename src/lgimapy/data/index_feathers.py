@@ -5,7 +5,7 @@ import pandas as pd
 from pyarrow import ArrowIOError
 from tqdm import tqdm
 
-from lgimapy.data import Database
+from lgimapy.data import Database, groupby
 from lgimapy.utils import mkdir, root, restart_program
 
 
@@ -46,12 +46,28 @@ def create_feather(fid, db):
         if first_of_month < pd.to_datetime("11/1/2018"):
             ix._fill_missing_columns_with_bbg_data()
 
+        # Fill missing HY index flags.
+        ix = fill_missing_HY_index_flags(ix)
         # Compute MTD total and excess returns.
         ix.compute_excess_returns()
 
     # Remove previous month's last day and save feather file.
     df = ix.subset(start=ix.dates[1]).df.reset_index(drop=True)
     df.to_feather(root(f"data/{db.market}/feathers/{fid}.feather"))
+
+
+def fill_missing_HY_index_flags(ix):
+    min_daily_flags = (
+        ix.df[["Date", "USHYReturnsFlag"]].groupby("Date").sum().min().iloc[0]
+    )
+    if min_daily_flags < 1000:
+        flags = ix.df[["ISIN", "USHYReturnsFlag"]].groupby("ISIN").sum()
+        index_isins = flags[flags > 0].dropna().index
+        index_isin_loc = ix.df["ISIN"].isin(index_isins)
+        for col in ["USHYReturnsFlag", "USHYStatisticsFlag"]:
+            ix.df.loc[index_isin_loc, col] = 1
+
+    return ix
 
 
 def find_missing_feathers(db):
@@ -123,6 +139,8 @@ def update_market_data_feathers(limit=20):
         print(f"Updated {market} Feather Files")
 
 
+fid = "2019_10"
+db = Database()
 # %%
 
 if __name__ == "__main__":
