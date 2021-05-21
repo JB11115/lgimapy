@@ -8,6 +8,8 @@ speakers = """
     HY (Elizabeth/Oh-Me)
     -----------------------
     Rates
+    [Mon] Equity Vol - Mike
+    [Tues] Rate Vol - Matt
     Credit Macro
     -----------------------
     Credit Trading
