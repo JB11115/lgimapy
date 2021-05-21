@@ -92,6 +92,7 @@ index_agg = {
     "EU HY": ["EU HY"],
     "EM Sov": ["EM Sov"],
     "S&P 500": ["S&P 500"],
+    "Russell 2000": ["Russell 2000"],
     "MSCI EM": ["MSCI EM"],
     "VIX": ["Vix", "3M Vix"],
     "Gold": ["Gold"],
