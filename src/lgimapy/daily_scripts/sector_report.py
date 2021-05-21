@@ -2,6 +2,7 @@ import multiprocessing as mp
 import warnings
 from collections import defaultdict
 
+import joblib
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
@@ -49,72 +50,26 @@ def create_sector_report():
         mod.train(forecast="1m", maturity=maturity)
         xsret_model_d[name] = mod
 
-    sectors = [
-        "BASICS",
-        "CHEMICALS",
-        "METALS_AND_MINING",
-        "CAPITAL_GOODS",
-        "COMMUNICATIONS",
-        "CABLE_SATELLITE",
-        "MEDIA_ENTERTAINMENT",
-        "WIRELINES_WIRELESS",
-        "CONSUMER_CYCLICAL",
-        "AUTOMOTIVE",
-        "RETAILERS",
-        "CONSUMER_NON_CYCLICAL",
-        "FOOD_AND_BEVERAGE",
-        "HEALTHCARE_EX_MANAGED_CARE",
-        "MANAGED_CARE",
-        "PHARMACEUTICALS",
-        "TOBACCO",
-        "ENERGY",
-        "INDEPENDENT",
-        "INTEGRATED",
-        "OIL_FIELD_SERVICES",
-        "REFINING",
-        "MIDSTREAM",
-        "ENVIRONMENTAL_IND_OTHER",
-        "TECHNOLOGY",
-        "TRANSPORTATION",
-        "RAILROADS",
-        "BANKS",
-        "SIFI_BANKS_SR",
-        "SIFI_BANKS_SUB",
-        "US_REGIONAL_BANKS",
-        "YANKEE_BANKS",
-        "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-        "LIFE",
-        "P&C",
-        "REITS",
-        "OWNED_NO_GUARANTEE",
-        "GOVERNMENT_GUARANTEE",
-        "HOSPITALS",
-        "MUNIS",
-        "SOVEREIGN",
-        "SUPRANATIONAL",
-        "UNIVERSITY",
-    ]
-
+    sectors = db.IG_sectors(with_tildes=True, with_chevrons=True)
+    sectors = [s for s in sectors if not s.startswith(">>")]
+    sector_names = [s.strip("~") for s in sectors]
     # %%
     # Create document, append each page, and save.
     doc = Document(fid, path=pdf_path)
     doc.add_preamble(margin=1, bookmarks=True)
-    # pool = mp.Pool(processes=mp.cpu_count() - 2)
-    # res = [
-    #     pool.apply_async(
-    #         get_sector_page, args=(sector, doc, strategy_d, xsret_model_d)
-    #     )
-    #     for sector in sectors
-    # ]
-    # pages = [r.get() for r in res]
+
     pages = [
         get_sector_page(sector, doc, strategy_d, xsret_model_d)
         for sector in tqdm(sectors)
     ]
+    # pages = joblib.Parallel(n_jobs=6)(
+    #     joblib.delayed(get_sector_page)(sector, doc, strategy_d, xsret_model_d)
+    #     for sector in sectors
+    # )
     df = (
         pd.DataFrame(pages, columns=["sector", "page"])
         .set_index("sector")
-        .reindex(sectors)
+        .reindex(sector_names)
     )
     for page in df["page"]:
         doc.add_page(page)
@@ -128,15 +83,19 @@ def get_sector_page(sector, doc, strategy_d, xsret_model_d):
     """Create single page for each sector."""
 
     page = doc.create_page()
-    sector_kwargs = Database().index_kwargs(sector)
+    sector_name = sector.strip("~")
+    sector_kwargs = Database().index_kwargs(sector_name)
     page_name = sector_kwargs["name"].replace("&", "\&")
-    page.add_section(page_name)
+    if sector.startswith("~"):
+        page.add_subsection(page_name)
+    else:
+        page.add_section(page_name)
 
-    page = add_overview_table(page, sector, strategy_d, n=20)
+    page = add_overview_table(page, sector_name, strategy_d, n=20)
     page = add_issuer_performance_tables(page, sector_kwargs, xsret_model_d)
 
     page.add_pagebreak()
-    return sector, page
+    return sector_name, page
 
 
 def add_overview_table(page, sector, strategy_d, n):
