@@ -1,6 +1,7 @@
 import os
 import json
 import pprint as pp
+import pickle
 import re
 import sys
 from bisect import bisect_left, bisect_right
@@ -142,6 +143,32 @@ def dump_json(d, filename, **kwargs):
         json.dump(d, fid, **dump_kwargs)
 
 
+def load_pickle(fid):
+    """
+    Load a pickle file.
+
+    Parameters
+    ----------
+    fid: str
+        Filepath.
+    """
+    with open(fid.with_suffix(".pickle"), "rb") as f:
+        return pickle.load(f)
+
+
+def dump_pickle(obj, fid):
+    """
+    Save an object to a pickle file.
+
+    Parameters
+    ----------
+    fid: str
+        Filepath.
+    """
+    with open(fid.with_suffix(".pickle"), "wb") as f:
+        return pickle.dump(obj, f)
+
+
 def pprint(obj):
     """Print object to screen in nice formatting"""
     if isinstance(obj, pd.DataFrame):
@@ -225,6 +252,28 @@ def check_market(market):
             f"'{market}' not in allowable markets. "
             f"Please select one of {allowable_markets}."
         )
+
+
+def fill_dt_index(s, *args, **kwargs):
+    """
+    Fill datetime index with all dates within current range.
+
+    Parameters
+    ----------
+    s: pd.Series
+        Series with datetime index.
+    *args:
+        Positional arguments for ``pd.Series.fillna()``
+    **kwargs
+        Keyword arguments for ``pd.Series.fillna()``
+
+    Returns
+    -------
+    pd.Series:
+        Filled input series.
+    """
+    index = pd.date_range(s.index[0], s.index[-1])
+    return s.reindex(index).fillna(*args, **kwargs)
 
 
 def squeeze(x):
