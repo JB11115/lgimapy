@@ -137,12 +137,20 @@ class Index(BondBasket):
 
     def total_value(self, col="MarketValue", synthetic=False):
         """float: Total value of index in $M."""
-        dates = self.dates[1:] if synthetic else self.dates
-        a = np.zeros(len(dates))
-        for i, date in enumerate(dates):
-            df = self.synthetic_day(date) if synthetic else self.day(date)
-            a[i] = np.sum(df[col])
-        return pd.Series(a, index=dates, name="total_value")
+        if synthetic:
+            dates = self.dates[1:] if synthetic else self.dates
+            a = np.zeros(len(dates))
+            for i, date in enumerate(dates):
+                df = self.synthetic_day(date) if synthetic else self.day(date)
+                a[i] = np.sum(df[col])
+            return pd.Series(a, index=dates, name="total_value")
+        else:
+            return (
+                self.df[["Date", col]]
+                .groupby("Date")
+                .sum()[col]
+                .rename("total_value")
+            )
 
     def day(self, date, as_index=False):
         """
