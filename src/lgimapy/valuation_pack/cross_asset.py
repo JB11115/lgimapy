@@ -153,6 +153,8 @@ def calculate_market_review_tables():
     df_ratios["Growth / Value"] = df_ratios.eval("SP500_GROW / SP500_VALU")
     df_ratios["Momentum / S&P 500"] = df_ratios.eval("SP500_MOM / SP500")
     df_ratios["High Vol / Low Vol"] = df_ratios.eval("SP500_HIGHV / SP500_LOWV")
+    df_ratios["Cyclical / Defensive"] = df_ratios.eval("SP500_CYC / SP500_DEF")
+    df_ratios["Domestic / Global"] = df_ratios.eval("SP500_DOM / SP500_GLBL")
     df_ratios = df_ratios[
         [col for col in df_ratios.columns if col not in sec["equity_ratios"]]
     ]
@@ -428,6 +430,10 @@ def secuirites():
             "SP500_HIGHV",
             "SP500_LOWV",
             "RUSSELL_2000",
+            "SP500_CYC",
+            "SP500_DEF",
+            "SP500_DOM",
+            "SP500_GLBL",
         ],
         "rates": [
             "UST_2Y",
