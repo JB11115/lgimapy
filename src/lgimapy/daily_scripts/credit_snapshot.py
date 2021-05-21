@@ -102,6 +102,8 @@ class SnapshotConfig:
                 "~BBB_NON_FIN_TOP_30",
                 "~BBB_NON_FIN_EX_TOP_30",
                 "~BBB_NON_CORP",
+                "AJP_WINNERS",
+                "AJP_LOSERS",
             ],
             "US_IG_10+": [
                 "STATS_US_IG_10+",
@@ -117,6 +119,8 @@ class SnapshotConfig:
                 "~BBB_NON_FIN_TOP_30_10+",
                 "~BBB_NON_FIN_EX_TOP_30_10+",
                 "~BBB_NON_CORP",
+                "AJP_WINNERS",
+                "AJP_LOSERS",
             ],
             "US_HY": [],
         }[self.index]
@@ -134,6 +138,7 @@ class SnapshotConfig:
             return [
                 "AAA",
                 "BBB",
+                "AJP Winners",
                 "Basics",
                 "Capital Goods",
                 "Communications",
@@ -288,7 +293,13 @@ class SnapshotConfig:
     @property
     def margin(self):
         if self.index in {"US_IG", "US_IG_10+"}:
-            return {"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2}
+            return {
+                "left": 0.5,
+                "right": 0.5,
+                "top": 0.5,
+                "bottom": 0.2,
+                "paperheight": 29,
+            }
         elif self.index == "US_HY":
             return {
                 "left": 0.5,
