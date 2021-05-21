@@ -3,10 +3,12 @@ import re
 import subprocess
 import sys
 import time
+import warnings
 from inspect import cleandoc
 from pathlib import Path
 
 import pdfrw
+import PyPDF4
 
 import lgimapy.vis as vis
 from lgimapy.latex import latex_array, latex_matrix, latex_table, latex_figure
@@ -231,7 +233,7 @@ class LatexScript:
             table = latex_table(table_or_df, **kwargs)
             self._add_to_body(table)
 
-    def add_figure(self, fids, savefig=False, **kwargs):
+    def add_figure(self, fids, savefig=False, dpi=200, **kwargs):
         """
         Add table to document using :func:`latex_table`.
 
@@ -252,7 +254,7 @@ class LatexScript:
         fids = to_list(fids, dtype=str)
         if savefig:
             if len(fids) == 1:
-                vis.savefig(self.fig_dir / fids[0])
+                vis.savefig(self.fig_dir / fids[0], dpi=dpi)
                 vis.close()
             else:
                 msg = "Saving can only be done on individual Figures."
@@ -599,6 +601,7 @@ class Document(LatexScript):
             "titlesec",
             "transparent",
             "xcolor",
+            "wasysym",
         ]
         if packages is not None:
             all_packages = sorted(
@@ -675,6 +678,19 @@ class Document(LatexScript):
             \\definecolor{{eggplant}}{{HTML}}{{815a71}}
             \\definecolor{{mauve}}{{HTML}}{{a78197}}
             \\definecolor{{oldmauve}}{{HTML}}{{4C243B}}
+            \\definecolor{{navy}}{{HTML}}{{192E5B}}
+            \\definecolor{{lightpink}}{{HTML}}{{FBC2EF}}
+            \\definecolor{{mintgreen}}{{HTML}}{{D4F0B7}}
+            \\definecolor{{lightblue}}{{HTML}}{{72A2C0}}
+            \\definecolor{{tan}}{{HTML}}{{E8D0AC}}
+            \\definecolor{{opal}}{{HTML}}{{9BC1BC}}
+            \\definecolor{{sage}}{{HTML}}{{CACAAA}}
+            \\definecolor{{oceangreen}}{{HTML}}{{59C9A5}}
+            \\definecolor{{magicmint}}{{HTML}}{{A0EEC0}}
+            \\definecolor{{persiangreen}}{{HTML}}{{1B998B}}
+            \\definecolor{{paleblue}}{{HTML}}{{B1DDF1}}
+            \\definecolor{{champagne}}{{HTML}}{{EEE3AB}}
+            \\definecolor{{powderblue}}{{HTML}}{{A9D2D5}}
 
             %% Define function for perctile bars in tables.
             \\newlength{{\\barw}}
@@ -966,7 +982,14 @@ def pdf_fid(fid):
             return fid.with_suffix(".pdf")
 
 
-def merge_pdfs(merged_fid, fids, path=None, read_path=None, write_path=None):
+def merge_pdfs(
+    merged_fid,
+    fids,
+    path=None,
+    read_path=None,
+    write_path=None,
+    keep_bookmarks=False,
+):
     """
     Merge PDF files together and save to a new combined PDF.
 
@@ -982,6 +1005,9 @@ def merge_pdfs(merged_fid, fids, path=None, read_path=None, write_path=None):
         Path for reading individual PDFs to merge.
     new_path: Path, optional
         Path for writing merged PDF.
+    keep_bookmarks: bool, default=False
+        If ``True`` keep bookmarks when merging documents.
+        This prevents transparent images.
     """
     # Format fids to individual PDFs.
     if path is None and read_path is None:
@@ -1008,16 +1034,25 @@ def merge_pdfs(merged_fid, fids, path=None, read_path=None, write_path=None):
         merged_pdf_fid = path / pdf_fid(merged_fid)
 
     # Merge and write new PDF.
-    pdf_writer = pdfrw.PdfWriter()
-    for fid in pdf_fids:
-        pdf = pdfrw.PdfReader(fid)
-        pdf_writer.addpages(pdf.pages)
+    if keep_bookmarks:
+        pdf_writer = PyPDF4.PdfFileMerger(strict=False)
+        for fid in pdf_fids:
+            pdf_writer.append(str(fid))
+        pdf_writer.setPageMode("/UseOutlines")
+    else:
+        pdf_writer = pdfrw.PdfWriter()
+        for fid in pdf_fids:
+            pdf = pdfrw.PdfReader(fid)
+            pdf_writer.addpages(pdf.pages)
 
     while True:
         try:
             # Run twice to properly create transparent images.
-            for _ in range(2):
-                pdf_writer.write(merged_pdf_fid)
+            n_writes = 1 if keep_bookmarks else 2
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                for _ in range(n_writes):
+                    pdf_writer.write(str(merged_pdf_fid))
         except PermissionError:
             print(f"\nPermissionError:\n{merged_pdf_fid} is open.")
             msg = "  [Y] Retry\n  [N] Exit\n"
