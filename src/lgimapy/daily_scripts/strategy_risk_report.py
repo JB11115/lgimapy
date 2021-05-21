@@ -1,3 +1,6 @@
+import warnings
+
+import joblib
 import numpy as np
 import pandas as pd
 from datetime import datetime as dt
@@ -6,7 +9,7 @@ from tqdm import tqdm
 import lgimapy.vis as vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.utils import load_json, root, replace_multiple
+from lgimapy.utils import load_json, root, replace_multiple, Time
 
 # %%
 def main():
@@ -33,7 +36,6 @@ def main():
     strat_df = pd.Series(
         {k: len(v) for k, v in strat_acnt.items()}
     ).sort_values(ascending=False)
-    # strat_df.head(10)
 
     strategies = [
         "US Long Credit",
@@ -62,7 +64,7 @@ def main():
         "Barclays-Russell LDI Custom - DE",
         "INKA",
         "US Long Corporate A or better",
-        "US Corporate 7+ Years",
+        # "US Corporate 7+ Years",
     ]
     midrule_strats = [
         "US Long Corporate",
@@ -70,7 +72,7 @@ def main():
         "Liability Aware Long Duration Credit",
         "80% US A or Better LC/20% US BBB LC",
         "Barclays-Russell LDI Custom - DE",
-        "US Corporate 7+ Years",
+        # "US Corporate 7+ Years",
     ]
     strategy_midrules = [strategies.index(strat) for strat in midrule_strats]
     # %%
@@ -95,21 +97,29 @@ def main():
     )
     res = []
 
-    for strategy in tqdm(strategies):
-        res.append(
-            get_single_latex_risk_page(
-                strategy,
-                date,
-                prev_date,
-                pdf_path,
+    # for strategy in tqdm(strategies):
+    #     res.append(
+    #         get_single_latex_risk_page(
+    #             strategy,
+    #             date,
+    #             prev_date,
+    #             pdf_path,
+    #         )
+    #     )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        res = joblib.Parallel(n_jobs=6)(
+            joblib.delayed(get_single_latex_risk_page)(
+                strategy, date, prev_date, pdf_path
             )
+            for strategy in strategies
         )
 
-    df = (
-        pd.DataFrame(res, columns=["strategy", "summary", "pages"])
-        .set_index("strategy")
-        .reindex(strategies)
-    )
+        df = (
+            pd.DataFrame(res, columns=["strategy", "summary", "pages"])
+            .set_index("strategy")
+            .reindex(strategies)
+        )
     summary = pd.concat(df["summary"].values, axis=1, sort=False).T
     summary.index = [ix.replace("_", " ") for ix in summary.index]
     summary.index.rename("Strategy", inplace=True)
