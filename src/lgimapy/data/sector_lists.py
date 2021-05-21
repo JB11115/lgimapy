@@ -1,11 +1,11 @@
-def IG_sectors(with_tildes=False):
+def IG_sectors(with_tildes=False, with_chevrons=False):
     """
     List[str]:
         IG sectors used for daily snapshot.
         Overlap exists with subsectors and sectors.
     """
     sectors = [
-        "INDUSTRIALS",  # Industrials
+        ">>INDUSTRIALS",  # Industrials
         "BASICS",
         "~CHEMICALS",
         "~METALS_AND_MINING",
@@ -33,7 +33,7 @@ def IG_sectors(with_tildes=False):
         "TECHNOLOGY",
         "TRANSPORTATION",
         "~RAILROADS",
-        "FINANCIALS",  # Financials
+        ">>FINANCIALS",  # Financials
         "BANKS",
         "~SIFI_BANKS_SR",
         "~SIFI_BANKS_SUB",
@@ -44,7 +44,7 @@ def IG_sectors(with_tildes=False):
         "P&C",
         "REITS",
         "UTILITY",  # Utilities
-        "NON_CORP",  # Non-Corp
+        ">>NON_CORP",  # Non-Corp
         "OWNED_NO_GUARANTEE",
         "GOVERNMENT_GUARANTEE",
         "HOSPITALS",
@@ -54,7 +54,10 @@ def IG_sectors(with_tildes=False):
         "UNIVERSITY",
     ]
     if not with_tildes:
-        sectors = [s.strip('~') for s in sectors]
+        sectors = [s.strip("~") for s in sectors]
+    if not with_chevrons:
+        sectors = [s.strip(">") for s in sectors]
+
     return sectors
 
 
@@ -123,10 +126,11 @@ def HY_sectors(with_tildes=False, sectors_only=True):
         "UTILITY",
     ]
     if not with_tildes:
-        sectors = [s.strip('~') for s in sectors]
+        sectors = [s.strip("~") for s in sectors]
     if sectors_only:
         sectors = sectors[5:]
     return sectors
+
 
 def credit_sectors():
     """
@@ -158,6 +162,7 @@ def credit_sectors():
         "NON_CORP_OTHER",
         "OTHER_INDUSTRIAL",
     ]
+
 
 def IG_market_segments():
     """
