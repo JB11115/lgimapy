@@ -3,8 +3,8 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
-
 from tqdm import tqdm
+
 from lgimapy.data import (
     concat_index_dfs,
     Database,
@@ -13,6 +13,7 @@ from lgimapy.data import (
     Index,
 )
 from lgimapy.utils import to_datetime, to_set
+from lgimapy.data import credit_sectors, HY_sectors
 
 # %%
 
@@ -176,12 +177,23 @@ class PerformancePortfolio:
             return isin_pnl
 
 
-accounts = ["CARGLC", "SRPLC"]
-performance_ports = {
-    account: PerformancePortfolio(account, start=Database().date("YTD"))
-    for account in accounts
-}
-performance_ports
+# accounts = ["CARGLC", "SRPLC"]
+# performance_ports = {
+#     account: PerformancePortfolio(account, start=Database().date("YTD"))
+#     for account in accounts
+# }
+# performance_ports
+# db = Database()
+# pp = PerformancePortfolio("P-LD", start=db.date("yesterday"))
+# # %%
+# pp.tickers()
+#
+# pp.sectors()
+#
+#
+# pp.market_segments()
+#
+
 # %%
 
 
@@ -249,19 +261,23 @@ class PerformanceComp:
 
 
 # %%
-start = end = None
-n = None
-db = Database()
-self = PerformanceComp(performance_ports.values())
-
-# %%
-self.tickers(n=None)
-self.tickers(n=10, start=db.date("1m"))
-
-
-self.sectors(n=10)
-self.sectors(n=10, start=db.date("1m"))
-
-
-self.market_segments()
-self.market_segments(start=db.date("1m"))
+# db = Database()
+# self = PerformanceComp(performance_ports.values())
+#
+# # %%
+# self.tickers(n=20)
+# self.tickers(n=10, start=db.date("1m"))
+#
+#
+# self.sectors(sectors=credit_sectors(), n=10)
+# self.sectors(n=10, start=db.date("1m"))
+#
+#
+# self.market_segments()
+# self.market_segments(start=db.date("1m"))
+#
+#
+# # %%
+#
+# carglc = performance_ports["CARGLC"]
+# carglc.sectors(start="3/1/2021", end="3/31/2021")
