@@ -862,7 +862,7 @@ def main():
     # %%
 
     # %%
-    date = db.date("today")
+    date = db.date("yesterday")
     # date = db.date("1w")
 
     # date = pd.to_datetime("2/24/2020")
@@ -873,7 +873,7 @@ def main():
     # act_name = "NFLLA"
     # act_name = "SEIC"
     # act_name = "LIB150"
-    act_name = "CARGLC"
+    act_name = "P-LD"
     # act_name = "HITHY"
     act_df = db.load_portfolio(
         account=act_name,
@@ -883,11 +883,6 @@ def main():
         universe="stats",
     )
     acnt = Account(act_df, name=act_name, date=date)
-    list(acnt.df)
-
-    # %%
-    acnt.IG_market_segment_overweights()
-
     # %%
 
     # strat_name = "US Credit"
@@ -909,6 +904,23 @@ def main():
     strat = Strategy(strat_df, name=strat_name, date=date)
     # %%
 
-    strat.account_ticker_overweights_comp(by="DTS")
-    strat.account_IG_sector_overweights_comp(by="DTS")
-    strat.account_IG_market_segments_overweights_comp(by="DTS")
+    # %%
+    # df_list = []
+    df_list.append(acnt.subset(isin="US06051GJT76").df.T)
+    df = pd.concat(df_list, axis=1)
+    df.T.set_index("Date", drop=True).T.to_csv("BAC_new_issue_data.csv")
+    # %%
+
+    port = db.load_portfolio(account=["P-LD", "FEDLD"])
+    port
+    port.accounts
+    port.account_ticker_overweights_comp(by="DTS", n=None).to_csv(
+        "ticker_comp.csv"
+    )
+    port.account_ticker_overweights_comp(by="DTS", n=None)
+    port.account_IG_sector_overweights_comp(by="DTS", n=None).to_csv(
+        "sector_comp.csv"
+    )
+    port.account_IG_market_segments_overweights_comp(by="DTS", n=None).to_csv(
+        "market_segment_comp.csv"
+    )
