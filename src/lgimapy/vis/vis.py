@@ -369,6 +369,8 @@ def plot_double_y_axis_timeseries(
     ytickfmt_right=None,
     ylabel_left=None,
     ylabel_right=None,
+    color_left=None,
+    color_right=None,
     title=None,
     legend=False,
     plot_kws=None,
@@ -446,7 +448,7 @@ def plot_double_y_axis_timeseries(
 
     # Update kwargs and plot.
     kwargs_left = {
-        "color": "steelblue",
+        "color": "navy" if color_left is None else color_left,
         "alpha": 0.9,
         "lw": 1.5,
         "label": s_left.name,
@@ -455,7 +457,7 @@ def plot_double_y_axis_timeseries(
     if plot_kws_left is not None:
         kwargs_left.update(**plot_kws_left)
     kwargs_right = {
-        "color": "firebrick",
+        "color": "darkorchid" if color_right is None else color_right,
         "alpha": 0.9,
         "lw": 1.5,
         "label": s_right.name,
@@ -476,10 +478,12 @@ def plot_double_y_axis_timeseries(
         ax_right.set_title(title, fontweight="bold")
     if xlabel is not None:
         ax_right.set_xlabel(xlabel)
-    if ylabel_left is not None:
-        ax_left.set_ylabel(ylabel_left, color=kwargs_left["color"])
-    if ylabel_right is not None:
-        ax_right.set_ylabel(ylabel_right, color=kwargs_right["color"])
+    if ylabel_left is None:
+        ylabel_left = s_left.name
+    ax_left.set_ylabel(ylabel_left, color=kwargs_left["color"])
+    if ylabel_right is None:
+        ylabel_right = s_right.name
+    ax_right.set_ylabel(ylabel_right, color=kwargs_right["color"])
     if color_yticks:
         ax_left.tick_params(axis="y", colors=kwargs_left["color"])
         ax_right.tick_params(axis="y", colors=kwargs_right["color"])
