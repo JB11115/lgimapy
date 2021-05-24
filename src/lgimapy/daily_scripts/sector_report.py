@@ -9,7 +9,7 @@ import statsmodels.api as sm
 from tqdm import tqdm
 
 from lgimapy import vis
-from lgimapy.data import Database
+from lgimapy.data import Database, concat_index_dfs
 from lgimapy.latex import Document
 from lgimapy.models import XSRETPerformance
 from lgimapy.utils import root
@@ -53,6 +53,7 @@ def create_sector_report():
     sectors = db.IG_sectors(with_tildes=True, with_chevrons=True)
     sectors = [s for s in sectors if not s.startswith(">>")]
     sector_names = [s.strip("~") for s in sectors]
+
     # %%
     # Create document, append each page, and save.
     doc = Document(fid, path=pdf_path)
@@ -79,11 +80,15 @@ def create_sector_report():
 
 
 # %%
+sector = "CONSUMER_NON_CYCLICAL"
+
+
 def get_sector_page(sector, doc, strategy_d, xsret_model_d):
     """Create single page for each sector."""
 
     page = doc.create_page()
     sector_name = sector.strip("~")
+    print(sector_name)
     sector_kwargs = Database().index_kwargs(sector_name)
     page_name = sector_kwargs["name"].replace("&", "\&")
     if sector.startswith("~"):
@@ -187,6 +192,22 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
     df_list.append(Database().convert_numeric_ratings(ratings).rename("Rating"))
     df = pd.DataFrame(df_list).T.rename_axis(None)
     ticker_df = strategy_d["US MC"].ticker_df.copy()
+
+    missing_tickers = set(df.index) - set(ticker_df.index)
+    if len(missing_tickers) > 0:
+        ticker_df.index = list(ticker_df.index)
+        db = Database()
+        db.load_market_data()
+        ix = db.build_market_index(ticker=missing_tickers)
+        missing_ticker_df = ix.ticker_df
+        for ticker in missing_tickers:
+            try:
+                analyst_rating = missing_ticker_df.loc[ticker, "AnalystRating"]
+            except KeyError:
+                analyst_rating = np.nan
+            s = pd.Series({"AnalystRating": analyst_rating}, name=ticker)
+            ticker_df = ticker_df.append(s, ignore_index=False)
+
     df["Analyst*Score"] = ticker_df["AnalystRating"][df.index].round(0)
     mv_weighted_dts = (ticker_df["DTS"] * ticker_df["MarketValue"])[df.index]
     df["Sector*DTS"] = mv_weighted_dts / mv_weighted_dts.sum()
