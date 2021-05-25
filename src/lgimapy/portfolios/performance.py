@@ -1,3 +1,4 @@
+import argparse
 from collections import defaultdict
 from functools import lru_cache
 
@@ -12,7 +13,7 @@ from lgimapy.data import (
     IG_market_segments,
     Index,
 )
-from lgimapy.utils import to_datetime, to_set
+from lgimapy.utils import to_datetime, to_set, pprint
 from lgimapy.data import credit_sectors, HY_sectors
 
 # %%
@@ -183,15 +184,7 @@ class PerformancePortfolio:
 #     for account in accounts
 # }
 # performance_ports
-# db = Database()
-# pp = PerformancePortfolio("P-LD", start=db.date("yesterday"))
-# # %%
-# pp.tickers()
-#
-# pp.sectors()
-#
-#
-# pp.market_segments()
+
 #
 
 # %%
@@ -281,3 +274,51 @@ class PerformanceComp:
 #
 # carglc = performance_ports["CARGLC"]
 # carglc.sectors(start="3/1/2021", end="3/31/2021")
+
+
+def get_best_worst_df(s):
+    worst = s.iloc[:10]
+    best = s.iloc[-10:][::-1]
+    df = pd.DataFrame()
+    df["Best"] = best.index
+    df["PnL"] = best.values.round(2)
+    df["Worst"] = worst.index
+    df["PnL "] = worst.values.round(2)
+    df.index += 1
+    return df
+
+
+def parse_args():
+    """Collect settings from command line and set defaults."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--portfolio", help="Portfolio")
+    parser.add_argument("-s", "--start", help="Start Date")
+    parser.set_defaults(portfolio="P-LD", start="yesterday")
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+    db = Database()
+    pp = PerformancePortfolio(args.portfolio, start=db.date(args.start))
+
+    print("\nTickers")
+    pprint(get_best_worst_df(pp.tickers()))
+
+    print("\n\nSectors")
+    pprint(get_best_worst_df(pp.sectors()))
+
+    print("\n\nMarket Segments")
+    pprint(get_best_worst_df(pp.market_segments()))
+
+
+# # %%
+# class temp:
+#     start = "yesterday"
+#     portfolio = "P-LD"
+#
+#
+# args = temp()
+
+if __name__ == "__main__":
+    main()
