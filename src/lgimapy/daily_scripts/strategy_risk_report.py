@@ -431,7 +431,7 @@ def get_single_latex_risk_page(
 
     # Create summary series for cover page.
     tsy_weights = curr_strat.tsy_weights()
-    summary = pd.Series(name=strategy)
+    summary = pd.Series(name=strategy, dtype="float64")
     summary[f"DTS (%)*{date_fmt}"] = curr_strat.dts()
     summary[f"$\\Delta$DTS*{prev_date_fmt}"] = (
         curr_strat.dts() - prev_strat.dts()

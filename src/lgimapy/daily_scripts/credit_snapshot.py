@@ -392,6 +392,21 @@ def build_credit_snapshot(
         for sector in all_sectors
     ]
     rows = [p.get() for p in results]
+
+    # rows = []
+    # for sector in all_sectors:
+    #     print(sector)
+    #     row = get_snapshot_values(
+    #         ix_dict[sector],
+    #         dates_dict,
+    #         bm_mv,
+    #         bm_rets,
+    #         rep_account,
+    #         True,  # perform historical index corrections
+    #         config,
+    #     )
+    #     rows.appeend(row)
+
     table_df = pd.concat(rows, sort=False)
     table_df.to_csv(csv_path / f"{fid}.csv")
     table_df = pd.read_csv(csv_path / f"{fid}.csv", index_col=0)
@@ -1087,3 +1102,9 @@ if __name__ == "__main__":
     with Time():
         make_credit_snapshots(date)
         update_credit_snapshots()
+
+    # %%
+    index = "US_IG_10+"
+    date = None
+    pdf = True
+    include_portfolio_positions = True

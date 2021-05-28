@@ -88,7 +88,6 @@ def get_sector_page(sector, doc, strategy_d, xsret_model_d):
 
     page = doc.create_page()
     sector_name = sector.strip("~")
-    print(sector_name)
     sector_kwargs = Database().index_kwargs(sector_name)
     page_name = sector_kwargs["name"].replace("&", "\&")
     if sector.startswith("~"):
