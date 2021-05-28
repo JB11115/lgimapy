@@ -358,6 +358,7 @@ def strategy_scores_plot(df, ax, cmap):
 
 
 def update_strategy_scores(fid, fig_dir):
+    # %%
     vis.style(background="lightgrey")
     fig, axes = vis.subplots(
         2, 1, figsize=(4, 12), gridspec_kw={"height_ratios": [1, 3]}
@@ -416,6 +417,7 @@ def update_strategy_scores(fid, fig_dir):
         .iloc[:, -2:]
         .dropna(how="all")
     )
+
     # Drop non-credit scores.
     scores_df = scores_df[["(" not in name for name in scores_df.index]]
     avg_scores = np.mean(scores_df)
@@ -456,6 +458,7 @@ def update_strategy_scores(fid, fig_dir):
     vis.savefig(fig_dir / "strategy_scores")
     vis.close()
     vis.style()
+    # %%
 
 
 # %%
