@@ -23,7 +23,6 @@ from lgimapy.utils import nearest, mkdir, root, smooth_weight
 
 vis.style()
 warnings.simplefilter("default", RuntimeWarning)
-# %matplotlib qt
 
 # %%
 def svensson(t, B):
@@ -154,7 +153,7 @@ class TreasuryCurveBuilder:
         model="NSS",
         method="price",
         n=50,
-        n_drop=25,
+        n_drop=20,
         threshold=12,
         fit_strips=True,
         fit_bills=True,
@@ -433,7 +432,7 @@ class TreasuryCurveBuilder:
         rmse_res = np.zeros([n])
         for i, params in enumerate(init_params):
             try:
-                opt = minimize(
+                self._opt = minimize(
                     self._error_function,
                     x0=params,
                     method=self._solver,
@@ -443,15 +442,15 @@ class TreasuryCurveBuilder:
                     callback=printx if self._verbose >= 3 else exit_opt,
                 )
             except RuntimeError:
-                opt = namedtuple("opt_res", ["status"])
-                opt.status = 1
+                self._opt = namedtuple("opt_res", ["status"])
+                self._opt.status = 1
 
-            if opt.status != 0:
+            if self._opt.status != 0:
                 rmse_res[i] = 1e9  # arbitrary high error value
             else:
                 # Succesful optimization.
-                beta_res[i, :] = opt.x
-                rmse_res[i] = opt.fun
+                beta_res[i, :] = self._opt.x
+                rmse_res[i] = self._opt.fun
             if self._verbose >= 2:
                 print(f"      Iteration {i+1} | RMSE: {rmse_res[i]:.4f}")
         warnings.simplefilter(action="default", category=RuntimeWarning)
@@ -832,15 +831,22 @@ def update_treasury_curve_dates(dates=None, verbose=True):
     for date in db.trade_dates(start=db.date("MARKET_START")):
         if date in scraped_dates and i == 0:
             continue
+        # else:
+        # break
         db.load_market_data(date=date, local=False)
         treasury_ix = db.build_market_index(
             drop_treasuries=False, sector="TREASURIES"
         )
         tcb = TreasuryCurveBuilder(treasury_ix)
-        tcb.fit(verbose=int(verbose), threshold=12)
-        tcb.plot()
-
+        tcb.fit(
+            verbose=int(verbose),
+            threshold=12,
+            n=20,
+            n_drop=15,
+            solver="Nelder-Mead",
+        )
         tcb.save()
+
         del tcb
         gc.collect()
 
