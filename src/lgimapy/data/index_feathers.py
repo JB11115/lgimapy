@@ -2,7 +2,6 @@ from dateutil.relativedelta import relativedelta
 
 import numpy as np
 import pandas as pd
-from pyarrow import ArrowIOError
 from tqdm import tqdm
 
 from lgimapy.data import Database, groupby
