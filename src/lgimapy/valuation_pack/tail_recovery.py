@@ -121,7 +121,7 @@ def plot_just_tail(df_tail, curr_dt, prev_dt, path):
         spread_chg = row["spread_chg"]
         neg = spread_chg < 0
         ax.annotate(
-            s=f"{ticker}  " if neg else f"  {ticker}",
+            text=f"{ticker}  " if neg else f"  {ticker}",
             xy=(row["x"], spread_chg),
             rotation=90,
             va="top" if neg else "bottom",
