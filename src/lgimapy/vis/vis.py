@@ -1432,7 +1432,7 @@ def ebitda_by_sector():
     df = pd.read_clipboard(
         names=["sector", "change_mn", "change", "level"], sep="\s{2,}"
     )
-    df["sector"] = df["sector"].str.replace(" e", "e")
+    df["sector"] = df["sector"].str.replace(" e", "e", regex=True)
     df["change"] = [float(val.replace("%", "")) for val in df["change"]]
 
     pal = sns.set_palette("coolwarm")
