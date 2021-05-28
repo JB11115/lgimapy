@@ -372,7 +372,7 @@ def get_decile_table(df, subset):
         if col in float_cols:
             bins = np.round(bins, 2)
         else:
-            bins = np.round(bins).astype("Int64")
+            bins = np.rint(bins)
         percentile_labels = [
             "0-9",
             "10-19",
