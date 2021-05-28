@@ -368,7 +368,7 @@ class Index(BondBasket):
     @lockutils.synchronized(
         "synthetic_difference_history",
         external=True,
-        lock_path=root("data/synthetic_difference/file_maps"),
+        lock_path=root("data/US/synthetic_difference/file_maps"),
     )
     def _synthetic_difference_saved_history(self, col):
         """
