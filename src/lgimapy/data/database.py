@@ -821,7 +821,9 @@ class Database:
         """Clean sector names so they can be saved as a fid."""
         pattern = "|".join([" - ", "-", "/", " "])
         return (
-            sector.str.upper().str.replace("&", "AND").str.replace(pattern, "_")
+            sector.str.upper()
+            .str.replace("&", "AND", regex=True)
+            .str.replace(pattern, "_", regex=True)
         )
 
     def _preprocess_basys_data(self, df):
@@ -2724,6 +2726,7 @@ def main():
 
     # %%
     db.load_market_data()
+    ix = db.build_market_index()
 
     # %%
     self = Database(market="EUR")
@@ -2896,3 +2899,29 @@ def main():
 #         }
 #
 #     df.loc[df['SectorLevel3'] == 'Financial Servi']
+
+
+# %%
+# db = Database()
+# accounts = {"CITMC": "US_IG_bonds.csv", "P-LD": "US_Long_Credit_IG_bonds.csv"}
+# for account, fid in accounts.items():
+#     port = db.load_portfolio(account=account)
+#     cols = [
+#         "ISIN",
+#         'Ticker',
+#         "Description",
+#         "Sector",
+#         "P_Weight",
+#         "P_DTS",
+#         "BM_Weight",
+#         "BM_DTS",
+#     ]
+#     df = port.full_df[cols].dropna(subset=cols[-4:], how="all")
+#     for col in cols:
+#         if "DTS" in col:
+#             dts_pct_col = f"{col}_%"
+#             df[dts_pct_col] = df[col] / df[col].sum()
+#     df.to_csv(fid)
+#
+# %%
+# db.rating_changes()
