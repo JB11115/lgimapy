@@ -85,9 +85,3 @@ def update_top_30_tickers(date):
     indexes["A_NON_FIN_EX_TOP_30"]["ticker"] = top_30_tickers
     # Save changes.
     dump_json(indexes, fid)
-
-
-# %%
-db = Database()
-today = db.date("today")
-update_top_30_tickers(today)
