@@ -1,0 +1,53 @@
+name: lgimapy38
+channels:
+  - conda-forge
+  - oxfordcontrol
+  - defaults
+dependencies:
+  - python=3.8
+  - adjusttext
+  - awswrangler
+  - black
+  - blpapi
+  - boto3
+  - boost-cpp
+  - fastparquet
+  - fuzzywuzzy
+  - lxml
+  - ipykernel
+  - ipython
+  - jedi
+  - joblib
+  - matplotlib
+  - numba
+  - numexpr
+  - numpy
+  - oslo.concurrency
+  - pandas
+  - parquet-cpp
+  - pdfrw
+  - pip
+  - pretty_errors
+  - psutil
+  - pyarrow
+  - pyodbc
+  - pyqt
+  - pytest
+  - python-dateutil
+  - python-levenshtein
+  - pytz
+  - scikit-learn
+  - scipy
+  - seaborn
+  - setuptools
+  - snakeviz
+  - statsmodels
+  - squarify
+  - tabulate
+  - tqdm
+  - wquantiles
+  - wrapt
+  - xlrd
+  # - pip:
+  #   - pypdf4
+  #   - git+https://github.com/kyuni22/pybbg
