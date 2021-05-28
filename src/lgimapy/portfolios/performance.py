@@ -297,8 +297,15 @@ def parse_args():
     return parser.parse_args()
 
 
+class temp:
+    start = "yesterday"
+    portfolio = "P-LD"
+
+
 def main():
     args = parse_args()
+    # args = temp()
+
     db = Database()
     pp = PerformancePortfolio(args.portfolio, start=db.date(args.start))
 
@@ -312,13 +319,8 @@ def main():
     pprint(get_best_worst_df(pp.market_segments()))
 
 
-# # %%
-# class temp:
-#     start = "yesterday"
-#     portfolio = "P-LD"
-#
-#
-# args = temp()
+# %%
+
 
 if __name__ == "__main__":
     main()
