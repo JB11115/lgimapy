@@ -544,7 +544,6 @@ def main():
     curr = self.get_issuer_table(**kwargs)
 
     # %%
-    # %%
     # n_points = 500
     # window = 4
     # curve_table = (
