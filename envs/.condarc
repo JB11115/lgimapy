@@ -1,0 +1,6 @@
+offline: false
+ssl_verify: false
+
+proxy_servers:
+    http: http://USR:PSWD@proxych:8080
+    https: http://USR:PSWD@proxych:8080
