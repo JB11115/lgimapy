@@ -393,15 +393,14 @@
             "ET",
             "RTX",
             "AMGN",
-            "UNP",
             "MO",
+            "UNP",
             "GILD",
             "AVGO",
             "VOD",
             "CI",
             "BATSLN",
             "MCD",
-            "TMUS",
             "CSX",
             "FDX",
             "TWC",
@@ -409,7 +408,8 @@
             "ANTM",
             "GM",
             "VIAC",
-            "TELEFO"
+            "TELEFO",
+            "WMB"
         ],
         "special_rules": "~Ticker"
     },
@@ -440,15 +440,14 @@
             "ET",
             "RTX",
             "AMGN",
-            "UNP",
             "MO",
+            "UNP",
             "GILD",
             "AVGO",
             "VOD",
             "CI",
             "BATSLN",
             "MCD",
-            "TMUS",
             "CSX",
             "FDX",
             "TWC",
@@ -456,7 +455,8 @@
             "ANTM",
             "GM",
             "VIAC",
-            "TELEFO"
+            "TELEFO",
+            "WMB"
         ]
     },
     "BBB_NON_FIN_EX_TOP_30": {
@@ -483,7 +483,6 @@
             "CHTR",
             "AVGO",
             "ET",
-            "TMUS",
             "BATSLN",
             "CI",
             "RTX",
@@ -502,7 +501,8 @@
             "LOW",
             "MPLX",
             "AMT",
-            "VIAC"
+            "VIAC",
+            "TACHEM"
         ],
         "special_rules": "~Ticker"
     },
@@ -530,7 +530,6 @@
             "CHTR",
             "AVGO",
             "ET",
-            "TMUS",
             "BATSLN",
             "CI",
             "RTX",
@@ -549,7 +548,8 @@
             "LOW",
             "MPLX",
             "AMT",
-            "VIAC"
+            "VIAC",
+            "TACHEM"
         ]
     },
     "COVID_19_SENSATIVE": {
