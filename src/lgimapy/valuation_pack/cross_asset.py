@@ -442,6 +442,7 @@ def secuirites():
             "UST_30Y",
             "UST_10Y_RY",
             "UST_10Y_BE",
+            "UST_5Y5Y_BE",
             "UST_2Y_10Y",
             "UST_5Y_30Y",
             "BUND_10Y",
