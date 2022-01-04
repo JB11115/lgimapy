@@ -191,15 +191,14 @@ class Bond:
     @lru_cache(maxsize=None)
     def ytm(self):
         """
-        ytm: float
+        float:
             Memoized yield to maturity of the bond at market
             dirty price using true coupon values and dates.
         """
         x0 = 0.02  # initial guess
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        ytm = fsolve(self._ytm_func, x0, args=(self.DirtyPrice))[0]
-        warnings.simplefilter(action="default", category=RuntimeWarning)
-        return ytm
+        with warnings.catch_warnings():
+            warnings.simplefilter(action="ignore", category=RuntimeWarning)
+            return fsolve(self._ytm_func, x0, args=(self.DirtyPrice))[0]
 
     def theoretical_ytm(self, price):
         """
@@ -213,14 +212,13 @@ class Bond:
 
         Returns
         -------
-        ytm: float
+        float:
             Yield to maturity of the bond at specified price.
         """
         x0 = 0.02  # initial guess
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        ytm = fsolve(self._ytm_func, x0, args=(price))[0]
-        warnings.simplefilter(action="default", category=RuntimeWarning)
-        return ytm
+        with warnings.catch_warnings():
+            warnings.simplefilter(action="ignore", category=RuntimeWarning)
+            return fsolve(self._ytm_func, x0, args=(price))[0]
 
 
 class TBond(Bond):
@@ -408,14 +406,13 @@ class SyntheticTBill:
 
         Returns
         -------
-        ytm: float
+        float:
             Yield to maturity of the bond at specified price.
         """
         x0 = 0.02  # initial guess
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        ytm = fsolve(self._ytm_func, x0, args=(price))[0]
-        warnings.simplefilter(action="default", category=RuntimeWarning)
-        return ytm
+        with warnings.catch_warnings():
+            warnings.simplefilter(action="ignore", category=RuntimeWarning)
+            return fsolve(self._ytm_func, x0, args=(price))[0]
 
     def calculate_price_with_curve(self, curve):
         """
@@ -663,15 +660,14 @@ class SyntheticBond:
     @property
     def ytm(self):
         """
-        ytm: float
+        float:
             Yield to maturity of the bond at $100 price and
             semiannual coupons.
         """
         x0 = 0.02  # initial guess
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        ytm = fsolve(self._ytm_func, x0, args=(self.DirtyPrice))[0]
-        warnings.simplefilter(action="default", category=RuntimeWarning)
-        return ytm
+        with warnings.catch_warnings():
+            warnings.simplefilter(action="ignore", category=RuntimeWarning)
+            return fsolve(self._ytm_func, x0, args=(self.DirtyPrice))[0]
 
     def theoretical_ytm(self, price):
         """
@@ -685,14 +681,13 @@ class SyntheticBond:
 
         Returns
         -------
-        ytm: float
+        float:
             Yield to maturity of the bond at specified price.
         """
         x0 = 0.02  # initial guess
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        ytm = fsolve(self._ytm_func, x0, args=(price))[0]
-        warnings.simplefilter(action="default", category=RuntimeWarning)
-        return ytm
+        with warnings.catch_warnings():
+            warnings.simplefilter(action="ignore", category=RuntimeWarning)
+            return fsolve(self._ytm_func, x0, args=(price))[0]
 
     @property
     def duration(self):
