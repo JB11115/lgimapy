@@ -4,12 +4,14 @@ from lgimapy.data import Database
 from lgimapy.utils import load_json, dump_json
 
 # %%
-def update_top_30_tickers(date):
+def update_top_30_tickers(date=None):
     """
     Update the top 30 tickers used for the
     BBB Top 30 Non-Fin indexes.
     """
     db = Database()
+    if date is None:
+        date = db.date("today")
     db.load_market_data(local=True, date=date)
     fid = "index_kwargs/bloomberg"
     indexes = load_json(fid)
@@ -85,3 +87,8 @@ def update_top_30_tickers(date):
     indexes["A_NON_FIN_EX_TOP_30"]["ticker"] = top_30_tickers
     # Save changes.
     dump_json(indexes, fid)
+
+
+# %%
+if __name__ == "__main__":
+    update_top_30_tickers()
