@@ -95,10 +95,12 @@ def get_sector_table(maturity, path, db):
         "US_REGIONAL_BANKS",
         "YANKEE_BANKS",
         "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-        "LIFE",
-        "P&C",
+        "LIFE_SR",
+        "LIFE_SUB",
+        "P_AND_C",
         "REITS",
-        "UTILITY",
+        "UTILITY_OPCO",
+        "UTILITY_HOLDCO",
         "OWNED_NO_GUARANTEE",
         "GOVERNMENT_GUARANTEE",
         "HOSPITALS",
@@ -123,7 +125,7 @@ def get_sector_table(maturity, path, db):
             # Get top level sector.
             if sector == "SIFI_BANKS_SR":
                 top_level_sector = "Financials"
-            elif sector == "UTILITY":
+            elif sector == "UTILITY_OPCO":
                 top_level_sector = "Non-Corp"
 
             # Calculate volatility.
@@ -524,7 +526,7 @@ def make_forward_looking_sector_table(sector_df, name, doc):
         # Get row colors for level 3 sectors.
         sector_row_colors = {
             "ENERGY": "magicmint",
-            "COMMUNICATIONS": "opal",
+            "TMT": "opal",
             "CONSUMER_NON_CYCLICAL": "sage",
             "BANKS": "powderblue",
             "UTILITY": "magicmint",
@@ -540,10 +542,11 @@ def make_forward_looking_sector_table(sector_df, name, doc):
                     "US_REGIONAL_BANKS",
                     "YANKEE_BANKS",
                 },
-                "COMMUNICATIONS": {
+                "TMT": {
                     "WIRELINES_WIRELESS",
                     "CABLE_SATELLITE",
                     "MEDIA_ENTERTAINMENT",
+                    "TECHNOLOGY",
                 },
                 "ENERGY": {
                     "INDEPENDENT",
@@ -559,7 +562,7 @@ def make_forward_looking_sector_table(sector_df, name, doc):
                     "PHARMACEUTICALS",
                     "TOBACCO",
                 },
-                "UTILITY": {"UTILITY"},
+                "UTILITY": {"UTILITY_HOLDCO", "UTILITY_OPCO"},
                 "SOVS": {"OWNED_NO_GUARANTEE", "SOVEREIGN"},
                 "OTHER": {"HOSPITALS", "MUNIS", "UNIVERSITY"},
             }[sector]
@@ -634,7 +637,7 @@ def make_performance_tables(maturity, name, doc, db):
         # Get row colors for level 3 sectors.
         sector_row_colors = {
             "ENERGY": "magicmint",
-            "COMMUNICATIONS": "opal",
+            "TMT": "opal",
             "CONSUMER_NON_CYCLICAL": "sage",
             "BANKS": "powderblue",
             "UTILITY": "magicmint",
@@ -650,10 +653,11 @@ def make_performance_tables(maturity, name, doc, db):
                     "US_REGIONAL_BANKS",
                     "YANKEE_BANKS",
                 },
-                "COMMUNICATIONS": {
+                "TMT": {
                     "WIRELINES_WIRELESS",
                     "CABLE_SATELLITE",
                     "MEDIA_ENTERTAINMENT",
+                    "TECHNOLOGY",
                 },
                 "ENERGY": {
                     "INDEPENDENT",
@@ -669,7 +673,7 @@ def make_performance_tables(maturity, name, doc, db):
                     "PHARMACEUTICALS",
                     "TOBACCO",
                 },
-                "UTILITY": {"UTILITY"},
+                "UTILITY": {"UTILITY_HOLDCO", "UTILITY_OPCO"},
                 "SOVS": {"OWNED_NO_GUARANTEE", "SOVEREIGN"},
                 "OTHER": {"HOSPITALS", "MUNIS", "UNIVERSITY"},
             }[sector]

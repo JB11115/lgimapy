@@ -88,6 +88,7 @@ index_agg = {
         "UST 30Y",
     ],
     "US IG": ["US Market Credit"],
+    "CDX IG": ["CDX IG"],
     "US HY": ["US HY"],
     "EU HY": ["EU HY"],
     "EM Sov": ["EM Sov"],

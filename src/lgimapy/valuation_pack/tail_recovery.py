@@ -61,7 +61,7 @@ def get_tail_df():
 
     # sorted(df["Sector"].dropna().unique())
     cmap = {
-        "AEROSPACE/DEFENSE": "goldenrod",
+        "AEROSPACE_DEFENSE": "goldenrod",
         "AIRLINES": "goldenrod",
         "APARTMENT_REITS": "firebrick",
         "DIVERSIFIED_MANUFACTURING": "goldenrod",
@@ -80,7 +80,9 @@ def get_tail_df():
     df["color"] = df["Sector"].map(cmap)
     df["color"].fillna("grey", inplace=True)
 
-    return df[df["Cum MV"] > 0.8].copy(), curr_dt, prev_dt
+    bad_tickers = {"AAL", "DALSCD"}
+    tail_df = df[(df["Cum MV"] > 0.8) & ~df.index.isin(bad_tickers)].copy()
+    return tail_df, curr_dt, prev_dt
 
 
 def plot_just_tail(df_tail, curr_dt, prev_dt, path):

@@ -151,8 +151,8 @@ def calculate_market_review_tables():
     )
     df_ratios["Big / Small"] = df_ratios.eval("SP500 / RUSSELL_2000")
     df_ratios["Growth / Value"] = df_ratios.eval("SP500_GROW / SP500_VALU")
-    df_ratios["Momentum / S&P 500"] = df_ratios.eval("SP500_MOM / SP500")
-    df_ratios["High Vol / Low Vol"] = df_ratios.eval("SP500_HIGHV / SP500_LOWV")
+    # df_ratios["Momentum / S&P 500"] = df_ratios.eval("SP500_MOM / SP500")
+    # df_ratios["High Vol / Low Vol"] = df_ratios.eval("SP500_HIGHV / SP500_LOWV")
     df_ratios["Cyclical / Defensive"] = df_ratios.eval("SP500_CYC / SP500_DEF")
     df_ratios["Domestic / Global"] = df_ratios.eval("SP500_DOM / SP500_GLBL")
     df_ratios = df_ratios[

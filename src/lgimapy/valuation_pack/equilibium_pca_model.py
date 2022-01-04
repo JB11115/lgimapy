@@ -220,6 +220,7 @@ def run_pca_analysis():
 
     # reg_results = pd.DataFrame(d, index=col_names)
     table = pd.DataFrame(t, index=col_names)
+    table.to_csv("PCA_model.csv")
 
     # Flip residual signs for assets that are rich when current
     # level is greater than model level, such as equities.

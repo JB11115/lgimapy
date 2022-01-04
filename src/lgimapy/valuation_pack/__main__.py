@@ -18,7 +18,7 @@ from fallen_angel_analysis import update_fallen_angel_analysis
 # %%
 def main():
     # Duplicate template file and rename to todays date.
-    fid = f"{dt.today().strftime('%Y-%m-%d')}_Valuation_Pack"
+    fid = f"{dt.today():%Y-%m-%d}_Valuation_Pack"
     path = "reports/valuation_pack"
     directory = root(path)
     src = directory / "template.tex"
@@ -39,6 +39,8 @@ def main():
 
     doc = Document(fid, path=path, fig_dir=True, load_tex=True)
     doc.save()
+    doc.save_as("Valuation_Pack", path="reports/current_reports")
+    os.remove(dst)
 
 
 if __name__ == "__main__":

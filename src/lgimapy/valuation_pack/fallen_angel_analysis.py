@@ -4,9 +4,10 @@ import numpy as np
 import pandas as pd
 
 from lgimapy import vis
-from lgimapy.data import Database, mode
+from lgimapy.data import Database
 from lgimapy.latex import Document
 from lgimapy.models import simulate_rating_migrations
+from lgimapy.stats import mode
 from lgimapy.utils import root, to_list
 
 # %%
@@ -29,7 +30,7 @@ def sectors():
         "TRANSPORTATION",
         "BANKS",
         "OTHER_FIN",
-        "INSURANCE",
+        "INSURANCE_EX_HEALTHCARE",
         "REITS",
         "UTILITY",
         "SOVEREIGN",
@@ -324,6 +325,11 @@ def plot_fallen_angels_and_rising_stars(df, path):
         color="k",
         label="Net",
     )
+    # Pad edges.
+    vmin = df["Net"].min()
+    vmin = min(vmin * 1.2, vmin - 5)
+    vmax = df["Net"].max()
+    vmax = max(vmax * 1.2, vmax + 5)
     ax.grid(False, axis="x")
     ax.set_title("Last 12m Fallen Angels / Rising Stars\n\n", fontweight="bold")
     ax.legend(

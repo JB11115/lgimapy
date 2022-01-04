@@ -62,7 +62,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         1,
         figsize=(9, 8.5),
         sharex=True,
-        gridspec_kw={"height_ratios": [7, 1]},
+        gridspec_kw={"height_ratios": [6, 1]},
     )
     # Plot 5 year stats.
     oas = db.load_bbg_data("US_IG", "OAS", start=db.date("5y"))
@@ -122,9 +122,12 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
     axes[0].legend(loc="upper right", fancybox=True, title=title, shadow=True)
     axes[0].set_title("US Market Credit", fontweight="bold")
-
     # Plot short term scores below LC index.
     axes[1].plot(df["Short Term"], c="k", ls="--", lw=2)
+    yticks = sorted(df["Short Term"].unique().astype(int))
+    ytick_labels = [f"{v:.0f}" if v == 0 else f"{v:+.0f}" for v in yticks]
+    axes[1].set_yticks(yticks)
+    axes[1].set_yticklabels(ytick_labels)
     axes[1].set_ylabel("Short Term\nStrategy Score", fontsize=12)
     cmap = sns.color_palette("coolwarm_r", 7).as_hex()
     plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
@@ -204,6 +207,10 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     # Plot short term scores below LC index.
     axes[1].plot(df["Short Term"], c="k", ls="--", lw=2)
     axes[1].set_ylabel("Short Term\nStrategy Score", fontsize=12)
+    yticks = sorted(df["Short Term"].unique().astype(int))
+    ytick_labels = [f"{v:.0f}" if v == 0 else f"{v:+.0f}" for v in yticks]
+    axes[1].set_yticks(yticks)
+    axes[1].set_yticklabels(ytick_labels)
     cmap = sns.color_palette("coolwarm_r", 7).as_hex()
     plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
     fill = [np.min(plot_scores), np.max(plot_scores)]
@@ -232,8 +239,11 @@ def update_hy_ig_ratios(fig_dir, ix_d):
     df = pd.concat([bbg_df, oas], axis=1, sort=True).dropna(how="any")
     df["HY/IG Cash"] = df["US_HY"] / df["US_IG"]
     df["HY/IG CDX"] = df["CDX_HY"] / df["CDX_IG"]
-    s_left = df["HY/IG Cash"]
-    s_right = df["HY/IG CDX"]
+
+    right_last = 100 * df["HY/IG CDX"].rank(pct=True).iloc[-1]
+    right_label = f"CDX: {right_last:.0f}{get_ordinal(right_last)} %tile"
+    left_last = 100 * df["HY/IG Cash"].rank(pct=True).iloc[-1]
+    left_label = f"Cash: {left_last:.0f}{get_ordinal(left_last)} %tile"
 
     # Plot
     fig, ax_left = vis.subplots(figsize=(9, 6))
@@ -241,11 +251,16 @@ def update_hy_ig_ratios(fig_dir, ix_d):
     ax_right.grid(False)
 
     ax_left.plot(df["HY/IG Cash"], c="navy", alpha=0.9, lw=2)
+    ax_right.plot(
+        df["HY/IG Cash"].iloc[:2], c="navy", alpha=0.9, lw=2, label=left_label
+    )
     ax_left.set_ylabel("Cash", color="navy")
     ax_left.tick_params(axis="y", colors="navy")
     ax_left.axhline(np.median(df["HY/IG Cash"]), ls=":", lw=1.5, color="navy")
 
-    ax_right.plot(df["HY/IG CDX"], c="goldenrod", alpha=0.9, lw=2)
+    ax_right.plot(
+        df["HY/IG CDX"], c="goldenrod", alpha=0.9, lw=2, label=right_label
+    )
     ax_right.axhline(
         np.median(df["HY/IG CDX"]),
         ls=":",
@@ -264,8 +279,7 @@ def update_hy_ig_ratios(fig_dir, ix_d):
     vis.set_percentile_limits(
         [df["HY/IG Cash"], df["HY/IG CDX"]], [ax_left, ax_right]
     )
-    ax_right.legend()
-    plt.tight_layout()
+    ax_right.legend(loc="upper left", shadow=True, fancybox=True)
     vis.savefig(fig_dir / "HY_IG_ratio_cash_CDX")
     vis.close()
 
@@ -291,6 +305,33 @@ def update_bbb_a_ratios(fig_dir, ix_d):
             rating=("BBB+", "BBB-"), maturity=(8.25, 11)
         ),
     }
+    # ixs = {
+    #     "30_A": ix_nonfin.subset(
+    #         **db.index_kwargs(
+    #             "A_NON_FIN_TOP_30_10+", rating=("A+", "A-"), maturity=(25, 32)
+    #         )
+    #     ),
+    #     "30_BBB": ix_nonfin.subset(
+    #         **db.index_kwargs(
+    #             "BBB_NON_FIN_TOP_30_10+",
+    #             rating=("BBB+", "BBB-"),
+    #             maturity=(25, 32),
+    #         )
+    #     ),
+    #     "10_A": ix_nonfin.subset(
+    #         **db.index_kwargs(
+    #             "A_NON_FIN_TOP_30", rating=("A+", "A-"), maturity=(8.25, 11)
+    #         )
+    #     ),
+    #     "10_BBB": ix_nonfin.subset(
+    #         **db.index_kwargs(
+    #             "BBB_NON_FIN_TOP_30",
+    #             rating=("BBB+", "BBB-"),
+    #             maturity=(8.25, 11),
+    #         )
+    #     ),
+    # }
+    # %%
     df = pd.concat(
         [ix.market_value_median("OAS").rename(key) for key, ix in ixs.items()],
         axis=1,
@@ -304,12 +345,22 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     ax_right = ax_left.twinx()
     ax_right.grid(False)
 
+    right_last = 100 * df["30 yr"].rank(pct=True).iloc[-1]
+    right_label = f"30 yr: {right_last:.0f}{get_ordinal(right_last)} %tile"
+    left_last = 100 * df["10 yr"].rank(pct=True).iloc[-1]
+    left_label = f"10 yr: {left_last:.0f}{get_ordinal(left_last)} %tile"
+
     ax_left.plot(df["10 yr"], c="navy", alpha=0.9, lw=2)
+    ax_right.plot(
+        df["30 yr"].iloc[:2], c="navy", alpha=0.9, lw=2, label=left_label
+    )
     ax_left.set_ylabel("10 yr", color="navy")
     ax_left.tick_params(axis="y", colors="navy")
     ax_left.axhline(np.median(df["10 yr"]), ls=":", lw=1.5, color="navy")
 
-    ax_right.plot(df["30 yr"], c="goldenrod", alpha=0.9, lw=2)
+    ax_right.plot(
+        df["30 yr"], c="goldenrod", alpha=0.9, lw=2, label=right_label
+    )
     ax_right.axhline(
         np.median(df["30 yr"]),
         ls=":",
@@ -326,11 +377,11 @@ def update_bbb_a_ratios(fig_dir, ix_d):
     ax_right.tick_params(axis="y", colors="goldenrod")
     vis.format_xaxis(ax_right, df["30 yr"], "auto")
     vis.set_percentile_limits([df["10 yr"], df["30 yr"]], [ax_left, ax_right])
-    ax_right.legend()
-    plt.tight_layout()
+    ax_right.legend(loc="upper left", shadow=True, fancybox=True)
     vis.savefig(fig_dir / "BBB_A_nonfin_ratio")
     vis.close()
     save_to_global_pack("BBB_A_nonfin_ratio")
+    # %%
 
 
 # %%
