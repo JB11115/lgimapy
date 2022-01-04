@@ -10,17 +10,24 @@ from inspect import cleandoc, getfullargspec
 from itertools import chain
 from pathlib import Path
 
+import boto3
 import datetime as dt
+from fuzzywuzzy import process
 import numpy as np
 import pandas as pd
 import pyodbc
 
-from lgimapy.bloomberg import bdp, get_bloomberg_subsector
+from lgimapy.bloomberg import (
+    bdp,
+    get_bloomberg_subsector,
+    update_issuer_business_strucure_json,
+)
 from lgimapy.data import (
     clean_dtypes,
     concat_index_dfs,
     convert_sectors_to_fin_flags,
     credit_sectors,
+    groupby,
     HY_sectors,
     IG_sectors,
     IG_market_segments,
@@ -42,6 +49,7 @@ from lgimapy.utils import (
     to_list,
     to_set,
 )
+
 
 # %%
 
@@ -94,7 +102,7 @@ class Database:
         self._bbg_dfs = {}
         self._baml_dfs = {}
         n = 1 if server.upper() == "LIVE" else 2
-        self._conn = pyodbc.connect(
+        self._datamart_conn = pyodbc.connect(
             "Driver={SQL Server};"
             # f"SERVER=XWNUSSQL0{n}\\{server.upper()};"
             f"SERVER=l00-lgimadatamart-sql,14333;"
@@ -104,12 +112,36 @@ class Database:
             "PWD=$Jrb1236463716;"
         )
 
+    def local(self, fid):
+        return root(f"data/{fid}")
+
+    @property
+    @lru_cache(maxsize=None)
+    def _passwords(self):
+        fid = "P:/pswd.json"
+        return load_json(full_fid=fid)
+
+    @property
+    @lru_cache(maxsize=None)
+    def _3PDH_sess(self):
+        """Dict[str: int]: Memoized rating map."""
+        import awswrangler as wr
+        import boto3
+
+        return boto3.Session(
+            aws_access_key_id=self._passwords["AWS"]["prod_access_key"],
+            aws_secret_access_key=self._passwords["AWS"][
+                "prod_secret_access_key"
+            ],
+            region_name="us-east-2",
+        )
+
     def make_thread_safe(self):
         """
         Remobe pyodb.Connection object so :class:`Database` can
         be pickled and used in multiprocessing/multithreading.
         """
-        del self._conn
+        del self._datamart_conn
 
     @property
     @lru_cache(maxsize=None)
@@ -119,6 +151,12 @@ class Database:
         for i in range(23):
             ratings_map[i] = i
         return ratings_map
+
+    @property
+    @lru_cache(maxsize=None)
+    def all_dates(self):
+        """List[datetime]: Memoized list of all dates in DataBase."""
+        return list(self._trade_date_df.index)
 
     @property
     @lru_cache(maxsize=None)
@@ -211,6 +249,42 @@ class Database:
 
     @property
     @lru_cache(maxsize=None)
+    def _ticker_changes(self):
+        """Dict[str: str]: Memoized map of hisorical ticker changes."""
+        return load_json("ticker_changes")
+
+    @property
+    @lru_cache(maxsize=None)
+    def _utility_business_structure(self):
+        """Dict[str: str]: Memoized map of US states to state codes."""
+        return load_json("utility_business_structure")
+
+    @property
+    @lru_cache(maxsize=None)
+    def _BAMLSector_ticker_map(self):
+        """Dict[str: str]: Memoized map of hisorical ticker changes."""
+        return load_json("HY/ticker_BAMLSector_map")
+
+    @property
+    @lru_cache(maxsize=None)
+    def _BAMLTopLevelSector_ticker_map(self):
+        """Dict[str: str]: Memoized map of hisorical ticker changes."""
+        return load_json("HY/ticker_BAMLTopLevelSector_map")
+
+    @property
+    @lru_cache(maxsize=None)
+    def state_codes(self):
+        """Dict[str: str]: Memoized map of US states to state codes."""
+        return load_json("state_codes")
+
+    @property
+    @lru_cache(maxsize=None)
+    def state_populations(self):
+        """Dict[str: int]: Memoized map of US states to their populations."""
+        return load_json("state_populations")
+
+    @property
+    @lru_cache(maxsize=None)
     def long_corp_sectors(self):
         """List[str]: list of sectors in Long Corp Benchmark."""
         fid = root("data/long_corp_sectors.parquet")
@@ -228,6 +302,10 @@ class Database:
 
     def IG_market_segments(self, *args, **kwargs):
         return IG_market_segments(*args, **kwargs)
+
+    def fid_safe_str(self, s):
+        repl = {" ": "_", "/": "_", "%": "pct"}
+        return replace_multiple(s, repl)
 
     def rating_changes(
         self,
@@ -348,6 +426,13 @@ class Database:
         d.update(**kwargs)
         return d
 
+    def _subset_date_series(self, dates, start=None, end=None):
+        if start is not None:
+            dates = dates[dates.index >= to_datetime(start)]
+        if end is not None:
+            dates = dates[dates.index <= to_datetime(end)]
+        return dates
+
     def date(
         self,
         date_delta,
@@ -355,6 +440,8 @@ class Database:
         trade_dates=None,
         market=None,
         fcast=False,
+        start=None,
+        end=None,
         **kwargs,
     ):
         """
@@ -403,11 +490,21 @@ class Database:
                 "GBP": pd.to_datetime("12/1/2014"),
             }[market]
         elif date_delta == "MONTH_STARTS":
-            dates = pd.Series(trade_dates, trade_dates)
-            return list(dates.groupby(pd.Grouper(freq="M")).first())[1:]
+            all_dates = pd.Series(trade_dates, trade_dates)
+            dates = all_dates.groupby(pd.Grouper(freq="M")).first().iloc[1:]
+            return list(self._subset_date_series(dates, start, end))
         elif date_delta == "MONTH_ENDS":
-            dates = pd.Series(trade_dates, trade_dates)
-            return list(dates.groupby(pd.Grouper(freq="M")).last())[1:]
+            all_dates = pd.Series(trade_dates, trade_dates)
+            dates = all_dates.groupby(pd.Grouper(freq="M")).last().iloc[1:]
+            return list(self._subset_date_series(dates, start, end))
+        elif date_delta == "YEAR_STARTS":
+            all_dates = pd.Series(trade_dates, trade_dates)
+            dates = dates.groupby(pd.Grouper(freq="Y")).first().iloc[1:]
+            return list(self._subset_date_series(dates, start, end))
+        elif date_delta == "YEAR_ENDS":
+            all_dates = pd.Series(trade_dates, trade_dates)
+            dates = all_dates.groupby(pd.Grouper(freq="Y")).last().iloc[1:]
+            return list(self._subset_date_series(dates, start, end))
 
         # Use today as reference date if none is provided,
         # otherwise find closes trading date to reference date.
@@ -419,7 +516,7 @@ class Database:
         last_trade = partial(bisect_left, trade_dates)
         if date_delta == "TODAY":
             return today
-        elif date_delta == "YESTERDAY" or date_delta == "DAILY":
+        elif date_delta in {"YESTERDAY", "DAILY", "1D", "1DAY", "1DAYS"}:
             return self.nearest_date(
                 today, market=market, inclusive=False, after=False
             )
@@ -481,7 +578,7 @@ class Database:
             FROM dbo.AccountValue AV
             JOIN dbo.DimAccount DA ON AV.AccountKey = DA.AccountKey
             """
-        df = pd.read_sql(query, self._conn)
+        df = pd.read_sql(query, self._datamart_conn)
         df["DateKey"] = pd.to_datetime(df["DateKey"], format="%Y%m%d")
         return (
             pd.pivot_table(
@@ -513,14 +610,31 @@ class Database:
 
     @property
     @lru_cache(maxsize=None)
-    def DM_countries(self):
-        """Set[str]: Developed market country codes."""
+    def DM_countries(self, region=None):
+        """Set[str]: DM Country codes."""
         fid = root("data/DM_countries.parquet")
         return set(pd.read_parquet(fid).squeeze())
 
+    @property
+    @lru_cache(maxsize=None)
+    def _country_codes(self, region=None):
+        """Dict[str: str]: Country codes file."""
+        return load_json("country_codes")
+
+    def country_codes(self, region=None):
+        """Dict[str: str]: Developed market country codes."""
+        codes = self._country_codes
+        if region is None:
+            d = {}
+            for region_d in codes.values():
+                d = {**d, **region_d}
+            return d
+        else:
+            return codes[region.upper()]
+
     @lru_cache(maxsize=None)
     def _hy_index_flags(self, index):
-        """pd.DaataFrame: Index flag boolean for ISIN vs date."""
+        """pd.DataFrame: Index flag boolean for ISIN vs date."""
         fid = root(f"data/index_members/{index}.parquet")
         return pd.read_parquet(fid)
 
@@ -531,7 +645,7 @@ class Database:
 
         return list(
             pd.to_datetime(
-                pd.read_sql(dates_sql, self._conn).values.ravel(),
+                pd.read_sql(dates_sql, self._datamart_conn).values.ravel(),
                 format="%Y%m%d",
             )
         )
@@ -721,6 +835,7 @@ class Database:
             "MLFI_Classification4": "BAMLSector",
             "MLFI_ModDurtoMat": "ModDurtoMat",
             "MLFI_ModDurtoWorst": "ModDurtoWorst",
+            "YieldAndSpreadWorkoutDate": "WorkoutDate",
         }
         df.rename(columns=col_map, inplace=True)
 
@@ -729,19 +844,31 @@ class Database:
         df["Eligibility144AFlag"].fillna(-1, inplace=True)
 
         # Convert str time to datetime.
-        for date_col in ["Date", "MaturityDate", "IssueDate", "NextCallDate"]:
-            df[date_col] = pd.to_datetime(
-                df[date_col], format="%Y-%m-%d", errors="coerce"
-            )
+        date_cols = [
+            "Date",
+            "MaturityDate",
+            "IssueDate",
+            "NextCallDate",
+            "WorkoutDate",
+        ]
+        for date_col in date_cols:
+            if date_col in df.columns:
+                df[date_col] = pd.to_datetime(
+                    df[date_col], format="%Y-%m-%d", errors="coerce"
+                )
 
         # Capitalize market of issue, sector, and issuer.
         for col in ["MarketOfIssue", "Sector", "Issuer"]:
             df[col] = df[col].str.upper()
 
+        # Clean tickers.
+        df["Ticker"] = self._clean_tickers(df["Ticker"])
+
         # Map sectors to standard values.
-        df["Sector"] = df["Sector"].str.replace(" ", "_")
+        # For BAML columns, populate sectors based on ticker maps.
+        df["Sector"] = self._clean_sectors(df["Sector"])
         for col in ["BAMLSector", "BAMLTopLevelSector"]:
-            df[col] = self._clean_sector(df[col])
+            df[col] = self._populate_BAML_sectors(df["Ticker"], df[col])
 
         sector_map = {"OTHER_FINANCIAL": "FINANCIAL_OTHER"}
         for old_val, sector in sector_map.items():
@@ -815,16 +942,92 @@ class Database:
 
         # Add bloomberg subsector.
         df["Subsector"] = get_bloomberg_subsector(df["CUSIP"].values)
+
+        # Add Opco/Holdco business structure for utilities.
+        # utility_sectors = {"NATURAL_GAS", "ELECTRIC", "UTILITY_OTHER"}
+        # utility_loc = df["Sector"].isin(utility_sectors)
+        # update_issuer_business_strucure_json(df[utility_loc], db=self)
+        # df.loc[utility_loc, "Subsector"] = df.loc[utility_loc, "Issuer"].map(
+        #     self._business_structure_map
+        # )
+
         return clean_dtypes(df)
 
-    def _clean_sector(self, sector):
-        """Clean sector names so they can be saved as a fid."""
-        pattern = "|".join([" - ", "-", "/", " "])
-        return (
+    def _clean_sectors(self, sector):
+        """
+        Clean sector names so they can be saved as a fid.
+
+        Parameters
+        ----------
+        sector: pd.Series
+            Raw sector names.
+        Returns
+        -------
+        pd.Series:
+            Cleaned sector names.
+        """
+        pattern = "|".join([" - ", "-", " / ", "/", " "])
+        s = (
             sector.str.upper()
+            .str.replace("P&C", "P_AND_C", regex=True)
             .str.replace("&", "AND", regex=True)
+            .str.replace(",", "", regex=True)
             .str.replace(pattern, "_", regex=True)
         )
+        sector_map = {
+            "GOVERNMENT_GUARANTEED": "GOVERNMENT_GUARANTEE",
+            "GOVERNMENT_OWNED_NO_GUARANTEE": "OWNED_NO_GUARANTEE",
+            "CONSUMER_CYC_SERVICES": "CONSUMER_CYCLICAL_SERVICES",
+            "CONSUMER_CYC_SERVICES": "CONSUMER_CYCLICAL_SERVICES",
+            "OTHER_INDUSTRIAL": "INDUSTRIAL_OTHER",
+        }
+        loc = s[s.isin(sector_map.keys())].index
+        s.loc[loc] = s.loc[loc].map(sector_map)
+        return s
+
+    def _clean_tickers(self, tickers):
+        """
+        Clean tickers correcting historical tickers
+        when they change but maintain the same credit
+        risk.
+
+        Parameters
+        ----------
+        tickers: pd.Series
+            Series of tickers.
+
+        Returns
+        -------
+        clean_tickers: pd.Series:
+            Cleaned series of tickers.
+        """
+        clean_tickers = tickers.copy()
+        loc = clean_tickers.isin(self._ticker_changes)
+        clean_tickers.loc[loc] = clean_tickers[loc].map(self._ticker_changes)
+        return clean_tickers
+
+    def _populate_BAML_sectors(self, tickers, sectors):
+        """
+        Use stored ticker: sector maps to populate missing
+        BAML sectors and overwrite erronious ones.
+
+        Parameters
+        ----------
+        tickers: pd.Series
+            Series of tickers.
+        sectors: pd.Series
+            Series of BAML sectors.
+
+        Returns
+        -------
+        populated_sectors: pd.Series:
+            Populated series of BAML sectors.
+        """
+        map = getattr(self, f"_{sectors.name}_ticker_map")
+        populated_sectors = sectors.copy()
+        loc = tickers.isin(map)
+        populated_sectors.loc[loc] = tickers[loc].map(map)
+        return populated_sectors
 
     def _preprocess_basys_data(self, df):
         # Fill missing sectors and subsectors.
@@ -835,7 +1038,6 @@ class Database:
             .fillna(method="ffill", axis=1)
             .copy()
         )
-        df.loc[df["Level 1"] == "Sovereigns", "Level 5"] = "Sovereigns"
 
         # Fill missing collateral types.
         collat_cols = [f"Seniority Level {i+1}" for i in range(3)]
@@ -854,9 +1056,13 @@ class Database:
             "CUSIP": "CUSIP",
             "Coupon": "CouponRate",
             "Final Maturity": "MaturityDate",
-            "Workout date": "WorstDate",
-            "Level 5": "MLSector",
-            "Level 6": "MLSubsector",
+            "Workout date": "WorkoutDate",
+            "Level 1": "SectorLevel1",
+            "Level 2": "SectorLevel2",
+            "Level 3": "SectorLevel3",
+            "Level 4": "SectorLevel4",
+            "Level 5": "SectorLevel5",
+            "Level 6": "SectorLevel6",
             "Markit iBoxx Rating": "CompositeRating",
             "Seniority Level 2": "CollateralType",
             "Notional Amount": "AmountOutstanding",
@@ -878,7 +1084,7 @@ class Database:
         df = df.rename(columns=col_map)[col_map.values()].copy()
 
         # Convert str time to datetime.
-        for date_col in ["Date", "MaturityDate", "WorstDate", "NextCallDate"]:
+        for date_col in ["Date", "MaturityDate", "WorkoutDate", "NextCallDate"]:
             dates = pd.to_datetime(
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
@@ -900,19 +1106,17 @@ class Database:
             "1/1/2220"
         )
 
-        # Define maturites yearrs.
+        # Define maturites year.
         day = "timedelta64[D]"
         df["MaturityYears"] = (df["MaturityDate"] - df["Date"]).astype(
             day
         ) / 365
 
-        # Make sector column NaN. This column is required to be present.
-        df["Sector"] = np.nan
-
-        # Capitalize sectors, and issuers.
-        for col in ["MLSubsector", "MLSector", "Issuer"]:
-            df[col] = df[col].str.upper()
-        df["MLSector"] = df["MLSector"].str.replace(" ", "_")
+        # Issuers and clean raw sector columns.
+        df["Issuer"] = df["Issuer"].str.upper()
+        sector_cols = [f"SectorLevel{i}" for i in range(1, 7)]
+        for col in sector_cols:
+            df[col] = self._clean_sectors(df[col])
 
         # Put amount outstanding and market value into $M.
         for col in ["AmountOutstanding", "MarketValue"]:
@@ -921,14 +1125,16 @@ class Database:
         # Get numeric ratings from composit ratings.
         df["NumericRating"] = self._get_numeric_ratings(df, ["CompositeRating"])
 
-        # Add financial flag column.
-        df["FinancialFlag"] = convert_sectors_to_fin_flags(df["MLSector"])
-
         # Calculate DTS. Approximate OAD ~ OASD.
         df["DTS"] = df["OAD"] * df["OAS"]
         df["DTS_Libor"] = df["OAD"] * df["ZSpread"]
 
         df["CUSIP"].fillna(df["ISIN"], inplace=True)
+        df["Sector"] = df["SectorLevel5"].values
+        df.loc[df["SectorLevel1"] == "SOVEREIGNS", "Sector"] = "SOVEREIGNS"
+        df["Subsector"] = np.nan
+        # Add financial flag column.
+        df["FinancialFlag"] = convert_sectors_to_fin_flags(df["Sector"])
         return clean_dtypes(df)
 
     def _get_numeric_ratings(self, df, cols):
@@ -1058,6 +1264,18 @@ class Database:
             "NA",
         }
         disallowed_tickers = {"TVA", "FNMA", "FHLMC", "FN", "FR"}
+        gcc_tickers = {
+            "KSA",
+            "QATAR",
+            "ARAMCO",
+            "QPETRO",
+            "BHRAIN",
+            "DUGB",
+            "ADGB",
+            "QUDIB",
+            "OMAN",
+            "KUWIB",
+        }
         disallowed_collateral_types = {
             "CERT OF DEPOSIT",
             "GOVT LIQUID GTD",
@@ -1119,6 +1337,7 @@ class Database:
             "FinancialFlag",
             "Eligibility144AFlag",
             "AnyIndexFlag",
+            "MLHYFlag",
             "USAggReturnsFlag",
             "USAggStatisticsFlag",
         }
@@ -1128,6 +1347,7 @@ class Database:
             if "flag" in col.lower() and col not in ignored_flag_cols
         ]
         df[index_flag_cols] = df[index_flag_cols].replace(-1, 0)
+        df[index_flag_cols]
         is_index_bond = df[index_flag_cols].sum(axis=1).astype(bool)
 
         # Find columns to keep by ignoring unnecessary columns.
@@ -1158,7 +1378,10 @@ class Database:
                 & (~df["Sector"].isin(disallowed_sectors))
                 & (~df["Ticker"].isin(disallowed_tickers))
                 & (~df["CollateralType"].isin(disallowed_collateral_types))
-                & (df["CountryOfRisk"].isin(self.DM_countries))
+                & (
+                    df["CountryOfRisk"].isin(self.DM_countries)
+                    | df["Ticker"].isin(gcc_tickers)
+                )
                 & (df["Currency"] == "USD")
                 & (df["NumericRating"] <= 22)
             )
@@ -1179,8 +1402,33 @@ class Database:
         # Use dirty price to calculate market value.
         df["MarketValue"] = df["AmountOutstanding"] * df["DirtyPrice"] / 100
 
+        # Add utility business structure.
+        df = self._update_utility_business_structure(df)
+
         # Make new fields categories and drop duplicates.
         return clean_dtypes(df).drop_duplicates(subset=["CUSIP", "Date"])
+
+    def _update_utility_business_structure(self, df):
+        # Map utility subsector to proper business structure
+        # from issuer name.
+        utility_map = self._utility_business_structure
+        utility_sectors = {"ELECTRIC", "NATURAL_GAS", "UTILITY_OTHER"}
+        utes = df["Sector"].isin(utility_sectors)
+        df["Subsector"] = df["Subsector"].astype(str)
+        df.loc[utes, "Subsector"] = df.loc[utes, "Issuer"].map(utility_map)
+
+        # Alert user to missing utilities
+        loaded_issuers = set(df.loc[utes]["Issuer"].unique())
+        missing_issuers = loaded_issuers - set(utility_map.keys())
+        missing_utes = groupby(
+            df[df["Issuer"].isin(missing_issuers)], "Issuer"
+        )["Ticker"]
+        if len(missing_utes):
+            print("\nMissing Utility Business Structures:")
+            for issuer, ticker in missing_utes.items():
+                print(f"    {ticker: <8}: {issuer}")
+            print()
+        return df
 
     def _load_local_data(self):
         """Load data from the ``lgimapy/data`` directory."""
@@ -1226,11 +1474,12 @@ class Database:
 
         # Load data into a DataFrame form SQL in chunks to
         # reduce memory usage, cleaning them on the fly.
-        df_chunk = pd.read_sql(query, self._conn, chunksize=50_000)
+        df_chunk = pd.read_sql(query, self._datamart_conn, chunksize=50_000)
         chunk_list = []
         for chunk in df_chunk:
             # Preprocess chunk.
-            chunk = self._preprocess_market_data(chunk)
+            if self._preprocess:
+                chunk = self._preprocess_market_data(chunk)
             if self._clean:
                 chunk = self._clean_market_data(chunk)
             chunk_list.append(chunk)
@@ -1292,6 +1541,7 @@ class Database:
         end=None,
         cusips=None,
         clean=True,
+        preprocess=True,
         ret_df=False,
         local=True,
         local_file_fmt="feather",
@@ -1322,9 +1572,11 @@ class Database:
         cusips: List[str], optional
             List of cusips to specify for the load, by default load all.
         clean: bool, default=True
-            If true, apply standard cleaning rules to loaded DataFrame.
+            If ``True``, apply standard cleaning rules to loaded data.
+        preprocess: bool, default=True
+            If ``True``, preprocess loaded data.
         ret_df: bool, default=False
-            If True, return loaded DataFrame.
+            If ``True``, return loaded DataFrame.
         local: bool, default=True
             Load index from local feather file.
         local_file_fmt: ``{"feather", "parquet"}``, default="feather"
@@ -1349,6 +1601,7 @@ class Database:
         self._fid_extension = local_file_fmt
         self._cusips = cusips
         self._clean = clean
+        self._preprocess = preprocess
 
         if data is not None:
             # Store provided data.
@@ -1748,6 +2001,8 @@ class Database:
             for kwarg, val in user_defined_constraints.items()
             if kwarg not in ignored_kws and val != default_constraints[kwarg]
         }
+        if drop_treasuries:
+            index_constraints["drop_treasuries"] = True
 
         # Add new issue mask if required.
         if is_new_issue:
@@ -1924,14 +2179,18 @@ class Database:
             "Maturity": "MaturityDate",
             "Seniority": "CollateralType",
             "Country": "CountryOfRisk",
+            "Moody": "MoodyRating",
+            "S&P": "SPRating",
+            "Fitch": "FitchRating",
             "PMV": "P_Weight",
             "PMV INDEX": "BM_Weight",
             "PMV VAR": "Weight_Diff",
             "OADAgg": "P_OAD",
             "BmOADAgg": "BM_OAD",
             "OADVar": "OAD_Diff",
-            "AssetValue": "P_AssetValue",
-            "BMAssetValue": "BM_AssetValue",
+            "AssetValue": "P_MarketValue",
+            "Quantity": "P_Notional",
+            "BMAssetValue": "BM_MarketValue",
             "L4": "Sector",
             "Price_Dirty": "DirtyPrice",
             "Price": "CleanPrice",
@@ -1949,6 +2208,7 @@ class Database:
             "DTSVar": "DTS_Diff",
             "MKT_VAL": "StrategyMarketValue",
             "RVRecommendation": "AnalystRating",
+            "YTW": "YieldToWorst",
         }
         df.columns = [col_map.get(col, col) for col in df.columns]
 
@@ -1961,8 +2221,10 @@ class Database:
         for key, val in equiv_ranks.items():
             df.loc[df["CollateralType"].isin(val), "CollateralType"] = key
 
-        # Fix Charter having the old Time Warner Cable ticker.
-        df.loc[df["Ticker"] == "TWC", "Ticker"] = "CHTR"
+        # Clean other columns.
+        df["Issuer"] = df["Issuer"].str.upper()
+        df["Sector"] = self._clean_sectors(df["Sector"])
+        df["Ticker"] = self._clean_tickers(df["Ticker"])
 
         # Convert date columns to datetime dtype.
         for col in ["Date", "MaturityDate"]:
@@ -1984,11 +2246,179 @@ class Database:
             "1/1/2220"
         )
 
+        # Add utility business structure.
+        df = self._update_utility_business_structure(df)
+
         # Clean analyst ratings.
         df["AnalystRating"] = df["AnalystRating"].replace("NR", np.nan)
         return clean_dtypes(df).drop_duplicates(
             subset=["Date", "CUSIP", "Account"]
         )
+
+    def _add_EUR_sector_cols(self, df):
+        # TODO
+        df = df_prev.copy()
+        df["Sector"] = np.nan
+        df["Subsector"] = np.nan
+
+        # Perform direct replacements of existing sectors.
+        direct_replacements_d = {
+            "Sector": {
+                3: {
+                    "FINANCIAL_SERVICES": "FINANCIAL_SERVICES",
+                    "REAL_ESTATE": "REAL_ESTATE",
+                    "UTILITIES": "UTILITIES",
+                    "INDUSTRIALS": "INDUSTRIALS",
+                    "TELECOMMUNICATIONS": "TELECOMMUNICATIONS",
+                    "BASIC_MATERIALS": "BASIC_MATERIALS",
+                    "CONSUMER_GOODS": "CONSUMER_GOODS",
+                    "CONSUMER_SERVICES": "CONSUMER_SERVICES",
+                    "HEALTH_CARE": "HEALTH_CARE",
+                    "INDUSTRIALS": "INDUSTRIALS",
+                    "OIL_AND_GAS": "OIL_AND_GAS",
+                    "TECHNOLOGY": "TECHNOLOGY",
+                    "TELECOMMUNICATIONS": "TELECOMMUNICATIONS",
+                    "UTILITIES": "UTILITIES",
+                },
+                5: {
+                    "PHARMACEUTICALS_AND_BIOTECHNOLOGY": "PHARMA",
+                },
+            },
+            "Subsector": {
+                4: {
+                    "BASIC_RESOURCES": "BASIC_RESOURCES",
+                    "CHEMICALS": "CHEMICALS",
+                    "BANKS": "BANKS",
+                    "INSURANCE": "INSURANCE",
+                    "TRAVEL_AND_LEISURE": "TRAVEL_AND_LEISURE",
+                    "RETAIL": "RETAIL",
+                    "MEDIA": "MEDIA",
+                },
+                5: {
+                    "HEALTH_CARE_EQUIPMENT_AND_SERVICES": "MEDTECH",
+                    "TOBACCO": "TOBACCO",
+                    "AEROSPACE_AND_DEFENSE": "AEROSPACE_AND_DEFENSE",
+                    "CONSTRUCTION_AND_MATERIALS": "CONSTRUCTION_AND_MATERIALS",
+                    "CONSTRUCTION_AND_MATERIALS": "CONSTRUCTION_AND_MATERIALS",
+                    "INDUSTRIAL_TRANSPORTATION": "INDUSTRIAL_TRANSPORTATION",
+                    "ELECTRICITY": "ELECTRICITY",
+                },
+                6: {
+                    "INDUSTRIAL_AND_OFFICE_REITS": "INDUSTRIAL_AND_OFFICE_REITS",
+                    "LOGISTICS_REITS": "LOGISTICS_REITS",
+                    "RESIDENTIAL_REITS": "RESIDENTIAL_REITS",
+                    "RETAIL_REITS": "RETAIL_REITS",
+                    "SPECIALTY_REITS": "SPECIALTY_REITS",
+                    "DIVERSIFIED_REITS": "DIVERSIFIED_REITS",
+                    "REAL_ESTATE_HOLDING_AND_DEVELOPMENT": "REAL_ESTATE_HOLDING_AND_DEVELOPMENT",
+                    "WATER": "WATER",
+                    "GAS_DISTRIBUTION": "GAS_DISTRIBUTION",
+                    "MULTIUTILITIES": "MULTIUTILITIES",
+                },
+            },
+        }
+        for col, col_replacement_d in direct_replacements_d.items():
+            for level, replacement_d in col_replacement_d.items():
+                for prev_sector, new_sector in replacement_d.items():
+                    loc = df[f"SectorLevel{level}"] == prev_sector
+                    df.loc[loc, col] = new_sector
+
+        # Use custom rules to build sectors.
+        for prev_sector in ["PERSONAL_GOODS", "HOUSEHOLD_GOODS"]:
+            loc = df["SectorLevel5"] == prev_sector
+            df.loc[loc, "Sector"] = "PERSONAL_AND_HOUSEHOLD_GOODS"
+
+        loc = (df["Sector"] == "INDUSTRIALS") & df["Subsector"].isna()
+        df.loc[loc, "Subsector"] = "GENERAL_INDUSTRIES"
+
+        df["CollateralType"].value_counts()
+        df_raw[df_raw["Seniority Level 2"] == "Other"][
+            "Seniority Level 3"
+        ].value_counts()
+
+    def _numeric_ratings_columns(self, df):
+        cols = ["MoodyRating", "SPRating", "FitchRating"]
+        if "Idx_Rtg" in df.columns:
+            cols.append("Idx_Rtg")
+        ratings_mat = np.zeros((len(df), len(cols)), dtype="object")
+        for i, col in enumerate(cols):
+            try:
+                agency_col = df[col].cat.add_categories("NR")
+            except (AttributeError, ValueError):
+                agency_col = df[col]
+
+            ratings_mat[:, i] = agency_col.fillna("NR")
+        num_ratings = np.vectorize(self._ratings.__getitem__)(
+            ratings_mat
+        ).astype(float)
+        num_ratings[num_ratings == 0] = np.nan  # json nan value is 0
+        return pd.DataFrame(
+            num_ratings, index=df.index, columns=cols
+        ).rename_axis(None)
+
+    def _add_rating_risk_buckets(self, df):
+        rating_cols = self._numeric_ratings_columns(df)
+        min_rating = rating_cols.min(axis=1)
+        max_rating = rating_cols.max(axis=1)
+
+        # fmt: off
+        rating_bucket_locs = {}
+        rating_bucket_locs['Any AAA/AA'] = (
+            min_rating <= self._convert_single_input_rating("AA-")
+        )
+        rating_bucket_locs['Pure A'] = (
+            (min_rating > self._convert_single_input_rating("AA-"))
+            & (max_rating <= self._convert_single_input_rating("A-"))
+        )
+        rating_bucket_locs['Split A/BBB'] = (
+            (min_rating <= self._convert_single_input_rating("A-"))
+            & (max_rating >= self._convert_single_input_rating("BBB+"))
+        )
+        rating_bucket_locs['Pure BBB+/BBB'] = (
+            (min_rating >= self._convert_single_input_rating("BBB+"))
+            & (max_rating <= self._convert_single_input_rating('BBB'))
+        )
+        rating_bucket_locs['Any BBB-/BB'] = (
+            max_rating >= self._convert_single_input_rating('BBB-')
+        )
+        # fmt: on
+
+        df["RatingRiskBucket"] = np.nan
+        for rating_bucket, loc in rating_bucket_locs.items():
+            df.loc[loc, "RatingRiskBucket"] = rating_bucket
+        df["RatingRiskBucket"] = df["RatingRiskBucket"].astype("category")
+        return df
+
+    def _add_BM_treasuries(self, df):
+        bm_treasury = {}
+        for i in range(25):
+            if i <= 2:
+                bm_treasury[i] = 2
+            elif i <= 3:
+                bm_treasury[i] = 3
+            elif i <= 6:
+                bm_treasury[i] = 5
+            elif i <= 15:
+                bm_treasury[i] = 10
+            elif i <= 23:
+                bm_treasury[i] = 20
+            else:
+                bm_treasury[i] = np.nan
+        year = df["Date"].dt.year
+        maturity_date = df["MaturityDate"].dt.year
+        issue_date = df["IssueDate"].dt.year
+        tenor = maturity_date - year
+
+        loc_7yr = (tenor == 7) & (issue_date == year)
+        df["BMTreasury"] = tenor.map(bm_treasury).fillna(30).astype("int8")
+        df.loc[loc_7yr, "BMTreasury"] = 7
+        return df
+
+    def _add_calculated_portfolio_columns(self, df):
+        df = self._add_rating_risk_buckets(df)
+        if "IssueYears" in df.columns:
+            df = self._add_BM_treasuries(df)
+        return df
 
     def load_portfolio(
         self,
@@ -2007,6 +2437,7 @@ class Database:
         ret_df=False,
         get_mv=False,
         hy_duration_adjustment=0.5,
+        raw=False,
     ):
         """
         Load portfolio data from SQL server. If end is not specified
@@ -2082,7 +2513,9 @@ class Database:
         sql_both = ", ".join(inputs)
 
         # # Query SQL.
-        df = pd.read_sql(sql_base + sql_both, self._conn)
+        df = pd.read_sql(sql_base + sql_both, self._datamart_conn)
+        if raw:
+            return df
         df = self._preprocess_portfolio_data(df)
         if not len(df):
             port = strategy or account
@@ -2154,6 +2587,8 @@ class Database:
                 ["OAD_Diff", "P_OAD"],
             ] *= hy_duration_adjustment
 
+        df = self._add_calculated_portfolio_columns(df)
+
         if ret_df:
             return df
         if start == end:
@@ -2193,7 +2628,7 @@ class Database:
                 AND a.DateClose IS NULL\
             ORDER BY BloombergID\
             """
-        df = pd.read_sql(sql, self._conn)
+        df = pd.read_sql(sql, self._datamart_conn)
         df.columns = ["account", "manager", "strategy"]
         # Save account: strategy json.
         account_strategy = {
@@ -2300,6 +2735,7 @@ class Database:
         self,
         securities,
         fields,
+        column_names=None,
         start=None,
         end=None,
         aggregate=False,
@@ -2315,6 +2751,9 @@ class Database:
             Security or secuirites to load data for.
         fields: str or list[str], ``{'OAS', 'Price', 'TRET', 'YTW', etc.}``
             Field(s) of data to load.
+        column_names: ``{'security', 'field', 'both'}``, optional
+            Column names when multiple securities and fields are included.
+            By default the security name will be used.
         start: datetime, optional.
             Inclusive start date for data.
         end: datetime, optional.
@@ -2343,12 +2782,6 @@ class Database:
         fields = [field.upper() for field in to_list(fields, dtype=str)]
         securities = to_list(securities, dtype=str)
 
-        multiple_securities = len(securities) > 1 or securities == ["all"]
-        if len(fields) > 1 and multiple_securities:
-            raise ValueError(
-                "Cannot have multiple securities and multiple fields."
-            )
-
         if aggregate is True:
             if len(fields) > 1:
                 raise ValueError("Cannot aggregate more than 1 field.")
@@ -2356,10 +2789,37 @@ class Database:
                 securities, fields[0], start, end
             )
 
+        multiple_securities = len(securities) > 1 or securities == ["all"]
+        multiple_fields = len(fields) > 1
+
         if len(securities) == 1:
             securities = securities[0]
 
-        if len(fields) > 1:
+        if len(fields) > 1 and multiple_securities:
+            if len(fields) == len(securities):
+                if column_names is None or column_names == "security":
+                    col_names = securities
+                elif column_names == "field":
+                    col_names = fields
+                elif column_names == "both":
+                    col_names = [f"{s}_{f}" for s, f in zip(securities, fields)]
+                else:
+                    raise ValueError("Improper value for `column_names`")
+                df = pd.concat(
+                    (
+                        self._read_bbg_df(field)[security].rename(col)
+                        for field, security, col in zip(
+                            fields, securities, col_names
+                        )
+                    ),
+                    axis=1,
+                )
+            else:
+                raise ValueError(
+                    "Number of securities does not match number of fields."
+                )
+
+        elif len(fields) > 1:
             df = pd.concat(
                 (
                     self._read_bbg_df(field)[securities].rename(field)
@@ -2633,7 +3093,7 @@ class Database:
             order by i.cusip
             """
         )
-        df = pd.read_sql(sql, self._conn)
+        df = pd.read_sql(sql, self._datamart_conn)
         s = pd.to_datetime(df.set_index("CUSIP")["DateEnd"])
         if start is not None:
             s = s[s >= to_datetime(start)]
@@ -2705,6 +3165,33 @@ class Database:
 
         return df
 
+    def convert_state_codes(self, states):
+        """List[str]: Convert state names to state codes."""
+        state_codes = []
+        all_states = set(self.state_codes.keys())
+        for state in to_list(states, dtype=str):
+            key, score = process.extract(state, all_states)[0]
+            if score > 85:
+                state_codes.append(self.state_codes[key])
+            else:
+                state_codes.append(np.NaN)
+
+        if len(state_codes) == 1:
+            return state_codes[0]
+        else:
+            return state_codes
+
+    def query_3PDH(self, table, query):
+        import awswrangler as wr
+
+        return wr.athena.read_sql_query(
+            sql=query,
+            database=table,
+            s3_output=self._passwords["AWS"]["loc"],
+            ctas_approach=False,
+            boto3_session=self._3PDH_sess,
+        )
+
 
 # %%
 def main():
@@ -2715,213 +3202,17 @@ def main():
     from lgimapy.utils import Time, load_json, dump_json
     from lgimapy.bloomberg import bdp, bdh
     from tqdm import tqdm
-    from lgimapy.data import groupby
-
+    from lgimapy.utils import to_sql_list, to_clipboard
     from lgimapy.data import IG_sectors, HY_sectors
 
     vis.style()
     self = Database()
     self.display_all_columns()
-    db = Database()
 
+    db = Database()
     # %%
     db.load_market_data()
-    ix = db.build_market_index()
 
     # %%
-    self = Database(market="EUR")
-    df_raw = self.load_market_data(local=False, clean=False, ret_df=True)
-    df_raw.head()
+    acnt = db.load_portfolio(account="CBSMC")
     # %%
-
-
-#     def _preprocess_basys_data(self, df):
-#         # %%
-#         df = df_raw.copy()
-#         # Fill missing sectors and subsectors.
-#         sector_cols = [f"Level {i}" for i in range(7)]
-#         df[sector_cols] = (
-#             df[sector_cols]
-#             .replace("*", np.nan)
-#             .fillna(method="ffill", axis=1)
-#             .copy()
-#         )
-#         df.loc[df["Level 1"] == "Sovereigns", "Level 5"] = "Sovereigns"
-#
-#         # Fill missing collateral types.
-#         collat_cols = [f"Seniority Level {i+1}" for i in range(3)]
-#         df[collat_cols] = (
-#             df[collat_cols]
-#             .replace("*", np.nan)
-#             .fillna(method="ffill", axis=1)
-#             .copy()
-#         )
-#
-#         col_map = {
-#             "Date": "Date",
-#             "Ticker": "Ticker",
-#             "Issuer": "Issuer",
-#             "ISIN": "ISIN",
-#             "CUSIP": "CUSIP",
-#             "Coupon": "CouponRate",
-#             "Final Maturity": "MaturityDate",
-#             "Workout date": "WorstDate",
-#             "Level 1": "SectorLevel1",
-#             "Level 2": "SectorLevel2",
-#             "Level 3": "SectorLevel3",
-#             "Level 4": "SectorLevel4",
-#             "Level 5": "SectorLevel5",
-#             "Level 6": "SectorLevel6",
-#             "Markit iBoxx Rating": "CompositeRating",
-#             "Seniority Level 2": "CollateralType",
-#             "Notional Amount": "AmountOutstanding",
-#             "Market Value": "MarketValue",
-#             "Next Call Date": "NextCallDate",
-#             "Index Price": "CleanPrice",
-#             "Dirty Index Price": "DirtyPrice",
-#             "Accrued Interest": "AccruedInterest",
-#             "Effective OA duration": "OAD",
-#             "OAS": "OAS",
-#             "Z-Spread Over Libor": "ZSpread",
-#             "Semi-Annual Yield": "YieldToWorst",
-#             "Semi-Annual Yield to Maturity": "YieldToMat",
-#             "Semi-Annual Modified Duration": "ModDurationToWorst",
-#             "Semi-Annual Modified Duration to Maturity": "ModDurationToMat",
-#             "Month-to-date Sovereign Curve Swap Return": "MTDXSRet",
-#             "Month-to-date Libor Swap Return": "MTDLiborXSRet",
-#         }
-#         df = df.rename(columns=col_map)[col_map.values()].copy()
-#
-#         # Convert str time to datetime.
-#         for date_col in ["Date", "MaturityDate", "WorstDate", "NextCallDate"]:
-#             dates = pd.to_datetime(
-#                 df[date_col], format="%Y-%m-%d", errors="coerce"
-#             )
-#             # Find indexes with NaT dates, and use other format.
-#             mask = dates.isna()
-#             clean_dates = pd.to_datetime(
-#                 df.loc[mask, date_col], format="%d/%m/%Y", errors="coerce"
-#             )
-#             dates.loc[mask] = clean_dates
-#             mask = dates.isna()
-#             clean_dates = pd.to_datetime(
-#                 df.loc[mask, date_col], errors="coerce"
-#             )
-#             dates.loc[mask] = clean_dates
-#             df[date_col] = dates
-#
-#         # Set perpetuals to a constant date of 1/1/2220.
-#         df.loc[df["MaturityDate"].isna(), "MaturityDate"] = pd.to_datetime(
-#             "1/1/2220"
-#         )
-#
-#         # Define maturites yearrs.
-#         day = "timedelta64[D]"
-#         df["MaturityYears"] = (df["MaturityDate"] - df["Date"]).astype(
-#             day
-#         ) / 365
-#
-#         # Make sector column NaN. This column is required to be present.
-#         df["Sector"] = np.nan
-#
-#         # Capitalize sectors, and issuers.
-#         for col in ["MLSubsector", "MLSector", "Issuer"]:
-#             df[col] = df[col].str.upper()
-#         df["MLSector"] = df["MLSector"].str.replace(" ", "_")
-#
-#         # Put amount outstanding and market value into $M.
-#         for col in ["AmountOutstanding", "MarketValue"]:
-#             df[col] /= 1e6
-#
-#         # Get numeric ratings from composit ratings.
-#         df["NumericRating"] = self._get_numeric_ratings(df, ["CompositeRating"])
-#
-#         # Add financial flag column.
-#         df["FinancialFlag"] = convert_sectors_to_fin_flags(df["MLSector"])
-#
-#         # Calculate DTS. Approximate OAD ~ OASD.
-#         df["DTS"] = df["OAD"] * df["OAS"]
-#         df["DTS_Libor"] = df["OAD"] * df["ZSpread"]
-#
-#         df["CUSIP"].fillna(df["ISIN"], inplace=True)
-#         return clean_dtypes(df)
-#
-#
-# list(df)
-# df['CollateralType'].value_counts()
-# df_prev = df.copy()
-#
-# df['SectorLevel3'].value_counts().sort_values(ascending=False)[:20]
-# df['SectorLevel4'].value_counts().sort_values(ascending=False)[:20]
-# df['SectorLevel5'].value_counts().sort_values(ascending=False)[:20]
-# df['SectorLevel6'].value_counts().sort_values(ascending=False)[:30]
-#
-# # %%
-# df = df_prev.copy()
-# def _add_EUR_sector_cols(self, df):
-#     df['Sector'] = np.nan
-#     df['Subsector'] = np.nan
-#
-#     direct_replacements =
-#         'Sector' = {
-#             3: {
-#                 'Financial Services': 'FINANCIAL_SERVICES',
-#                 "Real Estate": "REAL_ESTATE",
-#                 "Utilities": "UTILITIES",
-#                 "Industrials": "INDUSTRIALS",
-#                 "Telecommunications": "TELECOMMUNICATIONS",
-#                 "Basic Materials": "BASIC_MATERIALS",
-#             },
-#             4: {
-#                 'Chemicals': 'CHEMICALS',
-#                 'Banks': 'BANKS',
-#                 'Insurance': 'INSURANCE',
-#             },
-#             5: {
-#                 'Pharmaceuticals & Biotechnology': 'PHARMA',
-#                 "Health Care Equipment & Services": "MEDTECH",
-#             },
-#             6: {
-#                 ""
-#             }
-#         },
-#         "Subsector" = {
-#             3: {
-#                 'Financial Services': 'FINANCIAL_SERVICES',
-#                 "Real Estate": "REAL_ESTATE",
-#             },
-#             4: {
-#                 'Chemicals': 'CHEMICALS',
-#             },
-#             6: {
-#                 ""
-#             }
-#         }
-#
-#     df.loc[df['SectorLevel3'] == 'Financial Servi']
-
-
-# %%
-# db = Database()
-# accounts = {"CITMC": "US_IG_bonds.csv", "P-LD": "US_Long_Credit_IG_bonds.csv"}
-# for account, fid in accounts.items():
-#     port = db.load_portfolio(account=account)
-#     cols = [
-#         "ISIN",
-#         'Ticker',
-#         "Description",
-#         "Sector",
-#         "P_Weight",
-#         "P_DTS",
-#         "BM_Weight",
-#         "BM_DTS",
-#     ]
-#     df = port.full_df[cols].dropna(subset=cols[-4:], how="all")
-#     for col in cols:
-#         if "DTS" in col:
-#             dts_pct_col = f"{col}_%"
-#             df[dts_pct_col] = df[col] / df[col].sum()
-#     df.to_csv(fid)
-#
-# %%
-# db.rating_changes()
