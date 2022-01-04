@@ -1,4 +1,4 @@
-def IG_sectors(with_tildes=False, with_chevrons=False):
+def IG_sectors(with_tildes=False, with_chevrons=False, drop_chevrons=False):
     """
     List[str]:
         IG sectors used for daily snapshot.
@@ -41,18 +41,25 @@ def IG_sectors(with_tildes=False, with_chevrons=False):
         "~YANKEE_BANKS",
         "BROKERAGE_ASSETMANAGERS_EXCHANGES",
         "LIFE",
-        "P&C",
+        "~LIFE_SR",
+        "~LIFE_SUB",
+        "P_AND_C",
         "REITS",
         "UTILITY",  # Utilities
+        "~UTILITY_OPCO",
+        "~UTILITY_HOLDCO",
         ">>NON_CORP",  # Non-Corp
         "OWNED_NO_GUARANTEE",
         "GOVERNMENT_GUARANTEE",
         "HOSPITALS",
         "MUNIS",
         "SOVEREIGN",
+        "~LATAM_SOVEREIGN",
         "SUPRANATIONAL",
         "UNIVERSITY",
     ]
+    if drop_chevrons:
+        sectors = [s for s in sectors if not s.startswith(">")]
     if not with_tildes:
         sectors = [s.strip("~") for s in sectors]
     if not with_chevrons:
