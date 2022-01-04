@@ -46,7 +46,10 @@ def update_rating_changes(max_dates=100):
         pd.Series(dtype="float64"), ignore_index=True
     )
     updated_df.iloc[-1, 1] = curr_date
-    updated_df.to_csv(fid)  # .csv for solutions team
+    try:
+        updated_df.to_csv(fid)  # .csv for solutions team
+    except PermissionError:
+        pass
 
     # Save parquet for use in lgimapy (with blank row removed).
     df_parquet = clean_rating_dtypes(updated_df.iloc[:-1])
