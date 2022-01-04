@@ -4,7 +4,8 @@ import numpy as np
 import pandas as pd
 from pandas.api.types import CategoricalDtype, union_categoricals
 
-from lgimapy.utils import load_json, to_set
+from lgimapy.stats import mode
+from lgimapy.utils import load_json, to_set, to_list
 
 # %%
 
@@ -41,7 +42,7 @@ def clean_dtypes(df):
             "ModDurationToWorst",
             "ModDurationToMat",
             "ModDurtoMat",
-            "ModDurtoMat",
+            "ModDurtoWorst",
             "NumericRating",
             "MaturityYears",
             "TRet",
@@ -56,12 +57,13 @@ def clean_dtypes(df):
             "AccountWeight",
             "BenchmarkWeight",
             "AnalystRating",
-        ],
-        "float16": [
-            "AnalystRating",
+            "MLFI_OAS",
+            "MLFI_YieldtoMat",
+            "MLFI_YieldtoWorst",
         ],
         "int8": [
             "OriginalMaturity",
+            "BMTreasury",
             "FinancialFlag",
             "Eligibility144AFlag",
             "AnyIndexFlag",
@@ -71,6 +73,7 @@ def clean_dtypes(df):
             "USAggStatisticsFlag",
             "USHYReturnsFlag",
             "USHYStatisticsFlag",
+            "MLHYFlag",
             "H0A0Flag",
             "H4UNFlag",
             "HC1NFlag",
@@ -83,12 +86,17 @@ def clean_dtypes(df):
             "Ticker",
             "Issuer",
             "RiskEntity",
+            "RatingRiskBucket",
             "Sector",
             "Subsector",
-            "MLSector",
-            "MLSubsector",
             "BAMLTopLevelSector",
             "BAMLSector",
+            "SectorLevel1",
+            "SectorLevel2",
+            "SectorLevel3",
+            "SectorLevel4",
+            "SectorLevel5",
+            "SectorLevel6",
             "CompositeRating",
             "MoodyRating",
             "SPRating",
@@ -133,8 +141,10 @@ def convert_sectors_to_fin_flags(sectors):
     """
 
     financials = {
-        "P&C",
+        "P_AND_C",
         "LIFE",
+        "LIFE_SR",
+        "LIFE_SUB",
         "APARTMENT_REITS",
         "BANKING",
         "BROKERAGE_ASSETMANAGERS_EXCHANGES",
@@ -156,7 +166,7 @@ def convert_sectors_to_fin_flags(sectors):
         "LIFE_INSURANCE",
         "NONLIFE_INSURANCE",
         "PUBLIC_BANKS",
-        "REAL_ESTATE_INVESTMENT_&_SERVICES",
+        "REAL_ESTATE_INVESTMENT_AND_SERVICES",
         "REAL_ESTATE_INVESTMENT_TRUSTS",
         "REGIONS",
     }
@@ -172,6 +182,8 @@ def convert_sectors_to_fin_flags(sectors):
         "MUNIS",
         "UNIVERSITY",
         "UTILITY",
+        "UTILITY_OPCO",
+        "UTILITY_HOLDCO",
         "UTILITY_OTHER",
         "NATURAL_GAS",
         "ELECTRIC",
@@ -181,16 +193,20 @@ def convert_sectors_to_fin_flags(sectors):
         "AUSTRIA_COVERED",
         "BELGIUM_COVERED",
         "CANADA_COVERED",
+        "CZECH_REPUBLIC_COVERED",
         "DENMARK_COVERED",
         "ELECTRICITY",
+        "ESTONIA_COVERED",
         "FINLAND_COVERED",
         "FRANCE_COVERED_LEGAL",
         "FRANCE_COVERED_SFH",
         "FRANCE_COVERED_STRUCTURED",
-        "GAS_/_WATER_&_MULTIUTILITIE",
+        "GAS_WATER_AND_MULTIUTILITIES",
+        "GREECE_COVERED",
         "HYPOTHEKENPFANDBRIEFE",
         "IRELAND_COVERED",
         "ITALY_COVERED",
+        "JAPAN_COVERED",
         "LUXEMBOURG_COVERED",
         "NETHERLANDS_COVERED",
         "NEW_ZEALAND_COVERED",
@@ -199,11 +215,16 @@ def convert_sectors_to_fin_flags(sectors):
         "OTHER_COLLATERALIZED",
         "OTHER_PFANDBRIEFE",
         "OTHER_SOVEREIGNS",
+        "POLAND_COVERED",
         "POOLED_CEDULAS",
         "PORTUGAL_COVERED",
         "SECURITIZED",
+        "SINGAPORE_COVERED",
         "SINGLE_CEDULAS",
+        "SLOVAKIA_COVERED",
+        "SOUTH_KOREA_COVERED",
         "SOVEREIGNS",
+        "SUPRANATIONALS",
         "SWEDEN_COVERED",
         "SWITZERLAND_COVERED",
         "UK_COVERED",
@@ -414,3 +435,113 @@ def index_kwargs(key, unused_constraints=None, source=None, **kwargs):
 
     d.update(**kwargs)
     return d
+
+
+def groupby(df, cols):
+    """
+    Group basket of bonds together by seletected features.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        DataFrame basket of bonds.
+    cols: str or List[str].
+        Column(s) in `df` to group by.
+
+    Returns
+    -------
+    pd.DataFrame
+        Grouped DataFrame.
+    """
+    df_to_group = df.copy()
+    if cols == "risk entity":
+        groupby_cols = ["Ticker", "Issuer"]
+    else:
+        groupby_cols = to_list(cols, dtype=str)
+
+    # Collect columns that should be market value weighted
+    # and create a mv weighted column for each that is present.
+    mv_weight_cols = [
+        "OAS",
+        "OASD",
+        "OAD",
+        "DTS",
+        "YieldToWorst",
+        "DirtyPrice",
+        "CleanPrice",
+        "PX_Adj_OAS",
+        "NumericRating",
+        "AnalystRating",
+    ]
+    mv_agg_rules = {}
+    df_cols = set(df)
+    any_mv_cols_present = len(set(mv_weight_cols) & df_cols)
+    if any_mv_cols_present and "MarketValue" in df_cols:
+        for col in mv_weight_cols:
+            if col not in df_cols:
+                continue
+            df_to_group[f"MV_{col}"] = df["MarketValue"] * df[col]
+            mv_agg_rules[f"MV_{col}"] = np.sum
+
+    # Collect columns that should be market value weighted using
+    # previous day's market value and create a mv weighted column
+    # for each column that is present.
+    prev_mv_weight_cols = ["TRet", "XSRet"]
+    prev_mv_agg_rules = {}
+    any_prev_mv_cols_present = len(set(prev_mv_weight_cols) & df_cols)
+    if any_prev_mv_cols_present and "PrevMarketValue" in df_cols:
+        for col in prev_mv_weight_cols:
+            if col not in df_cols:
+                continue
+            df_to_group[f"PMV_{col}"] = df["PrevMarketValue"] * df[col]
+            prev_mv_agg_rules[f"PMV_{col}"] = np.sum
+
+    # Combine aggregation rules for all columns.
+    agg_rules = {
+        "Ticker": mode,
+        "Issuer": mode,
+        "Sector": mode,
+        "Subsector": mode,
+        "LGIMASector": mode,
+        "BAMLSector": mode,
+        "BAMLTopLevelSector": mode,
+        "OAD_Diff": np.sum,
+        "P_OAD": np.sum,
+        "BM_OAD": np.sum,
+        "DTS_Diff": np.sum,
+        "P_DTS": np.sum,
+        "BM_DTS": np.sum,
+        "AmountOutstanding": np.sum,
+        "MarketValue": np.sum,
+        "PrevMarketValue": np.sum,
+        "P_Notional": np.sum,
+        "P_MarketValue": np.sum,
+        "BM_MarketValue": np.sum,
+        "P_Weight": np.sum,
+        "BM_Weight": np.sum,
+        "Weight_Diff": np.sum,
+        "OASD_Diff": np.sum,
+        "OAS_Diff": np.sum,
+        "DTS_Contrib": np.sum,
+        **mv_agg_rules,
+        **prev_mv_agg_rules,
+    }
+    # Apply aggregation of present columns.
+    agg_cols = {
+        col: rule
+        for col, rule in agg_rules.items()
+        if col in df_to_group.columns and col not in groupby_cols
+    }
+    gdf = df_to_group.groupby(groupby_cols, observed=True).aggregate(agg_cols)
+
+    # Clean market value weighted columns by dividing by total
+    # market value and renaming back to original name.
+    col_names = {}
+    for col in mv_agg_rules.keys():
+        gdf[col] = gdf[col] / gdf["MarketValue"]
+        col_names[col] = col[3:]
+    for col in prev_mv_agg_rules.keys():
+        gdf[col] = gdf[col] / gdf["PrevMarketValue"]
+        col_names[col] = col[4:]
+
+    return gdf.rename(columns=col_names)
