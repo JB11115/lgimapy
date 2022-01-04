@@ -7,7 +7,6 @@ from inspect import getfullargspec
 import numpy as np
 import pandas as pd
 from oslo_concurrency import lockutils
-from statsmodels.stats.weightstats import DescrStatsW
 
 from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import (
@@ -16,9 +15,8 @@ from lgimapy.data import (
     groupby,
     new_issue_mask,
     TreasuryCurve,
-    weighted_percentile,
 )
-
+from lgimapy.stats import percentile, mean, std
 from lgimapy.utils import (
     check_all_equal,
     dump_json,
@@ -500,7 +498,7 @@ class Index(BondBasket):
     def subset_current_universe(self):
         """ "
         Return an index consisting only of bonds which exist
-        on the most current day in the index, (e.g., drop all
+        on the most current day in the index, (i.e., drop all
         bonds that have matured or fallen out of the index).
 
         Returns
@@ -510,6 +508,20 @@ class Index(BondBasket):
         """
         current_cusips = self.day(self.dates[-1], as_index=True).cusips
         return self.subset(cusip=current_cusips)
+
+    def subset_current_universe_tickers(self):
+        """ "
+        Return an index consisting only of tickers which exist
+        on the most current day in the index, (i.e., drop all
+        tickers that have fully matured or fallen out of the index).
+
+        Returns
+        -------
+        :class:`Index`:
+            Index of most current constituents.
+        """
+        current_tickers = self.day(self.dates[-1], as_index=True).tickers
+        return self.subset(ticker=current_tickers)
 
     def drop_ratings_migrations(self, allowable_ratings=None):
         """
@@ -711,8 +723,7 @@ class Index(BondBasket):
         def daily_mean(df):
             """Mean for single day."""
             daily_weights = weights if weights is None else df[weights]
-            weighted_stats = DescrStatsW(df[col], weights=daily_weights)
-            return weighted_stats.mean
+            return mean(df[col], weights=daily_weights)
 
         return self.df[cols].groupby("Date").apply(daily_mean)
 
@@ -742,7 +753,7 @@ class Index(BondBasket):
         def daily_median(df):
             """Median for single day."""
             daily_weights = weights if weights is None else df[weights]
-            return weighted_percentile(df[col], weights=daily_weights, q=q)
+            return percentile(df[col], weights=daily_weights, q=q)
 
         return self.df[cols].groupby("Date").apply(daily_median)
 
@@ -770,8 +781,7 @@ class Index(BondBasket):
         def daily_std(df):
             """Standard deviation for single day."""
             daily_weights = weights if weights is None else df[weights]
-            weighted_stats = DescrStatsW(df[col], weights=daily_weights, ddof=1)
-            return weighted_stats.std
+            return std(df[col], weights=daily_weights)
 
         return self.df[cols].groupby("Date").apply(daily_std)
 
@@ -799,8 +809,9 @@ class Index(BondBasket):
         def daily_rsd(df):
             """RSD for single day."""
             daily_weights = weights if weights is None else df[weights]
-            weighted_stats = DescrStatsW(df[col], weights=daily_weights, ddof=1)
-            return weighted_stats.std / weighted_stats.mean
+            return mean(df[col], weights=daily_weights) / std(
+                df[col], weights=daily_weights
+            )
 
         return self.df[cols].groupby("Date").apply(daily_rsd)
 
@@ -830,9 +841,7 @@ class Index(BondBasket):
         def daily_iqr(df):
             """QCD for single day."""
             daily_weights = weights if weights is None else df[weights]
-            Q1, Q3 = weighted_percentile(
-                df[col], weights=daily_weights, q=qrange
-            )
+            Q1, Q3 = percentile(df[col], weights=daily_weights, q=qrange)
             return Q3 - Q1
 
         return self.df[cols].groupby("Date").apply(daily_iqr)
@@ -863,9 +872,7 @@ class Index(BondBasket):
         def daily_qcd(df):
             """QCD for single day."""
             daily_weights = weights if weights is None else df[weights]
-            Q1, Q3 = weighted_percentile(
-                df[col], weights=daily_weights, q=qrange
-            )
+            Q1, Q3 = percentile(df[col], weights=daily_weights, q=qrange)
             return (Q3 - Q1) / (Q3 + Q1)
 
         return self.df[cols].groupby("Date").apply(daily_qcd)
@@ -895,7 +902,7 @@ class Index(BondBasket):
 
         def daily_median(df):
             """Median for single day."""
-            return weighted_percentile(df[col], weights=df["MarketValue"], q=50)
+            return percentile(df[col], weights=df["MarketValue"], q=50)
 
         return self.df[cols].groupby("Date").apply(daily_median)
 
@@ -1114,6 +1121,22 @@ class Index(BondBasket):
             tsy_trets = np.sum(weights * self._treasury.trets(date), axis=1)
             ex_rets = df["TRet"].values - tsy_trets
             self.df.loc[self.df["Date"] == date, "XSRet"] = ex_rets
+
+        # 0 out the excess return for on the run treasuries.
+        tsy_loc = self.df["Sector"] == "TREASURIES"
+        if tsy_loc.sum():
+            cols = ["Date", "OriginalMaturity", "IssueDate"]
+            for date, date_df in self.df.loc[tsy_loc, cols].groupby("Date"):
+                on_the_run_treasuries = set(
+                    date_df.groupby("OriginalMaturity")
+                    .idxmax()["IssueDate"]
+                    .values
+                )
+                self.df.loc[
+                    (self.df["Date"] == date)
+                    & (self.df.index.isin(on_the_run_treasuries)),
+                    "XSRet",
+                ] = 0
 
     def accumulate_individual_excess_returns(
         self, start_date=None, end_date=None
