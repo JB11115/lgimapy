@@ -5,25 +5,33 @@ from lgimapy.data import Database, BondBasket
 from lgimapy.utils import dump_json, mkdir, root
 
 # %%
+
+
 def save_lgima_sectors(date):
     """
     Save .json mapping file of CUSIPs to LGIMA sector
     for each CUSIP on giving date.
     """
-
+    # %%
     db = Database()
-    df = db.load_market_data(date=(date), clean=False, ret_df=True, local=False)
+    df = db.load_market_data(date=date, clean=False, ret_df=True, local=False)
+    df = db._update_utility_business_structure(df)
     basket = BondBasket(df)
 
-    industrial_sectors = {
+    industrial_sectors = [
         "CHEMICALS",
         "METALS_AND_MINING",
+        "PACKAGING",
+        "PAPER",
         "CAPITAL_GOODS",
         "CABLE_SATELLITE",
         "MEDIA_ENTERTAINMENT",
         "WIRELINES_WIRELESS",
+        "CONSUMER_CYCLICAL_SERVICES",
         "AUTOMOTIVE",
         "RETAILERS",
+        "HOSPITALITY",
+        "CONSUMER_NON_CYCLICAL",
         "FOOD_AND_BEVERAGE",
         "HEALTHCARE_EX_MANAGED_CARE",
         "MANAGED_CARE",
@@ -37,23 +45,32 @@ def save_lgima_sectors(date):
         "ENVIRONMENTAL_IND_OTHER",
         "TECHNOLOGY",
         "TRANSPORTATION",
-    }
+    ]
 
-    financial_sectors = {
+    financial_sectors = [
         "SIFI_BANKS_SR",
         "SIFI_BANKS_SUB",
+        "SIFI_BANKS_PREF",
+        "SIFI_BANKS_NONSTANDARD",
         "US_REGIONAL_BANKS",
         "YANKEE_BANKS",
         "BROKERAGE_ASSETMANAGERS_EXCHANGES",
         "FINANCE_COMPANIES",
+        "FINANCIAL_OTHER",
         "LIFE",
-        "P&C",
+        "LIFE_SR",
+        "LIFE_SUB",
+        "P_AND_C",
         "REITS",
-    }
+    ]
 
-    utility_sectors = {"UTILITY"}
+    utility_sectors = [
+        "UTILITY_NONSTANDARD",
+        "UTILITY_OPCO",
+        "UTILITY_HOLDCO",
+    ]
 
-    non_corp_sectors = {
+    non_corp_sectors = [
         "OWNED_NO_GUARANTEE",
         "GOVERNMENT_GUARANTEE",
         "HOSPITALS",
@@ -61,13 +78,31 @@ def save_lgima_sectors(date):
         "SOVEREIGN",
         "SUPRANATIONAL",
         "UNIVERSITY",
-    }
+        "PFANDBRIEFE",
+        "AGENCY_CMBS",
+        "NON_AGENCY_CMBS",
+        "ABS",
+    ]
+    securitized_sectors = [
+        "AGENCY_CMBS",
+        "NON_AGENCY_CMBS",
+        "ABS",
+        "AGENCY_MBS",
+        "MORTGAGES",
+    ]
+    treasury_sectors = ["TREASURIES"]
+    swap_sectors = ["SWAPS"]
+    loan_sectors = ["LOANS"]
 
     all_sectors = (
         industrial_sectors
-        | financial_sectors
-        | utility_sectors
-        | non_corp_sectors
+        + financial_sectors
+        + utility_sectors
+        + non_corp_sectors
+        + securitized_sectors
+        + treasury_sectors
+        + swap_sectors
+        + loan_sectors
     )
 
     # Make a map of each cusip to respective LGIMA sector.
@@ -75,7 +110,7 @@ def save_lgima_sectors(date):
     lgiam_top_level_sector_map = {}
     for sector in all_sectors:
         kwargs = db.index_kwargs(
-            sector, unused_constraints=["in_stats_index", "maturity"]
+            sector, unused_constraints=["in_stats_index", "maturity", "OAS"]
         )
         cusips = basket.subset(**kwargs).cusips
         for cusip in cusips:
@@ -86,9 +121,22 @@ def save_lgima_sectors(date):
                 lgiam_top_level_sector_map[cusip] = "Financials"
             elif sector in utility_sectors:
                 lgiam_top_level_sector_map[cusip] = "Utilities"
+            elif sector in securitized_sectors:
+                lgiam_top_level_sector_map[cusip] = "Securitized"
+            elif sector in treasury_sectors:
+                lgiam_top_level_sector_map[cusip] = "Treasuries"
             else:
                 lgiam_top_level_sector_map[cusip] = "Non-Corp"
 
+    # df_missing = df[~df["CUSIP"].isin(lgima_sector_map)].reset_index(drop=True)
+    # print(len(df_missing))
+    # df_missing[["Ticker", "Issuer", "Sector", "Subsector"]]
+    # s = df_missing["Sector"].value_counts()
+    # s[s > 0].head(25)
+
+    # %%
+
+    # %%
     # Save sector maps.
     sector_file_dir = root("data/lgima_sector_maps")
     mkdir(sector_file_dir)
