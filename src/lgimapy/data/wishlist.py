@@ -34,7 +34,7 @@ def save_bond_wishlist():
     missing_isins_list = list(isin_wishlist - database_isins - bad_isins)
     missing_isins = pd.Series(missing_isins_list).to_frame()
     missing_isins.to_excel(fid)
-    print(f"Updated Bond Wishlist: {len(missing_isins)} bonds")
+    print(f"Updated Bond Wishlist: {len(missing_isins)} bonds\n")
 
 
 # %%
