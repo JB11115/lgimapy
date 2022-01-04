@@ -9,11 +9,10 @@ from lgimapy.data import Database
 from lgimapy.latex import Document
 from lgimapy.utils import root
 
-# %%
-def update_HY_spread_dispersion():
+# %%MEX
+def update_HY_spread_dispersion(fid):
     vis.style()
     df = load_data()
-    fid = "HY_Spread_Dispersion"
     date = df.index[-1]
     doc = Document(fid, path="reports/HY", fig_dir=True, load_tex=fid)
     doc.add_preamble(
@@ -427,4 +426,5 @@ def make_decile_tables(df, doc):
 
 # %%
 if __name__ == "__main__":
-    update_HY_spread_dispersion()
+    fid = "HY_Spread_Dispersion"
+    update_HY_spread_dispersion(fid)

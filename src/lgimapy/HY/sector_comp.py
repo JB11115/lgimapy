@@ -23,19 +23,16 @@ from lgimapy.utils import root, get_ordinal
 def update_sector_models(fid, db):
     """Update volatility indicator figures."""
     vis.style()
-    doc = Document("Sector_Valuations", path="reports/HY", fig_dir=True)
 
-    db = Database()
     today = db.date("today").strftime("%B %#d, %Y")
-    db.load_market_data(start=db.date("HY_START"))
     ix = db.build_market_index(in_H4UN_index=True, start=db.date("1.2y"))
-
     table_df = get_sector_table(ix, db)
     # %%
-    doc = Document("Sector_Valuations", path="reports/HY", fig_dir=True)
+    doc = Document(fid, path="reports/HY", fig_dir=True)
+    doc.add_section("Sector Valuations")
     doc.add_preamble(
         margin={
-            "paperheight": 20,
+            "paperheight": 22,
             "paperwidth": 20,
             "left": 0.5,
             "right": 0.5,
@@ -568,4 +565,8 @@ def _xsret_z_score_plots():
     # %%
 
 
-# %%
+if __name__ == "__main__":
+    fid = "Sector_Valuations"
+    db = Database()
+    db.load_market_data(start=db.date("5y"))
+    update_sector_models(fid, db)

@@ -1,26 +1,20 @@
+import argparse
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from functools import lru_cache
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sms
 
 from lgimapy import vis
-from lgimapy.bloomberg import bdp
 from lgimapy.data import Database
+from lgimapy.latex import Document
 from lgimapy.utils import root, mkdir, load_pickle, dump_pickle
 
 vis.style()
 
 # %%
-def update_default_rate_pdf():
-    ratings = {
-        "HY": "HY",
-        "BB": ("BB+", "BB-"),
-        "B": ("B+", "B-"),
-        "CCC": ("CCC+", "CCC-"),
-    }
-    lookbacks = [1, 3, 5]
 
 
 class DefaultRates:
@@ -53,6 +47,9 @@ class DefaultRates:
 
     def _og_isin_fid(self, rating, fid):
         return self.dir / rating / f"isins/{fid}.parquet"
+
+    def _distressed_ratio_fid(self, rating):
+        return self.dir / rating / "distressed_ratio.parquet"
 
     def data_is_missing(self, fid):
         """Returns ``True`` if data is missing for date."""
@@ -91,14 +88,41 @@ class DefaultRates:
     def defaults(self):
         df = pd.read_csv(self.dir / "defaults.csv", index_col=0)
         df.columns = ["Ticker", "Date", "ISIN"]
+        bad_dates = {"#N/A Invalid Security"}
+        bad_isins = {"#N/A Requesting Data...", "#N/A Field Not Applicable"}
         df = df[
-            ~(
-                (df["Date"] == "#N/A Invalid Security")
-                | (df["ISIN"] == "#N/A Field Not Applicable")
-            )
+            ~((df["Date"].isin(bad_dates)) | (df["ISIN"].isin(bad_isins)))
         ].copy()
+        df["ISIN"].value_counts()
         df["Date"] = pd.to_datetime(df["Date"])
         return df.sort_values("Date").reset_index(drop=True).rename_axis(None)
+
+    def update_distressed_ratio_files(self, fid, ix):
+        """
+        Update distressed ratio file for each rating at current date.
+        """
+        # Make original ticker file.
+        for rating, rating_kws in self.ratings.items():
+            dr_fid = self._distressed_ratio_fid(rating)
+            try:
+                old_df = pd.read_parquet(dr_fid)
+            except (OSError, FileNotFoundError):
+                old_df = pd.DataFrame()
+            if fid in old_df.index:
+                continue
+            col = "AmountOutstanding"
+            rating_ix = ix.subset(rating=rating_kws)
+            ix_mv = rating_ix.total_value(col).iloc[0]
+            distressed_ix = rating_ix.subset(OAS=(1000, None))
+            if len(distressed_ix.df):
+                distressed_mv = distressed_ix.total_value(col).iloc[0]
+            else:
+                distressed_mv = 0
+            new_df = pd.DataFrame(
+                {"distress_ratio": distressed_mv / ix_mv}, index=[fid]
+            )
+            updated_df = pd.concat((old_df, new_df), sort=True)
+            updated_df.to_parquet(dr_fid)
 
     def make_og_index_files(self, fid, ix):
         """
@@ -285,13 +309,13 @@ class DefaultRates:
         for i, date in enumerate(self.dates):
             fid = self.fid(date)
             # if i == 120:
-            # break
             if self.data_is_missing(fid):
-                print(fid)
                 ix = self.load_month_start_index(date)
                 self.make_og_index_files(fid, ix)
                 self.update_CDR_tables(fid, ix)
+                self.update_distressed_ratio_files(fid, ix)
 
+    @lru_cache(maxsize=None)
     def default_rate(self, rating, lookback, metric="issuer"):
         dates, cdr = [], []
         t = 12 * lookback
@@ -301,102 +325,278 @@ class DefaultRates:
             if len(row):
                 dates.append(pd.to_datetime(row.name, format="%Y_%m"))
                 cdr.append(row[f"{metric}_CDR"])
-        return pd.Series(cdr, index=dates)
+        return pd.Series(cdr, index=dates, name="default_rate")
+
+    @lru_cache(maxsize=None)
+    def distressed_ratio(self, rating):
+        dr = pd.read_parquet(self._distressed_ratio_fid(rating)).squeeze()
+        dr.index = pd.to_datetime(dr.index, format="%Y_%m")
+        return dr
+
+    @property
+    @lru_cache(maxsize=None)
+    def sr_loan_survey(self):
+        return self.db.load_bbg_data("US_SR_LOAN", "LEVEL").rename("sr_loan")
 
 
-ratings = {
-    "HY": "HY",
-    "BB": ("BB+", "BB-"),
-    "B": ("B+", "B-"),
-    "CCC": ("CCC+", "CCC-"),
-}
-lookbacks = [1, 3, 5]
-self = DefaultRates(ratings, lookbacks)
+# ratings = {
+#     "HY": "HY",
+#     "BB": ("BB+", "BB-"),
+#     "B": ("B+", "B-"),
+#     "CCC": ("CCC+", "CCC-"),
+# }
+# lookbacks = [1, 3, 5]
+# self = DefaultRates(ratings, lookbacks)
 
 # %%
-from lgimapy.utils import Time
 
-with Time():
-    self.update_default_rate_data()
-
-#     cdr = self.default_rate("HY", 1, "issuer")
+#
+# # # %%
+# cdr = self.default_rate("HY", 1, "issuer")
+# vis.plot_timeseries(cdr, ytickfmt="{x:.0%}")
+# vis.show()
+#
+# # %%
+# db = Database()
+# sr_loan = db.load_bbg_data("US_SR_LOAN", "LEVEL", start="1999")
+# # %%
+# x = 500
+# fig, ax = vis.subplots()
+# vis.plot_timeseries(sr_loan / x, label="large", color="navy", ax=ax)
+# vis.plot_timeseries(cdr, label="Default Rate", color="k", ax=ax)
+# ax.legend(fancybox=True, shadow=True)
+# vis.show()
 #
 #
 # # %%
-from lgimapy import vis
-from lgimapy.bloomberg import bdh
-
-vis.style()
-
+# d = defaultdict(list)
+# for raw_date in self.dates:
+#     date = self.db.date("MONTH_START", raw_date)
+#     self.db.load_market_data(date=date)
+#     ix = self.db.build_market_index(
+#         in_hy_stats_index=True,
+#         in_hy_returns_index=True,
+#         special_rules="USHYReturnsFlag | USHYStatisticsFlag",
+#     )
+#     distressed_ix = ix.subset(OAS=(1000, None))
+#     ix_mv = ix.total_value("AmountOutstanding").iloc[0]
+#     if len(distressed_ix.df):
+#         distressed_mv = distressed_ix.total_value("AmountOutstanding").iloc[0]
+#     else:
+#         distressed_mv = 0
+#
+#     d["date"].append(date)
+#     d["issuer_DR"].append(len(distressed_ix.df) / len(ix.df))
+#     d["mv_DR"].append(distressed_mv / ix_mv)
+#
+# # len(d['date'])
+# # d['issuer_DR'].append(d['issuer_DR'][-1])
+# # d['mv_DR'].append(d['mv_DR'][-1])
+#
+# df = pd.DataFrame(d).set_index("date", drop=True).rename_axis(None)
 # # %%
-cdr = self.default_rate("HY", 1, "issuer")
-vis.plot_timeseries(cdr, ytickfmt="{x:.0%}")
-vis.show()
-
-# %%
-tight_standard_lm = (
-    bdh("SLDETIGT", "Index", "PX_LAST", start="1/1/1992").squeeze() / 100
-)
-tight_standard_s = (
-    bdh("SLDETGTS", "Index", "PX_LAST", start="1/1/1992").squeeze() / 100
-)
-
-# %%
-x = 5
-fig, ax = vis.subplots()
-vis.plot_timeseries(tight_standard_lm / x, label="large", color="navy", ax=ax)
-vis.plot_timeseries(tight_standard_s / x, label="small", color="skyblue", ax=ax)
-vis.plot_timeseries(cdr, label="Default Rate", color="k", ax=ax)
-ax.legend(fancybox=True, shadow=True)
-vis.show()
+# x = 5
+# fig, ax = vis.subplots()
+# vis.plot_timeseries(
+#     df["issuer_DR"].rank(pct=True), label="issuer", color="navy", ax=ax
+# )
+# vis.plot_timeseries(
+#     df["mv_DR"].rank(pct=True), label="small", color="skyblue", ax=ax
+# )
+# vis.plot_timeseries(cdr.rank(pct=True), label="Default Rate", color="k", ax=ax)
+# ax.legend(fancybox=True, shadow=True)
+# vis.show()
+#
+# issuer_dr = df["issuer_DR"]
+#
+#
+# # %%
+# rating = "HY"
 
 
 # %%
-d = defaultdict(list)
-for raw_date in self.dates:
-    date = self.db.date("MONTH_START", raw_date)
-    self.db.load_market_data(date=date)
-    ix = self.db.build_market_index(
-        in_hy_stats_index=True,
-        in_hy_returns_index=True,
-        special_rules="USHYReturnsFlag | USHYStatisticsFlag",
+def update_default_rate_pdf(fid):
+    # %%
+    vis.style()
+    ratings = {
+        "HY": "HY",
+        "BB": ("BB+", "BB-"),
+        "B": ("B+", "B-"),
+        "CCC": ("CCC+", "CCC-"),
+    }
+    lookbacks = [1, 3, 5]
+    mod = DefaultRates(ratings, lookbacks)
+    mod.update_default_rate_data()
+    doc = Document(fid, path="reports/HY", fig_dir=True)
+    doc.add_preamble(
+        bookmarks=True,
+        table_caption_justification="c",
+        margin={"left": 0.5, "right": 0.5, "top": 1.5, "bottom": 1},
+        header=doc.header(
+            left="Default Rates",
+            right=f"EOD {mod.dates[-1].strftime('%B %#d, %Y')}",
+            height=0.5,
+        ),
+        footer=doc.footer(logo="LG_umbrella", height=-0.4, width=0.1),
     )
-    distressed_ix = ix.subset(OAS=(1000, None))
-    ix_mv = ix.total_value("AmountOutstanding").iloc[0]
-    if len(distressed_ix.df):
-        distressed_mv = distressed_ix.total_value("AmountOutstanding").iloc[0]
+    doc.add_section("Default Rates")
+
+    fig, ax = vis.subplots(figsize=(10, 5))
+    colors = ["skyblue", "royalblue", "navy"]
+    for lookback, color in zip(lookbacks[::-1], colors):
+        dr = mod.default_rate("HY", lookback, "issuer")
+        vis.plot_timeseries(
+            dr,
+            color=color,
+            lw=3,
+            alpha=0.8,
+            label=f"{lookback} yr",
+            ax=ax,
+            start="2006",
+            title="HY Issuer Default Rate",
+        )
+    ax.legend(fancybox=True, shadow=True)
+    vis.format_yaxis(ax, ytickfmt="{x:.0%}")
+    doc.add_figure("HY_default_rates", width=0.9, dpi=200, savefig=True)
+
+    fig, ax = vis.subplots(figsize=(10, 5))
+    colors = ["k"] + vis.colors("ryb")
+    for rating, color in zip(ratings.keys(), colors):
+        dr = mod.default_rate(rating, 1, "issuer")
+        vis.plot_timeseries(
+            dr,
+            color=color,
+            lw=3,
+            alpha=0.8,
+            label=rating,
+            ax=ax,
+            start="2006",
+            title="1 yr Issuer Default Rate",
+        )
+    ax.legend(fancybox=True, shadow=True)
+    vis.format_yaxis(ax, ytickfmt="{x:.0%}")
+    doc.add_figure("1yr_default_rates", width=0.9, dpi=200, savefig=True)
+
+    columns = doc.add_subfigures(n=2, valign="t")
+    for title, column in zip(["Issuer", "MV"], columns):
+        d = defaultdict(list)
+        for rating in ratings.keys():
+            for lookback in lookbacks:
+                dr = mod.default_rate(rating, lookback, title.lower())
+                d[rating].append(dr.iloc[-1])
+
+        idx = [f"{lb} yr" for lb in lookbacks]
+        table = pd.DataFrame(d, index=idx)
+        with doc.start_edit(column):
+            doc.add_table(
+                table,
+                caption=f"{title} Default Rates",
+                col_fmt="lrrrr",
+                font_size="Large",
+                prec={col: "1%" for col in table.columns},
+            )
+
+    doc.save(save_tex=False)
+
+
+# %%
+
+
+def get_shift(df, col):
+    if col == "sr_loan":
+        return 6
+    elif col == "distress_ratio":
+        return 8
+    shifts = {}
+    for shift in range(1, 12):
+        reg_df = df.copy()
+        reg_df["shift"] = reg_df[col].shift(shift)
+        reg_df.dropna(inplace=True)
+        ols = sms.OLS(
+            reg_df["default_rate"], sms.add_constant(reg_df["shift"])
+        ).fit()
+        shifts[shift] = ols.rsquared
+    optimal_shift = max(shifts, key=shifts.get)
+    return optimal_shift
+
+
+# %%
+def forecast_default_rate(self, rating):
+    # %%
+    rating = "HY"
+    raw_df = pd.concat(
+        (
+            self.default_rate(rating, 1, "issuer"),
+            self.distressed_ratio(rating),
+            self.sr_loan_survey,
+        ),
+        axis=1,
+    )
+    raw_df["sr_loan"].fillna(method="ffill", inplace=True)
+    raw_df.dropna(inplace=True)
+    pct_df = raw_df.rank(pct=True)
+
+    raw_reg_df = pct_df["default_rate"].copy().to_frame()
+
+    x_cols = ["distress_ratio", "sr_loan"]
+    shifts = {}
+    for col in x_cols:
+        shifts[col] = get_shift(pct_df, col)
+        raw_reg_df[col] = pct_df[col].shift(shifts[col])
+
+    reg_df = raw_reg_df.dropna()
+    y = reg_df["default_rate"]
+    x = sms.add_constant(reg_df[x_cols])
+    ols = sms.OLS(y, x).fit()
+
+    # %%
+    y_pred = ols.predict(x).rename("pred")
+
+    # %%
+    pct_df.tail(10)
+    reg_df.tail()
+    pct_df["sr_loan"].iloc[-6]
+    pct_df["sr_loan"].shift(6).iloc[-1]
+
+    # %%
+    curr_x = pd.DataFrame()
+    curr_x["const"] = [1]
+    curr_x["sr_loan"] = [pct_df["sr_loan"].iloc[-1]]
+    n = shifts["distress_ratio"] - shifts["sr_loan"] + 1
+    curr_x["distress_ratio"] = [pct_df["distress_ratio"].iloc[-n]]
+    curr_pred = ols.predict(curr_x).iloc[0]
+    def_rt = pct_df["default_rate"]
+    idx = def_rt[def_rt <= curr_pred].sort_values().index[-1]
+    raw_df.loc[idx, "default_rate"]
+    pct_df
+    # %%
+    pred_x = pct_df["sr_loan"].to_frame()
+    pred_x["distress_ratio"] = pct_df["distress_ratio"].shift(n - 1)
+    y_pred = ols.predict(sms.add_constant(pred_x.dropna()))
+
+    # %%
+
+    plot_df = pd.concat((y, y_pred), axis=1)
+    plot_df.plot()
+    vis.show()
+
+
+def parse_args():
+    """Collect settings from command line and set defaults."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-p", "--print", action="store_true", help="Print SRCH Columns"
+    )
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    if args.print:
+        print(
+            "\nBBG SRCH Result Columns:\n",
+            "['Issuer Name', 'Ticker', 'Default Date', 'ISIN']",
+        )
     else:
-        distressed_mv = 0
-
-    d["date"].append(date)
-    d["issuer_DR"].append(len(distressed_ix.df) / len(ix.df))
-    d["mv_DR"].append(distressed_mv / ix_mv)
-
-# len(d['date'])
-# d['issuer_DR'].append(d['issuer_DR'][-1])
-# d['mv_DR'].append(d['mv_DR'][-1])
-
-df = pd.DataFrame(d).set_index("date", drop=True).rename_axis(None)
-# %%
-x = 5
-fig, ax = vis.subplots()
-vis.plot_timeseries(
-    df["issuer_DR"].rank(pct=True), label="issuer", color="navy", ax=ax
-)
-vis.plot_timeseries(
-    df["mv_DR"].rank(pct=True), label="small", color="skyblue", ax=ax
-)
-vis.plot_timeseries(cdr.rank(pct=True), label="Default Rate", color="k", ax=ax)
-ax.legend(fancybox=True, shadow=True)
-vis.show()
-
-
-# %%
-
-
-fid = self._table_fid("HY", "")
-df = pd.read_parquet(fid)
-df.iloc[:12]
-# def_df = self.defaults
-# def_df[def_df["Ticker"].isin({"USG", "BTU", "DOOR", "TPCG"})]
-# %%
+        fid = "Default_Rates"
+        update_default_rate_pdf(fid)

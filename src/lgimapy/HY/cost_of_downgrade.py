@@ -10,13 +10,11 @@ vis.style()
 # %%
 
 
-def get_yields_and_coupons():
-    db = Database()
-    db.load_market_data(start=db.date("1y"), local=True)
-
-    ix_bbb = db.build_market_index(rating="BBB-", in_stats_index=True)
-    ix_bb = db.build_market_index(rating=("BB+", "BB-"), in_hy_stats_index=True)
-    ix_b = db.build_market_index(rating=("B+", "B-"), in_hy_stats_index=True)
+def get_yields_and_coupons(db):
+    ix = db.build_market_index(start=db.date("1y"))
+    ix_bbb = ix.subset(rating="BBB-", in_stats_index=True)
+    ix_bb = ix.subset(rating=("BB+", "BB-"), in_hy_stats_index=True)
+    ix_b = ix.subset(rating=("B+", "B-"), in_hy_stats_index=True)
 
     d = {}
     d["BBB-_coupon"] = ix_bbb.market_value_weight("CouponRate")
@@ -69,9 +67,9 @@ def plot_yields_vs_coupons(data, doc, coupon_rating, yield_rating):
     doc.add_figure(fid, savefig=True, dpi=200)
 
 
-def update_cost_of_downgrade():
-    data = get_yields_and_coupons()
-    doc = Document("Cost_of_Downgrade", path="reports/HY", fig_dir=True)
+def update_cost_of_downgrade(fid, db):
+    data = get_yields_and_coupons(db)
+    doc = Document(fid, path="reports/HY", fig_dir=True)
     doc.add_preamble(
         margin={"left": 0.5, "right": 0.5, "top": 1.5, "bottom": 1},
         bookmarks=True,
@@ -85,4 +83,7 @@ def update_cost_of_downgrade():
 
 
 if __name__ == "__main__":
-    update_cost_of_downgrade()
+    fid = "Cost_of_Downgrade"
+    db = Database()
+    db.load_market_data(db.date("1y"))
+    update_cost_of_downgrade(fid, db)

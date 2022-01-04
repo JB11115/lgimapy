@@ -8,13 +8,14 @@ from lgimapy import vis
 from lgimapy.bloomberg import bdh
 from lgimapy.data import Database
 from lgimapy.latex import Document
+from lgimapy.utils import root
 
 # %%
 
 
-def update_sharpe_ratios_and_correlations():
+def update_sharpe_ratios_and_correlations(fid):
     vis.style()
-    doc = Document("Correlations_and_SRs", path="reports/HY", fig_dir=True)
+    doc = Document(fid, path="reports/HY", fig_dir=True)
     doc.add_preamble(
         bookmarks=True,
         table_caption_justification="c",
@@ -23,7 +24,6 @@ def update_sharpe_ratios_and_correlations():
     doc.add_section("Cross Asset Measures")
     doc.add_subsection("Correlations")
     db = Database()
-
     assets = [
         "UST_5Y",
         "UST_10Y",
@@ -46,6 +46,12 @@ def update_sharpe_ratios_and_correlations():
 
     start = "1/1/2008"
     tret_raw = db.load_bbg_data(assets, "TRET", start=start).dropna()
+
+    # temp_add_df = pd.read_csv(root("data/HY/temp/HUFN.csv"), skiprows=1)
+    # temp_add_df.index = pd.to_datetime(temp_add_df["Date"])
+    # temp_add = temp_add_df.iloc[:, 1].dropna().rename("HUFN")
+    # tret_raw = pd.concat((tret_raw, temp_add), axis=1)
+
     tret = np.log(tret_raw).diff().iloc[1:]
     fed_funds = bdh("FDTRMID", "Index", fields="PX_MID", start=start).squeeze()
 
@@ -71,11 +77,15 @@ def update_sharpe_ratios_and_correlations():
         ax.legend(loc=2, bbox_to_anchor=(1, 1), fontsize=10)
 
     doc.add_figure("cross_asset_correlations", savefig=True)
+    doc.add_vskip("1cm")
 
+    # Calculate and plot current correlations.
     corr = tret.iloc[-252:].corr()
     mask = np.triu(np.ones_like(corr, dtype=bool))
     lt_corr = corr.where(~mask).dropna(how="all").dropna(how="all", axis=1)
     fig, ax = vis.subplots(figsize=(6, 6))
+    xlabels = db.bbg_names(lt_corr.columns)
+    ylabels = db.bbg_names(lt_corr.index)
     sns.heatmap(
         lt_corr,
         cmap="coolwarm",
@@ -89,20 +99,68 @@ def update_sharpe_ratios_and_correlations():
         ax=ax,
     )
 
-    ax.set_xticklabels(db.bbg_names(lt_corr.columns), ha="center", fontsize=12)
+    ax.set_xticklabels(xlabels, rotation=0, ha="center", fontsize=12)
     ax.set_yticklabels(
-        db.bbg_names(lt_corr.index),
-        rotation=0,
-        ha="right",
-        va="center",
-        fontsize=12,
+        ylabels, rotation=0, ha="right", va="center", fontsize=12
     )
     ax.set_title("Current Correlations", fontweight="bold", fontsize=16)
     doc.add_figure("current_correlations", width=0.6, savefig=True)
 
+    # Calculate and plot long run correlations.
+    subfig_fids = ["long_run_correlations", "correlation_difference"]
+    corr = tret.corr()
+    lt_corr_long = corr.where(~mask).dropna(how="all").dropna(how="all", axis=1)
+    fig, ax = vis.subplots(figsize=(5.5, 5.5))
+    sns.heatmap(
+        lt_corr_long,
+        cmap="coolwarm",
+        center=0,
+        vmax=1,
+        vmin=-1,
+        linewidths=0.3,
+        cbar=False,
+        annot=True,
+        fmt=".2f",
+        ax=ax,
+    )
+
+    ax.set_xticklabels(xlabels, rotation=0, ha="center", fontsize=12)
+    ax.set_yticklabels(
+        ylabels, rotation=0, ha="right", va="center", fontsize=12
+    )
+    ax.set_title("Long Run Correlations", fontweight="bold", fontsize=16)
+    vis.savefig(subfig_fids[0], path=doc.fig_dir)
+
+    # Calculate and plot difference between current and long run correlations.
+    lt_diff_corr = lt_corr - lt_corr_long
+    fig, ax = vis.subplots(figsize=(6, 6))
+    sns.heatmap(
+        lt_diff_corr,
+        cmap="coolwarm",
+        center=0,
+        vmax=1,
+        vmin=-1,
+        linewidths=0.3,
+        cbar=False,
+        annot=True,
+        fmt="+.2f",
+        ax=ax,
+    )
+
+    ax.set_xticklabels(xlabels, ha="center", fontsize=12)
+    ax.set_yticklabels(
+        ylabels, rotation=0, ha="right", va="center", fontsize=12
+    )
+    ax.set_title(
+        "Current Deviation from Average", fontweight="bold", fontsize=16
+    )
+    vis.savefig(subfig_fids[1], path=doc.fig_dir)
+    doc.add_subfigures(figures=subfig_fids)
+
+    # Compute and plot Sharpe Ratios
     doc.add_subsection("Sharpe Ratios")
     periods = [1, 3, 5, 10]
-    fig, axes = vis.subplots(len(periods), 1, sharex=True, figsize=(12, 14))
+    fig, axes = vis.subplots(len(periods), 1, sharex=True, figsize=(12, 12))
     df_list = []
     for period, ax in zip(periods, axes.flat):
         daily_fed_funds = (1 + fed_funds / 100) ** (1 / 252) - 1
@@ -136,11 +194,15 @@ def update_sharpe_ratios_and_correlations():
 
     sr_df = pd.concat(df_list, axis=1).T
     sr_df.columns = db.bbg_names(sr_df.columns)
+    # cols = db.bbg_names(sr_df.columns[:-1]) + ['HUFN']
+    # sr_df.columns = cols
     sr_df.index = [f"{p}yr" for p in periods]
     doc.add_table(sr_df, prec=2, caption="Annualized Sharpe Ratios")
     doc.add_figure("sharpe_ratios", savefig=True)
     doc.save()
 
 
+# %%
 if __name__ == "__main__":
-    update_sharpe_ratios_and_correlations()
+    fid = "Correlations_and_SRs"
+    update_sharpe_ratios_and_correlations(fid)

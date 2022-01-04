@@ -11,30 +11,26 @@ from lgimapy.utils import root, get_ordinal
 
 
 # %%
-def update_cover_page():
+def update_cover_page(fid, db):
     """Create cover page for strategy meeting."""
     # %%
     vis.style()
-    db = Database()
-    db.load_market_data(start=db.date("5y"))
 
     # %%
     fid = "HY_Cover_Page"
     doc = Document(fid, path="reports/HY", fig_dir=True, load_tex=fid)
-    plot_index_oas("H0A0", doc)
+    plot_corrected_H0A0_oas(doc, db)
     plot_index_oas("H4UN", doc)
-    plot_hy_ig_ratios(doc)
-    plot_negative_convexity(db, doc)
+    plot_hy_ig_ratios(doc, db)
+    plot_negative_convexity(doc, db)
     doc.save(save_tex=True)
 
     # %%
 
 
 # %%
-def plot_hy_ig_ratios(doc):
+def plot_hy_ig_ratios(doc, db):
     """Update plot for IG/HY ratio for cash bonds and cdx."""
-    db = Database()
-    db.load_market_data(start=db.date("5y"))
     ix_ig = db.build_market_index(in_stats_index=True)
     ig_oas = ix_ig.market_value_median("OAS").rename("US_IG")
     bbg_df = db.load_bbg_data(
@@ -43,8 +39,11 @@ def plot_hy_ig_ratios(doc):
     df = pd.concat([bbg_df, ig_oas], axis=1, sort=True).dropna(how="any")
     df["HY/IG Cash"] = df["US_HY"] / df["US_IG"]
     df["HY/IG CDX"] = df["CDX_HY"] / df["CDX_IG"]
-    s_left = df["HY/IG Cash"]
-    s_right = df["HY/IG CDX"]
+
+    right_last = 100 * df["HY/IG CDX"].rank(pct=True).iloc[-1]
+    right_label = f"CDX: {right_last:.0f}{get_ordinal(right_last)} %tile"
+    left_last = 100 * df["HY/IG Cash"].rank(pct=True).iloc[-1]
+    left_label = f"Cash: {left_last:.0f}{get_ordinal(left_last)} %tile"
 
     # Plot
     fig, ax_left = vis.subplots(figsize=(10, 5.8))
@@ -52,11 +51,16 @@ def plot_hy_ig_ratios(doc):
     ax_right.grid(False)
 
     ax_left.plot(df["HY/IG Cash"], c="navy", alpha=0.9, lw=2)
+    ax_right.plot(
+        df["HY/IG Cash"].iloc[:2], c="navy", alpha=0.9, lw=2, label=left_label
+    )
     ax_left.set_ylabel("Cash", color="navy")
     ax_left.tick_params(axis="y", colors="navy")
     ax_left.axhline(np.median(df["HY/IG Cash"]), ls=":", lw=1.5, color="navy")
 
-    ax_right.plot(df["HY/IG CDX"], c="goldenrod", alpha=0.9, lw=2)
+    ax_right.plot(
+        df["HY/IG CDX"], c="goldenrod", alpha=0.9, lw=2, label=right_label
+    )
     ax_right.axhline(
         np.median(df["HY/IG CDX"]),
         ls=":",
@@ -75,8 +79,8 @@ def plot_hy_ig_ratios(doc):
     vis.set_percentile_limits(
         [df["HY/IG Cash"], df["HY/IG CDX"]], [ax_left, ax_right]
     )
-    ax_right.legend()
-    vis.savefig(doc.fig_dir / "HY_IG_ratio")
+    ax_right.legend(loc="upper left", shadow=True, fancybox=True)
+    vis.savefig(doc.fig_dir / "HY_IG_ratio_cash_CDX")
     vis.close()
 
 
@@ -114,14 +118,109 @@ def plot_index_oas(index, doc):
     ax.axhline(pct[95], label="_nolegend_", **pct_line_kwargs)
 
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    ax.legend(fancybox=True, title=title, shadow=True)
+    ax.legend(loc="upper right", fancybox=True, title=title, shadow=True)
     vis.savefig(doc.fig_dir / f"cover_{index}")
     vis.close()
 
 
-def plot_negative_convexity(db, doc):
+def get_label(s):
+    last_val = s.iloc[-1]
+    last_pct = 100 * s.rank(pct=True).iloc[-1]
+    ord = get_ordinal(last_pct)
+    return f"\n  {last_val:.0f} bp ({last_pct:.0f}{ord} %tile)"
+
+
+def one_yr(s, db):
+    return s[s.index >= db.date("1y")]
+
+
+def plot_corrected_H0A0_oas(doc, db):
+    rating_kwargs = {
+        "BB": ("BB+", "BB-"),
+        "B": ("B+", "B-"),
+        "C": ("CCC+", "C"),
+    }
     ix = db.build_market_index(in_H0A0_index=True)
-    rating_kwargs = {"BB": ("BB+", "BB-"), "B": ("B+", "B-"), "CCC": "CCC"}
+    ix_oas_5y = ix.OAS()
+    ix_oas_median = np.median(ix_oas_5y)
+    ix_oas_1y = one_yr(ix_oas_5y, db)
+
+    rating_oas_1y = {}
+    rating_oas_5y = {}
+    rating_oas_median = {}
+    rating_mv_nominal = {}
+    for rating, rating_kws in rating_kwargs.items():
+        rating_ix = ix.subset(rating=rating_kws)
+        rating_oas_5y[rating] = rating_ix.OAS().rename(rating)
+        rating_oas_1y[rating] = one_yr(rating_oas_5y[rating], db)
+        rating_oas_median[rating] = np.median(rating_oas_5y[rating])
+        rating_mv_nominal[rating] = rating_ix.total_value().iloc[-1]
+
+    ix_mv = sum(list(rating_mv_nominal.values()))
+    rating_mv = {k: v / ix_mv for k, v in rating_mv_nominal.items()}
+
+    fig, ax = vis.subplots(figsize=(10, 5.8))
+    lw = 2
+
+    hy_oas_df = pd.concat(
+        (rating_oas_5y[rating] * rating_mv[rating] for rating in rating_kwargs),
+        axis=1,
+    )
+    corrected_ix_oas_5y = hy_oas_df.sum(axis=1)
+    corrected_ix_oas_5y -= corrected_ix_oas_5y.iloc[-1] - ix_oas_5y.iloc[-1]
+    corrected_ix_oas_median = np.median(corrected_ix_oas_5y)
+    corrected_ix_oas_1y = one_yr(corrected_ix_oas_5y, db)
+
+    vis.plot_timeseries(
+        ix_oas_1y,
+        lw=lw,
+        color="grey",
+        label=f"Historical H0A0: {get_label(ix_oas_5y)}",
+        median_line=ix_oas_median,
+        median_line_kws={"color": "grey", "alpha": 0.8, "label": "_nolegend_"},
+        ax=ax,
+        title="HY Spreads",
+    )
+    vis.plot_timeseries(
+        corrected_ix_oas_1y,
+        color="k",
+        lw=lw,
+        label=f"Corrected H0A0: {get_label(corrected_ix_oas_5y)}",
+        median_line=corrected_ix_oas_median,
+        median_line_kws={"color": "k", "alpha": 0.8, "label": "_nolegend_"},
+        ax=ax,
+        title="HY Spreads",
+    )
+
+    colors = dict(zip(rating_kwargs.keys(), vis.colors("ryb")))
+    for rating, rating_kws in rating_kwargs.items():
+        c = colors[rating]
+        vis.plot_timeseries(
+            rating_oas_1y[rating],
+            color=c,
+            lw=lw,
+            median_line=rating_oas_median[rating],
+            median_line_kws={"color": c, "alpha": 0.8, "label": "_nolegend_"},
+            label=f"{rating}-Rated: {get_label(rating_oas_5y[rating])}",
+            ax=ax,
+        )
+    title = "$\\bf{5yr}$ $\\bf{Stats}$"
+    ax.legend(
+        title=title, fancybox=True, shadow=True, loc=2, bbox_to_anchor=(1, 1)
+    )
+
+    fid = "HY_spreads_cover_page"
+    vis.savefig(doc.fig_dir / fid)
+    vis.close()
+
+
+def plot_negative_convexity(doc, db):
+    ix = db.build_market_index(in_H0A0_index=True)
+    rating_kwargs = {
+        "BB": ("BB+", "BB-"),
+        "B": ("B+", "B-"),
+        "CCC": ("CCC+", "CCC-"),
+    }
     colors = dict(zip(rating_kwargs.keys(), vis.colors("ryb")))
     fig, ax = vis.subplots(figsize=(10, 5.8))
     for rating, rating_kws in rating_kwargs.items():
@@ -157,4 +256,7 @@ def plot_negative_convexity(db, doc):
 
 
 if __name__ == "__main__":
-    update_cover_page()
+    fid = "HY_Cover_Page"
+    db = Database()
+    db.load_market_data(start=db.date("5y"))
+    update_cover_page(fid, db)

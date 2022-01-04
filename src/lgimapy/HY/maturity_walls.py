@@ -98,10 +98,10 @@ def plot_maturity_walls(mat_walls, doc):
     doc.add_figure("maturity_walls", savefig=True)
 
 
-def update_maturity_walls():
+def update_maturity_walls(fid):
     vis.style()
     maturity_wall_data = get_maturity_walls()
-    doc = Document("Maturity_Walls", path="reports/HY", fig_dir=True)
+    doc = Document(fid, path="reports/HY", fig_dir=True)
     doc.add_preamble(
         bookmarks=True,
         margin={"left": 0.5, "right": 0.5, "top": 1.5, "bottom": 1},
@@ -115,4 +115,5 @@ def update_maturity_walls():
 # %%
 
 if __name__ == "__main__":
-    update_maturity_walls()
+    fid = "Maturity_Walls"
+    update_maturity_walls(fid)

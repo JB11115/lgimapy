@@ -4,9 +4,10 @@ import numpy as np
 import pandas as pd
 
 from lgimapy import vis
-from lgimapy.data import Database, mode
+from lgimapy.data import Database
 from lgimapy.latex import Document
 from lgimapy.models import simulate_rating_migrations
+from lgimapy.stats import mode
 from lgimapy.utils import root, to_list
 
 # %%
@@ -29,7 +30,7 @@ def sectors():
         "TRANSPORTATION",
         "BANKS",
         "OTHER_FIN",
-        "INSURANCE",
+        "INSURANCE_EX_HEALTHCARE",
         "REITS",
         "UTILITY",
         "SOVEREIGN",
@@ -279,6 +280,7 @@ def last_12m_ratings_actions():
         d["Rising Stars"].append(rising_stars["AmountOutstanding"].sum())
         df = pd.DataFrame(d).set_index("Month", drop=True).rename_axis(None)
         df["Net"] = df["Rising Stars"] - df["Fallen Angels"]
+        df
     return df / 1e3
 
 
@@ -324,6 +326,13 @@ def plot_fallen_angels_and_rising_stars(df, path):
         color="k",
         label="Net",
     )
+
+    # Pad edges.
+    vmin = df["Net"].min()
+    vmin = min(vmin * 1.2, vmin - 5)
+    vmax = df["Net"].max()
+    vmax = max(vmax * 1.2, vmax + 5)
+    ax.set_ylim(vmin, vmax)
     ax.grid(False, axis="x")
     ax.set_title("Last 12m Fallen Angels / Rising Stars\n\n", fontweight="bold")
     ax.legend(
@@ -450,7 +459,16 @@ def add_rising_star_ticker_table(df, caption, doc, db):
             ["US06652KAB98", "US06738EBP97", "US639057AB46"],
         ),
         "NFLX": (["US64110LAV80"], ["US124857AZ68", "US25470DBJ72"]),
+        "CNC": (["US15135BAX91"], ["US126650DN71", "US404119BX69"]),
+        "WEIRLN": (["US94876QAA40"], ["US489170AF77"]),
+        "PPC": (["US72147KAF57"], ["US832248BD93"]),
+        "NWL": (
+            ["US651229AY21"],
+            ["US205887CE05", "US60871RAH30", "US418056AU19"],
+        ),
+        "FE": (["US337932AP26"], ["US059165EN63", "US69352PAQ63"]),
     }
+    comp_offset = {"WEIRLN": 20}
     comps = []
     upside = []
     for ticker in df["Ticker"]:
@@ -463,7 +481,7 @@ def add_rising_star_ticker_table(df, caption, doc, db):
         else:
             rep_oas = db.build_market_index(isin=rep).OAS().iloc[-1]
             comp_ix = db.build_market_index(isin=comp)
-            comp_oas = comp_ix.OAS().iloc[-1]
+            comp_oas = comp_ix.OAS().iloc[-1] - comp_offset.get(ticker, 0)
             comp_tickers = sorted(comp_ix.df["Ticker"].unique())
             tickers = ", ".join(comp_tickers)
             comp_og_mat = comp_ix.df["OriginalMaturity"].mean()
@@ -581,10 +599,8 @@ def update_fallen_angel_analysis(fid):
     plot_downgrades(ra_df, path)
 
 
-def update_fallen_angels_rising_stars():
-    doc = Document(
-        "Potential_Fallen_Angels_Rising_Stars", path="reports/HY", fig_dir=True
-    )
+def update_fallen_angels_rising_stars(fid):
+    doc = Document(fid, path="reports/HY", fig_dir=True)
     vis.style()
     db = Database()
     db.load_market_data()
@@ -613,9 +629,7 @@ def update_fallen_angels_rising_stars():
     doc.add_section("Fallen Angels")
     add_fallen_angel_table(pfa_df, doc)
 
-    doc.add_subfigures(
-        figures=["fig/net_fallen_angels", "fig/recent_downgrades"]
-    )
+    doc.add_subfigures(figures=["net_fallen_angels", "recent_downgrades"])
     doc.add_pagebreak()
     doc.add_section("Rising Stars")
     rising_stars, bb_outlooks = doc.add_subfigures(n=2, widths=[0.45, 0.54])
@@ -637,7 +651,7 @@ def update_fallen_angels_rising_stars():
 
 def comp_check():
     # %%
-    ticker = "NFLX"
+    ticker = "FE"
     db = Database()
     db.load_market_data()
     ticker_ix = db.build_market_index(ticker=ticker, in_H0A0_index=True)
@@ -646,12 +660,17 @@ def comp_check():
         in_stats_index=True, rating="BBB-", sector=sector
     )
     bbb_ix = db.build_market_index(
-        in_stats_index=True, ticker=["DISCA", "VIAC"]
+        in_stats_index=None,
+        ticker=["PPL", "EXC"],
+        # issue_years=(None, 2),
     )
     cols = ["ISIN", "Ticker", "MaturityYears", "IssueYears", "OAS"]
-    ticker_ix.df[cols]
-    bbb_ix.df[cols]
+    ticker_ix.df[cols].sort_values(["Ticker", "MaturityYears"])
+    # %%
+    bbb_ix.df[cols].sort_values(["Ticker", "MaturityYears"])
+    # %%
 
 
 if __name__ == "__main__":
-    update_fallen_angels_rising_stars()
+    fid = "Potential_Fallen_Angels_Rising_Stars"
+    update_fallen_angels_rising_stars(fid)

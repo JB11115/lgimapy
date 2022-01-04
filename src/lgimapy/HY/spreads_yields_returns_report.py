@@ -10,7 +10,7 @@ from lgimapy.utils import root
 # %%
 
 
-def update_spreads_yields_returns():
+def update_spreads_yields_returns(fid):
     # Load data.
     hy_dir = root("data/HY")
     spreads_fid = hy_dir / "report_spreads.csv"
@@ -118,7 +118,7 @@ def update_spreads_yields_returns():
         print()
         return
 
-    doc = Document("HY_spreads_yields_returns", path="reports/HY")
+    doc = Document(fid, path="reports/HY")
     date = spreads_df.index[-1]
     doc.add_preamble(
         orientation="landscape",
@@ -141,11 +141,11 @@ def update_spreads_yields_returns():
     )
 
     # Add percentile tables for spreads and yields.
-    doc.add_section("Decile Tables")
-    doc.add_subsection("Spreads")
+    doc.add_bookmark("Decile Tables")
+    doc.add_bookmark("Spreads", level=1)
     for section, kwargs in sections.items():
         if section.startswith("Yield"):
-            doc.add_subsection("Yields")
+            doc.add_bookmark("Yields", level=1)
         df, cols, yields = (
             kwargs["df"],
             kwargs["cols"],
@@ -169,7 +169,7 @@ def update_spreads_yields_returns():
     # Add total returns table.
 
     for title, df in return_dfs.items():
-        doc.add_subsection(title)
+        doc.add_bookmark(title, level=1)
         table = df.copy()
         heatmap_cols = ["1WK", "YTD"]
         heatmap_kwargs = {}
@@ -195,6 +195,7 @@ def update_spreads_yields_returns():
             gradient_cell_col=heatmap_cols,
             gradient_cell_kws=heatmap_kwargs,
         )
+
     doc.save(save_tex=False)
 
 
@@ -305,4 +306,5 @@ def parse_args():
 # %%
 
 if __name__ == "__main__":
-    update_spreads_yields_returns()
+    fid = "HY_spreads_yields_returns"
+    update_spreads_yields_returns(fid)

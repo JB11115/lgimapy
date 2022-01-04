@@ -8,14 +8,13 @@ from lgimapy.latex import Document
 # %%
 
 
-def update_valuations():
+def update_valuations(fid, db):
     vis.style()
-    db = Database()
-    doc = Document("HY_Valuations", path="reports/HY", fig_dir=True)
+    doc = Document(fid, path="reports/HY", fig_dir=True)
     date = db.date("today").strftime("%B %#d, %Y")
     doc.add_preamble(
         margin={
-            "paperheight": 30,
+            "paperheight": 31,
             "left": 0.5,
             "right": 0.5,
             "top": 0.5,
@@ -26,10 +25,10 @@ def update_valuations():
         header=doc.header(left="HY Valuations", right=f"EOD {date}"),
         footer=doc.footer(logo="LG_umbrella"),
     )
-
     start = "1/1/2020"
-    db.load_market_data(start=start, local=True)
-    total_ix = db.build_market_index(in_hy_stats_index=True, OAS=(-10, 5000))
+    total_ix = db.build_market_index(
+        in_hy_stats_index=True, OAS=(-10, 5000), start=start
+    )
 
     energy_sectors = [
         "INDEPENDENT",
@@ -157,4 +156,7 @@ def update_valuations():
 
 
 if __name__ == "__main__":
-    update_valuations()
+    fid = "HY_Valuations"
+    db = Database()
+    db.load_market_data(start="1/1/2020")
+    update_valuations(fid, db)
