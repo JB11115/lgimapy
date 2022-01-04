@@ -1,11 +1,13 @@
 from dateutil.relativedelta import relativedelta
 
+import awswrangler as wr
+import boto3
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
 from lgimapy.data import Database, groupby
-from lgimapy.utils import mkdir, root, restart_program
+from lgimapy.utils import mkdir, root, Time
 
 
 # %%
@@ -34,7 +36,7 @@ def create_feather(fid, db):
     db.load_market_data(
         start=prev_last_of_month, end=last_of_month, local=False
     )
-    ix = db.build_market_index()
+    ix = db.build_market_index(drop_treasuries=False)
     ix.df = ix.df[ix.df["Date"].isin(db.trade_dates())]
 
     # Add previous market value column.
@@ -54,6 +56,27 @@ def create_feather(fid, db):
     df = ix.subset(start=ix.dates[1]).df.reset_index(drop=True)
     df.to_feather(root(f"data/{db.market}/feathers/{fid}.feather"))
 
+    # Add daily files to s3 drop point.
+    year, month = fid.split("_")
+    sess = boto3.Session(
+        aws_access_key_id=db._passwords["AWS"]["dev_access_key"],
+        aws_secret_access_key=db._passwords["AWS"]["dev_secret_access_key"],
+    )
+    s3_dirs = [
+        "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds-history",
+        "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds-history",
+        "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
+    ]
+    for date, date_df in df.groupby("Date"):
+        mkt = db.market.lower()
+        filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
+        for s3_dir in s3_dirs:
+            s3_fid = f"{s3_dir}/{mkt}/{filename}.parquet"
+            wr.s3.to_parquet(
+                date_df, path=s3_fid, index=False, boto3_session=sess
+            )
+    # %%
+
 
 def fill_missing_HY_index_flags(ix):
     min_daily_flags = (
@@ -69,7 +92,7 @@ def fill_missing_HY_index_flags(ix):
     return ix
 
 
-def find_missing_feathers(db):
+def find_missing_feathers(db, update_current=False):
     """
     Find missing feathers from data dir.
 
@@ -95,6 +118,9 @@ def find_missing_feathers(db):
         ).strftime("%Y_%m")
     )
     missing_fids = expected_fids - saved_fids
+    if update_current:
+        current_fid = sorted(list(expected_fids))[-1]
+        missing_fids.add(current_fid)
 
     # Check that all expected trade dates for past couple months are
     # in saved the feather files.
@@ -110,10 +136,10 @@ def find_missing_feathers(db):
     missing_dates = set(expected_dates) - set(saved_dates)
     missing_date_fids = set([d.strftime("%Y_%m") for d in missing_dates])
 
-    return sorted(missing_fids | missing_date_fids)
+    return sorted(missing_fids | missing_date_fids, reverse=True)
 
 
-def update_market_data_feathers(limit=20):
+def update_market_data_feathers(limit=20, update_current=False):
     """
     Update market data feather files for each market.
     Finds and creates any missing feather files.
@@ -123,7 +149,7 @@ def update_market_data_feathers(limit=20):
     markets = ["US", "GBP", "EUR"]
     for market in markets:
         db = Database(market=market)
-        missing_fids = find_missing_feathers(db)
+        missing_fids = find_missing_feathers(db, update_current=update_current)
         pbar = len(missing_fids) > 3
         if pbar:
             print(f"Updating {market} Feather Files")
@@ -138,9 +164,11 @@ def update_market_data_feathers(limit=20):
         print(f"Updated {market} Feather Files")
 
 
-fid = "2019_10"
+# %%
+# fid = '2021_10'
 db = Database()
+# import boto3
 # %%
 
 if __name__ == "__main__":
-    update_market_data_feathers()
+    update_market_data_feathers(update_current=True)
