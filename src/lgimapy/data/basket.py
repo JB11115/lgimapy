@@ -11,7 +11,14 @@ from oslo_concurrency import lockutils
 from scipy import stats
 
 from lgimapy.bloomberg import get_bloomberg_ticker
-from lgimapy.data import Bond, concat_index_dfs, new_issue_mask, TreasuryCurve
+from lgimapy.data import (
+    Bond,
+    concat_index_dfs,
+    groupby,
+    new_issue_mask,
+    TreasuryCurve,
+)
+from lgimapy.stats import mode
 from lgimapy.utils import (
     check_all_equal,
     check_market,
@@ -24,119 +31,6 @@ from lgimapy.utils import (
     to_datetime,
     to_list,
 )
-
-
-def mode(x):
-    """Get most frequent occurance in Pandas aggregate by."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        return stats.mode(x)[0][0]
-
-
-def groupby(df, cols):
-    """
-    Group basket of bonds together by seletected features.
-
-    Parameters
-    ----------
-    df: pd.DataFrame
-        DataFrame basket of bonds.
-    cols: str or List[str].
-        Column(s) in `df` to group by.
-
-    Returns
-    -------
-    pd.DataFrame
-        Grouped DataFrame.
-    """
-    df_to_group = df.copy()
-    if cols == "risk entity":
-        groupby_cols = ["Ticker", "Issuer"]
-    else:
-        groupby_cols = to_list(cols, dtype=str)
-
-    # Collect columns that should be market value weighted
-    # and create a mv weighted column for each that is present.
-    mv_weight_cols = [
-        "OAS",
-        "OASD",
-        "OAD",
-        "DTS",
-        "DirtyPrice",
-        "CleanPrice",
-        "PX_Adj_OAS",
-        "NumericRating",
-        "AnalystRating",
-    ]
-    mv_agg_rules = {}
-    df_cols = set(df)
-    any_mv_cols_present = len(set(mv_weight_cols) & df_cols)
-    if any_mv_cols_present and "MarketValue" in df_cols:
-        for col in mv_weight_cols:
-            if col not in df_cols:
-                continue
-            df_to_group[f"MV_{col}"] = df["MarketValue"] * df[col]
-            mv_agg_rules[f"MV_{col}"] = np.sum
-
-    # Collect columns that should be market value weighted using
-    # previous day's market value and create a mv weighted column
-    # for each column that is present.
-    prev_mv_weight_cols = ["TRet", "XSRet"]
-    prev_mv_agg_rules = {}
-    any_prev_mv_cols_present = len(set(prev_mv_weight_cols) & df_cols)
-    if any_prev_mv_cols_present and "PrevMarketValue" in df_cols:
-        for col in prev_mv_weight_cols:
-            if col not in df_cols:
-                continue
-            df_to_group[f"PMV_{col}"] = df["PrevMarketValue"] * df[col]
-            prev_mv_agg_rules[f"PMV_{col}"] = np.sum
-
-    # Combine aggregation rules for all columns.
-    agg_rules = {
-        "Ticker": mode,
-        "Issuer": mode,
-        "Sector": mode,
-        "Subsector": mode,
-        "LGIMASector": mode,
-        "OAD_Diff": np.sum,
-        "P_OAD": np.sum,
-        "BM_OAD": np.sum,
-        "DTS_Diff": np.sum,
-        "P_DTS": np.sum,
-        "BM_DTS": np.sum,
-        "AmountOutstanding": np.sum,
-        "MarketValue": np.sum,
-        "PrevMarketValue": np.sum,
-        "P_AssetValue": np.sum,
-        "BM_AssetValue": np.sum,
-        "P_Weight": np.sum,
-        "BM_Weight": np.sum,
-        "Weight_Diff": np.sum,
-        "OASD_Diff": np.sum,
-        "OAS_Diff": np.sum,
-        "DTS_Contrib": np.sum,
-        **mv_agg_rules,
-        **prev_mv_agg_rules,
-    }
-    # Apply aggregation of present columns.
-    agg_cols = {
-        col: rule
-        for col, rule in agg_rules.items()
-        if col in df_to_group.columns and col not in groupby_cols
-    }
-    gdf = df_to_group.groupby(groupby_cols, observed=True).aggregate(agg_cols)
-
-    # Clean market value weighted columns by dividing by total
-    # market value and renaming back to original name.
-    col_names = {}
-    for col in mv_agg_rules.keys():
-        gdf[col] = gdf[col] / gdf["MarketValue"]
-        col_names[col] = col[3:]
-    for col in prev_mv_agg_rules.keys():
-        gdf[col] = gdf[col] / gdf["PrevMarketValue"]
-        col_names[col] = col[4:]
-
-    return gdf.rename(columns=col_names)
 
 
 class BondBasket:
@@ -184,41 +78,49 @@ class BondBasket:
         dates = list(pd.to_datetime(self.df["Date"].unique()))
         return [d for d in dates if d not in self._holiday_dates]
 
+    def _unique(self, col, df=None):
+        """
+        List[str]:
+            Sorted list of unique values for a columns in :attr:`df`.
+        """
+        df = self.df if df is None else df
+        return sorted(list(df[col].unique().dropna()))
+
     @property
     @lru_cache(maxsize=None)
     def cusips(self):
         """List[str]: Memoized unique CUSIPs in index."""
-        return list(self.df.index.unique())
+        return self._unique("CUSIP")
 
     @property
     @lru_cache(maxsize=None)
     def isins(self):
         """List[str]: Memoized unique ISINs in index."""
-        return list(self.df["ISIN"].unique())
+        return self._unique("ISIN")
 
     @property
     @lru_cache(maxsize=None)
     def sectors(self):
         """List[str]: Memoized unique sorted sectors in index."""
-        return sorted(list(self.df["Sector"].unique().dropna()))
+        return self._unique("Sector")
 
     @property
     @lru_cache(maxsize=None)
     def subsectors(self):
         """List[str]: Memoized unique sorted subsectors in index."""
-        return sorted(list(self.df["Subsector"].unique().dropna()))
+        return self._unique("Subsector")
 
     @property
     @lru_cache(maxsize=None)
     def issuers(self):
         """List[str]: Memoized unique sorted issuers in index."""
-        return sorted(list(self.df["Issuer"].unique().dropna()))
+        return self._unique("Issuer")
 
     @property
     @lru_cache(maxsize=None)
     def tickers(self):
         """List[str]: Memoized unique sorted tickers in index."""
-        return sorted(list(self.df["Ticker"].unique().dropna()))
+        return self._unique("Ticker")
 
     @property
     def bonds(self):
@@ -230,6 +132,13 @@ class BondBasket:
     def all_trade_dates(self):
         """List[datetime]: Memoized list of trade dates."""
         return list(self._trade_date_df.index)
+
+    @property
+    @lru_cache(maxsize=None)
+    def _trade_dates(self):
+        """List[datetime]: Memoized list of trade dates."""
+        trade_dates = self._trade_date_df[self._trade_date_df["holiday"] == 0]
+        return list(trade_dates.index)
 
     @property
     @lru_cache(maxsize=None)
@@ -263,6 +172,10 @@ class BondBasket:
         return groupby(self.df, "Ticker")
 
     @property
+    def issuer_df(self):
+        return groupby(self.df, "Issuer")
+
+    @property
     @lru_cache(maxsize=None)
     def _ratings_changes_df(self):
         """pd.DataFrame: Rating change history of basket."""
@@ -276,6 +189,7 @@ class BondBasket:
 
     def subset(
         self,
+        df=None,
         name=None,
         date=None,
         account=None,
@@ -283,6 +197,7 @@ class BondBasket:
         start=None,
         end=None,
         rating=(None, None),
+        rating_risk_bucket=None,
         analyst_rating=(None, None),
         currency=None,
         cusip=None,
@@ -293,9 +208,11 @@ class BondBasket:
         sector=None,
         subsector=None,
         LGIMA_sector=None,
+        LGIMA_top_level_sector=None,
         BAML_top_level_sector=None,
         BAML_sector=None,
-        drop_treasuries=True,
+        benchmark_treasury=(None, None),
+        drop_treasuries=False,
         drop_municipals=False,
         maturity=(None, None),
         issue_years=(None, None),
@@ -363,6 +280,8 @@ class BondBasket:
             * str: ``'HY'``, ``'IG'``, ``'AAA'``, ``'Aa1'``, etc.
             * Tuple[str, str]: ``('AAA', 'BB')`` uses all bonds in
               specified inclusive range.
+        rating_risk_bucket: str, List[str], optional
+            Rating risk buckets to include in index, default is all.
         analyst_rating: Tuple[float, float], default=(None, None)
             Range of analyst ratings to include.
         currency: str, List[str], optional
@@ -389,7 +308,11 @@ class BondBasket:
             BAML sector or list of sectors to include in index.
         LGIMA_sector: str, List[str], optional
             LGIMA custom sector(s) to include, default is all.
-        drop_treasuries: bool, default=True
+        LGIMA_top_level_sector: str, List[str], optional
+            LGIMA top level sector(s) to include, default is all.
+        benchmark_treasury: Tuple[float, float], defalt=(None, None)
+            Respective benchmark treasuries to include, default is all.
+        drop_treasuries: bool, default=False
             Whether to drop treausuries.
         drop_municipals: bool, default=False
             Whether to drop municipals.
@@ -532,9 +455,11 @@ class BondBasket:
 
         Returns
         -------
-        :class:`Index`:
-            :class:`Index` with specified rules.
+        :class:`BondBasket`:
+            :class:`BondBasket` or current child class of
+            :class:`BondBasket` subset with specified rules.
         """
+        df = self.df.copy() if df is None else df.copy()
         name = self.name if name is None else name
 
         # Convert dates to datetime.
@@ -562,6 +487,7 @@ class BondBasket:
         country_of_risk = to_list(country_of_risk, dtype=str, sort=True)
         collateral_type = to_list(collateral_type, dtype=str, sort=True)
         coupon_type = to_list(coupon_type, dtype=str, sort=True)
+        rating_risk_bucket = to_list(rating_risk_bucket, dtype=str, sort=True)
         L3 = to_list(L3, dtype=str, sort=True)
         sector = to_list(sector, dtype=str, sort=True)
         subsector = to_list(subsector, dtype=str, sort=True)
@@ -570,6 +496,9 @@ class BondBasket:
             BAML_top_level_sector, dtype=str, sort=True
         )
         LGIMA_sector = to_list(LGIMA_sector, dtype=str, sort=True)
+        LGIMA_top_level_sector = to_list(
+            LGIMA_top_level_sector, dtype=str, sort=True
+        )
 
         # Convert all flag constraints to int.
         in_returns_index = to_int(in_returns_index)
@@ -597,6 +526,7 @@ class BondBasket:
         user_defined_constraints = locals().copy()
         ignored_kws = {
             "self",
+            "df",
             "argspec",
             "default_constraints",
             "name",
@@ -612,7 +542,7 @@ class BondBasket:
 
         # Add new issue mask if required.
         if is_new_issue:
-            self.df["NewIssueMask"] = new_issue_mask(self.df)
+            df["NewIssueMask"] = new_issue_mask(df)
 
         # TODO: Modify price/amount outstading s.t. they account for currency.
         # Store category constraints.
@@ -626,6 +556,7 @@ class BondBasket:
             "isin": ("ISIN", isin),
             "issuer": ("Issuer", issuer),
             "ticker": ("Ticker", ticker),
+            "rating_risk_bucket": ("RatingRiskBucket", rating_risk_bucket),
             "L3": ("L3", L3),
             "sector": ("Sector", sector),
             "subsector": ("Subsector", subsector),
@@ -635,6 +566,10 @@ class BondBasket:
                 BAML_top_level_sector,
             ),
             "LGIMA_sector": ("LGIMASector", LGIMA_sector),
+            "LGIMA_top_level_sector": (
+                "LGIMATopLevelSector",
+                LGIMA_top_level_sector,
+            ),
             "market_of_issue": ("MarketOfIssue", market_of_issue),
             "country_of_domicile": ("CountryOfDomicile", country_of_domicile),
             "country_of_risk": ("CountryOfRisk", country_of_risk),
@@ -687,6 +622,7 @@ class BondBasket:
             "mod_dur_to_worst": ("ModDurtoWorst", mod_dur_to_worst),
             "mod_dur_to_mat": ("ModDurtoMat", mod_dur_to_mat),
             "liquidity_score": ("LQA", liquidity_score),
+            "benchmark_treasury": ("BMTreasury", benchmark_treasury),
         }
         self._range_vals = {}
         for col, constraint in range_constraints.values():
@@ -774,18 +710,17 @@ class BondBasket:
         # each individual mask.
         range_repl = {
             key: (
-                f'(self.df["{key}"] >= self._range_vals["{key}"][0]) & '
-                f'(self.df["{key}"] <= self._range_vals["{key}"][1])'
+                f'(df["{key}"] >= self._range_vals["{key}"][0]) & '
+                f'(df["{key}"] <= self._range_vals["{key}"][1])'
             )
             for key in self._range_vals.keys()
         }
         cat_repl = {
-            key: f'(self.df["{key}"].isin(self._category_vals["{key}"]))'
+            key: f'(df["{key}"].isin(self._category_vals["{key}"]))'
             for key in self._category_vals.keys()
         }
         flag_repl = {
-            key: f'(self.df["{key}"] == self._flags["{key}"])'
-            for key in self._flags
+            key: f'(df["{key}"] == self._flags["{key}"])' for key in self._flags
         }
         repl_dict = {**range_repl, **cat_repl, **flag_repl, "~(": "(~"}
 
@@ -801,9 +736,9 @@ class BondBasket:
 
         # Add treasury and muncipal rules.
         if drop_treasuries:
-            subset_mask_list.append('(self.df["Sector"]!="TREASURIES")')
+            subset_mask_list.append('(df["Sector"]!="TREASURIES")')
         if drop_municipals:
-            subset_mask_list.append('(self.df["Sector"]!="LOCAL_AUTHORITIES")')
+            subset_mask_list.append('(df["Sector"]!="LOCAL_AUTHORITIES")')
 
         # Format all other rules.
         for rule in self._all_rules:
@@ -816,41 +751,43 @@ class BondBasket:
         temp_cols = ["NewIssueMask"]
         if subset_mask_list:
             subset_mask = " & ".join(subset_mask_list)
-            df = eval(f"self.df.loc[{subset_mask}]").drop(
+            df = eval(f"df.loc[{subset_mask}]").drop(
                 temp_cols, axis=1, errors="ignore"
             )
         else:
-            df = self.df.drop(temp_cols, axis=1, errors="ignore")
+            df = df.drop(temp_cols, axis=1, errors="ignore")
 
-        # Return current BondBasket or child class of BondBasket
-        # If required, import child class.
+        return self._child_class(
+            df=df,
+            name=name,
+            constraints=subset_index_constraints,
+        )
+
+    def _child_class(self, **kwargs):
+        """
+        Return current child class of :class:`BondBasket`.
+        """
         class_name = self.__class__.__name__
         if class_name == "BondBasket":
             return BondBasket(
-                df=df,
-                name=name,
-                constraints=subset_index_constraints,
                 market=self.market,
                 index=self.index,
+                **kwargs,
             )
         elif class_name in {"Account", "Strategy"}:
             child_class = getattr(import_module("lgimapy.data"), class_name)
             return child_class(
-                df=df,
-                name=name,
                 date=self.date,
-                constraints=subset_index_constraints,
                 market=self.market,
                 index=self.index,
+                **kwargs,
             )
         else:
             child_class = getattr(import_module("lgimapy.data"), class_name)
             return child_class(
-                df=df,
-                name=name,
-                constraints=subset_index_constraints,
                 market=self.market,
                 index=self.index,
+                **kwargs,
             )
 
     def _add_category_input(self, input_val, col_name):
@@ -964,3 +901,208 @@ class BondBasket:
             min_rating = self._convert_single_input_rating(rating_range[0], 0)
             max_rating = self._convert_single_input_rating(rating_range[1], 23)
             return (min_rating, max_rating)
+
+    def _on_the_run_issue_years(self, maturity):
+        return {
+            2: (None, 1),
+            3: (None, 1.5),
+            5: (None, 1.5),
+            7: (None, 2),
+            10: (None, 2),
+            20: (None, 4),
+            30: (None, 5),
+        }[maturity]
+
+    def _on_the_run_maturity_years(self, maturity):
+        return {
+            2: (None, 2.5),
+            3: (2, 3.5),
+            5: (3.5, 5.5),
+            7: (5.5, 7.5),
+            10: (8.25, 11.5),
+            20: (17, 22),
+            30: (25, 32),
+        }[maturity]
+
+    def subset_on_the_runs(self, maturites=(2, 3, 5, 7, 10, 20, 30)):
+        """
+        Subset current index to only include the on the run bonds.
+
+        Parameters
+        ----------
+        maturities: Tuple(int), default=(2, 3, 5, 7, 10, 20, 30)
+            Maturities to include in new index.
+
+        Returns
+        -------
+        :class:`BondBasket`:
+            :class:`BondBasket` or current child class of
+            :class:`BondBasket` subset to on the run bonds only.
+        """
+        df_list = []
+        for maturity in maturites:
+            maturity_ix = self.subset(
+                maturity=self._on_the_run_maturity_years(maturity),
+                issue_years=self._on_the_run_issue_years(maturity),
+                original_maturity=(maturity, maturity),
+            )
+            maturity_df = maturity_ix.df.set_index("ISIN")
+            on_the_run_isins = (
+                maturity_df[["IssueDate", "Ticker"]]
+                .groupby("Ticker", observed=True)
+                .idxmax()
+                .squeeze()
+            )
+            df_list.append(maturity_ix.subset(isin=on_the_run_isins).df)
+
+        return self._child_class(df=pd.concat(df_list))
+
+    def expand_tickers(self):
+        self.expand_bank_tickers()
+        self.expand_life_tickers()
+        self.expand_utility_tickers()
+
+    def _expand_ticker_rules(self, rules):
+        """
+        Expand tickers with given rules.
+
+        Parameters
+        ----------
+        rules: dict[pd.Index, str]
+            A dict with keys being pandas index for :attr:`df`
+            for respective values of name to append to each ticker.
+        """
+        self.df["Ticker"] = self.df["Ticker"].astype(str)
+        for name, rule in rules.items():
+            self.df.loc[rule, "Ticker"] = self.df.loc[rule, "Ticker"] + name
+        self.df["Ticker"] = self.df["Ticker"].astype("category")
+
+    def expand_bank_tickers(self):
+        """
+        Expand bank tickers to include and differentiate by
+        Senior and Sub collateral.
+        """
+        banks = self.df["Sector"] == "BANKING"
+        rules = {
+            "-Snr": banks & (self.df["CollateralType"] == "UNSECURED"),
+            "-Sub": banks & (self.df["CollateralType"] == "SUBORDINATED"),
+        }
+        self._expand_ticker_rules(rules)
+
+    def expand_life_tickers(self):
+        """
+        Expand life insurance tickers to include and differentiate
+        by FABN, and Senior/Sub collateral.
+        """
+        life = self.df["Sector"] == "LIFE"
+        subs = {"SUBORDINATED", "JR SUBORDINATED"}
+        rules = {
+            "-FABN": life & (self.df["CollateralType"] == "SECURED"),
+            "-Snr": life & (self.df["CollateralType"] == "UNSECURED"),
+            "-Sub": life & (self.df["CollateralType"].isin(subs)),
+        }
+        self._expand_ticker_rules(rules)
+
+    def expand_utility_tickers(self):
+        """
+        Expand life insurance tickers to include and differentiate
+        by FABN, and Senior/Sub collateral.
+        """
+        utility_sectors = {
+            "ELECTRIC",
+            "NATURAL_GAS",
+            "UTILITY_OTHER",
+            "STRANDED_UTILITY",
+        }
+        utes = self.df["Sector"].isin(utility_sectors)
+        rules = {
+            "-HoldCo": utes & (self.df["Subsector"] == "HOLDCO"),
+            "-OpCo": utes & (self.df["Subsector"] == "OPCO"),
+        }
+        self._expand_ticker_rules(rules)
+
+    def add_BM_treasuries(self):
+        bm_treasury = {}
+        for i in range(25):
+            if i <= 2:
+                bm_treasury[i] = 2
+            elif i <= 3:
+                bm_treasury[i] = 3
+            elif i <= 6:
+                bm_treasury[i] = 5
+            elif i <= 15:
+                bm_treasury[i] = 10
+            elif i <= 23:
+                bm_treasury[i] = 20
+            else:
+                bm_treasury[i] = np.nan
+        year = self.df["Date"].dt.year
+        maturity_date = self.df["MaturityDate"].dt.year
+        issue_date = self.df["IssueDate"].dt.year
+        tenor = maturity_date - year
+
+        loc_7yr = (tenor == 7) & (issue_date == year)
+        self.df["BMTreasury"] = tenor.map(bm_treasury).fillna(30).astype("int8")
+        self.df.loc[loc_7yr, "BMTreasury"] = 7
+
+    def _numeric_ratings_columns(self):
+        cols = ["MoodyRating", "SPRating", "FitchRating"]
+        ratings_mat = np.zeros((len(self.df), len(cols)), dtype="object")
+        for i, col in enumerate(cols):
+            try:
+                agency_col = self.df[col].cat.add_categories("NR")
+            except (AttributeError, ValueError):
+                agency_col = self.df[col]
+
+            ratings_mat[:, i] = agency_col.fillna("NR")
+        num_ratings = np.vectorize(self._ratings.__getitem__)(
+            ratings_mat
+        ).astype(float)
+        num_ratings[num_ratings == 0] = np.nan  # json nan value is 0
+        return pd.DataFrame(
+            num_ratings, index=self.df.index, columns=cols
+        ).rename_axis(None)
+
+    @property
+    def _rating_risk_buckets(self):
+        return [
+            "Any AAA/AA",
+            "Pure A",
+            "Split A/BBB",
+            "Pure BBB+/BBB",
+            "Any BBB-/BB",
+        ]
+
+    def add_rating_risk_buckets(self):
+        rating_cols = self._numeric_ratings_columns()
+        min_rating = rating_cols.min(axis=1)
+        max_rating = rating_cols.max(axis=1)
+
+        # fmt: off
+        rating_bucket_locs = {}
+        rating_bucket_locs['Any AAA/AA'] = (
+            min_rating <= self._convert_single_input_rating("AA-")
+        )
+        rating_bucket_locs['Pure A'] = (
+            (min_rating >= self._convert_single_input_rating("A+"))
+            & (max_rating <= self._convert_single_input_rating("A-"))
+        )
+        rating_bucket_locs['Split A/BBB'] = (
+            (min_rating <= self._convert_single_input_rating("A-"))
+            & (max_rating >= self._convert_single_input_rating("BBB+"))
+        )
+        rating_bucket_locs['Pure BBB+/BBB'] = (
+            (min_rating >= self._convert_single_input_rating("BBB+"))
+            & (max_rating <= self._convert_single_input_rating('BBB'))
+        )
+        rating_bucket_locs['Any BBB-/BB'] = (
+            max_rating >= self._convert_single_input_rating('BBB-')
+        )
+        # fmt: on
+
+        self.df["RatingRiskBucket"] = np.nan
+        for rating_bucket, loc in rating_bucket_locs.items():
+            self.df.loc[loc, "RatingRiskBucket"] = rating_bucket
+        self.df["RatingRiskBucket"] = self.df["RatingRiskBucket"].astype(
+            "category"
+        )
