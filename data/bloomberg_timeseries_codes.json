@@ -42,6 +42,10 @@
         "TRET": "LT09TRUU Index",
         "YTW": "USGG10YR Index"
     },
+    "UST_20Y": {
+        "NAME": "UST 10Y",
+        "YTW": "USGG20YR Index"
+    },
     "UST_30Y": {
         "NAME": "UST 30Y",
         "TRET": "LT11TRUU Index",
@@ -412,6 +416,15 @@
         "XSRET": "I00643US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I00643US Index|INDEX_YIELD_TO_WORST",
         "MV": "I00643US Index|INDEX_MARKET_VALUE"
+    },
+    "US_IG_1-10": {
+        "NAME": "US Intermediate Credit",
+        "OAS": "I00151US Index|INDEX_OAS_TSY",
+        "OAD": "I00151US Index|INDEX_OAD_TSY",
+        "TRET": "I00151US Index|INDEX_VALUE",
+        "XSRET": "I00151US Index|INDEX_EXCESS_RETURN_MTD",
+        "YTW": "I00151US Index|INDEX_YIELD_TO_WORST",
+        "MV": "I00151US Index|INDEX_MARKET_VALUE"
     },
     "US_IG_5-10": {
         "NAME": "US Credit 5-10 yr",
@@ -805,14 +818,6 @@
         "YTW": "I09075GB Index|YIELD_TO_WORST",
         "MV": "I09075GB Index|INDEX_MARKET_VALUE"
     },
-    "GBP_A": {
-        "NAME": "GBP A",
-        "OAS": "I09076GB Index|INDEX_OAS_TSY",
-        "TRET": "I09076GB Index|INDEX_VALUE",
-        "XSRET": "I09076GB Index|INDEX_EXCESS_RETURN_MTD",
-        "YTW": "I09076GB Index|YIELD_TO_WORST",
-        "MV": "I09076GB Index|INDEX_MARKET_VALUE"
-    },
     "GBP_BBB": {
         "NAME": "GBP BBB",
         "OAS": "I09077GB Index|INDEX_OAS_TSY",
@@ -955,15 +960,6 @@
         "YTW": "I30389US Index|INDEX_YIELD_TO_WORST",
         "MV": "I30389US Index|INDEX_MARKET_VALUE"
     },
-    "EM_ASIA_CORP": {
-        "NAME": "EM Asia Corp",
-        "OAS": "I29089US Index|INDEX_OAS_TSY",
-        "OAD": "I29089US Index|INDEX_OAD_TSY",
-        "TRET": "I29089US Index|INDEX_VALUE",
-        "XSRET": "I29089US Index|INDEX_EXCESS_RETURN_MTD",
-        "YTW": "I29089US Index|INDEX_YIELD_TO_WORST",
-        "MV": "I29089US Index|INDEX_MARKET_VALUE"
-    },
     "EM_EMEA_SOV": {
         "NAME": "EM EMEA Sov",
         "OAS": "I22297US Index|INDEX_OAS_TSY",
@@ -990,6 +986,10 @@
         "XSRET": "I29080US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I29080US Index|INDEX_YIELD_TO_WORST",
         "MV": "I29080US Index|INDEX_MARKET_VALUE"
+    },
+    "JNK": {
+        "NAME": "JNK ETF",
+        "LEVEL": "JNK EQUITY"
     },
     "LIBOR": {
         "NAME": "LIBOR",

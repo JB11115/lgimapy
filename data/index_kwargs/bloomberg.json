@@ -170,33 +170,33 @@
             "CMCSA",
             "UNH",
             "DIS",
-            "AMZN",
             "HD",
             "PFE",
+            "INTC",
             "BNSF",
             "BMY",
-            "INTC",
             "PEP",
-            "COP",
             "IBM",
             "MRK",
-            "ABT",
+            "COP",
             "KO",
+            "ABT",
             "LMT",
             "UPS",
+            "BPLN",
+            "AZN",
             "BABA",
             "PM",
             "CAT",
             "AMXLMM",
-            "BPLN",
             "QCOM",
             "LLY",
             "CSCO",
             "MMM",
             "GSK",
-            "TOTAL",
-            "MDT",
+            "TTEFP",
             "NKE",
+            "MDT",
             "MA"
         ],
         "special_rules": "~Ticker"
@@ -217,33 +217,33 @@
             "CMCSA",
             "UNH",
             "DIS",
-            "AMZN",
             "HD",
             "PFE",
+            "INTC",
             "BNSF",
             "BMY",
-            "INTC",
             "PEP",
-            "COP",
             "IBM",
             "MRK",
-            "ABT",
+            "COP",
             "KO",
+            "ABT",
             "LMT",
             "UPS",
+            "BPLN",
+            "AZN",
             "BABA",
             "PM",
             "CAT",
             "AMXLMM",
-            "BPLN",
             "QCOM",
             "LLY",
             "CSCO",
             "MMM",
             "GSK",
-            "TOTAL",
-            "MDT",
+            "TTEFP",
             "NKE",
+            "MDT",
             "MA"
         ]
     },
@@ -261,36 +261,36 @@
         "in_stats_index": true,
         "ticker": [
             "CMCSA",
-            "AMZN",
             "UNH",
             "DIS",
             "BMY",
-            "HD",
             "PFE",
-            "IBM",
-            "BPLN",
             "INTC",
+            "HD",
+            "BPLN",
+            "IBM",
             "PEP",
             "TOYOTA",
             "CAT",
             "DE",
-            "KO",
             "BNSF",
+            "AZN",
             "MRK",
-            "PM",
+            "KO",
             "COP",
+            "PM",
             "UPS",
-            "GSK",
-            "BABA",
             "ABT",
-            "HNDA",
-            "MMM",
+            "BABA",
             "QCOM",
-            "TOTAL",
+            "TTEFP",
+            "GSK",
+            "MMM",
+            "HNDA",
             "LMT",
             "MA",
             "GD",
-            "HON"
+            "UNANA"
         ],
         "special_rules": "~Ticker"
     },
@@ -308,36 +308,36 @@
         "in_stats_index": true,
         "ticker": [
             "CMCSA",
-            "AMZN",
             "UNH",
             "DIS",
             "BMY",
-            "HD",
             "PFE",
-            "IBM",
-            "BPLN",
             "INTC",
+            "HD",
+            "BPLN",
+            "IBM",
             "PEP",
             "TOYOTA",
             "CAT",
             "DE",
-            "KO",
             "BNSF",
+            "AZN",
             "MRK",
-            "PM",
+            "KO",
             "COP",
+            "PM",
             "UPS",
-            "GSK",
-            "BABA",
             "ABT",
-            "HNDA",
-            "MMM",
+            "BABA",
             "QCOM",
-            "TOTAL",
+            "TTEFP",
+            "GSK",
+            "MMM",
+            "HNDA",
             "LMT",
             "MA",
             "GD",
-            "HON"
+            "UNANA"
         ]
     },
     "BBB_FIN": {
@@ -383,19 +383,19 @@
             "VZ",
             "ABIBB",
             "ORCL",
-            "ABBV",
             "CHTR",
+            "ABBV",
             "CVS",
             "BA",
-            "GE",
-            "KMI",
-            "EPD",
-            "ET",
-            "RTX",
             "AMGN",
-            "MO",
+            "RTX",
+            "EPD",
+            "KMI",
+            "ET",
             "UNP",
+            "MO",
             "GILD",
+            "TMUS",
             "AVGO",
             "VOD",
             "CI",
@@ -403,13 +403,13 @@
             "MCD",
             "CSX",
             "FDX",
-            "TWC",
+            "GE",
             "TRPCN",
             "ANTM",
-            "GM",
             "VIAC",
+            "GM",
             "TELEFO",
-            "WMB"
+            "NSC"
         ],
         "special_rules": "~Ticker"
     },
@@ -430,19 +430,19 @@
             "VZ",
             "ABIBB",
             "ORCL",
-            "ABBV",
             "CHTR",
+            "ABBV",
             "CVS",
             "BA",
-            "GE",
-            "KMI",
-            "EPD",
-            "ET",
-            "RTX",
             "AMGN",
-            "MO",
+            "RTX",
+            "EPD",
+            "KMI",
+            "ET",
             "UNP",
+            "MO",
             "GILD",
+            "TMUS",
             "AVGO",
             "VOD",
             "CI",
@@ -450,13 +450,13 @@
             "MCD",
             "CSX",
             "FDX",
-            "TWC",
+            "GE",
             "TRPCN",
             "ANTM",
-            "GM",
             "VIAC",
+            "GM",
             "TELEFO",
-            "WMB"
+            "NSC"
         ]
     },
     "BBB_NON_FIN_EX_TOP_30": {
@@ -479,30 +479,30 @@
             "ABBV",
             "BA",
             "CVS",
-            "GM",
             "CHTR",
+            "GM",
             "AVGO",
             "ET",
+            "TMUS",
+            "RTX",
+            "AMGN",
             "BATSLN",
             "CI",
-            "RTX",
-            "EPD",
             "KMI",
-            "AMGN",
+            "EPD",
             "GILD",
             "UNP",
-            "GE",
             "MCD",
-            "MO",
             "ANTM",
+            "MO",
             "DELL",
-            "WMB",
             "VOD",
+            "WMB",
             "LOW",
             "MPLX",
             "AMT",
             "VIAC",
-            "TACHEM"
+            "GE"
         ],
         "special_rules": "~Ticker"
     },
@@ -526,30 +526,30 @@
             "ABBV",
             "BA",
             "CVS",
-            "GM",
             "CHTR",
+            "GM",
             "AVGO",
             "ET",
+            "TMUS",
+            "RTX",
+            "AMGN",
             "BATSLN",
             "CI",
-            "RTX",
-            "EPD",
             "KMI",
-            "AMGN",
+            "EPD",
             "GILD",
             "UNP",
-            "GE",
             "MCD",
-            "MO",
             "ANTM",
+            "MO",
             "DELL",
-            "WMB",
             "VOD",
+            "WMB",
             "LOW",
             "MPLX",
             "AMT",
             "VIAC",
-            "TACHEM"
+            "GE"
         ]
     },
     "COVID_19_SENSATIVE": {
@@ -721,6 +721,35 @@
             "JR SUBORDINATED"
         ]
     },
+    "SIFI_BANKS_NONSTANDARD": {
+        "name": "US SIFI Banks (Nonstandard)",
+        "in_stats_index": true,
+        "OAS": [
+            -10,
+            3000
+        ],
+        "country_of_risk": [
+            "US"
+        ],
+        "ticker": [
+            "BAC",
+            "JPM",
+            "C",
+            "GS",
+            "MS",
+            "WFC",
+            "WB",
+            "LEH",
+            "MER",
+            "BSC"
+        ],
+        "collateral_type": [
+            "SUBORDINATED",
+            "UNSECURED",
+            "JR SUBORDINATED"
+        ],
+        "special_rules": "(~CountryOfRisk) | (~CollateralType)"
+    },
     "US_BANKS_SR": {
         "name": "US Banks (Sr)",
         "in_stats_index": true,
@@ -813,6 +842,19 @@
             "JR SUBORDINATED"
         ]
     },
+    "FINANCIALS_EX_BANKS": {
+        "name": "Financials ex Banks",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "financial_flag": true,
+        "sector": [
+            "BANKING"
+        ],
+        "special_rules": "~Sector",
+        "in_stats_index": true
+    },
     "STATS_all": {
         "name": "US Stats Index",
         "OAS": [
@@ -864,7 +906,7 @@
             3000
         ],
         "sector": [
-            "P&C",
+            "P_AND_C",
             "LIFE",
             "APARTMENT_REITS",
             "BANKING",
@@ -885,7 +927,7 @@
             3000
         ],
         "sector": [
-            "P&C",
+            "P_AND_C",
             "LIFE",
             "APARTMENT_REITS",
             "BANKING",
@@ -923,7 +965,7 @@
             3000
         ],
         "sector": [
-            "P&C",
+            "P_AND_C",
             "LIFE",
             "APARTMENT_REITS",
             "BANKING",
@@ -1049,7 +1091,7 @@
             "ENVIRONMENTAL",
             "DIVERSIFIED_MANUFACTURING",
             "BUILDING_MATERIALS",
-            "AEROSPACE/DEFENSE",
+            "AEROSPACE_DEFENSE",
             "CONSTRUCTION_MACHINERY",
             "TECHNOLOGY"
         ],
@@ -1099,6 +1141,17 @@
         ],
         "in_stats_index": true
     },
+    "PAPER": {
+        "name": "Paper",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "PAPER"
+        ],
+        "in_stats_index": true
+    },
     "METALS_AND_MINING": {
         "name": "Metals & Mining",
         "OAS": [
@@ -1131,8 +1184,9 @@
         ],
         "sector": [
             "DIVERSIFIED_MANUFACTURING",
+            "HOME_CONSTRUCTION",
             "BUILDING_MATERIALS",
-            "AEROSPACE/DEFENSE",
+            "AEROSPACE_DEFENSE",
             "CONSTRUCTION_MACHINERY"
         ],
         "ticker": [
@@ -1301,7 +1355,8 @@
         "sector": [
             "LEISURE",
             "GAMING",
-            "LODGING"
+            "LODGING",
+            "RESTAURANTS"
         ],
         "in_stats_index": true
     },
@@ -1360,7 +1415,8 @@
             3000
         ],
         "sector": [
-            "TECHNOLOGY"
+            "TECHNOLOGY",
+            "INTERNET_AND_DATA"
         ],
         "ticker": [
             "BABA",
@@ -1407,7 +1463,6 @@
             "LEISURE",
             "GAMING",
             "LODGING",
-            "HOME_CONSTRUCTION",
             "RESTAURANTS"
         ],
         "ticker": [
@@ -1509,6 +1564,7 @@
         ],
         "sector": [
             "HEALTHCARE",
+            "HEALTH_INSURANCE",
             "PHARMACEUTICALS"
         ],
         "subsector": [
@@ -1607,12 +1663,13 @@
         "sector": [
             "NATURAL_GAS",
             "ELECTRIC",
-            "UTILITY_OTHER"
+            "UTILITY_OTHER",
+            "STRANDED_UTILITY"
         ],
         "in_stats_index": true
     },
     "UTILITY_HOLDCO": {
-        "name": "Unsecured/Holdco",
+        "name": "Utilities (HoldCo)",
         "OAS": [
             -10,
             3000
@@ -1620,16 +1677,16 @@
         "sector": [
             "NATURAL_GAS",
             "ELECTRIC",
-            "UTILITY_OTHER"
+            "UTILITY_OTHER",
+            "STRANDED_UTILITY"
         ],
-        "collateral_type": [
-            "UNSECURED",
-            "JR SUBORDINATED"
+        "subsector": [
+            "HOLDCO"
         ],
         "in_stats_index": true
     },
-    "UTILITY_1ST_MORTGAGE": {
-        "name": "1st Mortgage",
+    "UTILITY_OPCO": {
+        "name": "Utilities (OpCo)",
         "OAS": [
             -10,
             3000
@@ -1637,14 +1694,31 @@
         "sector": [
             "NATURAL_GAS",
             "ELECTRIC",
-            "UTILITY_OTHER"
+            "UTILITY_OTHER",
+            "STRANDED_UTILITY"
         ],
-        "collateral_type": [
-            "1ST MORTGAGE",
-            "MORTGAGE",
-            "SECURED",
-            "COLLATERAL TRUST"
+        "subsector": [
+            "OPCO"
         ],
+        "in_stats_index": true
+    },
+    "UTILITY_NONSTANDARD": {
+        "name": "Utilities (Nonstandard)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NATURAL_GAS",
+            "ELECTRIC",
+            "UTILITY_OTHER",
+            "STRANDED_UTILITY"
+        ],
+        "subsector": [
+            "HOLDCO",
+            "OPCO"
+        ],
+        "special_rules": "~Subsector",
         "in_stats_index": true
     },
     "NATURAL_GAS": {
@@ -1680,14 +1754,14 @@
         ],
         "in_stats_index": true
     },
-    "AERO/DEFENSE": {
+    "AEROSPACE_DEFENSE": {
         "name": "Aero/Defense",
         "OAS": [
             -10,
             3000
         ],
         "sector": [
-            "AEROSPACE/DEFENSE"
+            "AEROSPACE_DEFENSE"
         ],
         "in_stats_index": true
     },
@@ -1843,6 +1917,8 @@
             3000
         ],
         "sector": [
+            "CREDIT_CARD",
+            "WHOLE_BUSINESS",
             "FINANCIAL_OTHER"
         ],
         "in_stats_index": true
@@ -1920,10 +1996,15 @@
         ],
         "ticker": [
             "AET",
-            "CI",
-            "CVS",
             "ANTM",
+            "CI",
+            "CNC",
+            "CVS",
+            "HCSERV",
+            "HIMARK",
             "HUM",
+            "MGLN",
+            "MOH",
             "UNH",
             "KPERM"
         ],
@@ -1943,6 +2024,10 @@
             "Medical-HMO",
             "Medical-Hospitals"
         ],
+        "ticker": [
+            "KPERM"
+        ],
+        "special_rules": "(Sector & Subsector) | Ticker",
         "in_stats_index": true
     },
     "MANAGED_CARE": {
@@ -1953,10 +2038,15 @@
         ],
         "ticker": [
             "AET",
-            "CI",
-            "CVS",
             "ANTM",
+            "CI",
+            "CNC",
+            "CVS",
+            "HCSERV",
+            "HIMARK",
             "HUM",
+            "MGLN",
+            "MOH",
             "UNH"
         ],
         "in_stats_index": true
@@ -1971,6 +2061,48 @@
             "LIFE"
         ],
         "in_stats_index": true
+    },
+    "LIFE_SR": {
+        "name": "Life (Sr)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE"
+        ],
+        "collateral_type": [
+            "UNSECURED"
+        ],
+        "in_stats_index": true
+    },
+    "LIFE_SUB": {
+        "name": "Life (Sub)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE"
+        ],
+        "collateral_type": [
+            "SUBORDINATED",
+            "JR SUBORDINATED"
+        ],
+        "in_stats_index": true
+    },
+    "LIFE_FABN": {
+        "name": "Life (FABN)",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE"
+        ],
+        "collateral_type": [
+            "SECURED"
+        ]
     },
     "FAANG": {
         "name": "FAANG",
@@ -1998,6 +2130,29 @@
             "CABLE_SATELLITE",
             "MEDIA_ENTERTAINMENT"
         ],
+        "in_stats_index": true
+    },
+    "TMT": {
+        "name": "TMT",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "TECHNOLOGY",
+            "INTERNET_AND_DATA",
+            "WIRELESS",
+            "WIRELINES",
+            "CABLE_SATELLITE",
+            "MEDIA_ENTERTAINMENT"
+        ],
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "special_rules": "(Sector | Ticker)",
         "in_stats_index": true
     },
     "MEDIA_ENTERTAINMENT": {
@@ -2029,7 +2184,8 @@
             3000
         ],
         "sector": [
-            "OWNED_NO_GUARANTEE"
+            "OWNED_NO_GUARANTEE",
+            "GOVERNMENT_SPONSORED"
         ],
         "in_stats_index": true
     },
@@ -2052,19 +2208,31 @@
         ],
         "sector": [
             "LIFE",
-            "P&C",
+            "P_AND_C",
             "HEALTH_INSURANCE"
         ],
         "in_stats_index": true
     },
-    "P&C": {
+    "INSURANCE_EX_HEALTHCARE": {
+        "name": "Insurance ex Healthcare",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "LIFE",
+            "P_AND_C"
+        ],
+        "in_stats_index": true
+    },
+    "P_AND_C": {
         "name": "P&C",
         "OAS": [
             -10,
             3000
         ],
         "sector": [
-            "P&C"
+            "P_AND_C"
         ],
         "in_stats_index": true
     },
@@ -2088,7 +2256,14 @@
         "sector": [
             "RETAILERS"
         ],
-        "in_stats_index": true
+        "ticker": [
+            "BABA",
+            "AMZN",
+            "EBAY",
+            "EXPE"
+        ],
+        "in_stats_index": true,
+        "special_rules": "~Ticker"
     },
     "RESTAURANTS": {
         "name": "Restaurants",
@@ -2109,6 +2284,23 @@
         ],
         "sector": [
             "SOVEREIGN"
+        ],
+        "in_stats_index": true
+    },
+    "LATAM_SOVEREIGN": {
+        "name": "LATAM",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SOVEREIGN"
+        ],
+        "ticker": [
+            "CHILE",
+            "MEX",
+            "PANAMA",
+            "PERU"
         ],
         "in_stats_index": true
     },
@@ -2189,9 +2381,118 @@
         ],
         "sector": [
             "ABS_OTHER",
-            "NON_AGENCY_CMBS"
+            "NON_AGENCY_CMBS",
+            "AGENCY_CMBS"
+        ]
+    },
+    "ABS": {
+        "name": "ABS",
+        "OAS": [
+            -10,
+            3000
         ],
-        "in_stats_index": true
+        "sector": [
+            "ABS_OTHER"
+        ]
+    },
+    "AGENCY_MBS": {
+        "name": "Agency MBS",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AGENCY_MBS_OTHER"
+        ]
+    },
+    "NON_AGENCY_CMBS": {
+        "name": "Non-Agency CMBS",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "NON_AGENCY_CMBS"
+        ]
+    },
+    "AGENCY_CMBS": {
+        "name": "Agency CMBS",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "AGENCY_CMBS"
+        ]
+    },
+    "MORTGAGES": {
+        "name": "Mortgages",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CONVENTIONAL_30_YR",
+            "CONVENTIONAL_20_YR",
+            "CONVENTIONAL_15_YR",
+            "CONVENTIONAL_10_YR",
+            "GNMA_30_YR",
+            "GNMA_15_YR",
+            "CMO",
+            "RESIDENTIAL_MORTGAGE"
+        ]
+    },
+    "LOANS": {
+        "name": "Loans",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "CAR_LOAN",
+            "AUTO_LOAN",
+            "STUDENT_LOAN"
+        ]
+    },
+    "SWAPS": {
+        "name": "Swaps",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "INTEREST_RATE_SWAP",
+            "PORTFOLIO_DEFAULT_SWAP",
+            "CURRENCY_SWAP",
+            "SWAPTION",
+            "INFLATION_SWAP"
+        ]
+    },
+    "TREASURIES": {
+        "name": "Treasuries",
+        "OAS": [
+            -50,
+            3000
+        ],
+        "sector": [
+            "TREASURIES"
+        ],
+        "drop_treasuries": false
+    },
+    "PFANDBRIEFE": {
+        "name": "Pfandbriefe",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "MTG_NON_PFANDBRIEFE",
+            "PFANDBRIEFE_TRADITIONAL_HYPOTHEKEN",
+            "PSLOAN_NON_PFANDBRIEFE",
+            "PFANDBRIEFE_JUMBO_HYPOTHEKEN",
+            "PFANDBRIEFE_TRADITIONAL_OEFFENLICHE",
+            "PFANDBRIEFE_JUMBO_OEFFENLICHE"
+        ]
     },
     "COVID_SENSITIVE_10": {
         "in_stats_index": true,
@@ -3426,7 +3727,7 @@
             "EPD",
             "KMI",
             "RTX",
-            "ETP",
+            "ET",
             "TMUS",
             "UNP",
             "BATSLN",

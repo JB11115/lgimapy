@@ -6,17 +6,22 @@
         "3539BNM",
         "4054BNM",
         "AIBBNM",
+        "ALVBNM",
         "AOSBNM",
         "APBNM",
+        "ARUPBNM",
+        "AUKBNM",
         "BABBNM",
         "BCBSBNM",
         "BNM",
         "BUPABNM",
+        "CARLBNM",
         "CATBNM",
         "CBNM",
         "CDTBNM",
-        "CFMBNM",
+        "CDTSDBNM",
         "DBRBNM",
+        "DBRSBNM",
         "DBRSBNM",
         "DELBNM",
         "DHSBNM",
@@ -40,11 +45,12 @@
         "LL1BNM",
         "LL2BNM",
         "LRBNM",
-        "MBOXBNM",
         "MFBNM",
+        "MHBNM",
         "MONBNM",
         "NAAFBNM",
         "NESBNM",
+        "NFTBNM",
         "NG1BNM",
         "NG2BNM",
         "NSKBNM",
@@ -52,18 +58,20 @@
         "PCBNM",
         "PRLBNM",
         "PROVBNM",
+        "PSABNM",
         "PWCBNM",
         "ROLLSBNM",
         "RRHBNM",
         "RRSBNM",
+        "RRSCP",
         "SALBNM",
         "SAULBNM",
         "SCGBNM",
         "SCIBNM",
+        "SHSBNM",
         "SIEBNM",
         "SNYBNM",
         "SOMBNM",
-        "SONBNM",
         "SSEBNM",
         "SUPBNM",
         "SWBNM",
@@ -86,7 +94,6 @@
     ],
     "US Government: Long": [
         "AEELG",
-        "HWMLG",
         "UNPLG"
     ],
     "US Long Credit": [
@@ -96,10 +103,9 @@
         "AOCLD",
         "ATILD",
         "AURLD",
-        "AXPLD",
         "BCBSLD",
+        "BCMALD",
         "BINGLD",
-        "BPLD",
         "CBSLD",
         "CELD",
         "CHCLD",
@@ -117,6 +123,7 @@
         "GENMLD",
         "HBANLD",
         "HEKLD",
+        "IMLD",
         "KELLD1",
         "KELLD2",
         "KHCLD",
@@ -125,6 +132,7 @@
         "MICHLD",
         "MMMLD",
         "MMMLD2",
+        "NATGLD",
         "OBWCLD",
         "ONCRLD",
         "P-LD",
@@ -141,16 +149,15 @@
         "PREMLD",
         "RAILD",
         "REXAMLD",
-        "SEMLD",
         "SRELD",
         "TOTLD",
         "TRWLD",
         "USGLD",
         "VEBALD",
         "VZLD",
+        "WABLD",
         "WMBLD",
         "WRKLD",
-        "WTWLD",
         "XRXLD"
     ],
     "BNM - US Long A+ Credit": [
@@ -162,9 +169,11 @@
         "FWFNBNM",
         "GMANBNM",
         "HARMBNM",
+        "LPBNM",
         "NVSBNM",
         "SESLBNM",
-        "SEULBNM"
+        "SEULBNM",
+        "USSBNM"
     ],
     "US Long GC 70/30": [
         "AILGC",
@@ -184,24 +193,14 @@
         "SALD2",
         "SAULD"
     ],
-    "US Credit": [
-        "AXPMC",
-        "CITMC",
-        "CSMC",
-        "DCMC",
-        "ERICMC",
-        "MYMC",
-        "NFLMC",
-        "PMCALL"
-    ],
     "US Long Government/Credit": [
         "BACLGC",
+        "BPGC",
         "CMAGC",
         "HRLGC",
         "KOLGC",
         "KOLRGC",
         "KOLSGC",
-        "LHNGC",
         "P-LGC",
         "RFAGC",
         "RFCGC",
@@ -234,28 +233,26 @@
         "BL-ESCR",
         "BL-WHELD",
         "BLFWA",
-        "BLWHLDTL",
         "FBBR3SP",
         "FBBR3TA",
-        "FBBR3TL",
         "FBV3ESCR",
         "FBVR3SP",
         "FBVR3TA",
         "FBVR3TL",
         "FV3ESCR",
         "FV3TTU",
-        "LGA-BLTL",
         "LGA-FHLB",
+        "LGA-MRE",
         "LGA-PENS",
         "LGA-WP",
-        "LGA-WPTL",
+        "LGACOL",
         "LGADSA1",
         "LGADSA2",
+        "LGADSLA",
         "LGAR-AD",
         "LGAR-ARE",
         "LGARADSP",
         "LGARFHLB",
-        "LGARSPB",
         "LGARSPFH",
         "LGFXUS1",
         "LGFXUS6",
@@ -265,10 +262,12 @@
         "LGPLWH6",
         "LGPLWH7",
         "LGPLWH8",
+        "PRTFHSA",
         "ULSTRP",
         "WNT-DR1A",
         "WNT-PU1B",
         "WPFWA",
+        "WPGSA",
         "WPGSAP",
         "WPPC",
         "WPSP"
@@ -285,38 +284,51 @@
         "EXCLC",
         "JNJLC"
     ],
+    "Absolute Return - LIB150": [
+        "CAD150",
+        "LIB150"
+    ],
     "US Long Credit Ex Emerging Market": [
         "CALLC"
     ],
-    "US Long Corporate A or better": [
-        "CARGLC",
-        "SRPLC"
+    "US Intermediate Credit": [
+        "CARGIC",
+        "CNPIC",
+        "PBIIC"
     ],
     "US Credit Plus": [
         "CBSMC",
         "GTMC",
         "GTSMC"
     ],
+    "BNM - US 1-5 Yr Credit": [
+        "CFMBNM"
+    ],
+    "US Credit": [
+        "CITMC",
+        "CSMC",
+        "DCMC",
+        "ERICMC",
+        "LHMC",
+        "MYMC",
+        "NFLMC",
+        "PMCALL",
+        "SEMMC"
+    ],
     "US Strips 15+ Yr": [
         "CITSTRP",
         "FEDSTRP",
         "KORSTRP",
-        "P-STRP",
         "PREMSTRP",
         "RLATSTRP",
         "RLDRSTRP",
         "RLUKSTRP"
     ],
-    "US Intermediate Credit": [
-        "CNPIC",
-        "PBIIC"
-    ],
-    "Barclays-Russell LDI Custom - DE": [
+    "Bloomberg LDI Custom - DE": [
         "DUKE-RS"
     ],
     "80% US Credit/20% 7-10 yr Treasury": [
-        "FBB-CA",
-        "FBB-CA2"
+        "FBB-CA"
     ],
     "US Long Credit Plus": [
         "FLD"
@@ -355,9 +367,6 @@
         "LGA-BL",
         "MYAMSC"
     ],
-    "Absolute Return - LIB150": [
-        "LIB150"
-    ],
     "Custom BNM - MBRF": [
         "MBRF"
     ],
@@ -365,7 +374,6 @@
         "MDLZSTRP"
     ],
     "US Corporate 1% Issuer Cap": [
-        "NAT2",
         "NATG",
         "OGCBF"
     ],
@@ -396,10 +404,18 @@
     "US Corporate IG": [
         "RSURC"
     ],
+    "Global Corporate IBoxx USD": [
+        "SANESG",
+        "SANESGT"
+    ],
     "US Credit A or better": [
         "SEIAC"
     ],
     "US Long A+ Credit": [
         "SEIC"
+    ],
+    "US Long Corporate A or better": [
+        "SRPLC",
+        "XCELLC"
     ]
 }
