@@ -5,6 +5,9 @@ from lgimapy.bloomberg.subsectors import (
     get_bloomberg_subsector,
     scrape_bloomberg_subsectors,
 )
+from lgimapy.bloomberg.business_structure import (
+    update_issuer_business_strucure_json,
+)
 from lgimapy.bloomberg.cashflows import get_cashflows
 from lgimapy.bloomberg.issue_price import get_issue_price
 from lgimapy.bloomberg.cusip_ticker import get_bloomberg_ticker
@@ -20,6 +23,7 @@ __all__ = [
     "get_bloomberg_ticker",
     "get_bloomberg_subsector",
     "update_subsector_json",
+    "update_issuer_business_strucure_json",
     "scrape_bloomberg_subsectors",
     "get_cashflows",
     "scrape_coupon_dates",
