@@ -19,15 +19,34 @@ from lgimapy.utils import load_json, mkdir, root, Time, restart_program
 def make_credit_snapshots(date=None, include_portfolio=True):
     """Build credit snapshots and sitch them together."""
     indexes = ["US_IG_10+", "US_IG", "US_HY"]
-    indexes = ["US_IG_10+", "US_IG"]
+
+    # Load data from beggining to end period for each snapshot.
+    db = Database()
+    date = db.date("today") if date is None else pd.to_datetime(date)
+    ytd_date = db.date("YTD", date)
+    horizon = max(SnapshotConfig(index).horizon for index in indexes)
+    horizon_date = db.date(f"{horizon}m", date)
+    start_date = min(ytd_date, horizon_date)
+    db.load_market_data(start=start_date, end=date)
+
+    # Build individual snapshots, then merge PDFs together.
     fids = []
     for index in indexes:
         fid = build_credit_snapshot(
-            index, date=date, include_portfolio_positions=include_portfolio
+            index,
+            db,
+            date=date,
+            pdf=True,
+            include_portfolio_positions=include_portfolio,
         )
         fids.append(fid)
-    pdf_path = "reports/credit_snapshots"
-    merge_pdfs("Credit_Snapshot", fids, path=pdf_path)
+
+    merge_pdfs(
+        "Credit_Snapshot",
+        fids,
+        read_path="reports/credit_snapshots",
+        write_path="reports/current_reports",
+    )
 
 
 def update_credit_snapshots():
@@ -51,8 +70,13 @@ def update_credit_snapshots():
         # Build .csv file for each missing date.
         for date in missing_dates:
             # restart_program(RAM_threshold=75)
+            db.load_market_data(date=date)
             build_credit_snapshot(
-                index, date=date, include_portfolio_positions=True, pdf=False
+                index,
+                db,
+                date=date,
+                include_portfolio_positions=True,
+                pdf=False,
             )
 
 
@@ -83,7 +107,7 @@ class SnapshotConfig:
         if self.index in {"US_IG", "US_IG_10+"}:
             return 6
         elif self.index == "US_HY":
-            return 7
+            return 12
 
     @property
     def overview_sectors(self):
@@ -102,8 +126,6 @@ class SnapshotConfig:
                 "~BBB_NON_FIN_TOP_30",
                 "~BBB_NON_FIN_EX_TOP_30",
                 "~BBB_NON_CORP",
-                "AJP_WINNERS",
-                "AJP_LOSERS",
             ],
             "US_IG_10+": [
                 "STATS_US_IG_10+",
@@ -119,8 +141,6 @@ class SnapshotConfig:
                 "~BBB_NON_FIN_TOP_30_10+",
                 "~BBB_NON_FIN_EX_TOP_30_10+",
                 "~BBB_NON_CORP",
-                "AJP_WINNERS",
-                "AJP_LOSERS",
             ],
             "US_HY": [],
         }[self.index]
@@ -138,7 +158,6 @@ class SnapshotConfig:
             return [
                 "AAA",
                 "BBB",
-                "AJP Winners",
                 "Basics",
                 "Capital Goods",
                 "Communications",
@@ -201,8 +220,8 @@ class SnapshotConfig:
             return [
                 (
                     "\\tiny Summary statistics and \\%tiles use a 5yr "
-                    "history for credit, rates, and LIBOR with a "
-                    "1yr history for equity indexes and the VIX."
+                    "history for credit, rates, and LIBOR, but a "
+                    "1yr history for equity indexes, the VIX, and oil."
                 ),
                 (
                     "\\tiny Historical spreads and yields corrected "
@@ -311,7 +330,11 @@ class SnapshotConfig:
 
 
 def build_credit_snapshot(
-    index, date=None, pdf=True, include_portfolio_positions=True
+    index,
+    db,
+    date,
+    pdf=True,
+    include_portfolio_positions=True,
 ):
     """
     Create snapshot for respective indexg.
@@ -320,7 +343,7 @@ def build_credit_snapshot(
     ----------
     index: ``{'US_IG_10+', 'US_IG', 'US_HY'}``
         Index to build snapshot for.
-    date: datetime, optional
+    date: datetime
         Date of close to build snapshot for, by default the
         most recent trade date.
     pdf: bool, default=True
@@ -330,12 +353,7 @@ def build_credit_snapshot(
         positions in resepective index.
     """
     config = SnapshotConfig(index)
-
-    # Define filename and directories to save data.
-    db = Database()
-    today = db.date("today") if date is None else pd.to_datetime(date)
-
-    fid = f"{today.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
+    fid = f"{date.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
     csv_path = root("data/credit_snapshots")
     pdf_path = "reports/credit_snapshots"
     mkdir(csv_path)
@@ -343,35 +361,38 @@ def build_credit_snapshot(
     # Find dates for daily, week, month, and year to date calculations.
     # Store dates not to be used in table with a `~` before them.
     dates_dict = {
-        "~today": today,
-        "Daily": db.date("yesterday", today),
-        "WTD": db.date("WTD", today),
-        "MTD": db.date("MTD", today),
+        "~today": date,
+        "Daily": db.date("yesterday", date),
+        "WTD": db.date("WTD", date),
+        "MTD": db.date("MTD", date),
         # "QTD": db.nearest_date(pd.to_datetime("6/29/2019")),
-        "YTD": db.date("YTD", today),
-        f"~{config.horizon}m": db.date(f"{config.horizon}m", today),
+        "YTD": db.date("YTD", date),
+        f"~{config.horizon}m": db.date(f"{config.horizon}m", date),
     }
 
     # Create indexes for all sectors.
     dates_dict["~start"] = min(dates_dict.values())
-    db.load_market_data(start=dates_dict["~start"], end=today)
     all_sectors = config.overview_sectors + config.sectors
     ix_dict = {}
     for sector in all_sectors:
-        kwargs = db.index_kwargs(sector.strip("^~"), **config.kwarg_updates)
+        kwargs = db.index_kwargs(
+            sector.strip("^~"),
+            start=dates_dict["~start"],
+            **config.kwarg_updates,
+        )
         if sector in {"LDB1_BBB", "HUC3_CCC"}:
             kwargs.pop("in_H4UN_index")
         ix_dict[sector] = db.build_market_index(**kwargs)
 
     # Get current market value of the entire long credit index.
     bm_name = all_sectors[0]
-    bm_ix_today = ix_dict[bm_name].subset(date=today)
-    bm_mv = bm_ix_today.total_value()[0]
+    curr_bm_ix = ix_dict[bm_name].subset(date=date)
+    bm_mv = curr_bm_ix.total_value()[0]
     bm_rets = ix_dict[bm_name].market_value_weight(config.return_type)
 
     # Get current state of portfolio.
     if include_portfolio_positions:
-        rep_account = db.load_portfolio(account=config.rep_account, date=today)
+        rep_account = db.load_portfolio(account=config.rep_account, date=date)
     else:
         rep_account = None
 
@@ -488,6 +509,11 @@ def build_credit_snapshot(
             )
         )
     doc.save(save_tex=False)
+    if config.index == "US_HY":
+        doc.save_as("US_HY_Snapshot", path="reports/current_reports")
+
+    print(f"{config.index.replace('_', ' ')} Snapshot Complete")
+
     return doc.fid
 
 
@@ -759,7 +785,7 @@ def make_cross_asset_table(table_df, cap, footnote):
                     d[col].append(f"{row[col]:.1%}")
                 else:
                     d[col].append(f"{row[col]:,.0f}")
-            elif row["asset_class"] == "vix":
+            elif row["asset_class"] == "other":
                 d[col].append(f"{row[col]:,.1f}")
 
     for col in cols:
@@ -1046,7 +1072,7 @@ def get_cross_asset_table(db, dates_d):
             "PRICE",
             "1y",
         ),
-        "vix": (["VIX"], "PRICE", "1y"),
+        "other": (["VIX", "OIL"], "PRICE", "1y"),
     }
     d = defaultdict(list)
     for asset_class, (securities, field, horizon) in security_d.items():
@@ -1060,11 +1086,9 @@ def get_cross_asset_table(db, dates_d):
         if isinstance(df, pd.Series):
             df = df.to_frame()
         if asset_class == "credit":
-            df["BBB-BB"] = df["US_BBB"] - df["US_BB"]
-            df["BB-B"] = df["US_BB"] - df["US_B"]
-            df = df[["BBB-BB", "BB-B"]]
-        elif asset_class == "vix":
-            df.columns = [db.bbg_names(df.columns)]
+            df["BB-BBB"] = df["US_BB"] - df["US_BBB"]
+            df["B-BB"] = df["US_B"] - df["US_BB"]
+            df = df[["BB-BBB", "B-BB"]]
         else:
             df.columns = db.bbg_names(df.columns)
         for col in df.columns:
@@ -1097,11 +1121,11 @@ def get_cross_asset_table(db, dates_d):
 # %%
 
 if __name__ == "__main__":
-    date = "8/31/2020"
+    date = "9/30/2021"
+    date = Database().date("yesterday")
     date = Database().date("today")
     with Time():
         make_credit_snapshots(date)
-        update_credit_snapshots()
 
     # %%
     index = "US_IG_10+"
