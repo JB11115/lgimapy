@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
-from lgimapy.data import weighted_percentile
+from lgimapy.stats import percentile
 from lgimapy.utils import to_list, root
 
 
@@ -147,10 +147,8 @@ class XSRETPerformance:
             # Find median DTS on that day and XSRet of index over the forecast.
             # Normalized DTS by the median and multiply to get forecasted
             # excess returns.
-            median_dts = weighted_percentile(
-                date_df["DTS"], date_df["MarketValue"]
-            )
-            median_xsret = weighted_percentile(xsrets, weights)
+            median_dts = percentile(date_df["DTS"], date_df["MarketValue"])
+            median_xsret = percentile(xsrets, weights)
             normalized_dts = date_df["DTS"] / median_dts
             date_df["fcast"] = normalized_dts * median_xsret
 
@@ -193,8 +191,6 @@ class XSRETPerformance:
         df = self._fcast_df.sort_values("Maturity", ascending=False)
         return df[~df.index.duplicated(keep="first")]
 
-    weighted_percentile([1, 2, 3, 4], [1, 1, 1, 10], q=50)
-
     def MAE(self, pctile=None):
         """
         Get mean absolute model error from current run.
@@ -219,7 +215,7 @@ class XSRETPerformance:
         """
         df = self._fcast_df.copy()
         df["abs_resid"] = np.abs(df["Out*Perform"])
-        mad = 1e4 * weighted_percentile(df["abs_resid"], df["weight"], q=50)
+        mad = 1e4 * percentile(df["abs_resid"], df["weight"], q=50)
         if pctile is None:
             return mad
         else:
@@ -250,7 +246,7 @@ class XSRETPerformance:
         for sector in self.sectors:
             if sector == "SIFI_BANKS_SR":
                 top_level_sector = "Financials"
-            elif sector == "UTILITY":
+            elif sector == "UTILITY_OPCO":
                 top_level_sector = "Non-Corp"
             for rating, rating_kws in ratings.items():
                 ix_sector = self.ix.subset(
@@ -514,10 +510,12 @@ class XSRETPerformance:
             "US_REGIONAL_BANKS",
             "YANKEE_BANKS",
             "BROKERAGE_ASSETMANAGERS_EXCHANGES",
-            "LIFE",
-            "P&C",
+            "LIFE_SR",
+            "LIFE_SUB",
+            "P_AND_C",
             "REITS",
-            "UTILITY",
+            "UTILITY_OPCO",
+            "UTILITY_HOLDCO",
             "OWNED_NO_GUARANTEE",
             "GOVERNMENT_GUARANTEE",
             "HOSPITALS",
