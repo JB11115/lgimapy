@@ -7,6 +7,7 @@ from lgimapy.models.rating_migrations import (
     simulate_rating_migrations,
 )
 from lgimapy.models.credit_curves import CreditCurve
+from lgimapy.models.dispersion import Dispersion
 
 __all__ = [
     "TLS",
@@ -16,4 +17,6 @@ __all__ = [
     "XSRETPerformance",
     "add_rating_outlooks",
     "simulate_rating_migrations",
+    "CreditCurve",
+    "Dispersion",
 ]
