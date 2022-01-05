@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -7,6 +8,7 @@ import warnings
 from inspect import cleandoc
 from pathlib import Path
 
+import numpy as np
 import pdfrw
 import PyPDF4
 
@@ -69,13 +71,8 @@ class LatexScript:
 
     def __init__(self, path, fig_dir, tab_indent):
         """Format path for file and figure directory."""
-        if path is None:
-            self.path = Path(os.getcwd())
-        elif isinstance(path, str):
-            self.path = root(path)
-        else:
-            self.path = Path(path)
-
+        self._base_path = Path(os.getcwd())
+        self.path = self._clean_path(path)
         self._fig_dir_bool = fig_dir
         if fig_dir:
             self.fig_dir = self.path.joinpath("fig/")
@@ -90,6 +87,14 @@ class LatexScript:
 
     def __exit__(self, type, value, traceback):
         self.end_edit()
+
+    def _clean_path(self, path):
+        if path is None:
+            return self._base_path
+        elif isinstance(path, str):
+            return root(path)
+        else:
+            return Path(path)
 
     def _add_to_body(self, script):
         """Add additional script to current :param:`body`."""
@@ -164,7 +169,27 @@ class LatexScript:
         # Close edit so document can be safely saved.
         self._currently_open_edit = False
 
-    def add_section(self, section):
+    def add_bookmark(self, bookmark, level=0):
+        """
+        Add a new bookmark to :attr:`Document.body` without anything
+        appearing in the text.
+
+        Parameters
+        ----------
+        bookmark: str
+            Title of new bookmark.
+        level: int, default=0
+            Numeric level of bookmark.
+
+            * 0: section (1)
+            * 1: subsection (0.1)
+            * 2: sub-subsection (0.0.1)
+        """
+        self._add_to_body(
+            f"\\pdfbookmark[{level}]{{{bookmark}}}{{{self._epoch}}}"
+        )
+
+    def add_section(self, section, number=False, bookmark=True):
         """
         Add a new section to :attr:`Document.body`.
 
@@ -172,10 +197,16 @@ class LatexScript:
         ----------
         section: str
             Title of new section.
+        number: bool, default=False
+            If ``True`` add number of current subsection before
+            title in text.
         """
-        self._add_to_body(f"\section{{{section}}}")
+        star = "" if number else "*"
+        self._add_to_body(f"\section{star}{{{section}}}")
+        if not number and bookmark:
+            self.add_bookmark(section, level=0)
 
-    def add_subsection(self, section):
+    def add_subsection(self, section, number=False, bookmark=True):
         """
         Add a new subsection to :attr:`Document.body`.
 
@@ -183,8 +214,14 @@ class LatexScript:
         ----------
         section: str
             Title of new section.
+        number: bool, default=False
+            If ``True`` add number of current subsection before
+            title in text.
         """
-        self._add_to_body(f"\subsection{{{section}}}")
+        star = "" if number else "*"
+        self._add_to_body(f"\subsection{star}{{{section}}}")
+        if not number and bookmark:
+            self.add_bookmark(section, level=1)
 
     def add_paragraph(self, paragraph):
         """
@@ -317,6 +354,8 @@ class LatexScript:
         """str: Format plot fid to insert into a figure."""
         indent = self._tab_indent if indent is None else indent
         t = " " * indent  # tab length
+        if self._fig_dir_bool:
+            fid = f"fig/{fid}"
         return f"{t}\\includegraphics[width={width}\\textwidth]{{{fid}}}\n"
 
     def add_plot(self, fid, width=0.95, indent=None):
@@ -559,7 +598,7 @@ class Document(LatexScript):
             )
 
         # Format other options.
-        bookmarks = "\\usepackage[open]{{bookmark}}" if bookmarks else ""
+        bookmarks = "\\usepackage[open]{bookmark}" if bookmarks else ""
         orient = {"portrait": "", "landscape": ", landscape"}[orientation]
         page_numbers = "" if page_numbers else "\\pagenumbering{gobble}"
         ignore_bmargin = (
@@ -591,6 +630,7 @@ class Document(LatexScript):
             "fancyhdr",
             "float",
             "graphicx",
+            "hyperref",
             "makecell",
             "marvosym",
             "MnSymbol",
@@ -600,8 +640,8 @@ class Document(LatexScript):
             "tabu",
             "titlesec",
             "transparent",
-            "xcolor",
             "wasysym",
+            "xcolor",
         ]
         if packages is not None:
             all_packages = sorted(
@@ -643,7 +683,7 @@ class Document(LatexScript):
                 labelformat=empty
             }}
             \\captionsetup[subfigure]{{
-                justification=raggedright,
+                justification={tcj},
                 singlelinecheck=false,
                 font={{footnotesize, bf}},
                 aboveskip=0pt,
@@ -859,6 +899,14 @@ class Document(LatexScript):
         else:
             raise TypeError(f"input of type {type(page)} is not a Page.")
 
+    def df_to_locs(self, df):
+        a = df.values
+        locs = []
+        for i, j in np.ndindex(a.shape):
+            if a[i, j]:
+                locs.append((i, j))
+        return tuple(locs)
+
     def save_tex(self):
         """Save .tex file of current document."""
         if self._currently_open_edit:
@@ -874,6 +922,22 @@ class Document(LatexScript):
         # Save tex file.
         with open(f"{fid}.tex", "w") as f:
             f.write(self.doc)
+
+    @staticmethod
+    def _save(fid, save_code_block, *args):
+        while True:
+            try:
+                save_code_block(*args)
+            except (PermissionError, subprocess.CalledProcessError):
+                print(f"\nPermissionError:\n{fid} may be open.")
+                msg = "  [Y] Retry\n  [N] Exit\n"
+                retry = str(input(msg)).upper()
+                if retry == "Y":
+                    continue
+                else:
+                    break
+            else:
+                break
 
     def save(self, fid=None, save_tex=False):
         """
@@ -897,6 +961,7 @@ class Document(LatexScript):
             full_fid = self.path.joinpath(fid)
         else:
             full_fid = fid
+        self._save_fid = full_fid
 
         # Save tex file.
         doc = self.doc
@@ -904,33 +969,24 @@ class Document(LatexScript):
             f.write(doc)
 
         # Documents with transparent images must be compiled twice.
+        def save_code_block(fid, n):
+            for _ in range(n):
+                subprocess.check_call(
+                    ["pdflatex", f"{fid}.tex", "-interaction=nonstopmode"],
+                    shell=False,
+                    stderr=subprocess.STDOUT,
+                    stdout=subprocess.DEVNULL,
+                )
+
         n = 2 if "\\transparent" in doc else 1
-        while True:
-            try:
-                for _ in range(n):
-                    subprocess.check_call(
-                        ["pdflatex", f"{fid}.tex", "-interaction=nonstopmode"],
-                        shell=False,
-                        stderr=subprocess.STDOUT,
-                        stdout=subprocess.DEVNULL,
-                    )
-            except (PermissionError, subprocess.CalledProcessError):
-                print(f"\nPermissionError:\n{full_fid} may be open.")
-                msg = "  [Y] Retry\n  [N] Exit\n"
-                retry = str(input(msg)).upper()
-                if retry == "Y":
-                    continue
-                else:
-                    break
-            else:
-                break
+        self._save(fid, save_code_block, fid, n)
 
         # Clean up temporary files.
         if not save_tex and not self._loaded_file:
             os.remove(f"{full_fid}.tex")
         self._delete_temp_files(full_fid)
 
-    def save_as(self, fid, save_tex=False):
+    def save_as(self, fid, path=None, save_tex=False):
         """
         Save `.tex` to new file and compile to `.pdf`.
 
@@ -942,6 +998,17 @@ class Document(LatexScript):
             If True, save `.tex` as well as `.pdf`.
         """
         self.save(fid, save_tex)
+        if path is not None:
+            path = self._clean_path(path)
+            extensions = ["pdf", "tex"] if save_tex else ["pdf"]
+            for ext in extensions:
+                src = f"{self._save_fid}.{ext}"
+                dst = path.joinpath(pdf_fid(fid))
+
+                def save_code_block(src, dst):
+                    shutil.move(src, dst)
+
+                self._save(dst, save_code_block, src, dst)
 
 
 class Page(LatexScript):
@@ -950,7 +1017,7 @@ class Page(LatexScript):
     apart from a main :class:`Document` and attached later.
     """
 
-    def __init__(self, path, fig_dir, tab_indent):
+    def __init__(self, path=None, fig_dir=None, tab_indent=2):
         super().__init__(path=path, fig_dir=fig_dir, tab_indent=tab_indent)
         self.body = ""
 
@@ -1045,21 +1112,14 @@ def merge_pdfs(
             pdf = pdfrw.PdfReader(fid)
             pdf_writer.addpages(pdf.pages)
 
-    while True:
-        try:
-            # Run twice to properly create transparent images.
-            n_writes = 1 if keep_bookmarks else 2
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                for _ in range(n_writes):
-                    pdf_writer.write(str(merged_pdf_fid))
-        except PermissionError:
-            print(f"\nPermissionError:\n{merged_pdf_fid} is open.")
-            msg = "  [Y] Retry\n  [N] Exit\n"
-            retry = str(input(msg)).upper()
-            if retry == "Y":
-                continue
-            else:
-                break
-        else:
-            break
+    def save_code_block(merged_pdf_fid, keep_bookmarks):
+        # Run twice to properly create transparent images.
+        n_writes = 1 if keep_bookmarks else 2
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for _ in range(n_writes):
+                pdf_writer.write(str(merged_pdf_fid))
+
+    Document._save(
+        merged_pdf_fid, save_code_block, merged_pdf_fid, keep_bookmarks
+    )
