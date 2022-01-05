@@ -1,9 +1,13 @@
 from time import sleep
+from datetime import datetime as dt
 
 from lgimapy.daily_scripts import (
     build_issuer_change_report,
     make_credit_snapshots,
     update_credit_snapshots,
+    build_on_the_run_ticker_snapshot,
+    build_month_end_extensions_report,
+    create_sector_report,
 )
 from lgimapy.data import (
     Database,
@@ -23,6 +27,7 @@ from lgimapy.data import (
 )
 from lgimapy.models.treasury_curve import update_treasury_curve_dates
 
+
 # %%
 
 
@@ -40,7 +45,6 @@ def main():
     update_hy_index_members()
     print("Updated HY Index Flags\n")
     update_treasury_curve_dates()
-
     update_market_data_feathers()
     print()
     update_lgima_sectors()
@@ -55,14 +59,25 @@ def main():
     print("Updated Dealer Inventory\n")
     update_rating_changes()
     print("Updated Rating Changes\n")
+    make_credit_snapshots()
+    print("Credit Snapshots Complete\n")
+    build_on_the_run_ticker_snapshot()
+    print("On the Run Ticker Snaphshot Complete\n")
     build_issuer_change_report()
     print("Issuer Change Report Complete\n")
-    make_credit_snapshots()
-    update_credit_snapshots()
-    print("Credit Snaphshots Complete\n")
     update_nonfin_spreads()
     print("Updated Nonfin Sub-Rating Spreads\n")
     save_bond_wishlist()
+    if dt.today().day > 18:
+        print("Building Month End Extensions Report:")
+        build_month_end_extensions_report()
+        print()
+    if dt.today().weekday() == 0:
+        # Monday
+        print("Building Sector Report:")
+        create_sector_report()
+        print()
+
     # update_strategy_overweights()
     # print("Updated Strategy Overweights\n")
 
