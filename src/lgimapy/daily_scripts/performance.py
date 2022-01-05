@@ -22,38 +22,25 @@ def main():
             print(account)
         return
 
+    db = Database()
     if args.date is not None:
         date = pd.to_datetime(args.date)
     else:
-        date = Database().date("today")
+        date = db.date("today")
     print(date.strftime("%m/%d/%Y"))
+
     if args.estimate:
-        print("\n***Estimates***")
+        print("\n***Estimates***  (YC)")
+
     for account in accounts:
         if args.estimate:
-            performance = estimate_performance(account, date)
+            port = db.load_portfolio(account=account, date=date)
+            tret = 1e4 * port.total_return()
+            yc = 1e4 * port.total_return("tsy")
         else:
-            performance = read_jmgr_file(account, date)
-        print(f"{account}: {performance:+.1f}")
+            tret, yc = read_jmgr_file(account, date)
 
-
-def estimate_performance(account, date):
-    # Load data for current day.
-    db = Database()
-    curr_df = db.load_portfolio(account=account, date=date).df.set_index("ISIN")
-
-    # Use stats index for previous date if it's the 1st of the month.
-    prev_date = db.date("yesterday", date)
-    prev_universe = "stats" if prev_date == db.date("MTD", date) else "returns"
-    prev_df = db.load_portfolio(
-        account=account, date=prev_date, universe=prev_universe
-    ).df.set_index("ISIN")
-
-    # Estimate performance from spread change and average duration over
-    # the two day period.
-    oas_change = curr_df["OAS"] - prev_df["OAS"]
-    oad_avg = (curr_df["OAD_Diff"] + prev_df["OAD_Diff"]) / 2
-    return (-oas_change * oad_avg).sum()
+        print(f"{account: <6}:  {tret:+.1f}   ({yc:+.1f})")
 
 
 def read_jmgr_file(account, date):
@@ -64,10 +51,11 @@ def read_jmgr_file(account, date):
     except IndexError:
         raise FileNotFoundError(f"No file found for {account}.")
 
-    df = pd.read_excel(fid, usecols=[1, 2])
-    df.columns = ["ix", "val"]
-    df.set_index("ix", inplace=True)
-    return df.loc["Outperformance (bps)"].squeeze()
+    df = pd.read_excel(fid, usecols=[1, 2, 4, 8]).head(15)
+    df.columns = ["total_idx", "total_val", "detail_idx", "detail_val"]
+    tret = df.set_index("total_idx").loc["Outperformance (bps)", "total_val"]
+    yc = df.set_index("detail_idx").loc["Yield Curve", "detail_val"]
+    return tret, yc
 
 
 def parse_args():
