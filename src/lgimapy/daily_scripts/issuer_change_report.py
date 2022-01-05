@@ -4,9 +4,10 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from lgimapy.data import Database, BondBasket, weighted_percentile
+from lgimapy.data import Database, BondBasket
 from lgimapy.latex import Document, latex_table
-from lgimapy.utils import root, mkdir
+from lgimapy.stats import percentile
+from lgimapy.utils import root, mkdir, cp
 
 # %%
 
@@ -14,8 +15,8 @@ from lgimapy.utils import root, mkdir
 def build_issuer_change_report():
     # ---------------------------------- #
     sort_column = "month"
-    tights_date = pd.to_datetime("12/30/2019")
-    tights_date_label = "$\\Delta$YE'19"
+    tights_date = pd.to_datetime("12/31/2020")
+    tights_date_label = "$\\Delta$YE'20"
     # tights_date_label = None
     # ---------------------------------- #
 
@@ -66,7 +67,9 @@ def build_issuer_change_report():
         "nonfin": "Non-Financials",
         "fin": "Financials, Utilities, Non Corp",
     }
-    excel = pd.ExcelWriter(doc.path / "Issuer_Change_Data.xlsx")
+    excel_fid = root("reports/current_reports/Issuer_Change_Data.xlsx")
+    excel = pd.ExcelWriter(excel_fid)
+
     # %%
     for market in markets:
         doc.add_section(market)
@@ -115,7 +118,8 @@ def build_issuer_change_report():
                     doc.add_pagebreak()
 
     add_methodology_section(doc)
-    doc.save(save_tex=False)
+    doc.save()
+    doc.save_as("Issuer_Change_Report", path="reports/current_reports")
     excel.save()
 
 
@@ -146,15 +150,7 @@ def get_raw_data(market, tights_date):
                 issue_years=(None, max_issue),
                 currency=currency,
             )
-            # Differentiate Senior and Sub banks in the ticker.
-            banks = ix.df["Sector"] == "BANKING"
-            rules = {
-                " Snr": banks & (ix.df["CollateralType"] == "UNSECURED"),
-                " Sub": banks & (ix.df["CollateralType"] == "SUBORDINATED"),
-            }
-            ix.df["Ticker"] = ix.df["Ticker"].astype(str)
-            for name, rule in rules.items():
-                ix.df.loc[rule, "Ticker"] = ix.df.loc[rule, "Ticker"] + name
+            ix.expand_tickers()
             if key == "today":
                 d[maturity].append(ix.ticker_df)
             else:
@@ -215,7 +211,7 @@ def get_market_sectors(market, page):
                 "BANKS",
                 "BROKERAGE_ASSETMANAGERS_EXCHANGES",
                 "LIFE",
-                "P&C",
+                "P_AND_C",
                 "REITS",
                 "UTILITY",  # Utilities
                 "OWNED_NO_GUARANTEE",
@@ -399,7 +395,7 @@ def calculate_midrule(df, sort_col, market, unit, page):
         for sector in get_market_sectors(market, page)
     ]
     df_page = df[df["LGIMA_Sector"].isin(sectors)]
-    return weighted_percentile(df_page[col], weights=df_page["MarketValue"])
+    return percentile(df_page[col], weights=df_page["MarketValue"])
 
 
 def add_methodology_section(doc):
