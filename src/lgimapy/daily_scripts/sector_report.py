@@ -19,6 +19,7 @@ vis.style()
 
 
 def create_sector_report():
+    # %%
     db = Database()
     date = db.date("today")
     pdf_path = root("reports/sector_reports")
@@ -50,8 +51,12 @@ def create_sector_report():
         mod.train(forecast="1m", maturity=maturity)
         xsret_model_d[name] = mod
 
-    sectors = db.IG_sectors(with_tildes=True, with_chevrons=True)
-    sectors = [s for s in sectors if not s.startswith(">>")]
+    # Get list of sectors to analyze.
+    sectors = db.IG_sectors(with_tildes=True, drop_chevrons=True)
+    idx = sectors.index("LIFE")
+    sectors.insert(idx + 1, "~LIFE_FABN")
+    # sectors = ["WIRELINES_WIRELESS", "COMMUNICATIONS", "TMT"]
+
     sector_names = [s.strip("~") for s in sectors]
 
     # %%
@@ -74,13 +79,15 @@ def create_sector_report():
     )
     for page in df["page"]:
         doc.add_page(page)
-    doc.save(save_tex=False)
+    doc.save()
+    doc.save_as("Sector_Report", path="reports/current_reports")
 
     # %%
 
 
 # %%
-sector = "CONSUMER_NON_CYCLICAL"
+sector = "P_AND_C"
+n = 20
 
 
 def get_sector_page(sector, doc, strategy_d, xsret_model_d):
@@ -116,7 +123,9 @@ def add_overview_table(page, sector, strategy_d, n):
             prec[col] = "1%"
         elif "OAD OW" in col:
             ow_cols.append(col)
-            prec[col] = "2f"
+            prec[col] = "+2f"
+        elif "Analyst" in col:
+            prec[col] = "+0f"
 
     issuer_table = table.iloc[3 : n + 2, :].copy()
     ow_max = max(1e-5, issuer_table[ow_cols].max().max())
@@ -126,7 +135,7 @@ def add_overview_table(page, sector, strategy_d, n):
         page.add_table(
             table,
             table_notes=footnote,
-            col_fmt="llcc|cc|cccc",
+            col_fmt="llrc|cc|cccc",
             multi_row_header=True,
             midrule_locs=[table.index[3], "Other"],
             prec=prec,
@@ -187,6 +196,7 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
                 )
             )
 
+    strat.sectors
     ratings = np.mean(pd.DataFrame(ratings_list)).round(0).astype(int)
     df_list.append(Database().convert_numeric_ratings(ratings).rename("Rating"))
     df = pd.DataFrame(df_list).T.rename_axis(None)
@@ -258,8 +268,12 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
 
 def add_issuer_performance_tables(page, sector_kwargs, xsret_model_d):
     table_edits = page.add_subfigures(2)
+
     for edit, (title, mod) in zip(table_edits, xsret_model_d.items()):
-        table = mod.get_issuer_table(**sector_kwargs).reset_index(drop=True)
+        try:
+            table = mod.get_issuer_table(**sector_kwargs).reset_index(drop=True)
+        except KeyError:
+            continue
         table.drop("RatingBucket", axis=1, inplace=True)
         bold_rows = tuple(
             table[table["Issuer"].isin({"A-Rated", "BBB-Rated"})].index
@@ -291,9 +305,3 @@ def add_issuer_performance_tables(page, sector_kwargs, xsret_model_d):
 
 if __name__ == "__main__":
     create_sector_report()
-
-# mod = XSRETPerformance(db)
-# mod.train(maturity=(10, None))
-#
-#
-import pdb
