@@ -1536,7 +1536,7 @@ def weighted_median(a, weights):
 def plot_hist(
     a,
     bins=20,
-    bin_width=1,
+    bin_width=None,
     weights=None,
     normed=True,
     cumulative=False,
@@ -1545,6 +1545,7 @@ def plot_hist(
     median=False,
     median_kws=None,
     prec=0,
+    bar_width=1,
     ax=None,
     figsize=(6, 4),
     **kwargs,
@@ -1560,6 +1561,8 @@ def plot_hist(
         If `bins` is an int, it defines number of equal-width bins
         in given range (20 by default). If bins is a sequence, it
         defines a monotonically increasing array of bin edges.
+    bin_width: float, optional
+        Constant width for all bins. Supersedes `bins`.
     weights: array_like, optional
         An array of weights the same shape as `a`. Each value in
         `a` only contributes its associated weight towards the
@@ -1585,6 +1588,8 @@ def plot_hist(
         Keyword arguments for ``ax.axvline`` for median line.
     prec: int, default=1
         Decimal precision for mean and median in legend.
+    bar_width: float, default=1
+        Width for bars in chart.
     ax: matplotlib Axes, optional
         Axes in which to draw plot, otherwise activate Axes.
     figsize: (float, float), default=(6, 4).
@@ -1592,6 +1597,12 @@ def plot_hist(
     """
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    # Get bin sequence of equal widths if `bin_width` is provided.
+    if bin_width is not None:
+        bin_min = np.floor(np.min(a) / bin_width) * bin_width
+        bin_max = np.ceil(np.max(a) / bin_width) * bin_width
+        bins = np.arange(bin_min, bin_max + bin_width, bin_width)
 
     # Find histogram bin locations and sizes.
     res, edges = np.histogram(a, bins=bins, weights=weights, density=normed)
@@ -1604,7 +1615,7 @@ def plot_hist(
     # Update plot arguments.
     plot_kws = {"color": "steelblue", "alpha": 0.7, "label": "_nolegend_"}
     plot_kws.update(**kwargs)
-    ax.bar(edges[:-1], res, width=(bin_width * bw), **plot_kws)
+    ax.bar(edges[:-1], res, width=(bar_width * bw), **plot_kws)
     if normed:
         tick = mpl.ticker.StrMethodFormatter(f"{{x:.{prec}%}}")
         ax.yaxis.set_major_formatter(tick)
@@ -1666,9 +1677,22 @@ def tights_move():
     list(df)
     df["$\Delta$ OAS"] = df["OAS_change"]
 
-    # %%
     fig, ax = subplots(figsize=(10, 6))
     sns.scatterplot(
         x="MarketValue", y="OAS_change", hue="Rating", ax=ax, data=df
     )
     plt.show()
+
+
+def legend(ax, **kwargs):
+    """
+    Parameters
+    ----------
+    ax: matplotlib Axes
+        Axes in which to add legend to.
+    **kwargs:
+        Keyword arguments for ``matplotlib.pyplot.legend``
+    """
+    kws = {"fancybox": True, "shadow": True}
+    kws.update(**kwargs)
+    ax.legend(**kws)
