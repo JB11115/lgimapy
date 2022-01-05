@@ -30,6 +30,8 @@ class PerformancePortfolio:
         Starting date for scrape.
     end: datetime, optional
         Ending date for scrape.
+    pbar: bool, default=False
+        If ``True``, show a progress bar while loading data.
     account: str or List[str], optional
         Account(s) to include in scrape.
     strategy: str or List[str], optional
@@ -44,7 +46,13 @@ class PerformancePortfolio:
     """
 
     def __init__(
-        self, account=None, strategy=None, start=None, end=None, **kwargs
+        self,
+        account=None,
+        strategy=None,
+        start=None,
+        end=None,
+        pbar=False,
+        **kwargs,
     ):
         if start is None:
             raise ValueError("Must provide a start date.")
@@ -52,6 +60,7 @@ class PerformancePortfolio:
         self.account = account
         self.strategy = strategy
         self.name = self.account or self.strategy
+        self.pbar = pbar
 
         self._db = Database()
         self._dates = self._db.trade_dates(start=start, end=end)
@@ -74,15 +83,13 @@ class PerformancePortfolio:
             account=self.account,
             strategy=self.strategy,
             date=self.start,
-            market_cols=False,
             **kwargs,
         )
-        for date in self._dates[1:]:
+        for date in tqdm(self._dates[1:], disable=(not self.pbar)):
             curr_acnt = self._db.load_portfolio(
                 account=self.account,
                 strategy=self.strategy,
                 date=date,
-                market_cols=False,
                 **kwargs,
             )
             isins = set(prev_acnt.df["ISIN"]) & set(curr_acnt.df["ISIN"])
@@ -103,6 +110,10 @@ class PerformancePortfolio:
             prev_acnt = curr_acnt
 
         return Index(concat_index_dfs(df_list))
+
+    def total(self, start=None, end=None):
+        """Find total PnL of portfolio."""
+        return self.ix.subset(start=start, end=end).df["PnL"].sum()
 
     def tickers(self, tickers=None, start=None, end=None):
         """Find PnL of tickers."""
@@ -253,6 +264,27 @@ class PerformanceComp:
         return table[cols]
 
 
+def get_best_worst_df(s, n=10):
+    worst = s.iloc[:n]
+    best = s.iloc[-n:][::-1]
+    df = pd.DataFrame()
+    df["Best"] = best.index
+    df["PnL"] = best.values.round(2)
+    df["Worst"] = worst.index
+    df["PnL "] = worst.values.round(2)
+    df.index += 1
+    return df
+
+
+def parse_args():
+    """Collect settings from command line and set defaults."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--portfolio", help="Portfolio")
+    parser.add_argument("-s", "--start", help="Start Date")
+    parser.set_defaults(portfolio="P-LD", start="yesterday")
+    return parser.parse_args()
+
+
 # %%
 # db = Database()
 # self = PerformanceComp(performance_ports.values())
@@ -276,47 +308,61 @@ class PerformanceComp:
 # carglc.sectors(start="3/1/2021", end="3/31/2021")
 
 
-def get_best_worst_df(s):
-    worst = s.iloc[:10]
-    best = s.iloc[-10:][::-1]
-    df = pd.DataFrame()
-    df["Best"] = best.index
-    df["PnL"] = best.values.round(2)
-    df["Worst"] = worst.index
-    df["PnL "] = worst.values.round(2)
-    df.index += 1
-    return df
-
-
-def parse_args():
-    """Collect settings from command line and set defaults."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--portfolio", help="Portfolio")
-    parser.add_argument("-s", "--start", help="Start Date")
-    parser.set_defaults(portfolio="P-LD", start="yesterday")
-    return parser.parse_args()
-
-
 class temp:
-    start = "yesterday"
+    # start = "yesterday"
+    # portfolio = "P-LD"
+    db = Database()
     portfolio = "P-LD"
+    start = "yesterday"
+    end = ""
+
+
+# args = temp()
+#
+# db = Database()
+# pp = PerformancePortfolio(args.portfolio, start=db.date(args.start))
+# pp.ix.df["PnL"].sum()
+# %%
 
 
 def main():
+    # %%
     args = parse_args()
     # args = temp()
 
     db = Database()
     pp = PerformancePortfolio(args.portfolio, start=db.date(args.start))
 
+    # %%
+    print(f"\nTotal: {pp.total():+.2f} bp")
+
     print("\nTickers")
-    pprint(get_best_worst_df(pp.tickers()))
+    pprint(get_best_worst_df(pp.tickers(), n=10))
 
     print("\n\nSectors")
-    pprint(get_best_worst_df(pp.sectors()))
+    pprint(get_best_worst_df(pp.sectors(), n=10))
 
     print("\n\nMarket Segments")
     pprint(get_best_worst_df(pp.market_segments()))
+    # %%
+
+
+def creat_performance_file():
+    # %%
+    port_name = "JNJLC"
+    fid = f"{port_name}_2019.xlsx"
+    start = "12/31/2018"
+    end = "12/31/2019"
+    pp = PerformancePortfolio("JNJLC", start=start, end=end)
+    excel = pd.ExcelWriter(fid)
+    get_best_worst_df(pp.tickers(), n=40).to_excel(excel, sheet_name="Tickers")
+    get_best_worst_df(pp.sectors(), n=20).to_excel(excel, sheet_name="Sectors")
+    get_best_worst_df(pp.market_segments(), n=15).to_excel(
+        excel, sheet_name="Market Segments"
+    )
+    excel.save()
+
+    # %%
 
 
 # %%
@@ -324,3 +370,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# %%
