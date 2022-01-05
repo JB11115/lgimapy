@@ -248,6 +248,13 @@ def apply_row_fmt(fout, row_fmt_d, fmt_str, ix_map, hide_index):
     return fout
 
 
+def float_cast(v):
+    try:
+        return float(v)
+    except ValueError:
+        return np.nan
+
+
 def latex_table(
     df,
     caption=None,
@@ -255,6 +262,7 @@ def latex_table(
     table_notes_justification="j",
     col_fmt=None,
     prec=3,
+    row_prec=None,
     align="center",
     max_width=120,
     adjust=False,
@@ -263,6 +271,7 @@ def latex_table(
     indent_subindexes=False,
     int_vals=False,
     nan_value="-",
+    special_replace_rules=None,
     font_size=None,
     midrule_locs=None,
     specialrule_locs=None,
@@ -323,6 +332,11 @@ def latex_table(
     nan_value: str, default='-'
         Value to fill NaNs with in LaTeX table.
         For blank, use ```" "```.
+    special_replace_rules, Dict[str, str], optional
+        Special replacments to perform at the end of formatting.
+        For example, this is useful to remove numbers from
+        shaded cells by specifying a rare replacment number
+        (e.g., 99999).
     font_size: str, default=None
         Font size for tables.
         ``{'tiny', 'scriptsize', 'footnotesize', 'small', 'normalsize',
@@ -500,12 +514,29 @@ def latex_table(
     else:
         div_bars = None
 
-    # Round values toi specified precision.
+    # Round values to specified precision.
     if isinstance(prec, int):
         df = df.round(prec).copy()
     elif isinstance(prec, dict):
         for col, fmt in prec.items():
-            df[col] = ["{:.{}}".format(v, fmt) for v in df[col]]
+            if fmt.startswith("+"):
+                df[col] = [
+                    f"{'+' if float_cast(v) > 0 else ''}{float_cast(v):.{fmt.strip('+')}}"
+                    for v in df[col]
+                ]
+            else:
+                df[col] = [f"{v:.{fmt}}" for v in df[col]]
+
+    # Round row values to specified precision.
+    if isinstance(row_prec, dict):
+        for row, fmt in row_prec.items():
+            if fmt.startswith("+"):
+                df.loc[row] = [
+                    f"{'+' if float_cast(v) > 0 else ''}{float_cast(v):.{fmt.strip('+')}}"
+                    for v in df.loc[row]
+                ]
+            else:
+                df.loc[row] = [f"{v:.{fmt}}" for v in df.loc[row]]
 
     # Hide index if required.
     if hide_index:
@@ -731,9 +762,11 @@ def latex_table(
         fout = re.sub(" nan\\\\% ", nan_value, fout)
         fout = re.sub(" nan ", nan_value, fout)
 
+    if special_replace_rules is not None:
+        for key, val in special_replace_rules.items():
+            fout = re.sub(key, val, fout)
+
     return fout
 
 
 # %%
-
-df = pd.DataFrame()
