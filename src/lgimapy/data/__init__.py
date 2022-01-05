@@ -8,6 +8,7 @@ from lgimapy.data.security_functions import (
     clean_dtypes,
     concat_index_dfs,
     convert_sectors_to_fin_flags,
+    groupby,
     index_kwargs,
     new_issue_mask,
     spread_diff,
@@ -20,8 +21,7 @@ from lgimapy.data.securities import (
     TBond,
     TreasuryCurve,
 )
-from lgimapy.data.weighted_stats import weighted_percentile
-from lgimapy.data.basket import BondBasket, groupby, mode
+from lgimapy.data.basket import BondBasket
 from lgimapy.data.index import Index
 from lgimapy.data.portfolios import Account, Strategy
 from lgimapy.data.database import (
@@ -42,6 +42,7 @@ from lgimapy.data.strategy_overweights import update_strategy_overweights
 from lgimapy.data.rating_changes import update_rating_changes
 from lgimapy.data.hy_index_members import update_hy_index_members
 from lgimapy.data.wishlist import save_bond_wishlist
+from lgimapy.data.portfolio_history import update_portfolio_history
 
 __all__ = [
     "IG_sectors",
@@ -59,7 +60,6 @@ __all__ = [
     "TreasuryCurve",
     "BondBasket",
     "groupby",
-    "mode",
     "Index",
     "Account",
     "Strategy",
@@ -83,5 +83,5 @@ __all__ = [
     "update_rating_changes",
     "update_hy_index_members",
     "save_bond_wishlist",
-    "weighted_percentile",
+    "update_portfolio_history",
 ]
