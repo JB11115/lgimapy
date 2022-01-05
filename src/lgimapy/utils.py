@@ -3,7 +3,9 @@ import json
 import pprint as pp
 import pickle
 import re
+import shutil
 import sys
+import warnings
 from bisect import bisect_left, bisect_right
 from collections import defaultdict, OrderedDict
 from datetime import timedelta
@@ -21,6 +23,10 @@ import psutil
 from tabulate import tabulate
 
 # %%
+
+
+def to_clipboard(obj, index=False, header=False):
+    pd.Series(obj).to_clipboard(index=index, header=header)
 
 
 def root(join_path=None):
@@ -97,21 +103,29 @@ def restart_program(RAM_threshold=90):
     os.execl(python, python, *sys.argv)
 
 
-def load_json(filename, empty_on_error=False):
+def load_json(filename=None, empty_on_error=False, full_fid=None):
     """
     Load json file from the `./data/` directory.
 
     Parameters
     ----------
-    filename: str
+    filename: str, optional
         Filename of json in `./data/` directory.
+    empty_on_error: bool, default=False
+        If ``True`` return an empty dict when file does not exist.
+        If ``False`` raise.
+    full_fid: Path, optional
+        Full file path for json.
 
     Returns
     -------
     dict:
         Loaded json file.
     """
-    json_fid = root(f"data/{filename}.json")
+    if full_fid is None:
+        json_fid = root(f"data/{filename}.json")
+    else:
+        json_fid = Path(full_fid)
     try:
         with open(json_fid, "r") as fid:
             return json.load(fid)
@@ -119,11 +133,11 @@ def load_json(filename, empty_on_error=False):
         if empty_on_error:
             return {}
         else:
-            msg = f"{filename}.json does no exist in `./data/` directory."
+            msg = f"{json_fid} does no exist."
             raise FileNotFoundError(msg)
 
 
-def dump_json(d, filename, **kwargs):
+def dump_json(d, filename=None, full_fid=None, **kwargs):
     """
     Write json file to the `./data/` directory.
 
@@ -131,12 +145,17 @@ def dump_json(d, filename, **kwargs):
     ----------
     d: dict
         Dictionary to store as json.
-    filename: str
+    filename: str, optional
         Filename of json in `./data/` directory.
+    full_fid: Path, optional
+        Full file path for json.
     **kwargs:
         Keyword arguments for ``json.dump()``
     """
-    json_fid = root(f"data/{filename}.json")
+    if full_fid is None:
+        json_fid = root(f"data/{filename}.json")
+    else:
+        json_fid = Path(full_fid)
     dump_kwargs = {"indent": 4}
     dump_kwargs.update(**kwargs)
     with open(json_fid, "w") as fid:
@@ -178,6 +197,62 @@ def pprint(obj):
         printer.pprint(obj)
     else:
         raise ValueError(f"Error: {type(obj)} not yet supported")
+
+
+def to_labelled_buckets(
+    a,
+    label_fmt="{}_{}",
+    closed="right",
+    right_end_closed=True,
+    left_end_closed=True,
+    interval=0.0001,
+):
+    try:
+        close = {"left": "L", "right": "R"}[closed]
+    except KeyError:
+        raise ValueError("`closed` must be either 'right' or 'left'")
+
+    buckets = {}
+    if not left_end_closed:
+        if close == "L":
+            buckets[f"<{a[0]}"] = (None, a[0] - interval)
+        elif close == "R":
+            buckets[f"<{a[0]}"] = (None, a[0])
+
+    for i, right in enumerate(a[1:]):
+        left = a[i]
+        if close == "L":
+            buckets[f"{left}-{right}"] = (left, right - interval)
+        elif close == "R":
+            buckets[f"{left}-{right}"] = (left + interval, right)
+
+    if not right_end_closed:
+        left = right
+        if close == "L":
+            buckets[f"{left}+"] = (left, None)
+        elif close == "R":
+            buckets[f"{left}+"] = (left + 0.001, None)
+
+    return buckets
+
+
+def quantile(q):
+    quantile_d = {
+        3: "Tercile",
+        4: "Quartile",
+        5: "Quintile",
+        6: "Sextile",
+        7: "Septile",
+        8: "Octile",
+        10: "Decile",
+        12: "Hexadecile",
+        20: "Ventile",
+        100: "Percentile",
+    }
+    try:
+        return quantile_d[q]
+    except KeyError:
+        raise KeyError(f"No quantile name exists for {q} buckets")
 
 
 class Time:
@@ -567,12 +642,13 @@ def floatftime(time_horizon, unit="d"):
 def get_ordinal(n):
     """str: return ordinal (e.g., 'th', 'st', 'rd') for a number."""
     # Return "th" for special cas of 11, 12, and 13.
-    last_two_digits = int(np.round(n, 0)) % 100
+    n_int = int(np.round(n, 0))
+    last_two_digits = n_int % 100
     if last_two_digits in {11, 12, 13}:
         return "th"
 
     # Find ordinal based on last digit.
-    last_digit = int(np.round(n, 0)) % 10
+    last_digit = n_int % 10
     ordinal = {1: "st", 2: "nd", 3: "rd"}.get(last_digit, "th")
     return ordinal
 
@@ -935,3 +1011,48 @@ class EventDistance:
         a = np.full(self._n, np.NaN)
         a[ix_mask] = s.values
         return a
+
+
+def to_sql_list(a):
+    """
+    Return list formated for SQL.
+
+    Parameters
+    ----------
+    a: array-like
+        Input values.
+
+    Returns
+    -------
+    str:
+        Formatted list for SQL.
+    """
+    return f"""('{"', '".join(list(a))}')"""
+
+
+def _copy_or_move(copy_or_move, src, dst):
+    func = {
+        "COPY": shutil.copy,
+        "MOVE": shutil.move,
+    }[copy_or_move]
+    while True:
+        try:
+            func(src, dst)
+        except PermissionError:
+            print(f"\nPermissionError:\n{dst} may be open.")
+            msg = "  [Y] Retry\n  [N] Exit\n"
+            retry = str(input(msg)).upper()
+            if retry == "Y":
+                continue
+            else:
+                break
+        else:
+            break
+
+
+def cp(src, dst):
+    _copy_or_move("COPY", src, dst)
+
+
+def mv(src, dst):
+    _copy_or_move("MOVE", src, dst)
