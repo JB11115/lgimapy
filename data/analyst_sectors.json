@@ -1,0 +1,106 @@
+{
+    "Brian Beargie": {
+        "Energy": [
+            "INDEPENDENT",
+            "INTEGRATED",
+            "MIDSTREAM",
+            "OIL_FIELD_SERVICES",
+            "REFINING"
+        ],
+        "Local Authorities": [
+            "LOCAL_AUTHORITIES"
+        ]
+    },
+    "Dan Haut": {
+        "Banking": [
+            "BANKING"
+        ]
+    },
+    "Garland Buchanan": {
+        "Healthcare": [
+            "HEALTHCARE",
+            "HEALTH_INSURANCE"
+        ],
+        "Autos_Pharma": [
+            "AUTOMOTIVE",
+            "PHARMACEUTICALS"
+        ]
+    },
+    "Jose Almonte": {
+        "Utes": [
+            "ELECTRIC",
+            "NATURAL_GAS",
+            "UTILITY_OTHER"
+        ],
+        "Other": [
+            "BUILDING_MATERIALS",
+            "CHEMICALS",
+            "METALS_AND_MINING",
+            "TOBACCO",
+            "PACKAGING",
+            "PAPER"
+        ]
+    },
+    "Ken Berlin": {
+        "Telecom": [
+            "CABLE_SATELLITE",
+            "MEDIA_ENTERTAINMENT",
+            "WIRELESS",
+            "WIRELINES"
+        ],
+        "Tech": [
+            "TECHNOLOGY",
+            "CONSUMER_CYCLICAL_SERVICES"
+        ]
+    },
+    "My Nguyn": {
+        "Consumer": [
+            "CONSUMER_PRODUCTS",
+            "FOOD_AND_BEVERAGE",
+            "LEISURE",
+            "LODGING",
+            "RESTAURANTS",
+            "RETAILERS",
+            "SUPERMARKETS"
+        ]
+    },
+    "Reed Eckhout": {
+        "REITs": [
+            "APARTMENT_REITS",
+            "HEALTHCARE_REITS",
+            "OFFICE_REITS",
+            "OTHER_REITS",
+            "RETAIL_REITS"
+        ],
+        "Fin": [
+            "BROKERAGE_ASSETMANAGERS_EXCHANGES",
+            "FINANCE_COMPANIES",
+            "FINANCIAL_OTHER",
+            "LIFE",
+            "P_AND_C"
+        ]
+    },
+    "Steve Marszalek": {
+        "Transport": [
+            "AEROSPACE_DEFENSE",
+            "AIRLINES",
+            "ENVIRONMENTAL",
+            "RAILROADS",
+            "TRANSPORTATION_SERVICES"
+        ],
+        "Construction_Manufacturing": [
+            "CONSTRUCTION_MACHINERY",
+            "DIVERSIFIED_MANUFACTURING",
+            "HOME_CONSTRUCTION",
+            "INDUSTRIAL_OTHER"
+        ]
+    },
+    "Uncovered": {
+        "Sectors": [
+            "GAMING",
+            "GOVERNMENT_GUARANTEE",
+            "OWNED_NO_GUARANTEE",
+            "SOVEREIGN"
+        ]
+    }
+}
