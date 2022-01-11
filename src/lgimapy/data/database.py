@@ -1,5 +1,7 @@
 import json
+import os
 import pickle
+import sys
 import warnings
 from bisect import bisect_left
 from datetime import timedelta
@@ -50,7 +52,6 @@ from lgimapy.utils import (
     to_set,
 )
 
-
 # %%
 
 
@@ -97,20 +98,34 @@ class Database:
     """
 
     def __init__(self, server="LIVE", market="US"):
+        self.server = server
         self.market = check_market(market)
         # Load mapping from standard ratings to numeric values.
         self._bbg_dfs = {}
         self._baml_dfs = {}
-        n = 1 if server.upper() == "LIVE" else 2
-        self._datamart_conn = pyodbc.connect(
-            "Driver={SQL Server};"
-            # f"SERVER=XWNUSSQL0{n}\\{server.upper()};"
-            f"SERVER=l00-lgimadatamart-sql,14333;"
-            "DATABASE=LGIMADatamart;"
-            "Trusted_Connection=yes;"
-            "UID=inv\JB11115;"
-            "PWD=$Jrb1236463716;"
-        )
+
+    @property
+    @lru_cache(maxsize=None)
+    def _datamrt_conn(self):
+        if sys.platform == "win32":
+            return pyodbc.connect(
+                "Driver={SQL Server};"
+                f"SERVER=l00-lgimadatamart-sql,14333;"
+                "DATABASE=LGIMADatamart;"
+                "Trusted_Connection=yes;"
+                f"UID=inv\{os.environ['USERNAME']};"
+                f"PWD={os.environ['USERPASS']};"
+            )
+        elif sys.platform == "linux":
+            return pyodbc.connect(
+                "Driver={ODBC Driver 17 for SQL Server};"
+                f"SERVER=l00-lgimadatamart-sql,14333;"
+                "DATABASE=LGIMADatamart;"
+                f"UID=inv\{os.environ['USERNAME']};"
+                f"PWD={os.environ['USERPASS']};"
+            )
+        else:
+            raise OSError(f"Unknown platform: {sys.platform}")
 
     def local(self, fid):
         return root(f"data/{fid}")
@@ -3213,6 +3228,17 @@ def main():
     # %%
     db.load_market_data()
 
+    ix = db.build_market_index(
+        **db.index_kwargs("HOSPITALS"),
+        maturity=(28, 32),
+        rating=("BBB+", "BBB-"),
+    )
+    ix.tickers
+
     # %%
-    acnt = db.load_portfolio(account="CBSMC")
+    self = db.load_portfolio(account="P-LD")
     # %%
+    db.load_market_data()
+    ix = db.build_market_index(in_stats_index=True, maturity=(10, None))
+    len(ix.tickers)
+    len(ix.issuers)
