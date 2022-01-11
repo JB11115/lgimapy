@@ -106,7 +106,7 @@ class Database:
 
     @property
     @lru_cache(maxsize=None)
-    def _datamrt_conn(self):
+    def _datamart_conn(self):
         if sys.platform == "win32":
             return pyodbc.connect(
                 "Driver={SQL Server};"
@@ -3226,7 +3226,6 @@ def main():
 
     db = Database()
     # %%
-    db.load_market_data()
 
     ix = db.build_market_index(
         **db.index_kwargs("HOSPITALS"),
