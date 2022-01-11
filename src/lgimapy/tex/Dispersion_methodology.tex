@@ -1,0 +1,150 @@
+\documentclass[12pt]{article}
+\usepackage[left=0.5cm, right=0.5cm, top=0.5cm, bottom=0.2cm]{geometry}
+\usepackage[table]{xcolor}
+%\usepackage[draft]{graphicx}
+\usepackage{graphicx}
+\usepackage{
+    amsmath,
+    amsthm,
+    amssymb,
+    adjustbox,
+    array,
+    background,
+    booktabs,
+    bm,
+    caption,
+    colortbl,
+    dsfont,
+    enumitem,
+    epigraph,
+    fancyhdr,
+    float,
+    makecell,
+    marvosym,
+    MnSymbol,
+    nicefrac,
+    ragged2e,
+    subcaption,
+    tabu,
+    titlesec,
+    transparent,
+    xcolor
+}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\backgroundsetup{contents={}}
+
+%% Define default caption settings for figures and tables.
+\captionsetup{
+    justification=centering,
+    singlelinecheck=false,
+    font={footnotesize, bf},
+    aboveskip=0pt,
+    belowskip=0pt,
+    labelformat=empty
+}
+\captionsetup[subfigure]{
+    justification=raggedright,
+    singlelinecheck=false,
+    font={footnotesize, bf},
+    aboveskip=0pt,
+    belowskip=0pt,
+    labelformat=empty
+}
+%% Define columns with fixed widths for tables.
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+%% Change separations distances for better presentation.
+\setlength{\textfloatsep}{0.1mm}
+\setlength{\floatsep}{1mm}
+\setlength{\intextsep}{2mm}
+
+%% Declare operators for mathematical expressions.
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\setcounter{MaxMatrixCols}{20}
+
+%% Define custom colors.
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{steelblue}{HTML}{0C70D5}
+\definecolor{firebrick}{HTML}{E85650}
+\definecolor{orchid}{HTML}{9A2BE6}
+\definecolor{orange}{HTML}{E69A2B}
+\definecolor{babyblue}{HTML}{85C7DB}
+\definecolor{salmon}{HTML}{DB8585}
+\definecolor{eggplant}{HTML}{815a71}
+\definecolor{mauve}{HTML}{a78197}
+
+%% Define function for perctile bars in tables.
+\newlength{\barw}
+\setlength{\barw}{0.15mm}
+\def\pctbar#1#2{%%
+    {\color{gray}\rule{#2\barw}{#1pt}} #2\%}
+
+%% Define function for divergent bars in tables.
+\def\bar#1#2{%
+    \color{#2}\rule{#1\barw}{10pt}
+}
+
+\def\divbar#1#2{%
+    \ifnum#1<0{%
+            \bar{\the\numexpr50+#1}{white}
+        \bar{-#1}{#2}
+        \bar{50}{white}
+    }
+    \else{%
+            \bar{50}{white}
+        \bar{#1}{#2}
+        \bar{\the\numexpr50-#1}{white}
+    }
+    \fi
+}
+
+\pagenumbering{gobble}
+
+
+
+
+
+\begin{document}
+
+
+
+\begin{table}[H]
+	\caption{}
+	\centering
+	\begin{tabu} to \linewidth{c|c|p{11cm}}
+		\toprule
+		{} &      Equation  &        Description \\
+		\midrule
+		Mean - Median      &  $\mu - \tilde{x}$ &  Larger numbers indicate a significant tail which causes the mean to be skewed wider. \\
+			\midrule
+		Std Dev        &  $\sigma = \sqrt{ \dfrac{\Sigma{ (x_i - \mu)^2}}{N}}$ & Standard deviation of spreads. Prone to outliers. \\
+			\midrule
+		MAD & $\dfrac{\Sigma{|x_i - \tilde{x}|}}{N}$ & Mean absolute deviation, less prone to outliers than standard deviation because distance between central tendency is not squared. \\
+		    \midrule
+		IDR       &  $q_{90} - q_{10}$ & Inter decile range, or the range between the 90th and 10th percentiles of spreads. Less
+		prone to outliers than $\sigma$. \\
+			\midrule
+		IQR       &  $q_{75} - q_{25}$ & Inter quartile range, nearly unaffected by outliers, measures dispersion among the central
+		distribution of spreads.\\
+			\toprule
+
+		RSD      & $\dfrac{\sigma}{\mu}$ & Relative standard deviation, a normalized version of standard deviation that scales
+		with level of spreads. Still prone to outliers.   \\
+			\midrule
+		RMAD      & $\dfrac{MAD}{\mu}$ & Relative mean absolute deviation, a normalized version of MAD that scales with level of spreads. Still prone to outliers, though not as much as RSD.   \\
+		\midrule
+		DCV      & $\dfrac{IDR}{\tilde{x}}$ & Decile coefficient of variation, normalized IDR. Less prone to outliers than RSD.   \\
+			\midrule
+		QCV      & $\dfrac{IQR}{\tilde{x}}$ & Quartile coefficient of variation, normalized IQR. Nearly unaffected by outliers, 
+		measures dispersion among the central distribution of spreads relative to spread level.   \\
+		\bottomrule
+	\end{tabu}
+\end{table}
+
+\end{document}
