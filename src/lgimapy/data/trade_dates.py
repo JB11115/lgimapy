@@ -3,7 +3,6 @@ import pandas as pd
 from lgimapy.data import Database, get_basys_fids
 from lgimapy.utils import root
 
-dates = None
 # %%
 
 
