@@ -9,9 +9,6 @@ from lgimapy.latex import Document, Page
 from lgimapy.models import Dispersion
 
 
-fid = "Dispersion"
-maturity = 10
-
 # %%
 
 
