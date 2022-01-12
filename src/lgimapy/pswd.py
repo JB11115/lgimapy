@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -9,7 +10,13 @@ from fuzzywuzzy import process
 def main():
     args = parse_args()
     # Load passwords.
-    pswd_fid = Path("P:/pswd.json")
+    if sys.platform == "linux":
+        pswd_fid = Path.home() / "pswd.json"
+    elif sys.platform == "win32":
+        pswd_fid = Path("P:/pswd.json")
+    else:
+        raise OSError(f"Unknown platform: {sys.platform}")
+
     with open(pswd_fid, "r") as fid:
         pswd_d = json.load(fid)
 
