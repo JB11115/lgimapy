@@ -41,6 +41,7 @@ dependencies:
   - seaborn
   - setuptools
   - snakeviz
+  - sphinx
   - statsmodels
   - squarify
   - tabulate
@@ -50,4 +51,3 @@ dependencies:
   - xlrd
   # - pip:
   #   - pypdf4
-  #   - git+https://github.com/kyuni22/pybbg
