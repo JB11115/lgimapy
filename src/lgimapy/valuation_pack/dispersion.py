@@ -15,7 +15,7 @@ maturity = 10
 # %%
 
 
-def update_dispersion(fid, db):
+def update_dispersion(fid):
     # %%
     vis.style()
 
@@ -69,3 +69,9 @@ def update_dispersion(fid, db):
                 gradient_cell_kws={"vmin": 0, "vmax": 100, "center": 50},
             )
     doc.save()
+
+
+if __name__ == "__main__":
+    fid = "Dispersion"
+    maturity = 10
+    update_dispersion(fid)
