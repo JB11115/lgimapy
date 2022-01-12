@@ -14,7 +14,7 @@ def update_valuations(fid, db):
     date = db.date("today").strftime("%B %#d, %Y")
     doc.add_preamble(
         margin={
-            "paperheight": 31,
+            "paperheight": 32,
             "left": 0.5,
             "right": 0.5,
             "top": 0.5,
