@@ -1,3 +1,0 @@
-1) Write tests
-2) Create local feather indexes
-3) Create beta models
