@@ -14,6 +14,9 @@ indexes, performing quantitative analysis, and publishing reports.
 * [Authors](#authors)
 
 ## Setup
+
+#### Code
+
 Install this project locally by running:
 
 ```bash
@@ -31,6 +34,15 @@ pip install -e .
 ```
 \* Note that `pip install` may fail if behind proxy or firewall. In that case
 use: `pip install --trusted-host files.pythonhosted.org --trusted-host pypi.org --trusted-host pypi.python.org pypdf4`
+
+#### Data
+To copy over the current data files, run the following. Note that this will
+take a half hour or so.
+
+```bash
+cp -R /mnt/x/Credit\ Strategy/lgimapy/data/ data/
+```
+
 
 #### Other Requirements
 * pdflatex: installed with apt package `texlive`
