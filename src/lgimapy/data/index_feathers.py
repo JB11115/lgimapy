@@ -57,7 +57,6 @@ def create_feather(fid, db):
     df.to_feather(root(f"data/{db.market}/feathers/{fid}.feather"))
 
     # Add daily files to s3 drop point.
-    year, month = fid.split("_")
     sess = boto3.Session(
         aws_access_key_id=db._passwords["AWS"]["dev_access_key"],
         aws_secret_access_key=db._passwords["AWS"]["dev_secret_access_key"],
