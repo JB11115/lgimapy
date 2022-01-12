@@ -9,8 +9,8 @@ indexes, performing quantitative analysis, and publishing reports.
 
 
 ## Table of contents
-* [Documentation](#documentation)
 * [Setup](#setup)
+* [Documentation](#documentation)
 * [Authors](#authors)
 
 ## Setup
@@ -37,7 +37,7 @@ use: `pip install --trusted-host files.pythonhosted.org --trusted-host pypi.org 
 
 #### Data
 To copy over the current data files, run the following. Note that this will
-take a half hour or so.
+take as much as an hour to complete.
 
 ```bash
 cp -R /mnt/x/Credit\ Strategy/lgimapy/data/ data/
