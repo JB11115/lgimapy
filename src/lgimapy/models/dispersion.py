@@ -3,16 +3,11 @@ from functools import lru_cache
 
 import numpy as np
 import pandas as pd
-import seaborn as sns
+from tqdm import tqdm
 
-from lgimapy import vis
-from lgimapy.latex import Document
 from lgimapy.stats import IQR, QCV, MAD, RMAD
 from lgimapy.utils import root, mkdir
 
-
-from lgimapy.data import Database
-from tqdm import tqdm
 
 # %%
 
@@ -320,70 +315,11 @@ class Dispersion:
 
 
 # #
+# from lgimapy.data import Database
 # db = Database()
 # self = Dispersion("IG", db)
 # self._date(None)
 # self.update()
 # maturity = 10
 # rating = "A"
-# self.overview_table(10)
-# self.intra_sector_table(10)
-
-# %%
-# self._load(self._inter_sector_fid("A", 30))
-# self._load(self._inter_sector_fid("A", 30)).isna().sum().sum()
-# self._load(self._inter_sector_fid("BBB", 10)).isna().sum().sum()
-#
-# print(self._load(self._trade_dates_fid)["Date"].iloc[-1].strftime("%m/%d/%Y"))
-#
-# date = self._db.date("today")
-# self.overview_table(maturity=30).round(2)
-# # %%
-# self.intra_sector_table(maturity=30)
-#
-# # %%
-# maturity = 10
-#
-# # %%
-# start = "11/23/16"
-# oas = db.load_bbg_data("US_IG", "OAS", start=start)
-# inter_a_10_list = []
-# inter_b_10_list = []
-# dates = []
-# trade_dates = db.trade_dates(exclusive_start=start)
-# for date in tqdm(trade_dates):
-#     try:
-#         table = self.overview_table(10, date=date)
-#     except KeyError:
-#         continue
-#     dates.append(date)
-#     inter_a_10_list.append(table.loc["Intra-Sector Absolute", "A-Rated"])
-#     inter_b_10_list.append(table.loc["Intra-Sector Absolute", "BBB-Rated"])
-#
-# inter_a = pd.Series(inter_a_10_list, index=dates).to_frame()
-# inter_b = pd.Series(inter_b_10_list, index=dates).to_frame()
-#
-# inter_a_smooth = inter_a.squeeze().rolling(5).mean().dropna()
-# inter_b_smooth = inter_b.squeeze().rolling(5).mean().dropna()
-#
-# # %%
-#
-# inter_a_smooth = inter_a.squeeze().rolling(5).mean().dropna()
-# inter_b_smooth = inter_b.squeeze().rolling(5).mean().dropna()
-# vis.style()
-#
-# ax_left, ax_right = vis.plot_double_y_axis_timeseries(
-#     inter_a_smooth.rename("Dispersion"),
-#     oas.rename("US Credit OAS"),
-#     color_left="navy",
-#     color_right="k",
-#     ret_axes=True,
-#     ytickfmt_left="{x:.0%}",
-#     plot_kws_right={"lw": 4},
-# )
-# vis.plot_timeseries(inter_b_smooth, color="darkorange", ax=ax_left)
-#
-# vis.show()
-# vis.savefig("A-rated_10yr_inter-sector_dispersion")
-#
-# x.to_frame().to_csv("A-rated_10yr_inter-sector_dispersion.csv")
+# self.overview_table(30)
