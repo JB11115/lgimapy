@@ -13,22 +13,8 @@ indexes, performing quantitative analysis, and publishing reports.
 * [Setup](#setup)
 * [Authors](#authors)
 
-
-## Documentation
-To build documentation, from the root directory run:
-```bash
-cd docs
-make html
-cd build/html
-open index.html
-```
-This URL will not change, so it is recommended to bookmark it in
-the browser of your choice. Documentation can be updated at any time
-using the `make html` command.
-
-
 ## Setup
-Install this project locally using:n
+Install this project locally by running:
 
 ```bash
 git clone https://gogs.btprod.openshift.inv.adroot.lgim.com/JB11115/lgimapy.git
@@ -53,11 +39,23 @@ use: `pip install --trusted-host files.pythonhosted.org --trusted-host pypi.org 
 * `bbgpy`, a Bloomberg API python package, installed in Windows 10
 * A logged-in Bloomberg terminal in Windows 10
 
+## Documentation
+To build documentation, from the root directory run:
+```bash
+cd docs
+make html
+cd build/html
+open index.html
+```
+This URL will not change, so it is recommended to bookmark it in
+the browser of your choice. Documentation can be updated at any time
+using the `make html` command.
+
 ## Authors
 
 The main developer(s):
 
-- Jason R Becker: jason.becker@lgima.com
+- Jason Becker: jason.becker@lgima.com
 
 [python-versions]: https://img.shields.io/badge/python-3.8-blue.svg
 [license]: https://img.shields.io/badge/license-TBD-green
