@@ -91,10 +91,9 @@ class Dispersion:
             last_analyzed_date = analyzed_dates["Date"].iloc[-1]
             return self._db.trade_dates(exclusive_start=last_analyzed_date)
 
-    def update(self):
+    def update(self, pbar=False):
         """Update all data files for current asset class."""
-
-        for date in tqdm(self._dates_to_analyze()):
+        for date in tqdm(self._dates_to_analyze(), disable=(not pbar)):
             self._date = date
             self._db.load_market_data(date=date)
             ix = self._db.build_market_index(in_stats_index=True)
