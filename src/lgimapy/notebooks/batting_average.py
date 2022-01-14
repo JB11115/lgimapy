@@ -23,7 +23,6 @@ n_sectors = 10
 ignored_sectors = {"ENERGY"}
 
 fid = f"{account}_batting_average_{start_date:%Y-%m-%d}_to_{end_date:%Y-%m-%d}"
-fid
 # %%
 
 bm_index_name = db.index_kwargs(bm_index)["name"]
@@ -195,5 +194,5 @@ doc.add_table(
     },
 )
 doc.save()
-# ticker_df.to_csv(f"{fid}_issuers.csv")
-# sector_df.to_csv(f"{fid}_sectors.csv")
+ticker_df.to_csv(f"{fid}_issuers.csv")
+sector_df.to_csv(f"{fid}_sectors.csv")
