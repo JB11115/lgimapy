@@ -467,6 +467,7 @@ def add_rising_star_ticker_table(df, caption, doc, db):
             ["US205887CE05", "US60871RAH30", "US418056AU19"],
         ),
         "FE": (["US337932AP26"], ["US059165EN63", "US69352PAQ63"]),
+        "MTZ": (["US576323AP42"], ["US74762EAF97"]),
     }
     comp_offset = {"WEIRLN": 20}
     comps = []
@@ -651,7 +652,7 @@ def update_fallen_angels_rising_stars(fid):
 
 def comp_check():
     # %%
-    ticker = "FE"
+    ticker = "MTZ"
     db = Database()
     db.load_market_data()
     ticker_ix = db.build_market_index(ticker=ticker, in_H0A0_index=True)
@@ -661,7 +662,8 @@ def comp_check():
     )
     bbb_ix = db.build_market_index(
         in_stats_index=None,
-        ticker=["PPL", "EXC"],
+        ticker=["PWR"],
+        rating=(None, "BBB-"),
         # issue_years=(None, 2),
     )
     cols = ["ISIN", "Ticker", "MaturityYears", "IssueYears", "OAS"]
