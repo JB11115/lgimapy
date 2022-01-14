@@ -1,0 +1,433 @@
+\documentclass[12pt]{article}
+\usepackage[top=1.5cm, bottom=2cm, left=0.5cm, right=0.5cm, landscape]{geometry}
+\usepackage[table]{xcolor}
+%\usepackage[draft]{graphicx}
+\usepackage{graphicx}
+\usepackage[open]{bookmark}
+\usepackage{
+	amsmath,
+	amsthm,
+	amssymb,
+	adjustbox,
+	array,
+	background,
+	booktabs,
+	bm,
+	caption,
+	colortbl,
+	dsfont,
+	enumitem,
+	epigraph,
+	fancyhdr,
+	float,
+	makecell,
+	MnSymbol,
+	nicefrac,
+	ragged2e,
+	subcaption,
+	tabu,
+	titlesec,
+	transparent,
+	wasysym,
+	xcolor,
+}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\backgroundsetup{contents={}}
+
+\captionsetup{
+	justification=raggedright,
+	singlelinecheck=false,
+	font={footnotesize, bf},
+	aboveskip=0pt,
+	belowskip=0pt,
+	labelformat=empty
+}
+\captionsetup[subfigure]{labelformat=empty}
+
+%% Change separations distances for better presentation.
+\setlength{\textfloatsep}{0.1mm}
+\setlength{\floatsep}{1mm}
+\setlength{\intextsep}{2mm}
+
+%% Declare operators for mathematical expressions.
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\setcounter{MaxMatrixCols}{20}
+
+%% Define custom colors.
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{steelblue}{HTML}{0C70D5}
+\definecolor{firebrick}{HTML}{E85650}
+\definecolor{orchid}{HTML}{9A2BE6}
+\definecolor{orange}{HTML}{E69A2B}
+\definecolor{navy}{HTML}{192E5B}
+\definecolor{lightpink}{HTML}{FBC2EF}
+\definecolor{mintgreen}{HTML}{D4F0B7}
+\definecolor{lightblue}{HTML}{72A2C0}
+\definecolor{tan}{HTML}{E8D0AC}
+\definecolor{opal}{HTML}{9BC1BC}
+\definecolor{sage}{HTML}{CACAAA}
+\definecolor{oceangreen}{HTML}{59C9A5}
+\definecolor{magicmint}{HTML}{A0EEC0}
+\definecolor{persiangreen}{HTML}{1B998B}
+\definecolor{paleblue}{HTML}{B1DDF1}
+\definecolor{champagne}{HTML}{EEE3AB}
+\definecolor{powderblue}{HTML}{A9D2D5}
+\definecolor{oldmauve}{HTML}{4C243B}
+
+%% Define function for perctile bars in tables.
+\newlength{\barw}
+\setlength{\barw}{0.15mm}
+\def\pctbar#1#2{%%
+	{\color{gray}\rule{#2\barw}{#1pt}} #2\%}
+
+%% Define function for divergent bars in tables.
+\def\bar#1#2{%
+	\color{#2}\rule{#1\barw}{8pt}
+}
+
+\def\divbar#1#2{%
+	\ifnum#1<0{%
+		\bar{\the\numexpr50+#1}{white}
+		\bar{-#1}{#2}
+		\bar{50}{white}
+	}
+	\else{%
+		\bar{50}{white}
+		\bar{#1}{#2}
+		\bar{\the\numexpr50-#1}{white}
+	}
+	\fi
+}
+
+
+
+\fancyhf{}
+\setlength{\headheight}{0.8cm}
+\setlength\footskip{0pt}
+\fancyhead[L]{US Credit Markets}
+\fancyhead[R]{\today}
+\fancyfoot[L]{\thepage}
+\fancyfoot[R]{
+	\raisebox{-0.8cm}[0pt][0pt]
+	{\includegraphics[width=0.065\textwidth]{"X:/Credit Strategy/lgimapy/fig/logos/LG_umbrella"}}
+}
+\pagestyle{fancy}
+
+\fancypagestyle{title}{
+	\setlength{\headheight}{3cm}
+	\fancyhf{}
+	\fancyhead[L]{\Huge \textbf{US Credit Markets}\\ \LARGE \today}
+	\fancyhead[R]{
+		\includegraphics[width=0.115\textwidth]{"X:/Credit Strategy/lgimapy/fig/logos/Legal_General_umbrella"}
+	}
+}
+
+
+
+\begin{document}
+	
+
+%% Cover Page
+\thispagestyle{title}
+\pdfbookmark[0]{Cover Page}{00000}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.375\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/US_MC_bollinger}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/HY_IG_ratio_cash_CDX}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.375\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/US_LC_bollinger}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/BBB_A_nonfin_ratio}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.2\textwidth}
+		\centering
+		%%\begin{short_term_score}
+		%%\end{short_term_score}
+		\vskip1cm
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/strategy_scores}
+	\end{subfigure}
+	%\caption{}
+\end{figure}
+
+
+
+\pagebreak
+% Market Review
+\pdfbookmark[0]{Cross Asset Overview}{00001}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		%%\begin{market_review_equities_commodities}
+		%%\end{market_review_equities_commodities}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		%%\begin{market_review_credit_rates}
+		%%\end{market_review_credit_rates}
+	\end{subfigure}
+\end{figure}
+
+
+
+\pagebreak
+% Market Returns
+\pdfbookmark[0]{Fixed Income Returns}{000001}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		%%\begin{credit_total_returns}
+		%%\end{credit_total_returns}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		%%\begin{credit_excess_returns}
+		%%\end{credit_excess_returns}
+	\end{subfigure}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\caption{\large Cross-Asset 1M Total Returns}
+	\includegraphics[width=\textwidth]{fig/cross_asset_trets}
+\end{figure}
+
+\pagebreak
+% Tail Crisis Recovery
+\pdfbookmark[0]{Crisis Recovery}{00003}
+\begin{figure}[H]
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/spread_crises_recovery}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		\includegraphics[width=1\textwidth]{fig/xsret_crises_recovery}
+	\end{subfigure}
+\end{figure}
+\vfill
+\begin{figure}[H]
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		%%\begin{lc_tail_table}
+		%%\end{lc_tail_table}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[t]{0.475\textwidth}
+		\centering
+		\vfill
+		\includegraphics[width=1\textwidth]{fig/lc_index_tail}
+	\end{subfigure}
+\end{figure}
+
+\pagebreak
+% Macro Indicators
+\pdfbookmark[0]{Macro Indicators}{000004}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.37\textwidth}
+		\centering
+		%%\begin{macro_indicator_tables}
+		%%\end{macro_indicator_tables}
+		\justify
+		\tiny
+		*A \textcolor{firebrick}{positive} (\textcolor{steelblue}{negative}) deviation indicates that the index is currently trading \textcolor{firebrick}{wider} (\textcolor{steelblue}{tighter}) than
+		its historical average given the current level of the respective indicator.
+		*Indicators are listed in descending order of goodness of fit to respective index.
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.29\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/macro_indicator_US_MFG_ISM}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/macro_indicator_US_ECO_SENT}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/macro_indicator_US_SR_LOAN}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.29\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/macro_indicator_US_LEAD_IND}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/macro_indicator_US_CONS_CONF}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/macro_indicator_US_UNEMPLOY}
+	\end{subfigure}
+\end{figure}
+	
+	
+\pagebreak
+% Cross Asset PCA Equilibrium Model
+\pdfbookmark[0]{Cross Asset Equilibrium}{000005}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		%%\begin{equilibrium_model_table}
+		%%\end{equilibrium_model_table}
+		\justify
+		\tiny
+		*Assets at the top are currently \textbf{\textcolor{orchid}{rich}} relative to model estimates while those at the bottom are \textbf{\textcolor{orange}{cheap}}.\\
+		*Price/Book ratios are used in the model for equities, but are converted to index price level for interpretability.
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.5\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/credit_risk_appetite}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/pca_vs_factors}
+	\end{subfigure}
+	\vspace{2cm}
+\end{figure}
+
+\pagebreak
+% Volatility
+\pdfbookmark[0]{Volatility}{000006}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.58\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/sector_spread_vs_vol_10_None}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/long_credit_vol_model}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.375\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/maturity_bucket_spread_vs_vol}
+		\vskip1em
+		\includegraphics[width=1\textwidth]{fig/sector_vol_beta_10_None}
+	\end{subfigure}
+\end{figure}
+
+\pagebreak
+% Dispersion
+\pdfbookmark[0]{Sector Analysis}{100007}
+%%\begin{dispersion_page}
+%%\begin{dispersion_page}
+
+\pagebreak
+% Sector Analysis
+\pdfbookmark[0]{Sector Analysis}{000007}
+\pdfbookmark[1]{Long Credit Performance}{000008}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		%%\begin{Long_Credit_1m_Industrials_sector_table}
+		%%\end{Long_Credit_1m_Industrials_sector_table}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		%%\begin{Long_Credit_1m_Financials_sector_table}
+		%%\end{Long_Credit_1m_Financials_sector_table}
+		\vskip1em
+		%%\begin{Long_Credit_1m_Non-Corp_sector_table}
+		%%\end{Long_Credit_1m_Non-Corp_sector_table}
+	\end{subfigure}
+\end{figure}
+\pagebreak
+\pdfbookmark[1]{Long Credit Rel Val}{000009}
+\begin{figure}[H]
+	\centering
+	%%\begin{Long_Credit_0_sector_table}
+	%%\end{Long_Credit_0_sector_table}
+\end{figure}
+\pagebreak
+\begin{figure}[H]
+	\centering
+	%%\begin{Long_Credit_1_sector_table}
+	%%\end{Long_Credit_1_sector_table}
+	\vskip1em
+	%%\begin{Long_Credit_2_sector_table}
+	%%\end{Long_Credit_2_sector_table}
+\end{figure}
+\pagebreak
+
+\pdfbookmark[1]{Market Credit Performance}{0000010}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		%%\begin{5-10_yr_Credit_1m_Industrials_sector_table}
+		%%\end{5-10_yr_Credit_1m_Industrials_sector_table}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		%%\begin{5-10_yr_Credit_1m_Financials_sector_table}
+		%%\end{5-10_yr_Credit_1m_Financials_sector_table}
+		\vskip1em
+		%%\begin{5-10_yr_Credit_1m_Non-Corp_sector_table}
+		%%\end{5-10_yr_Credit_1m_Non-Corp_sector_table}
+	\end{subfigure}
+\end{figure}
+\pagebreak
+\pdfbookmark[1]{Market Credit Rel Val}{0000011}
+\begin{figure}[H]
+	\centering
+	%%\begin{5-10_yr_Credit_0_sector_table}
+	%%\end{5-10_yr_Credit_0_sector_table}
+\end{figure}
+\pagebreak
+\begin{figure}[H]
+	\centering
+	%%\begin{5-10_yr_Credit_1_sector_table}
+	%%\end{5-10_yr_Credit_1_sector_table}
+	\vskip1em
+	%%\begin{5-10_yr_Credit_2_sector_table}
+	%%\end{5-10_yr_Credit_2_sector_table}
+\end{figure}
+
+\pagebreak
+% Fallen Angels
+\pdfbookmark[0]{Fallen Angels}{0000012}
+\begin{figure}[H]
+	\centering
+	%%\begin{potential_fallen_angels_table}
+	%%\end{potential_fallen_angels_table}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/net_fallen_angels}
+	\end{subfigure}
+	\hfill
+	\begin{subfigure}[b]{0.48\textwidth}
+		\centering
+		%\caption{}
+		\includegraphics[width=1\textwidth]{fig/recent_downgrades}
+	\end{subfigure}
+\end{figure}
+
+
+\end{document}
+
+
+
