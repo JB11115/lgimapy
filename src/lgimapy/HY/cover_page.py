@@ -159,9 +159,6 @@ def plot_corrected_H0A0_oas(doc, db):
     ix_mv = sum(list(rating_mv_nominal.values()))
     rating_mv = {k: v / ix_mv for k, v in rating_mv_nominal.items()}
 
-    fig, ax = vis.subplots(figsize=(10, 5.8))
-    lw = 2
-
     hy_oas_df = pd.concat(
         (rating_oas_5y[rating] * rating_mv[rating] for rating in rating_kwargs),
         axis=1,
@@ -171,6 +168,14 @@ def plot_corrected_H0A0_oas(doc, db):
     corrected_ix_oas_median = np.median(corrected_ix_oas_5y)
     corrected_ix_oas_1y = one_yr(corrected_ix_oas_5y, db)
 
+    fig, (ax_top, ax_bottom) = vis.subplots(
+        2,
+        1,
+        sharex=True,
+        gridspec_kw={"height_ratios": [1, 4]},
+        figsize=(10, 5.8),
+    )
+    lw = 2
     vis.plot_timeseries(
         ix_oas_1y,
         lw=lw,
@@ -178,8 +183,7 @@ def plot_corrected_H0A0_oas(doc, db):
         label=f"Historical H0A0: {get_label(ix_oas_5y)}",
         median_line=ix_oas_median,
         median_line_kws={"color": "grey", "alpha": 0.8, "label": "_nolegend_"},
-        ax=ax,
-        title="HY Spreads",
+        ax=ax_bottom,
     )
     vis.plot_timeseries(
         corrected_ix_oas_1y,
@@ -188,8 +192,7 @@ def plot_corrected_H0A0_oas(doc, db):
         label=f"Corrected H0A0: {get_label(corrected_ix_oas_5y)}",
         median_line=corrected_ix_oas_median,
         median_line_kws={"color": "k", "alpha": 0.8, "label": "_nolegend_"},
-        ax=ax,
-        title="HY Spreads",
+        ax=ax_bottom,
     )
 
     colors = dict(zip(rating_kwargs.keys(), vis.colors("ryb")))
@@ -200,14 +203,24 @@ def plot_corrected_H0A0_oas(doc, db):
             color=c,
             lw=lw,
             median_line=rating_oas_median[rating],
-            median_line_kws={"color": c, "alpha": 0.8, "label": "_nolegend_"},
+            median_line_kws={
+                "color": c,
+                "alpha": 0.8,
+                "label": "5yr median" if rating == "C" else "_nolegend_",
+            },
             label=f"{rating}-Rated: {get_label(rating_oas_5y[rating])}",
-            ax=ax,
+            title="HY Spreads" if rating == "C" else None,
+            ax=ax_top if rating == "C" else ax_bottom,
         )
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    ax.legend(
-        title=title, fancybox=True, shadow=True, loc=2, bbox_to_anchor=(1, 1)
-    )
+    for ax in [ax_top, ax_bottom]:
+        ax.legend(
+            title=title,
+            fancybox=True,
+            shadow=True,
+            loc=2,
+            bbox_to_anchor=(1, 1),
+        )
 
     fid = "HY_spreads_cover_page"
     vis.savefig(doc.fig_dir / fid)
