@@ -3,27 +3,34 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document, Page
 from lgimapy.models import Dispersion
-
 
 # %%
 
 
 def update_dispersion(fid):
     # %%
-    vis.style()
 
     db = Database()
     disp = Dispersion("IG", db)
     disp.update()
 
+    doc = Document(
+        fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
+    )
+    with doc.start_edit("dispersion_page"):
+        add_dispersion_tables(doc, disp)
+
+    doc.save_tex()
+
     # %%
+
+
+def build_dispersion_sheet(doc, disp):
     date = db.date("today")
     doc = Document(fid, path="reports/valuation_pack", fig_dir=True)
-    # doc = Page(path="reports/valuation_pack", fig_dir=True)
     doc.add_preamble(
         orientation="landscape",
         bookmarks=True,
@@ -37,7 +44,11 @@ def update_dispersion(fid):
         footer=doc.footer(logo="LG_umbrella", height=-0.5, width=0.05),
     )
     doc.add_section("Dispersion")
+    doc = add_dispersion_tables(doc, disp)
+    doc.save()
 
+
+def add_dispersion_tables(doc, disp):
     page_columns = doc.add_subfigures(n=2, valign="t")
     for maturity, page_col in zip([10, 30], page_columns):
         with doc.start_edit(page_col):
@@ -65,7 +76,7 @@ def update_dispersion(fid):
                 ],
                 gradient_cell_kws={"vmin": 0, "vmax": 100, "center": 50},
             )
-    doc.save()
+    return doc
 
 
 if __name__ == "__main__":

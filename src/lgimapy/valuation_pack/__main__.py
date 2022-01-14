@@ -12,7 +12,8 @@ from cross_asset import update_market_review
 from tail_recovery import update_lc_tail
 from macro_indicators import update_macro_indicators
 from equilibium_pca_model import update_equilibrium_model
-from sector_vol import update_sector_models
+from dispersion import update_dispersion
+from sector_analysis import update_sector_models
 from fallen_angel_analysis import update_fallen_angel_analysis
 
 # %%
@@ -34,6 +35,7 @@ def main():
     update_lc_tail(fid)
     update_macro_indicators(fid)
     update_equilibrium_model(fid)
+    update_dispersion(fid)
     update_sector_models(fid, db)
     update_fallen_angel_analysis(fid)
 
