@@ -151,13 +151,6 @@ class Database:
             region_name="us-east-2",
         )
 
-    def make_thread_safe(self):
-        """
-        Remobe pyodb.Connection object so :class:`Database` can
-        be pickled and used in multiprocessing/multithreading.
-        """
-        del self._datamart_conn
-
     @property
     @lru_cache(maxsize=None)
     def _ratings(self):
@@ -3225,19 +3218,6 @@ def main():
     self.display_all_columns()
 
     db = Database()
-    # %%
-
-    ix = db.build_market_index(
-        **db.index_kwargs("HOSPITALS"),
-        maturity=(28, 32),
-        rating=("BBB+", "BBB-"),
-    )
-    ix.tickers
-
-    # %%
-    self = db.load_portfolio(account="P-LD")
-    # %%
     db.load_market_data()
-    ix = db.build_market_index(in_stats_index=True, maturity=(10, None))
-    len(ix.tickers)
-    len(ix.issuers)
+
+    # %%
