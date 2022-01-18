@@ -40,7 +40,7 @@ To copy over the current data files, run the following. Note that this will
 take as much as an hour to complete.
 
 ```bash
-cp -R /mnt/x/Credit\ Strategy/lgimapy/data/ data/
+rsync -rh /mnt/x/Credit\ Strategy/lgimapy/data/ data/
 ```
 
 
