@@ -121,8 +121,11 @@ class Database:
                 "Driver={ODBC Driver 17 for SQL Server};"
                 f"SERVER=l00-lgimadatamart-sql,14333;"
                 "DATABASE=LGIMADatamart;"
-                f"UID=inv\{os.environ['USERNAME']};"
-                f"PWD={os.environ['USERPASS']};"
+                # f"UID=inv\{os.environ['USERNAME']};"
+                # f"PWD={os.environ['USERPASS']};"
+                "DOMAIN=inv;"
+                "UID=quantslive_svc;"
+                "PWD=Srv0ql092020;"
             )
         else:
             raise OSError(f"Unknown platform: {sys.platform}")
@@ -3221,3 +3224,5 @@ def main():
     db.load_market_data()
 
     # %%
+    ix = db.build_market_index(ticker="BA")
+    ix.df
