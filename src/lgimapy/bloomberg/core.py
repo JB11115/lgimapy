@@ -12,17 +12,12 @@ import pandas as pd
 if sys.platform == "win32":
     import pybbg
 
-from lgimapy.utils import to_list, to_datetime
+from lgimapy.utils import to_list, to_datetime, root
 
 
 # %%
 def bbgwinpy_executable():
-    try:
-        return os.environ["BBGWINPY_EXECUTABLE"]
-    except KeyError:
-        raise KeyError(
-            "`BBGWINPY_EXECUTABLE` not found in environment variables."
-        )
+    return root("src/lgimapy/bloomberg/bbgwinpy.py")
 
 
 def fmt_bbg_dt(date):
