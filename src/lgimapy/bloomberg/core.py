@@ -17,7 +17,7 @@ from lgimapy.utils import to_list, to_datetime, root
 
 # %%
 def bbgwinpy_executable():
-    return root("src/lgimapy/bloomberg/bbgwinpy.py")
+    return str(root("src/lgimapy/bloomberg/bbgwinpy.py"))
 
 
 def fmt_bbg_dt(date):
@@ -289,8 +289,6 @@ def _linux_to_windows_bbg(func, *args, **kwargs):
     s = subprocess.run(
         ["python.exe", bbgwinpy_executable(), bbg_input.bbgwinpy_args(func)],
         stdout=subprocess.PIPE,
-        text=True,
-        shell=True,
     )
     df = pd.read_json(s.stdout)
     return df
