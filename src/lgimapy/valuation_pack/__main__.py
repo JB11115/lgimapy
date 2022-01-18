@@ -40,7 +40,7 @@ def main():
     update_fallen_angel_analysis(fid)
 
     doc = Document(fid, path=path, fig_dir=True, load_tex=True)
-    doc.save()
+    doc.save(save_tex=True)
     doc.save_as("Valuation_Pack", path="reports/current_reports")
     os.remove(dst)
 
