@@ -40,7 +40,6 @@ def create_sector_report():
     # Train excess return models and store in dict.
     db_xsret = Database()
     db_xsret.load_market_data(start=db.date("2m"))
-    db_xsret.make_thread_safe()
     xsret_model_d = {}
     model_maturities = {
         "Long Credit": (10, None),
