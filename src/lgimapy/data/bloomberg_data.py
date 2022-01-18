@@ -74,6 +74,7 @@ class BBGTimeseriesScraper:
             for security in self.securities[field]
             if security not in old_df.columns
         ]
+
         if new_securities:
             old_df = pd.concat(
                 [old_df, self.scrape_data(new_securities, self.start)],
@@ -89,6 +90,7 @@ class BBGTimeseriesScraper:
             start = old_df.dropna().index[-1]
         except IndexError:
             start = self.start
+
         old_df = old_df[old_df.index < start]
         new_df = self.scrape_data(old_df.columns, start - timedelta(20))
         new_df = new_df[new_df.index >= start]
@@ -129,6 +131,7 @@ class BBGTimeseriesScraper:
             Bloomberg timeseries data for given parameters
             through current values.
         """
+        # securities = new_securities
         # Group codes by Bloomberg field.
         bbg_codes = {
             security: self.bbg_ts_codes[security][self._field]
@@ -149,12 +152,12 @@ class BBGTimeseriesScraper:
         try:
             for bbg_field, securities in field_codes.items():
                 df_temp = bdh(
-                    securities, yellow_key="", fields=bbg_field, start=start
+                    securities, yellow_keys="", fields=bbg_field, start=start
                 )
                 if len(securities) == 1:
                     # Column name will be bbg field instead of bbg code,
                     # so make it the security name.
-                    df_temp.columns = to_list(securities, str)
+                    df_temp.columns = to_list(securities, dtype=str)
                 df_list.append(df_temp)
         except KeyError:
             # Identify which security is causing the error.
@@ -218,7 +221,7 @@ class BBGTimeseriesScraper:
             DataFrame corrected for orders of magnitude.
         """
         if self._field == "OAS":
-            exceptions = ["EM_CORP"]
+            exceptions = {"EM_CORP"}
             multiply_cols = [
                 col
                 for col in df.columns
@@ -227,7 +230,7 @@ class BBGTimeseriesScraper:
             ]
             df[multiply_cols] = df[multiply_cols].multiply(100)
         elif self._field == "YTW":
-            exceptions = ["UST_10Y_RY", "UST_5Y5Y_BE"]
+            exceptions = {"UST_10Y_RY", "UST_5Y5Y_BE"}
             div_cols = [
                 col
                 for col in df.columns
@@ -239,8 +242,9 @@ class BBGTimeseriesScraper:
         return df
 
 
+# %%
 if __name__ == "__main__":
     update_bloomberg_data()
-    # self = BBGTimeseriesScraper()
-    # field = "OAS"
-    # self.create_data_file(field)
+    self = BBGTimeseriesScraper()
+    field = "LEVEL"
+    self.create_data_file(field)
