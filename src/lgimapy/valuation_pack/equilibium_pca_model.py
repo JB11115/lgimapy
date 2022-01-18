@@ -41,25 +41,23 @@ def update_equilibrium_model(fid):
     plot_pc_vs_factors(df_levels, df_pca, doc)
     plot_credit_risk_appetite(df_levels, df_pca, doc)
 
-    doc.start_edit("equilibrium_model_table")
-    doc.add_table(
-        format_table(equilibrium_table),
-        caption="Equilibrium Cross Asset Model Results",
-        font_size="scriptsize",
-        adjust=True,
-        col_fmt="lrrrrr",
-        prec=2,
-        gradient_cell_col="Current less Model * 1yr Z-score",
-        gradient_cell_kws={
-            "vals": equilibrium_table["cur_resid_sign"],
-            "cmax": "orange",
-            "cmin": "orchid",
-        },
-        multi_row_header=True,
-    )
-    doc.end_edit()
-    doc.save()
-    # doc.save_tex()
+    with doc.start_edit("equilibrium_model_table"):
+        doc.add_table(
+            format_table(equilibrium_table),
+            caption="Equilibrium Cross Asset Model Results",
+            font_size="scriptsize",
+            adjust=True,
+            col_fmt="lrrrrr",
+            prec=2,
+            gradient_cell_col="Current less Model * 1yr Z-score",
+            gradient_cell_kws={
+                "vals": equilibrium_table["cur_resid_sign"],
+                "cmax": "orange",
+                "cmin": "orchid",
+            },
+            multi_row_header=True,
+        )
+    doc.save_tex()
 
 
 def format_table(df):
