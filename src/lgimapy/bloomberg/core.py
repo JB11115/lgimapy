@@ -231,7 +231,7 @@ def bdh(securities, yellow_keys, fields, start, end=None, ovrd=None):
     if sys.platform == "win32":
         return _windows_bdh(securities, yellow_keys, fields, start, end, ovrd)
     elif sys.platform == "linux":
-        return _linux_to_windows_bbg("bds", **func_args)
+        return _linux_to_windows_bbg("bdh", **func_args)
 
 
 def bdp(securities, yellow_keys, fields, ovrd=None):
@@ -258,7 +258,7 @@ def bdp(securities, yellow_keys, fields, ovrd=None):
     if sys.platform == "win32":
         return _windows_bdp(securities, yellow_keys, fields, ovrd)
     elif sys.platform == "linux":
-        return _linux_to_windows_bbg("bds", **func_args)
+        return _linux_to_windows_bbg("bdp", **func_args)
 
 
 def bds(security, yellow_key, field, ovrd=None):
