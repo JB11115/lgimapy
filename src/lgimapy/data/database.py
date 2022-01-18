@@ -70,7 +70,10 @@ def get_basys_fids(market):
         Series of BASys fids with datetime index.
     """
     market = check_market(market)
-    dir = Path(f"S:/FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{market}/")
+    if sys.platform == "win32":
+        dir = Path(f"S:/FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{market}/")
+    elif sys.platform == "linux":
+        dir = Path(f"mnt/s/FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{market}/")
     fids = dir.glob("*")
     files = {}
     for fid in fids:
