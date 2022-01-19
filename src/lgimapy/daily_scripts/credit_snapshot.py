@@ -426,7 +426,7 @@ def build_credit_snapshot(
     #         True,  # perform historical index corrections
     #         config,
     #     )
-    #     rows.appeend(row)
+    #     rows.append(row)
 
     table_df = pd.concat(rows, sort=False)
     table_df.to_csv(csv_path / f"{fid}.csv")
@@ -473,7 +473,10 @@ def build_credit_snapshot(
         ignore_bottom_margin=True,
     )
     doc.add_background_image(
-        "umbrella", scale=1.1, vshift=config.umbrella_vshift, alpha=0.04
+        root("fig/logos/umbrella"),
+        scale=1.1,
+        vshift=config.umbrella_vshift,
+        alpha=0.04,
     )
 
     if config.index in {"US_IG", "US_IG_10+"}:
