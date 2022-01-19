@@ -226,7 +226,8 @@ def bdh(securities, yellow_keys, fields, start, end=None, ovrd=None):
     if sys.platform == "win32":
         return _windows_bdh(securities, yellow_keys, fields, start, end, ovrd)
     elif sys.platform == "linux":
-        return _linux_to_windows_bbg("bdh", **func_args)
+        df = _linux_to_windows_bbg("bdh", **func_args)
+        return df.sort_index()
 
 
 def bdp(securities, yellow_keys, fields, ovrd=None):
@@ -253,7 +254,8 @@ def bdp(securities, yellow_keys, fields, ovrd=None):
     if sys.platform == "win32":
         return _windows_bdp(securities, yellow_keys, fields, ovrd)
     elif sys.platform == "linux":
-        return _linux_to_windows_bbg("bdp", **func_args)
+        df = _linux_to_windows_bbg("bdp", **func_args)
+        return df.reindex(to_list(securities, dtype=str))
 
 
 def bds(security, yellow_key, field, ovrd=None):
@@ -280,13 +282,14 @@ def bds(security, yellow_key, field, ovrd=None):
     if sys.platform == "win32":
         return _windows_bds(security, yellow_key, field, ovrd)
     elif sys.platform == "linux":
-        return _linux_to_windows_bbg(
+        df = _linux_to_windows_bbg(
             "bds",
             securities=security,
             yellow_keys=yellow_key,
             fields=field,
             ovrd=ovrd,
         )
+        return df.sort_index()
 
 
 def _linux_to_windows_bbg(func, *args, **kwargs):
