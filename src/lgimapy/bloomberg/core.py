@@ -161,7 +161,7 @@ def _windows_bdp(securities, yellow_keys, fields, ovrd=None):
     # Format DataFrame.
     df.index = [re.sub(f"\ {args.yellow_keys}$", "", ix) for ix in df.index]
 
-    return df.reindex(to_list(args.securities, dtype=str))
+    return df
 
 
 def _windows_bds(security, yellow_key, field, ovrd=None):
@@ -250,12 +250,17 @@ def bdp(securities, yellow_keys, fields, ovrd=None):
     df: pd.DataFrame
         DataFrame with security index and field columns.
     """
-    func_args = locals()
     if sys.platform == "win32":
         return _windows_bdp(securities, yellow_keys, fields, ovrd)
     elif sys.platform == "linux":
-        df = _linux_to_windows_bbg("bdp", **func_args)
-        return df.reindex(to_list(securities, dtype=str))
+        df = _linux_to_windows_bbg(
+            "bdp",
+            securities=securities,
+            yellow_keys=yellow_keys,
+            fields=fields,
+            ovrd=ovrd,
+        )
+        return df
 
 
 def bds(security, yellow_key, field, ovrd=None):
@@ -297,6 +302,38 @@ def _linux_to_windows_bbg(func, *args, **kwargs):
     s = subprocess.run(
         ["python.exe", bbgwinpy_executable(), bbg_input.bbgwinpy_args(func)],
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        timeout=20,
     )
     df = pd.read_json(s.stdout)
     return df
+
+
+# %%
+def main():
+    from lgimapy.data import Database
+
+    db = Database()
+    db.load_market_data()
+    ix = db.build_market_index(ticker="BA", maturity=(25, 32))
+    # %%
+    # print(bdp(ix.df.index, "Corp", "PX_LAST"))
+    bbg_input = BBGInputConverter(ix.df.index, "Corp", "RTG_SP_OUTLOOK")
+    func = "bdp"
+    # bbg_input.bbgwinpy_args("bdp")
+
+
+if __name__ == "__main__":
+    main()
+    # %%
+
+# %%
+# s = subprocess.run(
+#     ["cat", bbgwinpy_executable()],
+#     stdout=subprocess.PIPE,
+#     stderr=subprocess.PIPE,
+#     timeout=10,
+# )
+# print(s.stdout)
+# s.stderr
