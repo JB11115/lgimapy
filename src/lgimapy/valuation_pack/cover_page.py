@@ -12,7 +12,7 @@ import seaborn as sns
 from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.utils import root, get_ordinal
+from lgimapy.utils import root, get_ordinal, mkdir
 
 
 # %%
@@ -44,7 +44,9 @@ def update_cover_page(fid, db):
 
 def save_to_global_pack(fid):
     src = root(f"reports/valuation_pack/fig/{fid}.png")
-    dst = root(f"reports/global_valuation_pack/fig/{fid}.png")
+    dst_dir = root(f"reports/global_valuation_pack/fig")
+    mkdir(dst_dir)
+    dst = dst_dir / f"{fid}.png"
     copy(src, dst)
 
 
