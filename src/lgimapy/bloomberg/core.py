@@ -280,7 +280,13 @@ def bds(security, yellow_key, field, ovrd=None):
     if sys.platform == "win32":
         return _windows_bds(security, yellow_key, field, ovrd)
     elif sys.platform == "linux":
-        return _linux_to_windows_bbg("bds", securities=security, yellow_keys=yellow_key, fields=fieldm, ovrd=ovrd)
+        return _linux_to_windows_bbg(
+            "bds",
+            securities=security,
+            yellow_keys=yellow_key,
+            fields=field,
+            ovrd=ovrd,
+        )
 
 
 def _linux_to_windows_bbg(func, *args, **kwargs):
