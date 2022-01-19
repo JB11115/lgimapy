@@ -236,7 +236,10 @@ class Database:
     @lru_cache(maxsize=None)
     def _trade_date_df(self, market):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
-        fid = root(f"data/{market}/trade_dates.parquet")
+        if market == "US":
+            fid = root(f"data/{market}/trade_dates.parquet")
+        else:
+            fid = root(f"data/{market}/trade_dates_{sys.platform}.parquet")
         return pd.read_parquet(fid)
 
     @lru_cache(maxsize=None)
@@ -3227,5 +3230,3 @@ def main():
     db.load_market_data()
 
     # %%
-    ix = db.build_market_index(ticker="BA")
-    ix.df

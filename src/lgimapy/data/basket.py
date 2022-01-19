@@ -1,3 +1,4 @@
+import sys
 import warnings
 from bisect import bisect_left
 from collections import defaultdict, OrderedDict
@@ -151,7 +152,10 @@ class BondBasket:
     @lru_cache(maxsize=None)
     def _trade_date_df(self):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
-        fid = root(f"data/{self.market}/trade_dates.parquet")
+        if self.market == "US":
+            fid = root(f"data/{self.market}/trade_dates.parquet")
+        else:
+            fid = root(f"data/{self.market}/trade_dates_{sys.platform}.parquet")
         return pd.read_parquet(fid)
 
     @property

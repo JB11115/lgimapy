@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 
 from lgimapy.data import Database, get_basys_fids
@@ -82,7 +84,7 @@ def update_US_trade_dates(dates=None):
 
 def update_regional_trade_dates(market):
     """Update trade date file for EUR or GBP markets."""
-    fid = root(f"data/{market}/trade_dates.parquet")
+    fid = root(f"data/{market}/trade_dates_{sys.platform}.parquet")
     fid.parents[0].mkdir(parents=True, exist_ok=True)
     basys_fids = get_basys_fids(market)
     df = basys_fids.to_frame()
