@@ -1,11 +1,11 @@
 # lgimapy
 
 ![Python Versions][python-versions]
-![BSD License][license]
 
 This is a general purpose python library for LGIM America with modules for
-for loading/interacting with data from various databases, modeling/building
-indexes, performing quantitative analysis, and publishing reports.
+for loading/interacting with data from various databases, scraping Bloomberg
+data, performing quantitative analysis, constructing portfolio trades,
+plotting figures, and publishing reports.
 
 
 ## Table of contents
@@ -37,19 +37,21 @@ use: `pip install --trusted-host files.pythonhosted.org --trusted-host pypi.org 
 
 #### Data
 To copy over the current data files, run the following. Note that this will
-take as much as an hour to complete.
+take an hour or more to complete.
 
 ```bash
-rsync -rh /mnt/x/Credit\ Strategy/lgimapy/data/ data/
+rsync -rv /mnt/x/Credit\ Strategy/lgimapy/data/ data/
 ```
 
 
 #### Other Requirements
-* pdflatex: installed with apt package `texlive`
-* various latex libraries: installed with apt packages `texlive-latex-extra` and
-  `texlive-fonts-extra`
-* `bbgpy`, a Bloomberg API python package, installed in Windows 10
-* A logged-in Bloomberg terminal in Windows 10
+* pdflatex: used for building reports, installed with `apt` package `texlive`
+* various latex libraries: used building reports, installed with `apt` packages
+`texlive-latex-extra` and `texlive-fonts-extra`
+* A logged-in Bloomberg terminal in Windows 10 for scraping Bloomberg data
+* Python installed in Windows, with `pandas`, `blpapi`, and `pybbg` libraries.
+* [Bloomberg API] C/C++ Supported Release v3.17.1.1
+* [Visual Studio C++ Build Tools]
 
 ## Documentation
 To build documentation, from the root directory run:
@@ -69,5 +71,6 @@ The main developer(s):
 
 - Jason Becker: jason.becker@lgima.com
 
+[Bloomberg API]: https://www.bloomberg.com/professional/support/api-library/
+[Visual Studio C++ Build Tools]: https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&ved=2ahUKEwiniM2o26HlAhVQRKwKHS_8DrAQFjAAegQIABAB&url=https%3A%2F%2Fgo.microsoft.com%2Ffwlink%2F%3FLinkId%3D691126&usg=AOvVaw0geDw_h-TSCfzTMvYE2ZOw
 [python-versions]: https://img.shields.io/badge/python-3.8-blue.svg
-[license]: https://img.shields.io/badge/license-TBD-green
