@@ -6,6 +6,7 @@ import warnings
 from collections.abc import Iterable
 from datetime import datetime as dt
 from numbers import Number
+from pathlib import Path
 
 import pandas as pd
 import pybbg
@@ -310,13 +311,24 @@ def bds(security, yellow_key, field, ovrd=None):
 
 
 def main():
+    # Get file name from command line.
     parser = argparse.ArgumentParser()
-    parser.add_argument("function_signature", help="Function Signature json")
+    parser.add_argument("fid", help="File ID to save BBG data")
     input_args = parser.parse_args()
-    input_d = json.loads(input_args.function_signature)
-    func = input_d.pop("func")
-    df = eval(func)(**input_d)
-    print(df.to_json(), file=sys.stdout)
+    fid = input_args.fid
+
+    # Read BBG command arguments from file.
+    args_fid = Path("//wsl$/Ubuntu/tmp/bbgwinpy/args") / f"{fid}.json"
+    with open(args_fid, "r") as f:
+        args_d = json.load(f)
+
+    # Run BBG command.
+    func = args_d.pop("func")
+    df = eval(func)(**args_d)
+
+    # Save output back in WSL.
+    data_fid = Path("//wsl$/Ubuntu/tmp/bbgwinpy/data") / f"{fid}.json"
+    df.to_json(data_fid)
 
 
 # %%

@@ -1,18 +1,20 @@
 import argparse
 import json
 import os
+import random
 import re
 import subprocess
 import sys
 import warnings
 from datetime import datetime as dt
+from pathlib import Path
 
 import pandas as pd
 
 if sys.platform == "win32":
     import pybbg
 
-from lgimapy.utils import to_list, to_datetime, root
+from lgimapy.utils import to_list, to_datetime, root, mkdir
 
 
 # %%
@@ -125,7 +127,7 @@ class BBGInputConverter:
             }
 
         args.update({"func": func})
-        return json.dumps(args)
+        return args
 
 
 def _windows_bdh(securities, yellow_keys, fields, start, end=None, ovrd=None):
@@ -298,42 +300,49 @@ def bds(security, yellow_key, field, ovrd=None):
 
 
 def _linux_to_windows_bbg(func, *args, **kwargs):
+    """
+    Run the specified Bloomberg Data call in
+    Windows, save the result in a file, load
+    back into memory in python and return the
+    resulting pd.DataFrame.
+    """
     bbg_input = BBGInputConverter(*args, **kwargs)
-    s = subprocess.run(
-        ["python.exe", bbgwinpy_executable(), bbg_input.bbgwinpy_args(func)],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-        timeout=20,
-    )
-    df = pd.read_json(s.stdout)
+
+    # Create a random file name.
+    rn = str(random.randint(0, 9999999))
+
+    # Save the BBG command arguments to a temporary location.
+    args_dir = Path("/tmp/bbgwinpy/args")
+    args_fid = args_dir / f"{rn}.json"
+    mkdir(args_dir)
+    with open(args_fid, "w") as f:
+        json.dump(bbg_input.bbgwinpy_args(func), f, indent=4)
+
+    # Ensure there is a directory to save the data to.
+    data_dir = Path("/tmp/bbgwinpy/data")
+    mkdir(data_dir)
+
+    # Run the BBG comman from Windows,saving the data to the above dir.
+    try:
+        s = subprocess.run(
+            [
+                "python.exe",
+                bbgwinpy_executable(),
+                rn,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=60,
+        )
+    except TimeoutError:
+        raise TimeoutError(f"{func.upper()} call '{rn}' failed")
+
+    # Load the data back into python.
+    data_fid = data_dir / f"{rn}.json"
+    df = pd.read_json(data_fid)
+
+    # Delete temporary files.
+    args_fid.unlink()
+    data_fid.unlink()
+
     return df
-
-
-# %%
-def main():
-    from lgimapy.data import Database
-
-    db = Database()
-    db.load_market_data()
-    ix = db.build_market_index(ticker="BA", maturity=(25, 32))
-    # %%
-    # print(bdp(ix.df.index, "Corp", "PX_LAST"))
-    bbg_input = BBGInputConverter(ix.df.index, "Corp", "RTG_SP_OUTLOOK")
-    func = "bdp"
-    # bbg_input.bbgwinpy_args("bdp")
-
-
-if __name__ == "__main__":
-    main()
-    # %%
-
-# %%
-# s = subprocess.run(
-#     ["cat", bbgwinpy_executable()],
-#     stdout=subprocess.PIPE,
-#     stderr=subprocess.PIPE,
-#     timeout=10,
-# )
-# print(s.stdout)
-# s.stderr
