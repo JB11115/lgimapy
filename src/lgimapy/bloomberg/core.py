@@ -277,11 +277,10 @@ def bds(security, yellow_key, field, ovrd=None):
         DataFrame with numeric index and columns determined
         by choice of Bloomberg field.
     """
-    func_args = locals()
     if sys.platform == "win32":
         return _windows_bds(security, yellow_key, field, ovrd)
     elif sys.platform == "linux":
-        return _linux_to_windows_bbg("bds", **func_args)
+        return _linux_to_windows_bbg("bds", securities=security, yellow_keys=yellow_key, fields=fieldm, ovrd=ovrd)
 
 
 def _linux_to_windows_bbg(func, *args, **kwargs):
