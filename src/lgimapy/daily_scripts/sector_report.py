@@ -52,8 +52,8 @@ def create_sector_report():
 
     # Get list of sectors to analyze.
     sectors = db.IG_sectors(with_tildes=True, drop_chevrons=True)
-    idx = sectors.index("LIFE")
-    sectors.insert(idx + 1, "~LIFE_FABN")
+    life_idx = sectors.index("LIFE")
+    sectors.insert(life_idx + 1, "~LIFE_FABN")  # Add FABNs to Life
     # sectors = ["WIRELINES_WIRELESS", "COMMUNICATIONS", "TMT"]
 
     sector_names = [s.strip("~") for s in sectors]
