@@ -1655,35 +1655,6 @@ def plot_hist(
         ax.legend()
 
 
-def tights_move():
-    fid = "X:/Jason/Projects/Index Analysis/data_test1.csv"
-    df = pd.read_csv(fid, index_col=0)
-
-    db = Database()
-    db.load_market_data(local=True)
-    ix = db.build_market_index(in_stats_index=True)
-    mv = ix.df.groupby("Ticker", observed=True).sum()["MarketValue"]
-
-    df["Rating"] = np.nan
-    df.loc[
-        (df["NumericRating"] > 0) & (df["NumericRating"] < 8), "Rating"
-    ] = "A"
-    df.loc[
-        (df["NumericRating"] > 7) & (df["NumericRating"] < 11), "Rating"
-    ] = "BBB"
-    df = df.dropna(subset=["NumericRating"]).set_index("Ticker")
-    df = df.join(mv)
-
-    list(df)
-    df["$\Delta$ OAS"] = df["OAS_change"]
-
-    fig, ax = subplots(figsize=(10, 6))
-    sns.scatterplot(
-        x="MarketValue", y="OAS_change", hue="Rating", ax=ax, data=df
-    )
-    plt.show()
-
-
 def legend(ax, **kwargs):
     """
     Parameters
