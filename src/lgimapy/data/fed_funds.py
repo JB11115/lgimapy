@@ -4,8 +4,6 @@ from lgimapy.bloomberg import bdh
 from lgimapy.data import Database
 from lgimapy.utils import root
 
-import matplotlib.pyplot as plt
-
 
 def update_fed_funds(dates=None):
     """
