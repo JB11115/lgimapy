@@ -139,7 +139,12 @@ class Database:
     @property
     @lru_cache(maxsize=None)
     def _passwords(self):
-        fid = "P:/pswd.json"
+        if sys.platform == "linux":
+            pswd_fid = Path.home() / "pswd.json"
+        elif sys.platform == "win32":
+            pswd_fid = Path("P:/pswd.json")
+        else:
+            raise OSError(f"Unknown platform: {sys.platform}")
         return load_json(full_fid=fid)
 
     @property
