@@ -774,14 +774,24 @@ class Document(LatexScript):
             header = "\n".join((header, newline))
         return header
 
+    # def footer(self, logo, height=2, width=0.065):
+    #     """str: formatted footer"""
+    #     return f"""
+    #         \\setlength\\footskip{{0pt}}
+    #         \\fancyfoot[R]{{
+    #         	\\raisebox{{{height}cm}}[0pt][0pt]
+    #         	{{\\includegraphics[width={width}\\textwidth]
+    #             {{"X:/Credit Strategy/lgimapy/fig/logos/{logo}"}}}}
+    #         }}
+    #         """
     def footer(self, logo, height=2, width=0.065):
-        """str: formatted footer"""
+        logo_fid = root(f"fig/logos/{logo}")
         return f"""
             \\setlength\\footskip{{0pt}}
             \\fancyfoot[R]{{
             	\\raisebox{{{height}cm}}[0pt][0pt]
             	{{\\includegraphics[width={width}\\textwidth]
-                {{"X:/Credit Strategy/lgimapy/fig/logos/{logo}"}}}}
+                {{"{logo_fid.as_posix()}"}}}}
             }}
             """
 
@@ -1123,3 +1133,21 @@ def merge_pdfs(
     Document._save(
         merged_pdf_fid, save_code_block, merged_pdf_fid, keep_bookmarks
     )
+
+
+# %%
+#
+# width = 0.02
+# logo = "umbrella"
+# height = 0.03
+# logo_fid = root(f"fig/logos/{logo}")
+# print(
+#     f"""
+#     \\setlength\\footskip{{0pt}}
+#     \\fancyfoot[R]{{
+#     	\\raisebox{{{height}cm}}[0pt][0pt]
+#     	{{\\includegraphics[width={width}\\textwidth]
+#         {{"{logo_fid.as_posix()}"}}
+#     }}
+#     """
+# )
