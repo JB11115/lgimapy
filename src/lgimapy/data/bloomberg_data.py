@@ -9,11 +9,12 @@ from lgimapy.bloomberg import bdh
 from lgimapy.utils import load_json, mkdir, root, to_list
 
 
-def update_bloomberg_data():
+def update_bloomberg_data(print_updates=False):
     """Update all Bloomberg timeseries data."""
     bbg_scraper = BBGTimeseriesScraper()
     for field in sorted(bbg_scraper.fields):
-        print(field)
+        if print_updates:
+            print(field)
         bbg_scraper.create_data_file(field)
 
 
@@ -245,4 +246,4 @@ class BBGTimeseriesScraper:
 
 # %%
 if __name__ == "__main__":
-    update_bloomberg_data()
+    update_bloomberg_data(print_updates=True)
