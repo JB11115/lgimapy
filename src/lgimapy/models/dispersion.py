@@ -208,14 +208,14 @@ class Dispersion:
         s.index = [idx.split("_n")[0] for idx in s.index]
         return s
 
-    def _date(self, raw_date):
+    def _fmt_date(self, raw_date):
         if raw_date is None:
             return self._db.date("today")
         else:
             return pd.to_datetime(raw_date)
 
     def _intra_sector_table(self, rating, maturity, date=None):
-        date = self._date(date)
+        date = self._fmt_date(date)
         table = pd.DataFrame(index=self.sectors)
         df = self._load(self._intra_sector_fid(rating, maturity))
         pctile_df = df.rank(pct=True)
@@ -261,7 +261,7 @@ class Dispersion:
         return table
 
     def _inter_sector_table(self, rating, maturity, date=None):
-        date = self._date(date)
+        date = self._fmt_date(date)
         df = self._load(self._inter_sector_fid(rating, maturity))
         pctile_df = df.rank(pct=True)
         curr_oas_pctile = pctile_df["OAS"].loc[date]
@@ -311,14 +311,3 @@ class Dispersion:
                 "Intra-Sector Relative",
             ]
         )
-
-
-# #
-# from lgimapy.data import Database
-# db = Database()
-# self = Dispersion("IG", db)
-# self._date(None)
-# self.update()
-# maturity = 10
-# rating = "A"
-# self.overview_table(30)
