@@ -42,6 +42,7 @@ def tendered_cusips():
     # }
 
 
+# %%
 def build_month_end_extensions_report():
     # %%
     db = Database()
@@ -244,6 +245,7 @@ def port_metrics(df, strategy=None):
         "US Corporate 7+ Years": 7,
         "BofA ML 10+ Year AAA-A US Corp Const": 10,
         "Bloomberg LDI Custom - DE": 3,
+        "BNM - US 1-5 Yr Credit": 1,
     }
     tenders = tendered_cusips()
     if tenders is not None:
@@ -256,7 +258,13 @@ def port_metrics(df, strategy=None):
     df["MaturityMonth"] = pd.to_datetime(
         df["MaturityDate"], errors="coerce"
     ).dt.to_period("M")
-    minimum_tenor = minimum_tenors_d[strategy]
+    try:
+        minimum_tenor = minimum_tenors_d[strategy]
+    except KeyError:
+        raise KeyError(
+            f"New Strategy: {strategy}, "
+            f"minimum tenor = {find_minimum_maturity(strategy):.2f} yrs)"
+        )
     minimum_years = int(minimum_tenor)
     minimum_months = int(12 * (minimum_tenor - minimum_years))
     dropped_maturities = pd.to_datetime(
