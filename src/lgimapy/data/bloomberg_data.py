@@ -13,6 +13,7 @@ def update_bloomberg_data():
     """Update all Bloomberg timeseries data."""
     bbg_scraper = BBGTimeseriesScraper()
     for field in sorted(bbg_scraper.fields):
+        print(field)
         bbg_scraper.create_data_file(field)
 
 
@@ -245,6 +246,3 @@ class BBGTimeseriesScraper:
 # %%
 if __name__ == "__main__":
     update_bloomberg_data()
-    self = BBGTimeseriesScraper()
-    field = "LEVEL"
-    self.create_data_file(field)
