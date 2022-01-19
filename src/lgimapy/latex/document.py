@@ -534,6 +534,8 @@ class Document(LatexScript):
         ix_begin_body = doc.find("\\begin{document}")
         ix_end_body = doc.find("\end{document}")
         preamble = doc[:ix_begin_body]
+        # Add correct root directory where required.
+        preamble = preamble.replace("<ROOT>", str(root().as_posix()))
         body = doc[ix_begin_body:ix_end_body]
         return preamble, body
 
@@ -1022,7 +1024,6 @@ class Page(LatexScript):
         self.body = ""
 
 
-# %%
 def pdf_fid(fid):
     """
     Convert input fid into a PDF fid if necessary.
