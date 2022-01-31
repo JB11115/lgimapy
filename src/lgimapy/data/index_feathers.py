@@ -164,10 +164,6 @@ def update_market_data_feathers(limit=20, update_current=False):
 
 
 # %%
-# fid = '2021_10'
-db = Database()
-# import boto3
-# %%
 
 if __name__ == "__main__":
     update_market_data_feathers(update_current=True)
