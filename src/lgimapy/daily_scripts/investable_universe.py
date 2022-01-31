@@ -139,7 +139,7 @@ def sort_table(df):
 
 
 def calculate_total(df, name, cols):
-    total_df = df.sum()[cols].to_frame().T
+    total_df = df[cols].sum().to_frame().T
     total_df["OAS"] = (df["OAS"] * df["MarketValue"]).sum() / df[
         "MarketValue"
     ].sum()
