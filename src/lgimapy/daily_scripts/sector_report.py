@@ -1,20 +1,15 @@
-import multiprocessing as mp
-import warnings
 from collections import defaultdict
 
 import joblib
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
 from tqdm import tqdm
 
-from lgimapy import vis
-from lgimapy.data import Database, concat_index_dfs
+from lgimapy.data import Database
 from lgimapy.latex import Document
 from lgimapy.models import XSRETPerformance
 from lgimapy.utils import root
 
-vis.style()
 # %%
 
 
@@ -78,6 +73,7 @@ def create_sector_report():
     )
     for page in df["page"]:
         doc.add_page(page)
+
     doc.save()
     doc.save_as("Sector_Report", path="reports/current_reports")
 
@@ -182,9 +178,7 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
         if sector_strat.accounts:
             df_list.append(sector_strat.ticker_overweights().rename(ow_col))
         else:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore", category=DeprecationWarning)
-                df_list.append(pd.Series(name=ow_col))
+            df_list.append(pd.Series(name=ow_col, dtype=object))
         ticker_df = sector_strat.ticker_df
         ratings_list.append(ticker_df["NumericRating"].dropna())
         if name in {"US LC", "US MC"}:
@@ -195,7 +189,6 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
                 )
             )
 
-    strat.sectors
     ratings = np.mean(pd.DataFrame(ratings_list)).round(0).astype(int)
     df_list.append(Database().convert_numeric_ratings(ratings).rename("Rating"))
     df = pd.DataFrame(df_list).T.rename_axis(None)
@@ -228,17 +221,21 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
     # Get summary rows.
     summary_rows = ["Total", "A Rated", "BBB Rated"]
     summary_df = pd.DataFrame()
+    str_cols = ["Rating", "Analyst*Score"]
+    numeric_cols = [col for col in df.columns if col not in str_cols]
     for name in summary_rows:
         if name == "Total":
-            df_row = df.sum().rename(name)
+            df_row = df[numeric_cols].sum().rename(name)
         else:
             df_row = (
-                df[df["Rating"].astype(str).str.startswith(name[0])]
+                df[df["Rating"].astype(str).str.startswith(name[0])][
+                    numeric_cols
+                ]
                 .sum()
                 .rename(name)
             )
-        df_row["Rating"] = "-"
-        df_row["Analyst*Score"] = "-"
+        for col in str_cols:
+            df_row[col] = "-"
         summary_df = summary_df.append(df_row)
 
     # Create `other` row if required.
