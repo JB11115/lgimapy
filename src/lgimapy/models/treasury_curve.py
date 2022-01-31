@@ -6,23 +6,24 @@ from collections import defaultdict, namedtuple
 from dateutil.relativedelta import relativedelta
 from functools import lru_cache
 
-warnings.simplefilter("ignore", RuntimeWarning)
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from scipy.interpolate import interp1d
-from scipy.optimize import fsolve, minimize
-from tqdm import tqdm
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", RuntimeWarning)
 
-import lgimapy.vis as vis
-from lgimapy.bloomberg import get_bloomberg_ticker
-from lgimapy.data import Database, TBond, SyntheticTBill, TreasuryCurve
-from lgimapy.utils import nearest, mkdir, root, smooth_weight
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mtick
+    import numpy as np
+    import pandas as pd
+    import seaborn as sns
+    from scipy.interpolate import interp1d
+    from scipy.optimize import fsolve, minimize, OptimizeWarning
+    from tqdm import tqdm
+
+    import lgimapy.vis as vis
+    from lgimapy.bloomberg import get_bloomberg_ticker
+    from lgimapy.data import Database, TBond, SyntheticTBill, TreasuryCurve
+    from lgimapy.utils import nearest, mkdir, root, smooth_weight
 
 vis.style()
-warnings.simplefilter("default", RuntimeWarning)
 
 # %%
 def svensson(t, B):
@@ -121,9 +122,9 @@ class TreasuryCurveBuilder:
         bonds += [b for b in bills if b.MaturityYears < min_mat]
 
         # Remove bonds with default ytm of 0.02.
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        bonds = [b for b in bonds if b.ytm != 0.02 and b.ytm > 0]
-        warnings.simplefilter(action="default", category=RuntimeWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            bonds = [b for b in bonds if b.ytm != 0.02 and b.ytm > 0]
         return bonds
 
     def _load(self, fid):
@@ -414,46 +415,55 @@ class TreasuryCurveBuilder:
             exit_opt(Xi)
 
         # Set up inits for optimizatios.
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        if self.model == "NS" or self._maturity_range == (0, 3):
-            bnds = [(0, 15), (-15, 30), (-30, 30), (0, 0), (0, 5), (0, 0)]
-        elif self.model == "NSS":
-            bnds = [(0, 15), (-15, 30), (-30, 30), (-30, 30), (0, 5), (5, 10)]
-        else:
-            raise ValueError("Model must be either NSS or NS.")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            warnings.simplefilter("ignore", OptimizeWarning)
 
-        # Randomly sample bounds to create n initial parameter combinations.
-        init_params = np.zeros([n, len(bnds)])
-        for j, bnd in enumerate(bnds):
-            init_params[:, j] = np.random.uniform(*bnds[0], size=n)
-
-        # Perform n optimizations, storing all results.
-        beta_res = np.zeros([n, len(bnds)])
-        rmse_res = np.zeros([n])
-        for i, params in enumerate(init_params):
-            try:
-                self._opt = minimize(
-                    self._error_function,
-                    x0=params,
-                    method=self._solver,
-                    bounds=bnds,
-                    tol=1e-4,
-                    options={"disp": False, "maxiter": 1000},
-                    callback=printx if self._verbose >= 3 else exit_opt,
-                )
-            except RuntimeError:
-                self._opt = namedtuple("opt_res", ["status"])
-                self._opt.status = 1
-
-            if self._opt.status != 0:
-                rmse_res[i] = 1e9  # arbitrary high error value
+            if self.model == "NS" or self._maturity_range == (0, 3):
+                bnds = [(0, 15), (-15, 30), (-30, 30), (0, 0), (0, 5), (0, 0)]
+            elif self.model == "NSS":
+                bnds = [
+                    (0, 15),
+                    (-15, 30),
+                    (-30, 30),
+                    (-30, 30),
+                    (0, 5),
+                    (5, 10),
+                ]
             else:
-                # Succesful optimization.
-                beta_res[i, :] = self._opt.x
-                rmse_res[i] = self._opt.fun
-            if self._verbose >= 2:
-                print(f"      Iteration {i+1} | RMSE: {rmse_res[i]:.4f}")
-        warnings.simplefilter(action="default", category=RuntimeWarning)
+                raise ValueError("Model must be either NSS or NS.")
+
+            # Randomly sample bounds to create n initial parameter combinations.
+            init_params = np.zeros([n, len(bnds)])
+            for j, bnd in enumerate(bnds):
+                init_params[:, j] = np.random.uniform(*bnds[0], size=n)
+
+            # Perform n optimizations, storing all results.
+            beta_res = np.zeros([n, len(bnds)])
+            rmse_res = np.zeros([n])
+            for i, params in enumerate(init_params):
+                try:
+                    self._opt = minimize(
+                        self._error_function,
+                        x0=params,
+                        method=self._solver,
+                        bounds=bnds,
+                        tol=1e-4,
+                        options={"disp": False, "maxiter": 1000},
+                        callback=printx if self._verbose >= 3 else exit_opt,
+                    )
+                except RuntimeError:
+                    self._opt = namedtuple("opt_res", ["status"])
+                    self._opt.status = 1
+
+                if self._opt.status != 0:
+                    rmse_res[i] = 1e9  # arbitrary high error value
+                else:
+                    # Succesful optimization.
+                    beta_res[i, :] = self._opt.x
+                    rmse_res[i] = self._opt.fun
+                if self._verbose >= 2:
+                    print(f"      Iteration {i+1} | RMSE: {rmse_res[i]:.4f}")
 
         # Store best results.
         if min(rmse_res) == 1e9:  # no succesful optimizations.
@@ -509,9 +519,10 @@ class TreasuryCurveBuilder:
         `data/treasury_curve_krd_params.parquet`.
         """
         # Get treasury curve parameters.
-        warnings.simplefilter(action="ignore", category=RuntimeWarning)
-        krds, coupons = self._get_KRDs_and_coupons()
-        warnings.simplefilter(action="default", category=RuntimeWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            krds, coupons = self._get_KRDs_and_coupons()
+
         if self._yesterday_curve:
             # Have data for yesterday, calculate total returns.
             trets = self._get_KRD_total_returns()
