@@ -30,6 +30,12 @@ def update_spreads_yields_returns(fid):
     return_dfs = {
         key: pd.read_csv(fid, index_col=0) for key, fid in return_fids.items()
     }
+    date = min(
+        find_last_trade_date(spreads_df), find_last_trade_date(yields_df)
+    )
+    spreads_df = spreads_df[spreads_df.index <= date]
+    yields_df = yields_df[yields_df.index <= date]
+
     sections = {
         "Spreads Overview": {
             "df": spreads_df,
@@ -119,7 +125,6 @@ def update_spreads_yields_returns(fid):
         return
 
     doc = Document(fid, path="reports/HY")
-    date = spreads_df.index[-1]
     doc.add_preamble(
         orientation="landscape",
         bookmarks=True,
@@ -197,6 +202,12 @@ def update_spreads_yields_returns(fid):
         )
 
     doc.save(save_tex=False)
+
+
+def find_last_trade_date(df):
+    """Find last date with no missing data."""
+    df_nans = df.isna().sum(axis=1)
+    return df_nans[df_nans == 0].index[-1]
 
 
 def make_table(df, yields=False, highlight_dates=None):
