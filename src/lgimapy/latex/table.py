@@ -760,7 +760,9 @@ def latex_table(
     # One final check to remove nans.
     if nan_value:
         fout = re.sub(" nan\\\\% ", nan_value, fout)
+        fout = re.sub(" NaN\\\\% ", nan_value, fout)
         fout = re.sub(" nan ", nan_value, fout)
+        fout = re.sub(" NaN ", nan_value, fout)
 
     if special_replace_rules is not None:
         for key, val in special_replace_rules.items():
