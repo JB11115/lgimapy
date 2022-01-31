@@ -145,7 +145,7 @@ class Database:
             pswd_fid = Path("P:/pswd.json")
         else:
             raise OSError(f"Unknown platform: {sys.platform}")
-        return load_json(full_fid=fid)
+        return load_json(full_fid=pswd_fid)
 
     @property
     @lru_cache(maxsize=None)
