@@ -528,14 +528,15 @@ class Database:
             dates = all_dates.groupby(pd.Grouper(freq="Y")).last().iloc[1:]
             return list(self._subset_date_series(dates, start, end))
 
-        # Use ref_date as reference date if none is provided,
-        # otherwise find closes trading date to reference date.
+        # Use today's date as reference date if none is provided,
+        # otherwise convert the provided date to a datetime object.
         if reference_date is None:
             ref_date = trade_dates[-1]
+        elif isinstance(reference_date, int) and 1980 < reference_date < 2100:
+            # Convert year to datetime object for the first of that year.
+            ref_date = pd.to_datetime(str(reference_date))
         else:
-            ref_date = self.nearest_date(
-                reference_date, market=market, **kwargs
-            )
+            ref_date = to_datetime(reference_date)
 
         last_trade = partial(bisect_left, trade_dates)
         if date_delta == "TODAY":
@@ -549,6 +550,9 @@ class Database:
                 last_trade(ref_date - timedelta(ref_date.weekday() + 1)) - 1
             ]
         elif date_delta == "MONTH_START":
+            return self.nearest_date(
+                ref_date.replace(day=1), market=market, before=False
+            )
             return trade_dates[last_trade(ref_date.replace(day=1))]
         elif date_delta == "NEXT_MONTH_START":
             # Find first trade date that is on or after the 1st
@@ -567,7 +571,18 @@ class Database:
         elif date_delta in {"MTD", "LAST_MONTH_END"}:
             return trade_dates[last_trade(ref_date.replace(day=1)) - 1]
         elif date_delta == "YEAR_START":
-            return trade_dates[last_trade(ref_date.replace(month=1, day=1))]
+            return self.nearest_date(
+                ref_date.replace(day=1, month=1), market=market, before=False
+            )
+        elif date_delta == "NEXT_YEAR_START":
+            next_year = ref_date.year + 1
+            next_year_start = pd.to_datetime(f"1/1/{next_year}")
+            return self.nearest_date(
+                next_year_start, market=market, before=False
+            )
+        elif date_delta == "YEAR_END":
+            next_year = self.date("NEXT_YEAR_START", reference_date=ref_date)
+            return self.date("YTD", reference_date=next_year)
         elif date_delta in {"YTD", "LAST_YEAR_END"}:
             return trade_dates[last_trade(ref_date.replace(month=1, day=1)) - 1]
         else:
@@ -3240,7 +3255,3 @@ def main():
     self.display_all_columns()
 
     db = Database()
-    db.load_market_data()
-
-    # %%
-    port = db.load_portfolio(account="P-LD")
