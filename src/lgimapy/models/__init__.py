@@ -8,6 +8,7 @@ from lgimapy.models.rating_migrations import (
 )
 from lgimapy.models.credit_curves import CreditCurve
 from lgimapy.models.dispersion import Dispersion
+from lgimapy.models.default_rate import DefaultRates
 
 __all__ = [
     "TLS",
@@ -19,4 +20,5 @@ __all__ = [
     "simulate_rating_migrations",
     "CreditCurve",
     "Dispersion",
+    "DefaultRates",
 ]
