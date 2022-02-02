@@ -521,49 +521,55 @@ class Database:
             return list(self._subset_date_series(dates, start, end))
         elif date_delta == "YEAR_STARTS":
             all_dates = pd.Series(trade_dates, trade_dates)
-            dates = dates.groupby(pd.Grouper(freq="Y")).first().iloc[1:]
+            dates = all_dates.groupby(pd.Grouper(freq="Y")).first().iloc[1:]
             return list(self._subset_date_series(dates, start, end))
         elif date_delta == "YEAR_ENDS":
             all_dates = pd.Series(trade_dates, trade_dates)
             dates = all_dates.groupby(pd.Grouper(freq="Y")).last().iloc[1:]
             return list(self._subset_date_series(dates, start, end))
 
-        # Use today as reference date if none is provided,
+        # Use ref_date as reference date if none is provided,
         # otherwise find closes trading date to reference date.
         if reference_date is None:
-            today = trade_dates[-1]
+            ref_date = trade_dates[-1]
         else:
-            today = self.nearest_date(reference_date, market=market, **kwargs)
+            ref_date = self.nearest_date(
+                reference_date, market=market, **kwargs
+            )
 
         last_trade = partial(bisect_left, trade_dates)
         if date_delta == "TODAY":
-            return today
+            return ref_date
         elif date_delta in {"YESTERDAY", "DAILY", "1D", "1DAY", "1DAYS"}:
             return self.nearest_date(
-                today, market=market, inclusive=False, after=False
+                ref_date, market=market, inclusive=False, after=False
             )
         elif date_delta in {"WTD", "LAST_WEEK_END"}:
             return trade_dates[
-                last_trade(today - timedelta(today.weekday() + 1)) - 1
+                last_trade(ref_date - timedelta(ref_date.weekday() + 1)) - 1
             ]
         elif date_delta == "MONTH_START":
-            return trade_dates[last_trade(today.replace(day=1))]
+            return trade_dates[last_trade(ref_date.replace(day=1))]
         elif date_delta == "NEXT_MONTH_START":
             # Find first trade date that is on or after the 1st
             # of the next month.
-            next_month = 1 if today.month == 12 else today.month + 1
-            next_year = today.year + 1 if today.month == 12 else today.year
+            next_month = 1 if ref_date.month == 12 else ref_date.month + 1
+            next_year = (
+                ref_date.year + 1 if ref_date.month == 12 else ref_date.year
+            )
             next_month_start = pd.to_datetime(f"{next_month}/1/{next_year}")
             return self.nearest_date(
                 next_month_start, market=market, before=False
             )
         elif date_delta == "MONTH_END":
-            next_month = self.date("NEXT_MONTH_START", reference_date=today)
+            next_month = self.date("NEXT_MONTH_START", reference_date=ref_date)
             return self.date("MTD", reference_date=next_month)
         elif date_delta in {"MTD", "LAST_MONTH_END"}:
-            return trade_dates[last_trade(today.replace(day=1)) - 1]
+            return trade_dates[last_trade(ref_date.replace(day=1)) - 1]
+        elif date_delta == "YEAR_START":
+            return trade_dates[last_trade(ref_date.replace(month=1, day=1))]
         elif date_delta in {"YTD", "LAST_YEAR_END"}:
-            return trade_dates[last_trade(today.replace(month=1, day=1)) - 1]
+            return trade_dates[last_trade(ref_date.replace(month=1, day=1)) - 1]
         else:
             # Assume value-unit specification.
             positive = "+" in date_delta
@@ -582,16 +588,18 @@ class Database:
             dt_kwargs = {dt_kwarg_map[unit]: val}
             if positive:
                 if fcast:
-                    return today + relativedelta(**dt_kwargs)
+                    return ref_date + relativedelta(**dt_kwargs)
                 else:
                     return self.nearest_date(
-                        today + relativedelta(**dt_kwargs),
+                        ref_date + relativedelta(**dt_kwargs),
                         market=market,
                         **kwargs,
                     )
             else:
                 return self.nearest_date(
-                    today - relativedelta(**dt_kwargs), market=market, **kwargs
+                    ref_date - relativedelta(**dt_kwargs),
+                    market=market,
+                    **kwargs,
                 )
 
     def account_values(self):
@@ -3235,3 +3243,4 @@ def main():
     db.load_market_data()
 
     # %%
+    port = db.load_portfolio(account="P-LD")
