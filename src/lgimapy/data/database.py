@@ -329,6 +329,47 @@ class Database:
         repl = {" ": "_", "/": "_", "%": "pct"}
         return replace_multiple(s, repl)
 
+    @property
+    @lru_cache(maxsize=None)
+    def _defaults_df(self):
+        fid = root("data/defaults.csv")
+        df = pd.read_csv(fid, index_col=0)
+        df.columns = ["Ticker", "Date", "ISIN"]
+        bad_dates = {"#N/A Invalid Security"}
+        bad_isins = {"#N/A Requesting Data...", "#N/A Field Not Applicable"}
+        df = df[
+            ~((df["Date"].isin(bad_dates)) | (df["ISIN"].isin(bad_isins)))
+        ].copy()
+        df["Date"] = pd.to_datetime(df["Date"])
+        return df.sort_values("Date").reset_index(drop=True).rename_axis(None)
+
+    def defaults(self, start=None, end=None, isins=None):
+        """
+        Get history of defaults.
+
+        Parameters
+        ----------
+        start: datetime, optional
+            Start date for rating changes.
+        end: datetime, optional
+            End date for rating changes.
+        isins: List[str], optional
+            List of ISINs to subset.
+
+        Returns
+        -------
+        df: pd.DataFrame
+            Rating changes within specified dates.
+        """
+        df = self._defaults_df.copy()
+        if start is not None:
+            df = df[df["Date"] >= pd.to_datetime(start)].copy()
+        if end is not None:
+            df = df[df["Date"] <= pd.to_datetime(end)].copy()
+        if isins is not None:
+            df = df[df["ISIN"].isin(isins)].copy()
+        return df
+
     def rating_changes(
         self,
         start=None,
@@ -3255,3 +3296,6 @@ def main():
     self.display_all_columns()
 
     db = Database()
+
+    # %%
+    db.defaults(start="2021")
