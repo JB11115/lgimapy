@@ -19,6 +19,8 @@ from lgimapy.vis.vis import (
     set_n_ticks,
     set_percentile_limits,
     plot_hist,
+    plot,
+    arrows,
 )
 
 __all__ = [
@@ -42,4 +44,6 @@ __all__ = [
     "set_n_ticks",
     "set_percentile_limits",
     "plot_hist",
+    "plot",
+    "arrows",
 ]

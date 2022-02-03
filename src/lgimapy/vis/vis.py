@@ -15,8 +15,6 @@ from pandas._libs.tslibs.timestamps import Timestamp
 from tqdm import tqdm
 
 from lgimapy.bloomberg import bdh
-
-# from lgimapy.data import Database
 from lgimapy.utils import mkdir, root, to_list
 
 
@@ -396,7 +394,7 @@ def plot_double_y_axis_timeseries(
     ax: matplotlib Axes, optional
         Axes in which to draw plot, otherwise activate Axes.
     figsize: (float, float), default=(8, 6).
-        Figure size.
+        Figure size if no `ax` is provided.
     xtickfmt: `{'auto', None}`, optional
         Format for x tick labels. If `auto` use matplotlib's
         AutoDateLocator and ConciseDateFormatter.
@@ -414,9 +412,9 @@ def plot_double_y_axis_timeseries(
         to names of `s_left` and `s_right` with default parameters.
         For non-default parameters pass kwargs to `Axes.legend()`.
     plot_kws: dict, optional
-        Kwargs for both plots.
+        Keyword arguments for both plots.
     plot_kws_{left, right}, optional
-        Kwargs for either `left` or `right` plots.
+        Keyword arguments for either `left` or `right` plots.
     color_yticks: bool, default=True
         If True color y-axis tick labels to match respective
         colors from line plots.
@@ -547,7 +545,7 @@ def plot_triple_y_axis_timeseries(
     ax: matplotlib Axes, optional
         Axes in which to draw plot, otherwise activate Axes.
     figsize: (float, float), default=(8, 6).
-        Figure size.
+        Figure size if no `ax` is provided.
     xtickfmt: ``{'auto', None}``, optional
         Format for x tick labels. If ``auto`` use matplotlib's
         AutoDateLocator and ConciseDateFormatter.
@@ -565,9 +563,9 @@ def plot_triple_y_axis_timeseries(
         to names of ``s_left`` and ``s_right`` with default parameters.
         For non-default parameters pass kwargs to ``Axes.legend()``.
     plot_kws: dict, optional
-        Kwargs for both plots.
+        Keyword Arguments for both plots.
     plot_kws_{left, right_inner, right_outer}, optional
-        matpltolib kwargs for either ``left``, ``right_inner``, and
+        matpltolib Keyword Arguments for either ``left``, ``right_inner``, and
         ``right_outer`` plots.
     color_yticks: bool, default=True
         If True color y-axis tick labels to match respective
@@ -727,16 +725,16 @@ def plot_timeseries(
         If ``True`` compute mean line and plot. If float is given
         use provided value as mean.
     mean_line_kws: dict, optional
-        Kwargs for ``matplotlib.Axes.plot()`` for mean line.
+        Keyword Arguments for ``matplotlib.Axes.plot()`` for mean line.
     median_line: bool or float, default=False
         If ``True`` compute mean line and plot. If float is given
         use provided value as mean.
     median_line_kws: dict, optional
-        Kwargs for ``matplotlib.Axes.plot()`` for median line.
+        Keyword Arguments for ``matplotlib.Axes.plot()`` for median line.
     pct_lines: bool or Tuple[int], default=False
         If tuple is given, plot lines at the given percentiles.
     figsize: (float, float), default=(8, 6).
-        Figure size.
+        Figure size if no `ax` is provided.
     xtickfmt: ``{'auto', None}``, optional
         Format for x tick labels. If ``auto`` use matplotlib's
         AutoDateLocator and ConciseDateFormatter.
@@ -754,8 +752,8 @@ def plot_timeseries(
         For non-default parameters pass kwargs to ``Axes.legend()``.
     ax: matplotlib Axes, optional
         Axes in which to draw plot, otherwise activate Axes.
-    **kwargs: dict, optional
-        Kwargs for ``matplotlib.Axes.plot()``.
+    **kwargs:
+        Keyword Arguments for ``matplotlib.Axes.plot()``.
     """
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -915,7 +913,7 @@ def plot_multiple_timeseries(
     ax: matplotlib Axes, optional
         Axes in which to draw plot, otherwise activate Axes.
     figsize: (float, float), default=(8, 6).
-        Figure size.
+        Figure size if no `ax` is provided.
     xtickfmt: ``{'auto', None}``, optional
         Format for x tick labels. If ``auto`` use matplotlib's
         AutoDateLocator and ConciseDateFormatter.
@@ -931,8 +929,8 @@ def plot_multiple_timeseries(
         If False, hide legend. If True, show legend defaulting
         to names of ``s_left`` and ``s_right`` with default parameters.
         For non-default parameters pass kwargs to ``Axes.legend()``.
-    **kwargs: dict, optional
-        Kwargs for ``matplotlib.Axes.plot()``.
+    **kwargs:
+        Keyword Arguments for ``matplotlib.Axes.plot()``.
     """
     # Set default plot params and update with specified params.
     if ax is None:
@@ -1593,7 +1591,9 @@ def plot_hist(
     ax: matplotlib Axes, optional
         Axes in which to draw plot, otherwise activate Axes.
     figsize: (float, float), default=(6, 4).
-        Figure size.
+        Figure size if no `ax` is provided.
+    **kwargs:
+        Keyword arguments for ``matplotlib.Axes.plot()``.
     """
     if ax is None:
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -1662,8 +1662,86 @@ def legend(ax, **kwargs):
     ax: matplotlib Axes
         Axes in which to add legend to.
     **kwargs:
-        Keyword arguments for ``matplotlib.pyplot.legend``
+        Keyword arguments for ``matplotlib.pyplot.legend()``
     """
     kws = {"fancybox": True, "shadow": True}
     kws.update(**kwargs)
     ax.legend(**kws)
+
+
+def plot(x_or_s, y=None, *args, ax=None, figsize=(8, 6), **kwargs):
+    """
+    Parameters
+    ----------
+    x_or_s: array-like, scalar, or pd.Series
+        If array-like or scalar, refers to the horizonal coordinates
+        of the data points. If pd.Series, the index refers to the
+        horizontal coordinates while the values refer to the vertical
+        coordinates.
+    y: array-like or scalar, optional
+        If provided, the vertical coordinates of the datapoints.
+    fmt: str, optional
+        A format string, e.g. '-o' for connected circles. See the Notes
+        section of ``matplotlib.Axes.plot()``for a full description
+        of the format strings.
+    ax: matplotlib Axes
+        Axes in which to add legend to.
+    figsize: (float, float), default=(8, 6).
+        Figure size if no `ax` is provided.
+    **kwargs:
+        Keyword arguments for ``matplotlib.Axes.plot()``.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    if isinstance(x_or_s, pd.Series) and y is None:
+        x = x_or_s.index
+        y = x_or_s.values
+    else:
+        x = x_or_s
+
+    kws = {"color": "navy", "lw": 2}
+    kws.update(**kwargs)
+    ax.plot(x, y, *args, **kws)
+
+
+def arrows(x_or_s, y=None, ax=None, figsize=(8, 6), **kwargs):
+    """
+    Parameters
+    ----------
+    x_or_s: array-like, scalar, or pd.Series
+        If array-like or scalar, refers to the horizonal coordinates
+        of the data points. If pd.Series, the index refers to the
+        horizontal coordinates while the values refer to the vertical
+        coordinates.
+    y: array-like or scalar, optional
+        If provided, the vertical coordinates of the datapoints.
+    fmt: str, optional
+        A format string, e.g. '-o' for connected circles. See the Notes
+        section of ``matplotlib.Axes.plot()``for a full description
+        of the format strings.
+    ax: matplotlib Axes
+        Axes in which to add legend to.
+    figsize: (float, float), default=(8, 6).
+        Figure size if no `ax` is provided.
+    **kwargs:
+        Keyword arguments for ``matplotlib.Axes.quiver()``.
+    """
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize=figsize)
+
+    if isinstance(x_or_s, pd.Series) and y is None:
+        x = np.asarray(x_or_s.index)
+        y = np.asarray(x_or_s.values)
+    else:
+        x = np.asarray(x_or_s)
+        y = np.asarray(y)
+
+    kws = {
+        "color": "navy",
+        "scale_units": "xy",
+        "angles": "xy",
+        "scale": 1,
+    }
+    kws.update(**kwargs)
+    ax.quiver(x[:-1], y[:-1], np.diff(x), np.diff(y), **kws)
