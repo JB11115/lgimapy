@@ -32,12 +32,16 @@ from lgimapy.utils import (
 
 
 class Portfolio:
-    def __init__(self, date):
+    def __init__(self, date, name, class_name=None):
         self.date = to_datetime(date)
+        self.name = name
+        self._class_name = (
+            self.__class__.__name__ if class_name is None else class_name
+        )
 
     def __repr__(self):
         date = self.date.strftime("%m/%d/%Y")
-        return f"{self.name} {self.__class__.__name__} {date}"
+        return f"{self.name} {self._class_name} {date}"
 
     @property
     def fid(self):
@@ -47,7 +51,7 @@ class Portfolio:
 
     @property
     def _stored_properties_history_fid(self):
-        data_dir = root(f"data/portfolios/history/{self.__class__.__name__}")
+        data_dir = root(f"data/portfolios/history/{self._class_name}")
         return data_dir / f"{self.fid}.parquet"
 
     @property
@@ -160,7 +164,7 @@ class Portfolio:
             ).sort_index()
             updated_df.to_parquet(self._stored_properties_history_fid)
 
-        if self.__class__.__name__ == "Strategy":
+        if self._class_name == "Strategy":
             for acnt in self.accounts.values():
                 acnt.save_stored_properties()
 
@@ -358,7 +362,7 @@ class Account(BondBasket, Portfolio):
             constraints=constraints,
             index=index,
         )
-        Portfolio.__init__(self, date=date)
+        Portfolio.__init__(self, date=date, name=name)
         self.full_df = df.copy()
         self.df, self.tsy_df, self.cash_df = self._split_credit_tsy_cash(df)
 
@@ -938,7 +942,7 @@ class Strategy(BondBasket, Portfolio):
             constraints=constraints,
             index=index,
         )
-        Portfolio.__init__(self, date)
+        Portfolio.__init__(self, date=date, name=name)
         self.name = name
 
         # Separate all accounts in the strategy.

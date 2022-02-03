@@ -23,7 +23,7 @@ from lgimapy.data.securities import (
 )
 from lgimapy.data.basket import BondBasket
 from lgimapy.data.index import Index
-from lgimapy.data.portfolios import Account, Strategy
+from lgimapy.data.portfolios import Account, Strategy, Portfolio
 from lgimapy.data.database import (
     Database,
     get_basys_fids,
@@ -63,6 +63,7 @@ __all__ = [
     "Index",
     "Account",
     "Strategy",
+    "Portfolio",
     "Database",
     "clean_dtypes",
     "convert_sectors_to_fin_flags",
