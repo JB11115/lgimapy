@@ -7,6 +7,7 @@ from inspect import getfullargspec
 import numpy as np
 import pandas as pd
 from oslo_concurrency import lockutils
+from pyarrow.lib import ArrowInvalid
 
 from lgimapy.bloomberg import get_bloomberg_ticker
 from lgimapy.data import (
@@ -408,7 +409,7 @@ class Index(BondBasket):
             fid = history_dir / filename
             try:
                 history = pd.read_parquet(fid).squeeze().to_dict()
-            except (FileNotFoundError, OSError):
+            except (FileNotFoundError, OSError, ArrowInvalid):
                 history = {}
             return fid, history
 
