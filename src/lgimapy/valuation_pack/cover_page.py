@@ -104,11 +104,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         """
     )
     vis.plot_timeseries(
-        oas,
-        start=df.index[0],
-        color="steelblue",
-        label=lbl,
-        ax=axes[0],
+        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
     )
 
     vis.plot_timeseries(
@@ -186,11 +182,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         """
     )
     vis.plot_timeseries(
-        oas,
-        start=df.index[0],
-        color="steelblue",
-        label=lbl,
-        ax=axes[0],
+        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
     )
 
     vis.plot_timeseries(
