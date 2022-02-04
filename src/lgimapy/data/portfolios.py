@@ -832,9 +832,7 @@ class Account(BondBasket, Portfolio):
         d = defaultdict(list)
         for rating_bucket in self._rating_risk_buckets:
 
-            bucket_port = self.subset(
-                rating_risk_bucket=rating_bucket,
-            )
+            bucket_port = self.subset(rating_risk_bucket=rating_bucket,)
             bucket_corp_port = bucket_port.subset(
                 LGIMA_top_level_sector=["Industrials", "Financials"]
             )
