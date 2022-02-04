@@ -151,6 +151,10 @@ class Index(BondBasket):
                 .rename("total_value")
             )
 
+    def _create_day_cache(self):
+        self._day_cache = {date: df for date, df in self.df.groupby("Date")}
+        self._day_cache_key = "_".join(self.df.columns)
+
     def day(self, date, as_index=False):
         """
         Memoized call to a dict of single day DataFrame
@@ -188,10 +192,8 @@ class Index(BondBasket):
                     date: df for date, df in self.df.groupby("Date")
                 }
         else:
-            # New columns added since last accessed,
-            # update cache and cache key.
-            self._day_cache = {date: df for date, df in self.df.groupby("Date")}
-            self._day_cache_key = current_cache_key
+            # New columns added since last accessed, update cache.
+            self._create_day_cache()
 
         if as_index:
             return Index(self._day_cache[date], self.name)
