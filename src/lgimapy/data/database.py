@@ -133,7 +133,8 @@ class Database:
         else:
             raise OSError(f"Unknown platform: {sys.platform}")
 
-    def local(self, fid):
+    @staticmethod
+    def local(fid):
         return root(f"data/{fid}")
 
     @property
@@ -242,9 +243,9 @@ class Database:
     def _trade_date_df(self, market):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
         if market == "US":
-            fid = root(f"data/{market}/trade_dates.parquet")
+            fid = self.local(f"{market}/trade_dates.parquet")
         else:
-            fid = root(f"data/{market}/trade_dates_{sys.platform}.parquet")
+            fid = self.local(f"{market}/trade_dates_{sys.platform}.parquet")
         return pd.read_parquet(fid)
 
     @lru_cache(maxsize=None)
@@ -266,7 +267,7 @@ class Database:
     @lru_cache(maxsize=None)
     def _rating_changes_df(self):
         """pd.DataFrame: Rating change history."""
-        fid = root("data/rating_changes.parquet")
+        fid = self.local("rating_changes.parquet")
         return pd.read_parquet(fid)
 
     @property
@@ -309,7 +310,7 @@ class Database:
     @lru_cache(maxsize=None)
     def long_corp_sectors(self):
         """List[str]: list of sectors in Long Corp Benchmark."""
-        fid = root("data/long_corp_sectors.parquet")
+        fid = self.local("long_corp_sectors.parquet")
         sector_df = pd.read_parquet(fid)
         return sorted(sector_df["Sector"].values)
 
@@ -332,7 +333,7 @@ class Database:
     @property
     @lru_cache(maxsize=None)
     def _defaults_df(self):
-        fid = root("data/defaults.csv")
+        fid = self.local("defaults.csv")
         df = pd.read_csv(fid, index_col=0)
         df.columns = ["Ticker", "Date", "ISIN"]
         bad_dates = {"#N/A Invalid Security"}
@@ -698,7 +699,7 @@ class Database:
     @lru_cache(maxsize=None)
     def DM_countries(self, region=None):
         """Set[str]: DM Country codes."""
-        fid = root("data/DM_countries.parquet")
+        fid = self.local("DM_countries.parquet")
         return set(pd.read_parquet(fid).squeeze())
 
     @property
@@ -721,7 +722,7 @@ class Database:
     @lru_cache(maxsize=None)
     def _hy_index_flags(self, index):
         """pd.DataFrame: Index flag boolean for ISIN vs date."""
-        fid = root(f"data/index_members/{index}.parquet")
+        fid = self.local(f"index_members/{index}.parquet")
         return pd.read_parquet(fid)
 
     def load_trade_dates(self):
@@ -1527,7 +1528,7 @@ class Database:
         # Load feather files as DataFrames and subset to correct dates.
         fmt = f"%Y_%m.{self._fid_extension}"
         files = pd.date_range(start_month, end, freq="MS").strftime(fmt)
-        fid_dir = root(f"data/{self._market}/{self._fid_extension}s")
+        fid_dir = self.local(f"{self._market}/{self._fid_extension}s")
         fids = [fid_dir / file for file in files]
         read_func = {
             "feather": pd.read_feather,
@@ -2755,7 +2756,7 @@ class Database:
             return self._bbg_dfs[field]
         except KeyError:
             df = pd.read_csv(
-                root(f"data/bloomberg_timeseries/{field}.csv"),
+                self.local(f"bloomberg_timeseries/{field}.csv"),
                 index_col=0,
                 parse_dates=True,
                 infer_datetime_format=True,
@@ -2808,7 +2809,7 @@ class Database:
             return self._baml_dfs[field]
         except KeyError:
             raw_df = pd.read_csv(
-                root(f"data/HY/{fid_d[field]}.csv"),
+                self.local(f"HY/{fid_d[field]}.csv"),
                 index_col=0,
                 parse_dates=True,
                 infer_datetime_format=True,
@@ -3194,7 +3195,7 @@ class Database:
     def ticker_overweights(self, strategy, ticker, start=None, end=None):
         tickers = to_list(ticker, str)
         fid = f"{self.strategy_fid(strategy)}_tickers.parquet"
-        dir_name = root("data/strategy_overweights")
+        dir_name = self.local("strategy_overweights")
         df = pd.read_parquet(dir_name / fid)
         if start:
             df = df[df.index >= to_datetime(start)]
@@ -3296,6 +3297,30 @@ def main():
     self.display_all_columns()
 
     db = Database()
-
     # %%
-    db.defaults(start="2021")
+
+    #
+    #
+    # sorted(df_clean['CouponType'].unique().dropna())
+    # df_clean[df_clean['CouponType'] == 'ZERO COUPON, OID']
+    #
+    # %%
+
+    db = Database()
+    start = "1/28/2022"
+    # db.load_market_data(start=start)
+    # ix = db.build_market_index(**db.index_kwargs("SOVEREIGN", maturity=(10, None)))
+    # ix.OAS()
+    df_oas = db.load_bbg_data("US_IG_10+", "OAS", start=start)
+    df_yields = 100 * db.load_bbg_data(
+        ["UST_10Y", "UST_30Y", "UST_10Y_RY"], "YTW", start=start
+    )
+
+    df_sp500 = db.load_bbg_data("SP500", "price", start=start)
+    df = pd.concat([df_oas, df_sp500, df_yields], axis=1).iloc[:-1]
+    # %%
+    df
+    df.iloc[-1] - df.iloc[0]
+    db.load_bbg_data("UST_10Y_RY", "YTW", start="6/1/2020").sort_values(
+        ascending=False
+    ).head(30)
