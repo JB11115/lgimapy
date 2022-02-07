@@ -65,7 +65,7 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import scipy
+from scipy import optimize
 
 
 # %%
@@ -76,29 +76,52 @@ Problem 1
 
 Write a function to subset a DataFrame of bonds, keeping the rows
 which meet the following criteria (Note that relevant DataFrame
-column names are provided in double quotes):
-    * "Sector" is 'TREASURY'
-    * Either:
-            The "Ticker" is one of  ('S', 'SP', 'SPX', or 'SPY')
-        OR:
-            It matures on the 15th of the month
-            ("MaturityDate" has day value equal to 15)
-    * "CouponType" is "FIXED"
-    * "CouponRate" is equal to 0
-    * "CallType" is 'NONCALL'
-    * "OAS" is greater than or equal to -30
-    * "OAS" is less than 40
-    * "OriginalMaturity" is equal to one of (2, 3, 5, 7, 10, 20, or 30)
-    * "YearsToMaturity" is greater than 3 months
-    * It has not crossed through another original maturity.
-        For example, a bond with an "OriginalMaturity" of 30 years
-        should be excluded once its "YearsToMaturity" <= 20 years.
-        Similarly, a bond with an "OriginalMaturity" of 20 years
-        should be excluded once its "YearsToMaturity" <= 10 years
-        and so on.
+column names are provided in double quotes).
 
-Add an additional column named "DTS" which is equal to "OASD" * "OAD"
-to the returned DataFrame.
+You will need to create a column "Tenor" (of dtype float) by
+subtracting the "CurrentDate" column from the "MaturityDate" column.
+A bond's tenor is the number of years remaining from the current
+date until the bond matures.
+
+The critera are are provided below (don't worry if you are not
+familiar with the bond lingo, just follow the given logic).
+Each returned row, should be a bond that:
+    * OAS isnt't too high: "OAS" is less than 40
+    * OAS isn't too low: "OAS" is greater than -30
+    * Either:
+        Is not a treasury strip:
+        The "Ticker" is not one of  ('S', 'SP', 'SPX', or 'SPY')
+      OR:
+        It matures on the 15th of the month:
+        "MaturityDate" has day value equal to 15
+    * Either:
+        is a treasury: "Sector" is 'TREASURIES'
+      OR:
+        has zero coupon,
+            Either:
+                "CouponType" is 'ZERO COUPON'
+            OR:
+                ("CouponType" is 'FIXED') AND ("CouponRate" is equal to 0)
+    * is not callable: "CallType" is 'NONCALL'
+    * has a normal tenor:
+        "OriginalTenor" is equal to one of (2, 3, 5, 7, 10, 20, or 30)
+    * is on-the-run: This means that the bond's tenor is between
+        its original tenor and the descending tenor from the
+        above normal tenor list.
+
+        For example, a bond with an "OriginalTenor" of 30 years is
+        on-the-run while its tenor is between 20 and 30 years, and
+        should be excluded once its "Tenor" <= 20 years.
+        Similarly, a bond with an "OriginalTenor" of 20 years
+        on-the-run while its tenor is between 10 and 20 years, and
+        should be excluded once its "Tenor" <= 10 years.
+        Similarly for 10 and 7, 7 and 5, and so on.
+        For bonds with "OriginalTenor" of 2 years, exclude them
+        once their "Tenor" <= 3 months.
+
+Once you have subset the DataFrame appropriately, add an additional
+column named "DTS" which is equal to "OASD" * "OAS"  before returing
+the cleaned DataFrame.
 """
 
 
@@ -121,18 +144,20 @@ def get_clean_treasuries(df):
 """
 Problem 2
 ---------
-Given a sorted list of dates, find the nearest date (inclusive) in the
-list to a specified date provided to the function. Include the ability
-to specify only dates before or after the specified date. If no dates
-in `date_list` meet the specifications, return ``None`` For example:
+Given a sorted list of non-continuous dates (for eample, days in which
+the bond market traded), find the nearest date (inclusive) in the
+list to a specified reference date provided to the function. Include the
+ability to specify only dates before or after the reference date. If
+there are two equidistant nearest dates to the reference date, return
+the later date. If no dates in `date_list` meet the specifications,
+return ``None``. For example:
 
     >>> date_list = pd.to_datetime(['2000', '2001', '2002'])
-    >>> date = pd.to_datetime('12/1/2001')
-    >>> nearest_date(date, date_list)
+    >>> reference_date = pd.to_datetime('12/1/2001')
+    >>> nearest_date(reference_date, date_list)
     Timestamp('2002-01-01')
-    >>> nearest_date(date, date_list, after=False)
+    >>> nearest_date(reference_date, date_list, after=False)
     Timestamp('2001-01-01')
-    >>> nearest_date()
 
 Hint: Imagine this is a function that will be called thousands of times
     per day, so efficiency is vital
@@ -262,7 +287,8 @@ Problem 5
 
 Complete the following class for performing a simple linear regression.
 We don't want you to waste time implementing OLS, so please use the
-`np.linalg` library to solve for alpha and beta in the regression.
+`np.linalg` library or another `numpy` function to solve for alpha and
+beta in the regression.
 
 The class should run properly even if `OLS.fit()` is not called
 directly by the user. For example:
@@ -278,12 +304,15 @@ should be stored such that the model is not being run twice. For example:
     >>> ols.fit()
     >>> ols.plot()
 
-This example is a simple linear regression, but pretend that it
-is a complicated model which takes a long time to fit (which we simulate
-here with an arbitrary 1 second delay for fitting but could actually be
-multiple hours). Do not run `OLS.fit()` during initialization of the
-class, rather it should only be invoked after the user calls one of the
-methods on the class.
+should not invoke `OLS.fit()` twice. This example is a simple linear
+regression, but pretend that it is a complicated model which takes a
+long time to fit (which we simulate here with an arbitrary 1 second delay
+for fitting but could actually be multiple hours). Leave this delay
+in your code.
+
+Do not run `OLS.fit()` during initialization of the class, rather it
+should only be invoked after the user calls one of the methods in the
+class.
 
 The `OLS.resid` attribute should return the residuals of the regression:
 
@@ -291,20 +320,18 @@ The `OLS.resid` attribute should return the residuals of the regression:
     >>> ols.resid
     np.array([...])
 
-The `OLS.predict()` method should return a prediction for the y value
-associated with the provided `x_pred` given the model fit.
+The `OLS.predict()` method should return a prediction for the y value(s)
+associated with the provided `x_pred`.
 
 For the `OLS.plot()` method, we would like you to create an aesthetically
 pleasing (imagine it would be shown to Senior Portfolio Managers or
-External Clients) plot which may or may not include predicted value.
+External Clients) plot which may or may not include a single predicted value.
 This method should save the figure using "OLS_plot.png" as the figure's
-filename if `x_pred` is not provided, or "OLS_plot_{x_pred}.png" if
-a prediction `x_pred` is provided to the method.
+filename.
 
 The plot should at a minimum include:
 * The raw data used for fitting
 * A best fit line
-* The predicted value if `x_pred` is provided
 * The R^2 value of the regression
 * Gridlines
 
@@ -339,11 +366,11 @@ class OLS:
         """
         Parameters
         ----------
-        x_pred: float
+        x_pred: float or [1 x n] np.array
 
         Returns
         -------
-        float
+        float or [1 x n] np.array
         """
         ...
 
@@ -354,3 +381,5 @@ class OLS:
         x_pred: float, optional
         """
         ...
+        plt.savefig("OLS_plot.png")
+        plt.close(plt.gcf())
