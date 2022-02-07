@@ -871,10 +871,11 @@ def plot_timeseries(
         or median_line is not False
         or pct_lines is not False
     ):
+        handles, labels = ax.get_legend_handles_labels()
         if isinstance(legend, dict):
-            ax.legend(**legend)
+            ax.legend(reversed(handles, reversed(labels)), **legend)
         else:
-            ax.legend()
+            ax.legend(reversed(handles), reversed(labels))
     # ax.margins(x=0.02, y=0.05)
     plt.tight_layout()
 
@@ -1655,7 +1656,7 @@ def plot_hist(
         ax.legend()
 
 
-def legend(ax, **kwargs):
+def legend(ax, *args, **kwargs):
     """
     Parameters
     ----------
@@ -1666,7 +1667,7 @@ def legend(ax, **kwargs):
     """
     kws = {"fancybox": True, "shadow": True}
     kws.update(**kwargs)
-    ax.legend(**kws)
+    ax.legend(*args, **kws)
 
 
 def plot(x_or_s, y=None, *args, ax=None, figsize=(8, 6), **kwargs):
