@@ -1,5 +1,6 @@
 import os
 import json
+import itertools as it
 import pprint as pp
 import pickle
 import re
@@ -1031,6 +1032,19 @@ def to_sql_list(a):
 
 
 def _copy_or_move(copy_or_move, src, dst):
+    """
+    Copy or move source file to new destination, with
+    proper error handling if the file is currently open.
+
+    Parameters
+    ----------
+    copy_or_move: {'COPY', 'MOVE'}
+        Whether to copy or move the source file.
+    src: Path
+        Source file location.
+    dst: Path
+        Destination file location.
+    """
     func = {
         "COPY": shutil.copy,
         "MOVE": shutil.move,
@@ -1051,8 +1065,50 @@ def _copy_or_move(copy_or_move, src, dst):
 
 
 def cp(src, dst):
+    """
+    Copy source file to new destination with proper
+    error handling if the file is currently open.
+
+    Parameters
+    ----------
+    src: Path
+        Source file location.
+    dst: Path
+        Destination file location.
+    """
     _copy_or_move("COPY", src, dst)
 
 
 def mv(src, dst):
+    """
+    Move source file to new destination with proper
+    error handling if the file is currently open.
+
+    Parameters
+    ----------
+    src: Path
+        Source file location.
+    dst: Path
+        Destination file location.
+    """
     _copy_or_move("MOVE", src, dst)
+
+
+def concat_lists(*lists):
+    """
+    Concatenate lists, dropping any lists that
+    are ``None``.
+
+    Parameters
+    ----------
+    *lists: list or None
+        Lists to concatenate.
+
+
+    Returns
+    -------
+    list:
+        Concatenated list of input lists.
+    """
+    clean_lists = [_list for _list in lists if _list is not None]
+    return list(it.chain(*clean_lists))
