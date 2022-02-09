@@ -5,7 +5,7 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype, union_categoricals
 
 from lgimapy.stats import mode
-from lgimapy.utils import load_json, to_set, to_list
+from lgimapy.utils import load_json, to_set, to_list, concat_lists
 
 # %%
 
@@ -437,7 +437,14 @@ def index_kwargs(key, unused_constraints=None, source=None, **kwargs):
     return d
 
 
-def groupby(df, cols):
+def groupby(
+    df,
+    cols_to_groupby,
+    cols_to_aggregate=None,
+    additional_col_rules=None,
+    additional_mv_weight_cols=None,
+    additional_prev_mv_weight_cols=None,
+):
     """
     Group basket of bonds together by seletected features.
 
@@ -445,23 +452,43 @@ def groupby(df, cols):
     ----------
     df: pd.DataFrame
         DataFrame basket of bonds.
-    cols: str or List[str].
+    cols_to_groupby: str or List[str].
         Column(s) in `df` to group by.
+    cols_to_aggregate: str or List[str].
+        Column(s) in `df` to perform aggregattions on.
+    additional_col_rules: Dict[str: Callable]
+        Additional aggregation rules for nonstandard columns.
+        This can also be used to override standard column
+        aggregation rules.
+    additional_mv_weight_cols: str or List[str]:
+        Additional columns to be market value weighted by
+        current market value.
+    additional_prev_mv_weight_cols: str or List[str]:
+        Additional columns to be market valued weighted by
+        the previous days market value, such as returns.
 
     Returns
     -------
-    pd.DataFrame
+    pd.DataFrame:
         Grouped DataFrame.
     """
-    df_to_group = df.copy()
-    if cols == "risk entity":
+    # Find columns to groupby
+    if cols_to_groupby in {"risk entity", "RiskEntity"}:
         groupby_cols = ["Ticker", "Issuer"]
     else:
-        groupby_cols = to_list(cols, dtype=str)
+        groupby_cols = to_list(cols_to_groupby, dtype=str)
+
+    # Subset DataFrame to only the necessary columns if specified.
+    if cols_to_aggregate is not None:
+        cols_to_aggregate = to_list(cols_to_aggregate, dtype=str)
+        cols_to_keep = concat_lists(groupby_cols, cols_to_aggregate)
+        df_to_group = df[cols_to_keep].copy()
+    else:
+        df_to_group = df.copy()
 
     # Collect columns that should be market value weighted
     # and create a mv weighted column for each that is present.
-    mv_weight_cols = [
+    default_mv_weight_cols = [
         "OAS",
         "OASD",
         "OAD",
@@ -473,6 +500,10 @@ def groupby(df, cols):
         "NumericRating",
         "AnalystRating",
     ]
+    additional_mv_weight_cols = to_list(additional_mv_weight_cols, dtype=str)
+    mv_weight_cols = concat_lists(
+        default_mv_weight_cols, additional_mv_weight_cols
+    )
     mv_agg_rules = {}
     df_cols = set(df)
     any_mv_cols_present = len(set(mv_weight_cols) & df_cols)
@@ -486,7 +517,13 @@ def groupby(df, cols):
     # Collect columns that should be market value weighted using
     # previous day's market value and create a mv weighted column
     # for each column that is present.
-    prev_mv_weight_cols = ["TRet", "XSRet"]
+    default_prev_mv_weight_cols = ["TRet", "XSRet"]
+    additional_prev_mv_weight_cols = to_list(
+        additional_prev_mv_weight_cols, dtype=str
+    )
+    prev_mv_weight_cols = concat_lists(
+        default_prev_mv_weight_cols, additional_prev_mv_weight_cols
+    )
     prev_mv_agg_rules = {}
     any_prev_mv_cols_present = len(set(prev_mv_weight_cols) & df_cols)
     if any_prev_mv_cols_present and "PrevMarketValue" in df_cols:
@@ -526,6 +563,9 @@ def groupby(df, cols):
         **mv_agg_rules,
         **prev_mv_agg_rules,
     }
+    if additional_col_rules is not None:
+        agg_rules = {**agg_rules, **additional_col_rules}
+
     # Apply aggregation of present columns.
     agg_cols = {
         col: rule
