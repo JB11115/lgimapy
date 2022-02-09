@@ -5,6 +5,7 @@ import pprint as pp
 import pickle
 import re
 import shutil
+import string
 import sys
 import warnings
 from bisect import bisect_left, bisect_right
@@ -1112,3 +1113,26 @@ def concat_lists(*lists):
     """
     clean_lists = [_list for _list in lists if _list is not None]
     return list(it.chain(*clean_lists))
+
+
+def mock_df(n_rows, n_cols, columns=None):
+    """
+    Make a mock DataFrame with given parameters.
+
+    Parameters
+    ----------
+    n_rows: int
+        Number of rows to include.
+    n_cols: int
+        Number of columns to include.
+    columns: str or List[str], optional
+        Column names for mock DataFrame. By defualt uses
+        alphabetical order capital letters.
+    """
+    if columns is None:
+        columns = list(string.ascii_uppercase)[:n_cols]
+    else:
+        columns = to_list(columns, dtype=str)
+
+    data = np.random.randn(n_rows, n_cols)
+    return pd.DataFrame(data, columns=columns)
