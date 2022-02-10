@@ -20,7 +20,7 @@ please don't copy and paste!). Finally, when we say you are allowed
 to use the standard library, we really mean use the standard library.
 
 For example, suppose we asked you to write an algorithm to count the
-number of occurences (case-insensitive) of each characther in a given
+number of occurences (case-insensitive) of each character in a given
 alphabetical string, and print results in alphabetical order. A
 perfect solution (sans documentation) would look something like this:
 
@@ -34,12 +34,12 @@ perfect solution (sans documentation) would look something like this:
 
     '''
 
-Note that we used the built in counting algorithm as well as the
-built in sorting function. If you are asked to do something
+Note that we used the built-in counting algorithm as well as the
+built-in sorting function. If you are asked to do something
 that you think requires 40+ lines of code, please check to see
 if it has already been implemented in the standard library as
-that is not the point of these problems. We do not require
-any assumption validations. Also note how in the above example we did
+that is not the point of these problems. We also do not require
+any assumption validations. Note how in the above example we did
 not check to ensure that the input was a string consisting only of
 alphabetical characters. Assume these checks take place outside
 of your functions, and every piece of information we provide
@@ -47,7 +47,7 @@ you regarding the inputs to the functions will be true.
 
 The assessment contains several problems for you to solve by
 completing the included unfinished functions/classes. You are
-free to write additional functions/classes/class methods as you
+encouraged to write additional functions/classes/class methods as you
 see fit in your solutions, but please do not modify the arguments
 or class/function names that are already provided for you.
 
@@ -75,15 +75,17 @@ Problem 1
 ---------
 
 Write a function to subset a DataFrame of bonds, keeping the rows
-which meet the following criteria (Note that relevant DataFrame
+which meet the following criteria (note that relevant DataFrame
 column names are provided in double quotes).
 
 You will need to create a column "Tenor" (of dtype float) by
 subtracting the "CurrentDate" column from the "MaturityDate" column.
 A bond's tenor is the number of years remaining from the current
-date until the bond matures.
+date until the bond matures. For example, a bond with with a
+"CurrentDate" of 1/1/2022 and a "MaturityDate" of 7/1/2024 would
+have a "Tenor" of 2.5 years.
 
-The critera are are provided below (don't worry if you are not
+The critera are provided below (don't worry if you are not
 familiar with the bond lingo, just follow the given logic).
 Each returned row, should be a bond that:
     * OAS isnt't too high: "OAS" is less than 40
@@ -112,7 +114,7 @@ Each returned row, should be a bond that:
         For example, a bond with an "OriginalTenor" of 30 years is
         on-the-run while its tenor is between 20 and 30 years, and
         should be excluded once its "Tenor" <= 20 years.
-        Similarly, a bond with an "OriginalTenor" of 20 years
+        Similarly, a bond with an "OriginalTenor" of 20 years is
         on-the-run while its tenor is between 10 and 20 years, and
         should be excluded once its "Tenor" <= 10 years.
         Similarly for 10 and 7, 7 and 5, and so on.
@@ -120,7 +122,7 @@ Each returned row, should be a bond that:
         once their "Tenor" <= 3 months.
 
 Once you have subset the DataFrame appropriately, add an additional
-column named "DTS" which is equal to "OASD" * "OAS"  before returing
+column named "DTS" which is equal to "OASD" * "OAS"  before returning
 the cleaned DataFrame.
 """
 
@@ -145,12 +147,12 @@ def get_clean_treasuries(df):
 Problem 2
 ---------
 Given a sorted list of non-continuous dates (for eample, days in which
-the bond market traded), find the nearest date (inclusive) in the
-list to a specified reference date provided to the function. Include the
-ability to specify only dates before or after the reference date. If
-there are two equidistant nearest dates to the reference date, return
-the later date. If no dates in `date_list` meet the specifications,
-return ``None``. For example:
+the bond market traded, which would exclude weekends and holidays),
+find the nearest date in the list (inclusive) to a specified reference
+date provided to the function. Include the ability to specify only dates
+before or after the reference date. If there are two equidistant nearest
+dates to the reference date, return the later date. If no dates in
+`date_list` meet the specifications, return ``None``. For example:
 
     >>> date_list = pd.to_datetime(['2000', '2001', '2002'])
     >>> reference_date = pd.to_datetime('12/1/2001')
@@ -226,7 +228,7 @@ Problem 4
 ---------
 Complete the following class for a simple bond. The date to use when
 computing yield is provided for you as `Bond._current_date`.
-Please complete the Bond.ytm attribute which calcualtes the continuously
+Please complete the `Bond.ytm` attribute which returns the continuously
 compounding yield of the bond. If you are not familiar with bond math,
 refer to equation 2.8 (slide 12) from:
 http://fixedincomerisk.com/Web/files/book1/slides_irr_ch2.pdf
