@@ -28,7 +28,7 @@ To set up a local environment using Anaconda:
 ```bash
 cd lgimapy/
 conda env create -f envs/lgimapy38_base_env.yml
-conda activate lgimapy
+conda activate lgimapy38
 pip install pypdf4
 pip install -e .
 ```
