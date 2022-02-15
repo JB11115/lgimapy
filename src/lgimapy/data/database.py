@@ -3284,12 +3284,13 @@ class Database:
 def main():
     pass
     # %%
+    import time
     from collections import defaultdict
     from lgimapy import vis
     from lgimapy.utils import Time, load_json, dump_json
     from lgimapy.bloomberg import bdp, bdh
     from tqdm import tqdm
-    from lgimapy.utils import to_sql_list, to_clipboard
+    from lgimapy.utils import to_sql_list, to_clipboard, mkdir
     from lgimapy.data import IG_sectors, HY_sectors
 
     vis.style()
@@ -3298,29 +3299,5 @@ def main():
 
     db = Database()
     # %%
-
-    #
-    #
-    # sorted(df_clean['CouponType'].unique().dropna())
-    # df_clean[df_clean['CouponType'] == 'ZERO COUPON, OID']
-    #
+    db.load_market_data()
     # %%
-
-    db = Database()
-    start = "1/28/2022"
-    # db.load_market_data(start=start)
-    # ix = db.build_market_index(**db.index_kwargs("SOVEREIGN", maturity=(10, None)))
-    # ix.OAS()
-    df_oas = db.load_bbg_data("US_IG_10+", "OAS", start=start)
-    df_yields = 100 * db.load_bbg_data(
-        ["UST_10Y", "UST_30Y", "UST_10Y_RY"], "YTW", start=start
-    )
-
-    df_sp500 = db.load_bbg_data("SP500", "price", start=start)
-    df = pd.concat([df_oas, df_sp500, df_yields], axis=1).iloc[:-1]
-    # %%
-    df
-    df.iloc[-1] - df.iloc[0]
-    db.load_bbg_data("UST_10Y_RY", "YTW", start="6/1/2020").sort_values(
-        ascending=False
-    ).head(30)
