@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 
 from lgimapy import vis
-from lgimapy.data import Database
+from lgimapy.data import Database, groupby
 from lgimapy.latex import Document
-from lgimapy.models import simulate_rating_migrations
+from lgimapy.models import simulate_rating_migrations, add_rating_outlooks
 from lgimapy.stats import mode
 from lgimapy.utils import root, to_list
 
@@ -280,7 +280,6 @@ def last_12m_ratings_actions():
         d["Rising Stars"].append(rising_stars["AmountOutstanding"].sum())
         df = pd.DataFrame(d).set_index("Month", drop=True).rename_axis(None)
         df["Net"] = df["Rising Stars"] - df["Fallen Angels"]
-        df
     return df / 1e3
 
 
@@ -444,37 +443,12 @@ def add_rising_star_ticker_table(df, caption, doc, db):
     # Find potential upside from comps.
     # First element of tuple is isin(s) for rising star candidate.
     # Second element is isin(s) for IG comps.
-    comp_d = {
-        "KHC": (["US50077LAV80"], ["US205887CC49", "US21036PBF45"]),
-        "TOL": (["US88947EAU47"], ["US526057CD41"]),
-        "OVV": (["US651290AR99"], ["US25179MAV54"]),
-        "MDC": (["US552676AU23"], ["US526057CD41"]),
-        "CLR": (["US212015AT84"], ["US136385BA87", "US25278XAR08"]),
-        "MTNA": (
-            ["US03938LBC72"],
-            ["US50249AAC71", "US260543DC49"],
-        ),
-        "DB": (
-            ["US251526CF47"],
-            ["US06652KAB98", "US06738EBP97", "US639057AB46"],
-        ),
-        "NFLX": (["US64110LAV80"], ["US124857AZ68", "US25470DBJ72"]),
-        "CNC": (["US15135BAX91"], ["US126650DN71", "US404119BX69"]),
-        "WEIRLN": (["US94876QAA40"], ["US489170AF77"]),
-        "PPC": (["US72147KAF57"], ["US832248BD93"]),
-        "NWL": (
-            ["US651229AY21"],
-            ["US205887CE05", "US60871RAH30", "US418056AU19"],
-        ),
-        "FE": (["US337932AP26"], ["US059165EN63", "US69352PAQ63"]),
-        "MTZ": (["US576323AP42"], ["US74762EAF97"]),
-    }
-    comp_offset = {"WEIRLN": 20}
     comps = []
+    comp_offset = {"WEIRLN": 20}
     upside = []
     for ticker in df["Ticker"]:
         try:
-            rep, comp = comp_d[ticker]
+            rep, comp = comp_d(ticker)
         except KeyError:
             # No comp.
             comps.append(np.nan)
@@ -564,7 +538,7 @@ def plot_bb_outlooks(df, path):
 
     red, blue, __ = vis.colors("ryb")
     colors = [blue, "skyblue", "grey", "firebrick", red]
-    fig, ax = vis.subplots(figsize=[10, 10])
+    fig, ax = vis.subplots(figsize=[10, 7.5])
     ax.set_title("Current Outlooks for BB bonds (by MV)\n\n", fontweight="bold")
     plot_df.plot.barh(stacked=True, color=colors, alpha=0.9, ax=ax)
     vis.format_xaxis(ax, xtickfmt="{x:.0%}")
@@ -580,6 +554,37 @@ def plot_bb_outlooks(df, path):
     )
     vis.savefig("BB_outlooks", path=path, dpi=200)
     vis.close()
+
+
+def add_recent_table(db, doc, caption, n=10, **kwargs):
+    recent_df = db.rating_changes(start=db.date("2y"), **kwargs)
+    amt_outstanding_col = "Amount (\\$M)*Outstanding"
+    ticker_df = (
+        groupby(
+            recent_df,
+            "Ticker",
+            cols_to_aggregate=["AmountOutstanding", "Date_NEW"],
+            additional_col_rules={"Date_NEW": mode},
+        )
+        .rename(
+            columns={
+                "AmountOutstanding": amt_outstanding_col,
+                "Date_NEW": "Date",
+            }
+        )
+        .sort_values("Date", ascending=False)
+        .rename_axis(None)
+    )
+    ticker_df = ticker_df[ticker_df[amt_outstanding_col] > 0]
+    ticker_df["Date"] = ticker_df["Date"].dt.strftime("%b %d, %Y")
+    doc.add_table(
+        ticker_df.head(n),
+        caption=f"Recent {caption}",
+        font_size="scriptsize",
+        multi_row_header=True,
+        col_fmt="l|r|r",
+        prec={amt_outstanding_col: "0f"},
+    )
 
 
 def update_fallen_angel_analysis(fid):
@@ -614,7 +619,6 @@ def update_fallen_angels_rising_stars(fid):
     plot_fallen_angels_and_rising_stars(ra_df, doc.fig_dir)
     plot_downgrades(ra_df, doc.fig_dir)
     plot_bb_outlooks(outlook_df, doc.fig_dir)
-
     doc.add_preamble(
         orientation="landscape",
         bookmarks=True,
@@ -633,8 +637,10 @@ def update_fallen_angels_rising_stars(fid):
     doc.add_subfigures(figures=["net_fallen_angels", "recent_downgrades"])
     doc.add_pagebreak()
     doc.add_section("Rising Stars")
-    rising_stars, bb_outlooks = doc.add_subfigures(n=2, widths=[0.45, 0.54])
-    with doc.start_edit(rising_stars):
+    left_page, right_page = doc.add_minipages(
+        n=2, widths=[0.4, 0.55], valign="t"
+    )
+    with doc.start_edit(left_page):
         add_rising_star_sector_table(rs_sector_df, doc)
         add_rising_star_ticker_table(
             rs_1_df, "1 Agency Upgrade Away Issuers", doc, db
@@ -642,17 +648,62 @@ def update_fallen_angels_rising_stars(fid):
         add_rising_star_ticker_table(
             rs_2_df, "2 Agency Upgrades Away Issuers", doc, db
         )
-    with doc.start_edit(bb_outlooks):
+    with doc.start_edit(right_page):
+        recent_rs_table, recent_fa_table = doc.add_subfigures(n=2, valign="t")
         doc.add_figure("BB_outlooks")
+    with doc.start_edit(recent_rs_table):
+        add_recent_table(db, doc, "Rising Stars", rising_stars=True)
+    with doc.start_edit(recent_fa_table):
+        add_recent_table(db, doc, "Fallen Angels", fallen_angels=True)
     doc.save()
 
 
 # %%
+def comp_d(ticker):
+    """
+    Dict[str: Dict[List[str]: List[str]]]:
+        Dictionary mapping ticker to list of ISINs for that
+        ticker to use in
+
+    """
+    return {
+        "KHC": (["US50077LAV80"], ["US205887CC49", "US21036PBF45"]),
+        "TOL": (["US88947EAU47"], ["US526057CD41"]),
+        "OVV": (["US651290AR99"], ["US25179MAV54"]),
+        "MDC": (["US552676AU23"], ["US526057CD41"]),
+        "CLR": (["US212015AT84"], ["US136385BA87", "US25278XAR08"]),
+        "MTNA": (
+            ["US03938LBC72"],
+            ["US50249AAC71", "US260543DC49"],
+        ),
+        "DB": (
+            ["US251526CF47"],
+            ["US06652KAB98", "US06738EBP97", "US639057AB46"],
+        ),
+        "NFLX": (["US64110LAV80"], ["US124857AZ68", "US25470DBJ72"]),
+        "CNC": (["US15135BAX91"], ["US126650DN71", "US404119BX69"]),
+        "WEIRLN": (["US94876QAA40"], ["US489170AF77"]),
+        "PPC": (["US72147KAF57"], ["US832248BD93"]),
+        "NWL": (
+            ["US651229AY21"],
+            ["US205887CE05", "US60871RAH30", "US418056AU19"],
+        ),
+        "FE": (["US337932AP26"], ["US059165EN63", "US69352PAQ63"]),
+        "MTZ": (["US576323AP42"], ["US74762EAF97"]),
+        "ENDENR": (["US29260FAE07"], ["US565849AP16"]),
+        "UCGIM": (["US904678AS85"], ["US83368RAY80", "US06738EBP97"]),
+        "CMZB": (["US20259BAA98"], ["US251526CC16"]),
+        "DRXLN": (["US26151AAA79"], ["US314382AA01"]),
+        "RWLVCA": (["US76120HAC16"], ["US571903BG74"]),
+        "RWNYNY": (["US37255JAA07"], ["US517834AE74"]),
+        "VIVENE": (["US92856HAB06"], ["_BBB_COMP_ISINs_"]),
+        "_RS_TICKER_": (["_RS_ISINs_"], ["_BBB_COMP_ISINs_"]),
+    }[ticker]
 
 
 def comp_check():
     # %%
-    ticker = "MTZ"
+    ticker = "VIVENE"
     db = Database()
     db.load_market_data()
     ticker_ix = db.build_market_index(ticker=ticker, in_H0A0_index=True)
@@ -662,7 +713,7 @@ def comp_check():
     )
     bbb_ix = db.build_market_index(
         in_stats_index=None,
-        ticker=["PWR"],
+        ticker=["LVS"],
         rating=(None, "BBB-"),
         # issue_years=(None, 2),
     )
@@ -676,3 +727,5 @@ def comp_check():
 if __name__ == "__main__":
     fid = "Potential_Fallen_Angels_Rising_Stars"
     update_fallen_angels_rising_stars(fid)
+
+# %%
