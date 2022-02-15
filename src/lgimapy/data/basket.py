@@ -1110,3 +1110,232 @@ class BondBasket:
         self.df["RatingRiskBucket"] = self.df["RatingRiskBucket"].astype(
             "category"
         )
+
+    def market_value_weight(self, col, weight="MarketValue"):
+        """
+        Market value weight a specified column vs entire
+        index market value.
+
+        Parameters
+        ----------
+        col: str
+            Column name to find weighted average for.
+        weight: str, default="MarketValue"
+            Column to use as weights.
+
+        Returns
+        -------
+        pd.Series:
+            Series of market value weighting for specified column.
+        """
+        df = self.df[["Date", weight, col]].copy()
+        df["mvw_col"] = df[weight] * df[col]
+        g = df[["Date", weight, "mvw_col"]].groupby("Date").sum()
+        return (g["mvw_col"] / g[weight]).rename(col)
+
+    def MEAN(self, col, weights="MarketValue"):
+        """
+        Daily mean for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to compute mean on.
+        weights: str, optional, default='MarketValue'
+            Column to use as weights. If ``None`` no
+            weights are used.
+
+        Returns
+        -------
+        pd.Series:
+            Daily mean with datetime index.
+        """
+        cols = ["Date", col]
+        if weights is not None:
+            cols.append(weights)
+
+        def daily_mean(df):
+            """Mean for single day."""
+            daily_weights = weights if weights is None else df[weights]
+            return mean(df[col], weights=daily_weights)
+
+        return self.df[cols].groupby("Date").apply(daily_mean)
+
+    def MEDIAN(self, col, q=50, weights="MarketValue"):
+        """
+        Daily median specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to compute median on.
+        q: int, default=50
+            qth percentile to return, default of 50 is median.
+        weights: str, optional, default='MarketValue'
+            Column to use as weights. If ``None`` no
+            weights are used.
+
+        Returns
+        -------
+        pd.Series:
+            Daily median with datetime index.
+        """
+        cols = ["Date", col]
+        if weights is not None:
+            cols.append(weights)
+
+        def daily_median(df):
+            """Median for single day."""
+            daily_weights = weights if weights is None else df[weights]
+            return percentile(df[col], weights=daily_weights, q=q)
+
+        return self.df[cols].groupby("Date").apply(daily_median)
+
+    def STD(self, col, weights="MarketValue"):
+        """
+        Daily standard deviation for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to compute standard deviation on.
+        weights: str, optional, default='MarketValue'
+            Column to use as weights. If ``None`` no
+            weights are used.
+
+        Returns
+        -------
+        pd.Series:
+            Daily standard deviation with datetime index.
+        """
+        cols = ["Date", col]
+        if weights is not None:
+            cols.append(weights)
+
+        def daily_std(df):
+            """Standard deviation for single day."""
+            daily_weights = weights if weights is None else df[weights]
+            return std(df[col], weights=daily_weights)
+
+        return self.df[cols].groupby("Date").apply(daily_std)
+
+    def RSD(self, col, weights="MarketValue"):
+        """
+        Daily relative standard deviation for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to perform RSD on.
+        weights: str, optional, default='MarketValue'
+            Column to use as weights. If ``None`` no
+            weights are used.
+
+        Returns
+        -------
+        pd.Series:
+            Daily RSD with datetime index.
+        """
+        cols = ["Date", col]
+        if weights is not None:
+            cols.append(weights)
+
+        def daily_rsd(df):
+            """RSD for single day."""
+            daily_weights = weights if weights is None else df[weights]
+            return mean(df[col], weights=daily_weights) / std(
+                df[col], weights=daily_weights
+            )
+
+        return self.df[cols].groupby("Date").apply(daily_rsd)
+
+    def IQR(self, col, qrange=[25, 75], weights="MarketValue"):
+        """
+        Daily interquartile range for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to compute IQR on.
+        qrange: list[int], default=[25, 75]
+            Quartile range to use.
+        weights: str, optional, default='MarketValue'
+            Column to use as weights. If ``None`` no
+            weights are used.
+
+        Returns
+        -------
+        pd.Series:
+            Daily IQR with datetime index.
+        """
+        cols = ["Date", col]
+        if weights is not None:
+            cols.append(weights)
+
+        def daily_iqr(df):
+            """QCD for single day."""
+            daily_weights = weights if weights is None else df[weights]
+            Q1, Q3 = percentile(df[col], weights=daily_weights, q=qrange)
+            return Q3 - Q1
+
+        return self.df[cols].groupby("Date").apply(daily_iqr)
+
+    def QCD(self, col, qrange=[25, 75], weights="MarketValue"):
+        """
+        Daily quartile coefficient of dispersion for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to compute QCD on.
+        qrange: list[int], default=[25, 75]
+            Quartile range to use.
+        weights: str, optional, default='MarketValue'
+            Column to use as weights. If ``None`` no
+            weights are used.
+
+        Returns
+        -------
+        pd.Series:
+            Daily QCD with datetime index.
+        """
+        cols = ["Date", col]
+        if weights is not None:
+            cols.append(weights)
+
+        def daily_qcd(df):
+            """QCD for single day."""
+            daily_weights = weights if weights is None else df[weights]
+            Q1, Q3 = percentile(df[col], weights=daily_weights, q=qrange)
+            return (Q3 - Q1) / (Q3 + Q1)
+
+        return self.df[cols].groupby("Date").apply(daily_qcd)
+
+    def OAS(self):
+        """
+        pd.Series:
+            Daily market value weighted OAS with datetime index.
+        """
+        return self.market_value_weight("OAS")
+
+    def market_value_median(self, col):
+        """
+        Daily market value weighted median specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to perform QCD on.
+
+        Returns
+        -------
+        pd.Series:
+            Daily median with datetime index.
+        """
+        cols = ["Date", "MarketValue", col]
+
+        def daily_median(df):
+            """Median for single day."""
+            return percentile(df[col], weights=df["MarketValue"], q=50)
+
+        return self.df[cols].groupby("Date").apply(daily_median)
