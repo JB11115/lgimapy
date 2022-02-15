@@ -1,6 +1,7 @@
 import itertools as it
 
 import numpy as np
+import pandas as pd
 
 from lgimapy.bloomberg import bdp
 from lgimapy.data import Database
@@ -44,6 +45,15 @@ def compare(s, migration, numeric_thresh):
         return s < numeric_thresh
     elif migration == "downgrade":
         return s > numeric_thresh
+
+
+def _simulate_rating_action(df, agency, n_notches):
+    has_rating_loc = ~df[f"{agency}NumericRating"].isna()
+    new_rating = pd.Series([np.nan] * len(df), index=df.index)
+    new_rating.loc[has_rating_loc] = df[f"{agency}NumericRating"].loc[
+        has_rating_loc
+    ] + (n_notches * df[f"{agency}Outlook"].loc[has_rating_loc].fillna(0))
+    return new_rating
 
 
 def simulate_rating_migrations(
@@ -98,7 +108,6 @@ def simulate_rating_migrations(
     new_rating_cols = [f"{agency}New" for agency in rating_agencies]
 
     df = ix.df[rating_cols + outlook_cols].copy()
-
     # Focus only on upgrades or downgrades.
     for col in outlook_cols:
         if migration == "downgrade":
@@ -112,11 +121,11 @@ def simulate_rating_migrations(
     for notch in to_list(notches):
         breaks_threshold = np.zeros(len(df))
         if notch == 1:
-            # One agency does 1 notch downgrade.
+            # One agency does 1 notch action.
             for agency in rating_agencies:
                 # Perform 1 notch action for selected agency.
-                df[f"{agency}New"] = (
-                    df[f"{agency}NumericRating"] + df[f"{agency}Outlook"]
+                df[f"{agency}New"] = _simulate_rating_action(
+                    df, agency, n_notches=1
                 )
                 # Leave the other two agency ratings unchanged.
                 unchanged_agencies = set(rating_agencies) - set([agency])
@@ -130,10 +139,10 @@ def simulate_rating_migrations(
         elif notch == 2:
             # Two agencies each perform a 1 notch action.
             for action_agencies in it.combinations(rating_agencies, 2):
-                # Perform 1 notch downgrade for each action agency.
+                # Perform 1 notch action for each action agency.
                 for agency in action_agencies:
-                    df[f"{agency}New"] = (
-                        df[f"{agency}NumericRating"] + df[f"{agency}Outlook"]
+                    df[f"{agency}New"] = _simulate_rating_action(
+                        df, agency, n_notches=1
                     )
                 # Leave the other agency unchanged.
                 agency = list(set(rating_agencies) - set(action_agencies))[0]
@@ -147,8 +156,8 @@ def simulate_rating_migrations(
                 # One agency does a 2 notch action.
                 for agency in rating_agencies:
                     # Perform 2 notch action for selected agency.
-                    df[f"{agency}New"] = df[f"{agency}NumericRating"] + (
-                        2 * df[f"{agency}Outlook"]
+                    df[f"{agency}New"] = _simulate_rating_action(
+                        df, agency, n_notches=2
                     )
                     # Leave the other two agency ratings unchanged.
                     unchanged_agencies = set(rating_agencies) - set([agency])
@@ -162,8 +171,8 @@ def simulate_rating_migrations(
         elif notch == 3:
             # Each rating agency takes a 1 notch action.
             for agency in rating_agencies:
-                df[f"{agency}New"] = (
-                    df[f"{agency}NumericRating"] + df[f"{agency}Outlook"]
+                df[f"{agency}New"] = _simulate_rating_action(
+                    df, agency, n_notches=1
                 )
             # Store bonds which exceeded threshold.
             new_rating = db._get_numeric_ratings(df, new_rating_cols)
@@ -178,8 +187,8 @@ def simulate_rating_migrations(
                     # action to the first agency, 1 notch to the second,
                     # and 2 notches to the third.
                     for n_notches, agency in enumerate(agencies):
-                        df[f"{agency}New"] = df[f"{agency}NumericRating"] + (
-                            n_notches * df[f"{agency}Outlook"]
+                        df[f"{agency}New"] = _simulate_rating_action(
+                            df, agency, n_notches=n_notches
                         )
                         # Store bonds which exceeded threshold.
                         new_rating = db._get_numeric_ratings(
@@ -189,5 +198,33 @@ def simulate_rating_migrations(
                         breaks_threshold[loc] = 1
 
         ix.df[new_column_name.format(notch)] = breaks_threshold
-
     return ix
+
+
+# %%
+# max_individual_agency_notches = 2
+# new_column_name = "{}Notch"
+# add_rating_outlook_columns = True
+# migration = "upgrade"
+# threshold = "BB+"
+# add_rating_outlook_columns = False
+# notches = [2]
+
+# db = Database()
+# db.load_market_data()
+# hy_ix = db.build_market_index(in_H0A0_index=True)
+# ix = hy_ix.subset(rating=("BB+", "BB-"))
+# ix = add_rating_outlooks(ix)
+
+
+# %%
+
+# ix_sim = simulate_rating_migrations(
+#     ix,
+#     "upgrade",
+#     threshold="BB+",
+#     notches=[2],
+#     max_individual_agency_notches=1,
+# )
+# %%
+# list(ix_sim.df[ix_sim.df["2Notch"] == 1]["Ticker"].unique())
