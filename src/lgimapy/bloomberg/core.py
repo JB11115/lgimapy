@@ -5,6 +5,7 @@ import random
 import re
 import subprocess
 import sys
+import time
 import warnings
 from datetime import datetime as dt
 from pathlib import Path
@@ -308,12 +309,12 @@ def _linux_to_windows_bbg(func, *args, **kwargs):
     """
     bbg_input = BBGInputConverter(*args, **kwargs)
 
-    # Create a random file name.
-    rn = str(random.randint(0, 9999999))
+    # Create a file name current epoch.
+    epoch = str(int(time.time() * 1e8))
 
     # Save the BBG command arguments to a temporary location.
     args_dir = Path("/tmp/bbgwinpy/args")
-    args_fid = args_dir / f"{rn}.json"
+    args_fid = args_dir / f"{epoch}.json"
     mkdir(args_dir)
     with open(args_fid, "w") as f:
         json.dump(bbg_input.bbgwinpy_args(func), f, indent=4)
@@ -328,17 +329,17 @@ def _linux_to_windows_bbg(func, *args, **kwargs):
             [
                 "python.exe",
                 bbgwinpy_executable(),
-                rn,
+                epoch,
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=60,
         )
     except TimeoutError:
-        raise TimeoutError(f"{func.upper()} call '{rn}' failed")
+        raise TimeoutError(f"{func.upper()} call '{epoch}' failed")
 
     # Load the data back into python.
-    data_fid = data_dir / f"{rn}.json"
+    data_fid = data_dir / f"{epoch}.json"
     df = pd.read_json(data_fid)
 
     # Delete temporary files.
