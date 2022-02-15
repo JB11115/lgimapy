@@ -449,44 +449,43 @@ class Index(BondBasket):
         dates = self.dates[1:]
         a = np.zeros(len(dates))
         cols = ["MarketValue", col]
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        for i, date in enumerate(dates):
-            # Check if date exists in saved history.
-            try:
-                a[i] = saved_history[date]
-            except KeyError:
-                pass
-            else:
-                if date == dates[-1]:
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            for i, date in enumerate(dates):
+                # Check if date exists in saved history.
+                try:
+                    a[i] = saved_history[date]
+                except KeyError:
                     pass
                 else:
-                    continue
+                    if date == dates[-1]:
+                        pass
+                    else:
+                        continue
 
-            # Date does not exist in saved history.
-            # Calculate the differenced history for
-            # bonds which existed for both current and
-            # previous days.
-            if dropna:
-                df = self.synthetic_day(date).dropna(subset=cols)
-                prev_df = self.day(self.dates[i]).dropna(subset=cols)
-            else:
-                df = self.synthetic_day(date)
-                prev_df = self.day(self.dates[i])
-            prev_df = prev_df[prev_df.index.isin(df.index)]
-            a[i] = (np.sum(df[col2] * df[col]) / np.sum(df[col2])) - (
-                np.sum(prev_df["MarketValue"] * prev_df[col])
-                / np.sum(prev_df["MarketValue"])
-            )
-            saved_history[date] = a[i]
-
-        warnings.simplefilter("default", category=RuntimeWarning)
+                # Date does not exist in saved history.
+                # Calculate the differenced history for
+                # bonds which existed for both current and
+                # previous days.
+                if dropna:
+                    df = self.synthetic_day(date).dropna(subset=cols)
+                    prev_df = self.day(self.dates[i]).dropna(subset=cols)
+                else:
+                    df = self.synthetic_day(date)
+                    prev_df = self.day(self.dates[i])
+                prev_df = prev_df[prev_df.index.isin(df.index)]
+                a[i] = (np.sum(df[col2] * df[col]) / np.sum(df[col2])) - (
+                    np.sum(prev_df["MarketValue"] * prev_df[col])
+                    / np.sum(prev_df["MarketValue"])
+                )
+                saved_history[date] = a[i]
 
         if not force_calculations:
             # Save synthetic difference history to file.
             new_history = pd.Series(saved_history, name="-").to_frame()
             new_history.to_parquet(fid)
 
-        # pd.DataFrame(calculated_s).to_csv(fid)
         # Add the the cumulative synthetic differences to the current
         # value backwards in time to yield the synthetic history
         # of the specified column.
@@ -824,10 +823,10 @@ class Index(BondBasket):
         # Find dates when coupons were paid by finding dates
         # with a decrease in accrued interest.
         accrued = self.get_value_history("AccruedInterest")[cols].values
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        accrued_mask = np.zeros(accrued.shape)
-        accrued_mask[1:] = np.where(np.diff(accrued, axis=0) < 0, 1, 0)
-        warnings.simplefilter("default", category=RuntimeWarning)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            accrued_mask = np.zeros(accrued.shape)
+            accrued_mask[1:] = np.where(np.diff(accrued, axis=0) < 0, 1, 0)
 
         # Find coupon rate, add coupon back into prices and assume
         # coupon is reinvested at same rate.
