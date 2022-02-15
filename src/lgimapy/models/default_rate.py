@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 
 import numpy as np
@@ -7,6 +8,7 @@ from lgimapy.latex import Document
 from lgimapy.utils import root, mkdir, load_pickle, dump_pickle
 
 # %%
+
 
 class DefaultRates:
     def __init__(self, ratings, lookbacks, db):
@@ -268,12 +270,22 @@ class DefaultRates:
     def check_default_data_is_up_to_date(self):
         last_date_to_update = self.dates[-1]
         last_observed_default = self.defaults["Date"].iloc[-1]
-        if last_date_to_update > last_observed_default:
+        defaults_fid = self.db.local("defaults.csv")
+        default_fid_last_modification = pd.to_datetime(
+            os.path.getmtime(defaults_fid), unit="s"
+        )
+        if last_date_to_update == max(
+            last_date_to_update,
+            last_observed_default,
+            default_fid_last_modification,
+        ):
             msg = (
                 f"Final date to update is {last_date_to_update:%m/%d/%Y}, but "
-                f"last observed default was {last_observed_default:%m/%d/%Y}."
+                f"last observed default was {last_observed_default:%m/%d/%Y} "
+                f"and default file was last modified on "
+                f"{default_fid_last_modification:%m/%d/%Y}."
                 f"Do you wish to continue with the update?\n"
-                "  [Y] Update\n  [N]  Exit\n"
+                f"  [Y] Update\n  [N]  Exit\n"
             )
             update_data = ""
             while update_data not in {"Y", "N"}:
