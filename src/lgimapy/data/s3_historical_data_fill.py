@@ -18,7 +18,7 @@ sess = boto3.Session(
 )
 
 # %%
-s3_dir = "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds-history"
+s3_dir = "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds-history/"
 markets = ["US", "EUR", "GBP"]
 markets = ["EUR", "GBP"]
 
