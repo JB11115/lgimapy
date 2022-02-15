@@ -142,6 +142,7 @@ class LatexScript:
 
         # Make safety flag to avoid saving file before edit is complete.
         self._currently_open_edit = True
+        self._current_edit_keyword = keyword
         return self
 
     def end_edit(self):
@@ -362,6 +363,11 @@ class LatexScript:
         """Add a plot to current figure."""
         self._add_to_body(self._format_plot(fid, width=width, indent=indent))
 
+    def add_minipages(self, n=None, widths=None, valign="b"):
+        return self.add_subfigures(
+            n=n, widths=widths, valign=valign, subfigure_str="minipage"
+        )
+
     def add_subfigures(
         self,
         n=None,
@@ -373,6 +379,7 @@ class LatexScript:
         subcaptions=None,
         subcaptions_on_top=True,
         indent=2,
+        subfigure_str="subfigure",
     ):
         # Determine number of subfigures.
         if n is None:
@@ -425,12 +432,14 @@ class LatexScript:
         if caption_on_top:
             fout += self._format_caption(caption, indent=indent)
         for i, (fig, subcap, w) in enumerate(zip(figure_list, subcaps, widths)):
-            fout += f"{t}\\begin{{subfigure}}[{valign}]{{{w}\\textwidth}}\n"
+            fout += (
+                f"{t}\\begin{{{subfigure_str}}}[{valign}]{{{w}\\textwidth}}\n"
+            )
             fout += f"{2*t}\\centering\n"
             if subcaptions_on_top:
                 fout += self._format_caption(subcap, indent=double_indent)
             if fig is None:
-                # make editable location and store keyword.
+                # Make editable location and store keyword.
                 edit_id = self._epoch
                 unique_edit_IDs.append(edit_id)
                 fout += f"{2*t}%%\\begin{{{edit_id}}}\n"
@@ -440,7 +449,7 @@ class LatexScript:
                 fout += self._format_plot(fig, indent=double_indent, width=1)
             if not subcaptions_on_top:
                 fout += self._format_caption(subcap, indent=double_indent)
-            fout += f"{t}\\end{{subfigure}}\n"
+            fout += f"{t}\\end{{{subfigure_str}}}\n"
             if i != n - 1:
                 # Not last figure, so add horizontal space.
                 fout += f"{t}\\hfill\n"
