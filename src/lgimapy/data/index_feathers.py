@@ -64,6 +64,7 @@ def create_feather(fid, db):
     s3_dirs = [
         "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds-history",
         "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds-history",
+        "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds-history/",
         "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
     ]
     for date, date_df in df.groupby("Date"):
