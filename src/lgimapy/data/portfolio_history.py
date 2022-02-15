@@ -11,9 +11,11 @@ from lgimapy.utils import root, mkdir, load_json, to_list
 
 
 def main():
-    override_from_date = Database().date("portfolio_start")
+    # override_from_date = Database().date("portfolio_start")
+    override_from_date = None
     override_to_date = None
-    specific_strategies = "US Credit Plus"
+    # specific_strategies = "US Credit Plus"
+    specific_strategies = None
     update_portfolio_history(
         override_from_date, override_to_date, specific_strategies
     )
@@ -75,7 +77,11 @@ def update_strategy(date, strategy, override_from_date):
     port.drop_empty_accounts()
     if not len(port.df):
         return
-    port.save_stored_properties()
+    try:
+        port.save_stored_properties()
+    except Exception as e:
+        print(port)
+        raise e
 
 
 def update_date(date, fid, override_from_date, specific_strategies):
@@ -105,6 +111,7 @@ def update_date(date, fid, override_from_date, specific_strategies):
         "Intermediate TIPS",
         "US Government: Intermediate",
         "US Government: Long",
+        "BNM - ICE BofA US Non-Financial Index",
     }
     large_strategies = {
         "US Long Credit",
