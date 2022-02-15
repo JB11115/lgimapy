@@ -29,7 +29,11 @@ df["UK_deaths_per_case"] = df["UK_deaths_offset"] / df["UK_cases"]
 df["US_deaths_per_case"] = df["US_deaths_offset"] / df["US_cases"]
 
 # %%
-df_norm = df / df.max()
+df_2021_peak = df[
+    (df.index >= pd.to_datetime("1/1/2021"))
+    & (df.index <= pd.to_datetime("8/1/2021"))
+]
+df_norm = df / df_2021_peak.max()
 fig, axes = vis.subplots(1, 2, figsize=(10, 6), sharey=True)
 for country, ax in zip(["UK", "US"], axes.flat):
     vis.plot_timeseries(
@@ -48,7 +52,7 @@ for country, ax in zip(["UK", "US"], axes.flat):
     )
     vis.format_yaxis(ax, "{x:.0%}")
 vis.legend(axes[0], fontsize=10, loc="upper left")
-axes[0].set_ylabel("Percent of Peak")
+axes[0].set_ylabel("Percent of Delta Peak")
 axes[0].set_title("UK", fontweight="bold")
 axes[1].set_title("US", fontweight="bold")
 vis.savefig("covid_cases_vs_deaths")
@@ -57,8 +61,14 @@ vis.savefig("covid_cases_vs_deaths")
 # %%
 df_recent = df[df.index >= pd.to_datetime("8/1/2020")]
 fig, ax = vis.subplots()
+
+
+def cfr(country, df, window=7):
+    return df[f"{country}_deaths_per_case"].rolling(window=window).mean()
+
+
 vis.plot_timeseries(
-    df_recent["UK_deaths_per_case"],
+    cfr("UK", df_recent),
     color="skyblue",
     label="UK",
     ylabel="Case Fatality Rate",
@@ -66,7 +76,7 @@ vis.plot_timeseries(
     ax=ax,
 )
 vis.plot_timeseries(
-    df_recent["US_deaths_per_case"],
+    cfr("US", df_recent),
     color="navy",
     label="US",
     ylabel="Case Fatality Rate",
