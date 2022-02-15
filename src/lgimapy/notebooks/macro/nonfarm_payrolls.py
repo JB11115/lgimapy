@@ -27,15 +27,12 @@ monthly_adjs = (
     .round(3)
     .to_dict()
 )
-
 # %%
 
 df_2021 = df_monthly[df_monthly.index >= pd.to_datetime("/1/1/2021")].copy()
 df_2021["sign"] = ((df_2021["adj"] * df_2021["NSA"]) > 0).astype(int)
+df_2021["date"] = df_2021.index
 df_2021 = df_2021.set_index("month").rename_axis(None).copy()
-
-df_2021
-
 df_rest_of_2021 = pd.DataFrame(columns=df_2021.columns)
 df_rest_of_2021["adj"] = pd.Series(range(1, 13)).map(monthly_adjs)
 df_rest_of_2021.index = range(1, 13)
@@ -60,6 +57,7 @@ df_2021["month_name"] = [
     pd.to_datetime(f"{month}/15/2021").strftime("%b") for month in df_2021.index
 ]
 df_2021 = df_2021.set_index("month_name").rename_axis(None)
+df_2021
 # %%
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")

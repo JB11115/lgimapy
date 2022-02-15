@@ -13,7 +13,7 @@ db = Database()
 df = bdh(["CONSSENT", "COMFCOMF"], "Index", "PX_LAST", start=start).sort_index()
 df.columns = db.columns = ["U Mich Consumer Confidence", "BBG Consumer Comfort"]
 
-u_mich = np.nan
+u_mich = 61.7
 bbg = np.nan
 today = pd.to_datetime("today").date()
 s = pd.Series([u_mich, bbg], index=df.columns, name=today)

@@ -13,8 +13,9 @@ vis.style()
 # %%
 db = Database()
 start = pd.to_datetime("1/1/2017")
-db.load_market_data(start=start)
 
+# %%
+db.load_market_data(start=start)
 tsy_30y = db.load_bbg_data("UST_30Y", "YTW", start=start)
 ix = db.build_market_index(in_stats_index=True)
 ix._create_day_cache()
@@ -149,8 +150,6 @@ comp_plot_with_treasury(abs_df["$ Weighted"], tsy_30y)
 vis.savefig("10s_30s_vs_UST_30y")
 
 
-
-
 # %%
 def plot_hy_ig_ratio(db, start):
     """Update plot for IG/HY ratio for cash bonds and cdx."""
@@ -158,15 +157,16 @@ def plot_hy_ig_ratio(db, start):
     vis.plot_timeseries(
         bbg_df["US_HY"] / bbg_df["US_IG"],
         ylabel="HY/IG Ratio",
-        color='navy',
+        color="navy",
         median_line=True,
-        median_line_kws={'color': 'firebrick', 'prec': 1},
+        median_line_kws={"color": "firebrick", "prec": 1},
+        figsize=(8, 6),
         pct_lines=(5, 95),
     )
 
 
 plot_hy_ig_ratio(db, start)
-vis.savefig('US_HY_IG_Ratio')
+vis.savefig("US_HY_IG_Ratio_sqare")
 
 # %%
 def plot_bbb_a_ratio(ix):
@@ -185,12 +185,37 @@ def plot_bbb_a_ratio(ix):
     vis.plot_timeseries(
         df["10_BBB"] / df["10_A"],
         ylabel="Nonfin 10y BBB/A Ratio",
-        color='navy',
+        color="navy",
         median_line=True,
-        median_line_kws={'color': 'firebrick', 'prec': 1},
+        median_line_kws={"color": "firebrick", "prec": 1},
         pct_lines=(5, 95),
-        legend={'loc': 'upper right', "fancybox": True, "shadow": True},
+        legend={"loc": "upper right", "fancybox": True, "shadow": True},
     )
 
+
 plot_bbb_a_ratio(ix)
-vis.savefig('nonfin_10y_BBB_A_ratio')
+vis.savefig("nonfin_10y_BBB_A_ratio")
+
+# %%
+def plot_median(s, color, ax):
+    ax.axhline(np.median(s), lw=1, ls="--", color=color, label="_nolegend_")
+
+
+def plot_ig_hy_spreads(db):
+    df = db.load_bbg_data(["US_IG", "US_HY"], "OAS", start="2017")
+    ax_left, ax_right = vis.plot_double_y_axis_timeseries(
+        df["US_IG"].rename("US IG"),
+        df["US_HY"].rename("US HY"),
+        color_left="navy",
+        color_right="darkorchid",
+        alpha=0.8,
+        lw=1.2,
+        figsize=(8, 6),
+        ret_axes=True,
+    )
+    plot_median(df["US_IG"], "navy", ax_left)
+    plot_median(df["US_HY"], "darkorchid", ax_right)
+
+
+plot_ig_hy_spreads(db)
+vis.savefig("US_IG_HY_Spreads_square")
