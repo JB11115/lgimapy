@@ -19,7 +19,7 @@ from lgimapy.data import (
     new_issue_mask,
     TreasuryCurve,
 )
-from lgimapy.stats import mode
+from lgimapy.stats import mean, mode, percentile, std
 from lgimapy.utils import (
     check_all_equal,
     check_market,
@@ -28,10 +28,13 @@ from lgimapy.utils import (
     mkdir,
     replace_multiple,
     root,
-    to_int,
     to_datetime,
+    to_int,
     to_list,
 )
+
+
+# %%
 
 
 class BondBasket:

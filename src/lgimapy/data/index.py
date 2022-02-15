@@ -18,7 +18,7 @@ from lgimapy.data import (
     new_issue_mask,
     TreasuryCurve,
 )
-from lgimapy.stats import percentile, mean, std
+from lgimapy.stats import mean, std
 from lgimapy.utils import (
     check_all_equal,
     dump_json,
