@@ -57,25 +57,31 @@ def create_feather(fid, db):
     df.to_feather(root(f"data/{db.market}/feathers/{fid}.feather"))
 
     # Add daily files to s3 drop point.
-    sess = boto3.Session(
-        aws_access_key_id=db._passwords["AWS"]["dev_access_key"],
-        aws_secret_access_key=db._passwords["AWS"]["dev_secret_access_key"],
-    )
-    s3_dirs = [
-        "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds-history",
-        "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds-history",
-        "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds-history/",
-        "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
-    ]
-    for date, date_df in df.groupby("Date"):
-        mkt = db.market.lower()
-        filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
-        for s3_dir in s3_dirs:
-            s3_fid = f"{s3_dir}/{mkt}/{filename}.parquet"
-            wr.s3.to_parquet(
-                date_df, path=s3_fid, index=False, boto3_session=sess
-            )
-    # %%
+    s3_dirs_d = {
+        "prod": [
+            "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds-history/",
+        ],
+        "dev": [
+            "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds-history",
+            "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds-history",
+            "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
+        ],
+    }
+    mkt = db.market.lower()
+    keys = db._passwords["AWS"]
+    for stage, s3_dirs in s3_dirs_d.items():
+        sess = boto3.Session(
+            aws_access_key_id=keys[f"{stage}_access_key"],
+            aws_secret_access_key=keys[f"{stage}_secret_access_key"],
+        )
+
+        for date, date_df in df.groupby("Date"):
+            filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
+            for s3_dir in s3_dirs:
+                s3_fid = f"{s3_dir}/{mkt}/{filename}.parquet"
+                wr.s3.to_parquet(
+                    date_df, path=s3_fid, index=False, boto3_session=sess
+                )
 
 
 def fill_missing_HY_index_flags(ix):
@@ -147,6 +153,7 @@ def update_market_data_feathers(limit=20, update_current=False):
     than 2 files are to be created.
     """
     markets = ["US", "GBP", "EUR"]
+    # markets = ["GBP", "EUR"]
     for market in markets:
         db = Database(market=market)
         missing_fids = find_missing_feathers(db, update_current=update_current)
@@ -167,4 +174,9 @@ def update_market_data_feathers(limit=20, update_current=False):
 # %%
 
 if __name__ == "__main__":
+    # update_current = True
+    # market = "EUR"
+    # db = Database(market=market)
+    # missing_fids = find_missing_feathers(db, update_current=update_current)
+    # fid = missing_fids[-1]
     update_market_data_feathers(update_current=True)
