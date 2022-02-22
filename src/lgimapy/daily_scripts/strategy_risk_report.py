@@ -898,7 +898,13 @@ def save_single_latex_risk_page(
             col_fmt="l|rr",
             prec={col: "0f" for col in historic_percentile_df.columns},
             gradient_cell_col=historic_percentile_df.columns,
-            gradient_cell_kws={"vmin": 0, "vmax": 100, "center": 50},
+            gradient_cell_kws={
+                "vmin": 0,
+                "vmax": 100,
+                "center": 50,
+                "cmin": "rose",
+                "cmax": "army",
+            },
             **history_table_kwargs,
         )
     start_date = history_df.index[0]
