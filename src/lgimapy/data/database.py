@@ -1,12 +1,13 @@
 import json
 import os
 import pickle
+import platform
 import sys
 import warnings
 from bisect import bisect_left
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from functools import lru_cache, partial
+from functools import lru_cache, partial, cached_property
 from glob import glob
 from inspect import cleandoc, getfullargspec
 from itertools import chain
@@ -107,8 +108,7 @@ class Database:
         self._bbg_dfs = {}
         self._baml_dfs = {}
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _datamart_conn(self):
         if sys.platform == "win32":
             return pyodbc.connect(
@@ -133,12 +133,23 @@ class Database:
         else:
             raise OSError(f"Unknown platform: {sys.platform}")
 
+    @cached_property
+    def current_env(self):
+        current_platform = platform.platform().upper()
+        env_keys = {
+            "WINDOW": "WINDOWS",
+            "AMZN": "DOMINO",
+            "WSL": "LINUX",
+        }
+        for key, env in env_keys.items():
+            if key in current_platform:
+                return env
+
     @staticmethod
     def local(fid):
         return root(f"data/{fid}")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _passwords(self):
         if sys.platform == "linux":
             pswd_fid = Path.home() / "pswd.json"
@@ -148,8 +159,7 @@ class Database:
             raise OSError(f"Unknown platform: {sys.platform}")
         return load_json(full_fid=pswd_fid)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _3PDH_sess(self):
         """Dict[str: int]: Memoized rating map."""
         import awswrangler as wr
@@ -163,8 +173,7 @@ class Database:
             region_name="us-east-2",
         )
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _ratings(self):
         """Dict[str: int]: Memoized rating map."""
         ratings_map = load_json("ratings")
@@ -172,14 +181,12 @@ class Database:
             ratings_map[i] = i
         return ratings_map
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def all_dates(self):
         """List[datetime]: Memoized list of all dates in DataBase."""
         return list(self._trade_date_df.index)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def all_dates(self):
         """List[datetime]: Memoized list of all dates in DataBase."""
         return list(self._trade_date_df.index)
@@ -263,51 +270,43 @@ class Database:
                 f"Please select one of {allowable_sources}."
             )
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _rating_changes_df(self):
         """pd.DataFrame: Rating change history."""
         fid = self.local("rating_changes.parquet")
         return pd.read_parquet(fid)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _ticker_changes(self):
         """Dict[str: str]: Memoized map of hisorical ticker changes."""
         return load_json("ticker_changes")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _utility_business_structure(self):
         """Dict[str: str]: Memoized map of US states to state codes."""
         return load_json("utility_business_structure")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _BAMLSector_ticker_map(self):
         """Dict[str: str]: Memoized map of hisorical ticker changes."""
         return load_json("HY/ticker_BAMLSector_map")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _BAMLTopLevelSector_ticker_map(self):
         """Dict[str: str]: Memoized map of hisorical ticker changes."""
         return load_json("HY/ticker_BAMLTopLevelSector_map")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def state_codes(self):
         """Dict[str: str]: Memoized map of US states to state codes."""
         return load_json("state_codes")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def state_populations(self):
         """Dict[str: int]: Memoized map of US states to their populations."""
         return load_json("state_populations")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def long_corp_sectors(self):
         """List[str]: list of sectors in Long Corp Benchmark."""
         fid = self.local("long_corp_sectors.parquet")
@@ -330,8 +329,7 @@ class Database:
         repl = {" ": "_", "/": "_", "%": "pct"}
         return replace_multiple(s, repl)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _defaults_df(self):
         fid = self.local("defaults.csv")
         df = pd.read_csv(fid, index_col=0)
@@ -677,33 +675,28 @@ class Database:
             / 1e6
         ).round(6)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _account_to_strategy(self):
         """Dict[str: str]: Account name to strategy map."""
         return load_json("account_strategy")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _strategy_to_accounts(self):
         """Dict[str: str]: Respective accounts for each strategy."""
         return load_json("strategy_accounts")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _manager_to_accounts(self):
         """Dict[str: str]: Respective accounts for each PM."""
         return load_json("manager_accounts")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def DM_countries(self, region=None):
         """Set[str]: DM Country codes."""
         fid = self.local("DM_countries.parquet")
         return set(pd.read_parquet(fid).squeeze())
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _country_codes(self, region=None):
         """Dict[str: str]: Country codes file."""
         return load_json("country_codes")
@@ -737,8 +730,7 @@ class Database:
             )
         )
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _numeric_to_letter_ratings(self):
         """Dict[int, str]: Numeric rating to letter map."""
         rating_dict = load_json("numeric_to_SP_ratings")
@@ -1116,6 +1108,12 @@ class Database:
         populated_sectors.loc[loc] = tickers[loc].map(map)
         return populated_sectors
 
+    def _drop_duplicate_columns(self, df, keep_col, drop_col):
+        if keep_col in df.columns and drop_col in df.columns:
+            return df.drop(drop_col, axis=1)
+        else:
+            return df
+
     def _preprocess_basys_data(self, df):
         # Fill missing sectors and subsectors.
         sector_cols = [f"Level {i}" for i in range(7)]
@@ -1134,6 +1132,17 @@ class Database:
             .fillna(method="ffill", axis=1)
             .copy()
         )
+
+        # Drop potential duplicate columns. These columns changed
+        # name over time and for a short period both were present.
+        # df = self._drop_duplicate_columns(
+        #     df, "Z-Spread Over", "Z-Spread Over RFR"
+        # )
+        # df = self._drop_duplicate_columns(
+        #     df,
+        #     "Month-to-Date Excess Return over RFR",
+        #     "Month-to-date Libor Swap Return",
+        # )
 
         col_map = {
             "Date": "Date",
@@ -1161,14 +1170,30 @@ class Database:
             "Effective OA duration": "OAD",
             "OAS": "OAS",
             "Z-Spread Over Libor": "ZSpread",
+            "Z-Spread Over RFR": "ZSpread",
             "Semi-Annual Yield": "YieldToWorst",
             "Semi-Annual Yield to Maturity": "YieldToMat",
             "Semi-Annual Modified Duration": "ModDurationToWorst",
             "Semi-Annual Modified Duration to Maturity": "ModDurationToMat",
             "Month-to-date Sovereign Curve Swap Return": "MTDXSRet",
+            "Month-to-Date Sovereign Curve Swap Return": "MTDXSRet",
+            "Month-to-Date Libor Swap Return": "MTDLiborXSRet",
             "Month-to-date Libor Swap Return": "MTDLiborXSRet",
+            "Month-to-Date Excess Return over RFR": "MTDLiborXSRet",
+            "Month-to-date Excess Return over RFR": "MTDLiborXSRet",
         }
-        df = df.rename(columns=col_map)[col_map.values()].copy()
+
+        # Get sorted unique columns.
+        unique_cols = set()
+        cols = []
+        for col in col_map.values():
+            if col in unique_cols:
+                continue
+            else:
+                cols.append(col)
+                unique_cols.add(col)
+
+        df = df.rename(columns=col_map)[cols].copy()
 
         # Convert str time to datetime.
         for date_col in ["Date", "MaturityDate", "WorkoutDate", "NextCallDate"]:
@@ -1214,6 +1239,7 @@ class Database:
 
         # Calculate DTS. Approximate OAD ~ OASD.
         df["DTS"] = df["OAD"] * df["OAS"]
+        df["ZSpread"]
         df["DTS_Libor"] = df["OAD"] * df["ZSpread"]
 
         df["CUSIP"].fillna(df["ISIN"], inplace=True)
@@ -1597,6 +1623,7 @@ class Database:
         for fid in trade_dates["fid"]:
             df_raw = pd.read_csv(
                 Path(fid),
+                # engine="python",
                 encoding="ISO-8859-1",
                 dtype={
                     "Next Call Date": str,
@@ -3122,8 +3149,7 @@ class Database:
 
         return df
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _bbg_name_dict(self):
         """
         Formatted names for Bloomberg data.
@@ -3296,8 +3322,8 @@ def main():
     vis.style()
     self = Database()
     self.display_all_columns()
+    self.display_all_rows(100)
 
     db = Database()
     # %%
-    db.load_market_data()
     # %%
