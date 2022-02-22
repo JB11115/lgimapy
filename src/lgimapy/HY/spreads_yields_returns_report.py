@@ -23,18 +23,14 @@ def update_spreads_yields_returns(fid):
     }
     spreads_df = pd.read_csv(
         spreads_fid, index_col=0, parse_dates=True, infer_datetime_format=True
-    )
+    ).fillna(method="ffill")
     yields_df = pd.read_csv(
         yields_fid, index_col=0, parse_dates=True, infer_datetime_format=True
-    )
+    ).fillna(method="ffill")
     return_dfs = {
         key: pd.read_csv(fid, index_col=0) for key, fid in return_fids.items()
     }
-    date = min(
-        find_last_trade_date(spreads_df), find_last_trade_date(yields_df)
-    )
-    spreads_df = spreads_df[spreads_df.index <= date]
-    yields_df = yields_df[yields_df.index <= date]
+    date = spreads_df.index[-1]
 
     sections = {
         "Spreads Overview": {
