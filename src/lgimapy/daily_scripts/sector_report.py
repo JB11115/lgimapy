@@ -137,8 +137,8 @@ def add_overview_table(page, sector, strategy_d, n):
             adjust=True,
             gradient_cell_col=ow_cols,
             gradient_cell_kws={
-                "cmax": "orchid",
-                "cmin": "orange",
+                "cmax": "army",
+                "cmin": "rose",
                 "vmax": ow_max,
                 "vmin": ow_min,
             },
