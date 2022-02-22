@@ -171,7 +171,7 @@ def update_EUR_spreads(doc, color, save=True):
     # Plot short term scores below LC index.
     axes[1].plot(df["Short Term"], c="k", ls="--", lw=2)
     axes[1].set_ylabel("Short Term\nStrategy Score", fontsize=12)
-    cmap = sns.color_palette("coolwarm_r", 7).as_hex()
+    cmap = sns.diverging_palette(348, 69, l=30, n=7).as_hex()
     plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
     fill = [np.min(plot_scores), np.max(plot_scores)]
     for i, (date, _) in enumerate(plot_scores.iloc[1:].items()):

@@ -104,7 +104,11 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         """
     )
     vis.plot_timeseries(
-        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
+        oas,
+        start=df.index[0],
+        color="steelblue",
+        label=lbl,
+        ax=axes[0],
     )
 
     vis.plot_timeseries(
@@ -127,7 +131,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     axes[1].set_yticks(yticks)
     axes[1].set_yticklabels(ytick_labels)
     axes[1].set_ylabel("Short Term\nStrategy Score", fontsize=12)
-    cmap = sns.color_palette("coolwarm_r", 7).as_hex()
+    cmap = sns.diverging_palette(348, 69, l=30, n=7).as_hex()
     plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
     fill = [np.min(plot_scores), np.max(plot_scores)]
     for i, (date, _) in enumerate(plot_scores.iloc[1:].items()):
@@ -182,7 +186,11 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         """
     )
     vis.plot_timeseries(
-        oas, start=df.index[0], color="steelblue", label=lbl, ax=axes[0],
+        oas,
+        start=df.index[0],
+        color="steelblue",
+        label=lbl,
+        ax=axes[0],
     )
 
     vis.plot_timeseries(
@@ -205,7 +213,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     ytick_labels = [f"{v:.0f}" if v == 0 else f"{v:+.0f}" for v in yticks]
     axes[1].set_yticks(yticks)
     axes[1].set_yticklabels(ytick_labels)
-    cmap = sns.color_palette("coolwarm_r", 7).as_hex()
+    cmap = sns.diverging_palette(348, 69, l=30, n=7).as_hex()
     plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
     fill = [np.min(plot_scores), np.max(plot_scores)]
     for i, (date, _) in enumerate(plot_scores.iloc[1:].items()):

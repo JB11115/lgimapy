@@ -194,7 +194,7 @@ def make_tail_position_table(df_tail, doc):
         },
         midrule_locs=["Total"],
         gradient_cell_col="LGIMA*Overweight",
-        gradient_cell_kws={"cmax": "steelblue", "cmin": "firebrick"},
+        gradient_cell_kws={"cmax": "army", "cmin": "rose"},
         alternating_colors=("lightgray", None),
     )
     doc.end_edit()
