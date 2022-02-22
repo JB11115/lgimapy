@@ -138,6 +138,8 @@ def colors(color):
         "green": "#09933C",
         "g": "#09933C",
         "ryb": ["#752333", "#0438A3", "#8E5C1D"],
+        "army": "4B5320",
+        "rose": "C98895",
     }[color.lower()]
 
 
