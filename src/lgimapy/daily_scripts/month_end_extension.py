@@ -246,6 +246,7 @@ def port_metrics(df, strategy=None):
         "BofA ML 10+ Year AAA-A US Corp Const": 10,
         "Bloomberg LDI Custom - DE": 3,
         "BNM - US 1-5 Yr Credit": 1,
+        "BNM - ICE BofA US Non-Financial Index": 1,
     }
     tenders = tendered_cusips()
     if tenders is not None:
