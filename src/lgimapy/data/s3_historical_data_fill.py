@@ -13,14 +13,13 @@ from lgimapy.data import Database
 db = Database()
 
 sess = boto3.Session(
-    aws_access_key_id=db._passwords["AWS"]["dev_access_key"],
-    aws_secret_access_key=db._passwords["AWS"]["dev_secret_access_key"],
+    aws_access_key_id=db._passwords["AWS"]["prod_access_key"],
+    aws_secret_access_key=db._passwords["AWS"]["prod_secret_access_key"],
 )
 
 # %%
 s3_dir = "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds-history/"
 markets = ["US", "EUR", "GBP"]
-markets = ["EUR", "GBP"]
 
 for market in markets:
     db = Database(market=market)
