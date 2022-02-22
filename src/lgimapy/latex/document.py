@@ -742,6 +742,8 @@ class Document(LatexScript):
             \\definecolor{{paleblue}}{{HTML}}{{B1DDF1}}
             \\definecolor{{champagne}}{{HTML}}{{EEE3AB}}
             \\definecolor{{powderblue}}{{HTML}}{{A9D2D5}}
+            \\definecolor{{army}}{{HTML}}{{4B5320}}
+            \\definecolor{{rose}}{{HTML}}{{C98895}}
 
             %% Define function for perctile bars in tables.
             \\newlength{{\\barw}}
