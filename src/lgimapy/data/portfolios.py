@@ -119,12 +119,18 @@ class Portfolio:
         lookback_perf.append(self.performance())
         return np.sqrt(252) * np.std(lookback_perf)
 
+    def normalized_tracking_error(self, lookback_months=1):
+        return self.tracking_error(lookback_months) / self.bm_oas()
+
     def stored_properties(self):
         return pd.Series(
             {
                 "dts_pct": 100 * self.dts("pct"),
                 "dts_abs": self.dts("abs"),
                 "dts_duration": self.dts("duration"),
+                "barbell": 100 * self.barbell(),
+                "tracking_error": self.tracking_error(),
+                "normalized_tracking_error": self.normalized_tracking_error(),
                 "port_carry": self.carry(),
                 "port_yield": self.port_yield(),
                 "port_oasd": self.oasd(),
@@ -148,7 +154,6 @@ class Portfolio:
                     "Non-Corp", by="OASD"
                 ),
                 "performance": self.performance(),
-                "tracking_error": self.tracking_error(),
             },
             name=self.date,
         )
@@ -224,7 +229,10 @@ class Portfolio:
         return {
             "dts_pct": "DTS (%)",
             "dts_abs": "DTS OW (abs)",
-            "dts_duration": "DTS Duration OW",
+            "dts_duration": "DTS OW (dur)",
+            "barbell": "Barbell (%)",
+            "tracking_error": "Tracking Error",
+            "normalized_tracking_error": "Normalized TE",
             "port_carry": "Carry (bp)",
             "port_yield": "Port Yield (%)",
             "port_oasd": "Port OASD",
@@ -244,7 +252,6 @@ class Portfolio:
             "corp_oasd_ow": "Corp OW",
             "noncorp_oasd_ow": "Non-Corp OW",
             "performance": "Performance",
-            "tracking_error": "Tracking Error",
         }
 
     @property
@@ -308,6 +315,9 @@ class Portfolio:
         # Replace columns with no performance (will be 0 due to
         # Numpy's sum) with NaNs
         historical_df.loc["performance"].replace(0, np.nan, inplace=True)
+        historical_df = historical_df.reindex(
+            self._stored_properties_idx_map.keys()
+        )
         historical_df.index = [
             self._stored_properties_idx_map[idx] for idx in historical_df.index
         ]
@@ -327,6 +337,9 @@ class Portfolio:
 
         # Remove performance.
         pctile_table.loc["performance"] = np.nan
+        pctile_table = pctile_table.reindex(
+            self._stored_properties_idx_map.keys()
+        )
         pctile_table.index = [
             self._stored_properties_idx_map[idx] for idx in pctile_table.index
         ]
@@ -338,12 +351,15 @@ class Portfolio:
         df = df[df.index <= self.date]
 
         range_table = pd.DataFrame()
-        range_table["Entire*Min"] = df.min()
+        range_table["Entire*Min"] = df.quantile(0.01)
         range_table["Entire*Median"] = df.median()
-        range_table["Entire*Max"] = df.max()
+        range_table["Entire*Max"] = df.quantile(0.99)
 
         # Remove performance.
         range_table.loc["performance"] = np.nan
+        range_table = range_table.reindex(
+            self._stored_properties_idx_map.keys()
+        )
         range_table.index = [
             self._stored_properties_idx_map[idx] for idx in range_table.index
         ]
@@ -457,6 +473,10 @@ class Account(BondBasket, Portfolio):
             return self.subset(rating=("IG")).dts("abs")
         elif method == "ig_pct":
             return self.subset(rating=("IG")).dts("port") / self.dts("bm")
+        elif method == "derivatives_abs":
+            return np.sum(self.derivatives_df["DTS_Diff"])
+        elif method == "derivatives_pct":
+            return np.sum(self.derivatives_df["DTS_Diff"]) / self.dts("bm")
         else:
             raise NotImplementedError(f"'{method}' is not a proper `method`.")
 
@@ -478,6 +498,9 @@ class Account(BondBasket, Portfolio):
 
     def IG_mv_pct(self):
         return self.subset(rating=("IG")).credit_pct()
+
+    def derivatives_mv_pct(self):
+        return np.sum(self.derivatives_df["P_Weight"])
 
     def tsy_pct(self):
         return np.sum(self.tsy_df["P_Weight"])
@@ -518,6 +541,10 @@ class Account(BondBasket, Portfolio):
     def carry(self):
         return self.port_oas() - self.bm_oas()
 
+    def barbell(self):
+        tsy_implied_dts = 1 - (self.tsy_oad() / self.full_df["BM_OAD"].sum())
+        return self.dts() - tsy_implied_dts
+
     @property
     def bm_df(self):
         return self.full_df[self.full_df["BM_Weight"] > 0].copy()
@@ -525,6 +552,10 @@ class Account(BondBasket, Portfolio):
     @property
     def port_df(self):
         return self.full_df[self.full_df["P_Weight"] > 0].copy()
+
+    @property
+    def derivatives_df(self):
+        return self.full_df[self.full_df["L1"] == "Derivatives"].copy()
 
     def bm_weight(self, col):
         with warnings.catch_warnings():
@@ -832,7 +863,9 @@ class Account(BondBasket, Portfolio):
         d = defaultdict(list)
         for rating_bucket in self._rating_risk_buckets:
 
-            bucket_port = self.subset(rating_risk_bucket=rating_bucket,)
+            bucket_port = self.subset(
+                rating_risk_bucket=rating_bucket,
+            )
             bucket_corp_port = bucket_port.subset(
                 LGIMA_top_level_sector=["Industrials", "Financials"]
             )
@@ -1079,9 +1112,12 @@ class Strategy(BondBasket, Portfolio):
             "hy_dts_pct": self.account_dts("hy_pct"),
             "ig_dts_abs": self.account_dts("ig_abs"),
             "ig_dts_pct": self.account_dts("ig_pct"),
+            "derivatives_dts_abs": self.account_dts("derivatives_abs"),
+            "derivatives_dts_pct": self.account_dts("derivatives_pct"),
             "credit_pct": self.account_credit_pct(),
             "ig_mv_pct": self.account_IG_mv_pct(),
             "hy_mv_pct": self.account_HY_mv_pct(),
+            "derivatives_mv_pct": self.account_derivatives_mv_pct(),
             "cash_pct": self.account_cash_pct(),
             "tsy_pct": self.account_tsy_pct(),
             "tsy_oad": self.account_tsy_oad(),
@@ -1099,9 +1135,12 @@ class Strategy(BondBasket, Portfolio):
             "hy_dts_pct": self.dts("hy_pct"),
             "ig_dts_abs": self.dts("ig_abs"),
             "ig_dts_pct": self.dts("ig_pct"),
+            "derivatives_dts_abs": self.dts("derivatives_abs"),
+            "derivatives_dts_pct": self.dts("derivatives_pct"),
             "credit_pct": self.credit_pct(),
             "ig_mv_pct": self.IG_mv_pct(),
             "hy_mv_pct": self.HY_mv_pct(),
+            "derivatives_mv_pct": self.derivatives_mv_pct(),
             "cash_pct": self.cash_pct(),
             "tsy_pct": self.tsy_pct(),
             "tsy_oad": self.tsy_oad(),
@@ -1113,15 +1152,18 @@ class Strategy(BondBasket, Portfolio):
         }
         column_names = {
             "dts_pct": "DTS (%)",
-            "dts_abs": "DTS (abs)",
-            "dts_duration": "DTS Duration OW",
+            "dts_abs": "DTS OW (abs)",
+            "dts_duration": "DTS OW (dur)",
             "hy_dts_abs": "HY DTS (abs)",
             "hy_dts_pct": "HY DTS (%)",
             "ig_dts_abs": "IG DTS (abs)",
             "ig_dts_pct": "IG DTS (%)",
+            "derivatives_dts_abs": "Derivatives DTS (abs)",
+            "derivatives_dts_pct": "Derivatives DTS (%)",
             "credit_pct": "Credit (%)",
             "hy_mv_pct": "HY MV (%)",
             "ig_mv_pct": "IG MV (%)",
+            "derivatives_mv_pct": "Derivatives MV (%)",
             "cash_pct": "Cash (%)",
             "tsy_pct": "Tsy (%)",
             "tsy_oad": "Tsy OAD",
@@ -1144,12 +1186,15 @@ class Strategy(BondBasket, Portfolio):
             "dts_abs": "1f",
             "dts_duration": "2f",
             "hy_dts_pct": "1%",
-            "ig_dts_pct": "1%",
             "hy_dts_abs": "1f",
+            "ig_dts_pct": "1%",
             "ig_dts_abs": "1f",
+            "derivatives_dts_abs": "1f",
+            "derivatives_dts_pct": "2%",
             "credit_pct": "1%",
             "hy_mv_pct": "1%",
             "ig_mv_pct": "1%",
+            "derivatives_mv_pct": "2%",
             "cash_pct": "1%",
             "tsy_pct": "1%",
             "tsy_oad": "1f",
@@ -1173,8 +1218,8 @@ class Strategy(BondBasket, Portfolio):
     def account_dts(self, method="pct"):
         name = {
             "pct": "DTS (%)",
-            "abs": "DTS (abs)",
-            "duration": "DTS Duration OW",
+            "abs": "DTS OW (abs)",
+            "duration": "DTS OW (dur)",
             "p": "Portfolio DTS (bp*yr)",
             "port": "Portfolio DTS (bp*yr)",
             "portfolio": "Portfolio DTS (bp*yr)",
@@ -1184,6 +1229,8 @@ class Strategy(BondBasket, Portfolio):
             "hy_abs": "HY DTS (abs)",
             "ig_pct": "IG DTS (%)",
             "ig_abs": "IG DTS (abs)",
+            "derivatives_pct": "Derivatives DTS (%)",
+            "derivatives_abs": "Derivatives DTS (abs)",
         }[method.lower()]
         return self.calculate_account_values(lambda x: x.dts(method), name)
 
@@ -1264,6 +1311,17 @@ class Strategy(BondBasket, Portfolio):
         return self.account_value_weight(self.account_IG_mv_pct())
 
     @lru_cache(maxsize=None)
+    def account_derivatives_mv_pct(self):
+        name = "Derivatives MV (%)"
+        return self.calculate_account_values(
+            lambda x: x.derivatives_mv_pct(), name
+        )
+
+    @lru_cache(maxsize=None)
+    def derivatives_mv_pct(self):
+        return self.account_value_weight(self.account_derivatives_mv_pct())
+
+    @lru_cache(maxsize=None)
     def account_bm_credit_pct(self):
         name = "Credit (%)"
         return self.calculate_account_values(lambda x: x.bm_credit_pct(), name)
@@ -1298,6 +1356,15 @@ class Strategy(BondBasket, Portfolio):
     def account_carry(self):
         name = "Carry (bp)"
         return self.calculate_account_values(lambda x: x.carry(), name)
+
+    @lru_cache(maxsize=None)
+    def barbell(self):
+        return self.account_value_weight(self.account_barbell())
+
+    @lru_cache(maxsize=None)
+    def account_barbell(self):
+        name = "Barbell"
+        return self.calculate_account_values(lambda x: x.barbell(), name)
 
     @lru_cache(maxsize=None)
     def port_yield(self):
