@@ -30,9 +30,9 @@ def main():
     pdf_path = root("reports/strategy_risk")
 
     strategy = "US Corporate IG"
-    strategy = "US Long Credit Plus"
     strategy = "US Long Government/Credit"
     strategy = "US Long Corporate"
+    strategy = "US Long Credit Plus"
     # strategy = "US Credit"
     # strategy = "Bloomberg LDI Custom - DE"
     # strategy = "US Long Credit"
@@ -123,8 +123,8 @@ def main():
     summary = pd.concat(df["summary"].values, axis=1, sort=False).T
     summary.index = [ix.replace("_", " ") for ix in summary.index]
     summary.index.rename("Strategy", inplace=True)
-    if len(summary.columns) > 14:
-        summary = summary[list(summary)[:14]]
+    if len(summary.columns) > 15:
+        summary = summary[list(summary)[:15]]
     prec = {}
     for col in summary.columns:
         if "OAD" in col:
@@ -164,14 +164,14 @@ def main():
     ]
     summary_page.add_table(
         summary.reset_index(),
-        col_fmt="ll|c|c|cc|r|cccc|ccccc",
+        col_fmt="ll|c|c|cc|c|r|cccc|ccccc",
         prec=prec,
         multi_row_header=True,
         adjust=True,
         hide_index=True,
         midrule_locs=strategy_midrules,
     )
-    summary_page.save(save_tex=False)
+    summary_page.save()
 
     # %%
     # Merge all files together to build to final report.
@@ -179,6 +179,7 @@ def main():
     for fid in df["fid"]:
         fids_to_merge.append(fid)
         fids_to_merge.append(f"{fid}_history")
+    fids_to_merge.append("risk_report_methodology")
 
     merge_pdfs(
         "Risk_Report",
@@ -308,19 +309,21 @@ def save_single_latex_risk_page(
             "dts_pct",
             "ig_dts_pct",
             "hy_dts_pct",
+            "derivatives_dts_pct",
             "dts_abs",
             "ig_dts_abs",
             "hy_dts_abs",
+            "derivatives_dts_abs",
             "credit_pct",
             "ig_mv_pct",
             "hy_mv_pct",
+            "derivatives_mv_pct",
             "curve_duration(5)",
             "curve_duration(7)",
             "curve_duration(10)",
             "curve_duration(20)",
         ]
         general_overview_midrules = [
-            "DTS (abs)",
             "Credit (\\%)",
             "Curve Dur (5yr)",
         ]
@@ -334,6 +337,12 @@ def save_single_latex_risk_page(
         axis=1,
         sort=False,
     )
+    # Drop derivatives from table if there are none in the portfolio.
+    overview_table = overview_table[
+        (~overview_table.index.str.contains("Derivatives"))
+        | (overview_table.abs().sum(axis=1) > 0)
+    ]
+
     prop_formats = curr_strat.property_latex_formats(properties)
     for prop, fmt in zip(overview_table.index, prop_formats):
         overview_table.loc[prop] = [
@@ -537,6 +546,7 @@ def save_single_latex_risk_page(
     summary[f"$\\Delta$DTS*{prev_date_fmt}"] = (
         curr_strat.dts() - prev_strat.dts()
     )
+    summary["Barbell*(%)"] = curr_strat.barbell()
     summary["OAD*Total"] = curr_strat.total_oad()
     summary["Cash*(%)"] = curr_strat.cash_pct()
     summary["Tsy OAD*Total"] = curr_strat.tsy_oad()
@@ -596,7 +606,8 @@ def save_single_latex_risk_page(
         "BM OAS": "0f",
         "DTS (%)": "1f",
         "DTS OW (abs)": "+1f",
-        "DTS Duration OW": "+2f",
+        "DTS OW (dur)": "+2f",
+        "Barbell (%)": "+1f",
         "Carry (bp)": "+1f",
         "Port Yield (%)": "2f",
         "Port OASD": "+2f",
@@ -612,8 +623,9 @@ def save_single_latex_risk_page(
         "HY OW": "+2f",
         "Corp OW": "+2f",
         "Non-Corp OW": "+2f",
-        "Performance": "+1f",
         "Tracking Error": "0f",
+        "Normalized TE": "2f",
+        "Performance": "+1f",
     }
 
     indents = {"Port DTS (%)", "BM DTS (%)"}
@@ -734,6 +746,10 @@ def save_single_latex_risk_page(
             f"$\\Delta${ow_metric}*(yrs) ",
         ],
         center_div_bar_header=False,
+        div_bar_kws={
+            "cmax": "army",
+            "cmin": "rose",
+        },
         **ticker_sector_ow_table_kwargs,
     )
     page.add_table(
@@ -792,8 +808,8 @@ def save_single_latex_risk_page(
         adjust=True,
         gradient_cell_col=maturity_spread_heatmap.columns,
         gradient_cell_kws={
-            "cmax": "orchid",
-            "cmin": "orange",
+            "cmax": "army",
+            "cmin": "rose",
             "vmin": maturity_spread_heatmap.iloc[:, :-1].min().min(),
             "vmax": maturity_spread_heatmap.iloc[:, :-1].max().max(),
             "symmetric": True,
@@ -828,6 +844,7 @@ def save_single_latex_risk_page(
     ) = history_page.add_subfigures(n=3, valign="t", widths=[0.48, 0.18, 0.28])
 
     midrule_locs = [
+        "Barbell (\\%)",
         "Carry (bp)",
         "BM OAS",
         "Total OAD OW",
