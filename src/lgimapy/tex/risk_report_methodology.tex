@@ -1,0 +1,238 @@
+\documentclass[12pt]{article}
+\usepackage[left=0.5cm, right=0.5cm, top=0.3cm, bottom=0.2cm, landscape]{geometry}
+\usepackage[table]{xcolor}
+\usepackage[open]{bookmark}
+\usepackage{
+    amsmath,
+    amsthm,
+    amssymb,
+    adjustbox,
+    array,
+    background,
+    booktabs,
+    bm,
+    caption,
+    colortbl,
+    dsfont,
+    enumitem,
+    epigraph,
+    fancyhdr,
+    float,
+    graphicx,
+    hyperref,
+    makecell,
+    marvosym,
+    MnSymbol,
+    nicefrac,
+    ragged2e,
+    subcaption,
+    tabu,
+    titlesec,
+    transparent,
+    wasysym,
+    xcolor
+}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+\backgroundsetup{contents={}}
+
+%% Define default caption settings for figures and tables.
+\captionsetup{
+    justification=raggedright,
+    singlelinecheck=false,
+    font={footnotesize, bf},
+    aboveskip=0pt,
+    belowskip=0pt,
+    labelformat=empty
+}
+\captionsetup[subfigure]{
+    justification=raggedright,
+    singlelinecheck=false,
+    font={footnotesize, bf},
+    aboveskip=0pt,
+    belowskip=0pt,
+    labelformat=empty
+}
+%% Define columns with fixed widths for tables.
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+
+%% Change separations distances for better presentation.
+\setlength{\textfloatsep}{0.1mm}
+\setlength{\floatsep}{1mm}
+\setlength{\intextsep}{2mm}
+
+%% Declare operators for mathematical expressions.
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+\DeclareMathOperator*{\argmax}{argmax}
+\DeclareMathOperator*{\argmin}{argmin}
+\setcounter{MaxMatrixCols}{20}
+
+%% Define custom colors.
+\definecolor{lightgray}{gray}{0.9}
+\definecolor{steelblue}{HTML}{0C70D5}
+\definecolor{firebrick}{HTML}{E85650}
+\definecolor{orchid}{HTML}{9A2BE6}
+\definecolor{orange}{HTML}{E69A2B}
+\definecolor{babyblue}{HTML}{85C7DB}
+\definecolor{salmon}{HTML}{DB8585}
+\definecolor{eggplant}{HTML}{815a71}
+\definecolor{mauve}{HTML}{a78197}
+\definecolor{oldmauve}{HTML}{4C243B}
+\definecolor{navy}{HTML}{192E5B}
+\definecolor{lightpink}{HTML}{FBC2EF}
+\definecolor{mintgreen}{HTML}{D4F0B7}
+\definecolor{lightblue}{HTML}{72A2C0}
+\definecolor{tan}{HTML}{E8D0AC}
+\definecolor{opal}{HTML}{9BC1BC}
+\definecolor{sage}{HTML}{CACAAA}
+\definecolor{oceangreen}{HTML}{59C9A5}
+\definecolor{magicmint}{HTML}{A0EEC0}
+\definecolor{persiangreen}{HTML}{1B998B}
+\definecolor{paleblue}{HTML}{B1DDF1}
+\definecolor{champagne}{HTML}{EEE3AB}
+\definecolor{powderblue}{HTML}{A9D2D5}
+
+%% Define function for perctile bars in tables.
+\newlength{\barw}
+\setlength{\barw}{0.15mm}
+\def\pctbar#1#2{%%
+    {\color{gray}\rule{#2\barw}{#1pt}} #2\%}
+
+%% Define function for divergent bars in tables.
+\def\bar#1#2{%
+    \color{#2}\rule{#1\barw}{7pt}
+}
+
+\def\divbar#1#2{%
+    \ifnum#1<0{%
+            \bar{\the\numexpr50+#1}{white}
+        \bar{-#1}{#2}
+        \bar{50}{white}
+    }
+    \else{%
+            \bar{50}{white}
+        \bar{#1}{#2}
+        \bar{\the\numexpr50-#1}{white}
+    }
+    \fi
+}
+
+\pagenumbering{gobble}
+
+\fancyhf{}
+\setlength{\headheight}{2cm}
+\fancyhead[L]{Strategy Risk Report}
+\fancyhead[R]{EOD February 18, 2022}
+
+            \setlength\footskip{0pt}
+            \fancyfoot[R]{
+                \raisebox{2cm}[0pt][0pt]
+                {\includegraphics[width=0.065\textwidth]
+                {"/home/jbecker/lgimapy/fig/logos/LG_umbrella"}}
+            }
+
+\pagestyle{fancy}
+
+
+
+
+
+
+\begin{document}
+
+
+\section*{Methodology}
+
+\pdfbookmark[0]{Methodology}{99999999}
+
+\begin{table}[H]
+\centering
+\begin{adjustbox}{width =\textwidth}
+\begin{tabu} to \linewidth{c|c|c|c|l}
+\toprule
+
+\textbf{Metric} &
+\textbf{Notation} &
+\textbf{Units} &
+\textbf{Equation} &
+\textbf{Description}\\
+
+\specialrule{2.5pt}{1pt}{1pt}
+DTS (\%) & $DTS_{pct}$ & \% & $\dfrac{DTS_{Port}}{DTS_{BM}}$ &
+    \makecell[l]{
+    Measure of Portfolio's Beta proxied by the Portfolio's DTS as a
+    percentage of the Benchmark's DTS.\\ Generally 97\% is considered neutral for
+    small ($<10$ bp) moves, while 100\% is neutral for large selloffs/rallies.
+    }\\
+\midrule
+DTS OW (abs) & $DTS^{OW}_{abs}$ & bp $\cdot$ yr & $DTS_{Port} - DTS_{BM}$ &
+    Portfolio's DTS less the Benchmark's DTS.\\
+\midrule
+DTS OW (dur) & $ DTS^{OW}_{dur}$ & yr & $\dfrac{DTS^{OW}_{abs}}{OAS_{BM}}$ &
+    \makecell[l]{
+        DTS overweight expressed in Duration terms. For example, a -0.5 value
+        can be interpreted such that for every\\100 bp move wider in BM spread,
+        you would expect to make +50 bp of performance. This measure is most \\
+        usefull for large (10+ bp) moves in the BM.
+    }\\
+
+\specialrule{2.5pt}{1pt}{1pt}
+Barbell (\%) & $Barb$ & \% (in DTS terms) &
+    \makecell{
+        $DTS_{pct} - DTS_{implied}$
+        \vspace{0.2cm} \\
+        \scriptsize
+        where $DTS_{implied} = 1 - \dfrac{OAD^{OW}_{Tsy}}{OAD_{BM}}$
+    } &
+    \makecell[l]{
+    Using our treasury position (in duration terms), we calculate what the DTS
+    of the portfolio would be if we owned\\ the BM pro rata after accounting for
+    treasuries. We then calculate how much the portfolio's DTS exceeds this \\
+    implied ``neutral" level from our given treasury position.
+    }\\
+\midrule
+Tracking Error & $TE_{n}$ & bp (annualized) &
+    \makecell{
+        $\sigma (\vec{R}_{Port} - \vec{R}_{BM})$
+        \vspace{0.2cm} \\
+        \scriptsize
+        where $\vec{R}$ is daily total returns \\
+        \scriptsize
+        over an $n$ month window
+    } &
+    \makecell[l]{
+        Annualized tracking error computed from daily performance numbers. This
+        is a backwards looking measure\\ which proxies the Alpha generated in
+        our portfolios. A $n=3$ month window is used to reduce volatilty in \\
+        the metric at the cost of slower updating to changes in the portfolio.
+    }\\
+\midrule
+Normalized TE & $\hat{TE_{n}}$ & \% & $\dfrac{TE_{n=1}}{BM_{OAS}}$ &
+    \makecell[l]{
+        Tracking error normalized by BM spread level to correct for changing volatilty
+        dynamics over time.\\ A 1 month TE was empirically chosen as it allows
+        TE to update quicker to match spread level of the BM.
+    }\\
+
+\specialrule{2.5pt}{1pt}{1pt}
+Carry & $Carry$ & bp & $OAS_{Port} - OAS_{BM}$ & Spread carry over the BM.\\
+
+\specialrule{2.5pt}{1pt}{1pt}
+Curve Duration & $CurveDur_{n}$ & yr & it's complicated &
+    \makecell[l]{
+        A duration measure for curve positioning around a pivot point $n$. For
+        example, a Curve Duration (10yr) value of +0.10 \\can be interpreted such
+        that if the treasury curve steepened 100 bp around the 10 yr, you would
+        expect to make +10 bp of\\performance. Positive (negative) values indicate
+        the portfolio is in a steepener (flattener) around the pivot point.
+    }\\
+
+\bottomrule
+\end{tabu}
+\end{adjustbox}
+\end{table}
+
+\end{document}
