@@ -1,7 +1,7 @@
 import warnings
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
-from functools import lru_cache, reduce
+from functools import lru_cache, reduce, cached_property
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -982,6 +982,39 @@ class Strategy(BondBasket, Portfolio):
         self.account_names = list(self.accounts.keys())
         self.df = self._process_input_df(df)
 
+    @cached_property
+    def benchmark_maturity_limits(self):
+        poorly_named_strategies = {
+            "GM_Blend": (5, None),
+            "INKA": (7, None),
+            "Bloomberg LDI Custom - DE": (2, None),
+            "80% US A or Better LC/20% US BBB LC": (10, None),
+        }
+        try:
+            return poorly_named_strategies[self.name]
+        except KeyError:
+            if "Long" in self.name:
+                return (10, None)
+            elif "Intermediate" in self.name:
+                return (1, 10)
+            else:
+                return (1, None)
+
+    @cached_property
+    def is_plus_strategy(self):
+        return True if "Plus" in self.name else False
+
+    @cached_property
+    def curve_pivot_point(self):
+        return {
+            (1, None): 10,
+            (2, None): 10,
+            (5, None): 10,
+            (7, None): 10,
+            (10, None): 20,
+            (1, 10): 5,
+        }[self.benchmark_maturity_limits]
+
     def _split_accounts(self):
         return {
             account_name: Account(df, account_name, self.date)
@@ -1198,10 +1231,10 @@ class Strategy(BondBasket, Portfolio):
             "cash_pct": "1%",
             "tsy_pct": "1%",
             "tsy_oad": "1f",
-            "curve_duration(5)": "3f",
-            "curve_duration(7)": "3f",
-            "curve_duration(10)": "3f",
-            "curve_duration(20)": "3f",
+            "curve_duration(5)": "2f",
+            "curve_duration(7)": "2f",
+            "curve_duration(10)": "2f",
+            "curve_duration(20)": "2f",
             "market_value": "0f",
         }
         return [fmt[prop.lower()] for prop in to_list(properties, str)]
@@ -1365,6 +1398,11 @@ class Strategy(BondBasket, Portfolio):
     def account_barbell(self):
         name = "Barbell"
         return self.calculate_account_values(lambda x: x.barbell(), name)
+
+    @lru_cache(maxsize=None)
+    def account_tracking_error(self):
+        name = "Tracking Error"
+        return self.calculate_account_values(lambda x: x.tracking_error(), name)
 
     @lru_cache(maxsize=None)
     def port_yield(self):
