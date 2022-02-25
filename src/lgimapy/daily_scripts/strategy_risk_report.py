@@ -26,7 +26,7 @@ def main():
     dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
     # dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q3_2021"
 
-    ignored_accounts = set()
+    ignored_accounts = set(["IMMC"])
     pdf_path = root("reports/strategy_risk")
 
     strategy = "US Corporate IG"
@@ -138,7 +138,8 @@ def main():
 
     # %%
     # Make summary page
-    summary_page = Document("summary", path=pdf_path)
+    summary_page_fid = "summary"
+    summary_page = Document(summary_page_fid, path=pdf_path)
     summary_page.add_preamble(
         bookmarks=True,
         orientation="landscape",
@@ -173,13 +174,20 @@ def main():
     )
     summary_page.save()
 
+    # Make methodology page.
+    methodology_page_fid = "risk_report_methodology"
+    methodology_page = Document(
+        methodology_page_fid, path=pdf_path, load_tex=methodology_page_fid
+    )
+    methodology_page.save()
+
     # %%
     # Merge all files together to build to final report.
-    fids_to_merge = ["summary"]
+    fids_to_merge = [summary_page_fid]
     for fid in df["fid"]:
         fids_to_merge.append(fid)
         fids_to_merge.append(f"{fid}_history")
-    fids_to_merge.append("risk_report_methodology")
+    fids_to_merge.append(methodology_page_fid)
 
     merge_pdfs(
         "Risk_Report",
@@ -220,6 +228,38 @@ def _load_portfolio(strategy, date, universe, ignored_accounts):
     port = port.drop_empty_accounts()
     port.expand_tickers()
     return port
+
+
+def _create_account_dispersion_table(curr_strat):
+    n_accounts = len(curr_strat.accounts)
+    pivot = curr_strat.curve_pivot_point
+
+    dispersion_metrics = {
+        "DTS*(%)": curr_strat.account_dts(),
+        "Barbell*(%)": curr_strat.account_barbell(),
+        "Tracking*Error": curr_strat.account_tracking_error(),
+        f"Curve ({pivot}yr)*Duration": curr_strat.account_curve_duration(pivot),
+        "Tsy*OAD": curr_strat.account_tsy_oad(),
+        "Cash*(%)": curr_strat.account_cash_pct(),
+    }
+    for col, vals in dispersion_metrics.items():
+        dispersion_metrics[col] = vals.sort_values(ascending=False)
+
+    if n_accounts > 10:
+        # Limit to top 5 and bottom 5 accounts with midrule between.
+        n_accounts = 10
+        account_dispersion_midrules = "5"
+        for col, vals in dispersion_metrics.items():
+            dispersion_metrics[col] = pd.concat([vals.head(), vals.tail()])
+    else:
+        account_dispersion_midrules = None
+
+    df = pd.DataFrame(index=range(n_accounts))
+    for i, (col, vals) in enumerate(dispersion_metrics.items()):
+        df["Account".center(7 + i)] = vals.index
+        df[col] = vals.values
+
+    return df, account_dispersion_midrules
 
 
 def load_portfolios(strategy, date, prev_date, ignored_accounts):
@@ -286,10 +326,6 @@ def save_single_latex_risk_page(
     date_fmt = date.strftime("%#m/%#d")
     prev_date_fmt = prev_date.strftime("%#m/%#d")
 
-    # Define special strategies.
-    hy_eligible_strategies = {"US Credit Plus", "US Long Credit Plus"}
-    is_hy_eligible_strategy = strategy in hy_eligible_strategies
-
     # Build overview table.
     properties = [
         "dts_pct",
@@ -303,7 +339,7 @@ def save_single_latex_risk_page(
     ]
     general_overview_midrules = ["Credit (\\%)", "Curve Dur (5yr)"]
     ow_metric = "OAD"
-    if is_hy_eligible_strategy:
+    if curr_strat.is_plus_strategy:
         ow_metric = "OASD"
         properties = [
             "dts_pct",
@@ -325,6 +361,7 @@ def save_single_latex_risk_page(
         ]
         general_overview_midrules = [
             "Credit (\\%)",
+            "DTS OW (abs)",
             "Curve Dur (5yr)",
         ]
 
@@ -389,29 +426,13 @@ def save_single_latex_risk_page(
     ]
 
     # Build account dispersion table.
-    n_accounts = len(curr_strat.accounts)
-    disp = {
-        "dts": curr_strat.account_dts().sort_values(ascending=False),
-        "tsy_oad": curr_strat.account_tsy_oad().sort_values(ascending=False),
-        "cash": curr_strat.account_cash_pct().sort_values(ascending=False),
-    }
-    if n_accounts > 10:
-        # Limit to top 5 and bottom 5 accounts with midrule between.
-        n_accounts = 10
-        account_dispersion_midrules = "5"
-        for key, val in disp.items():
-            disp[key] = pd.concat([val.head(), val.tail()])
-    else:
-        account_dispersion_midrules = None
+    # %%
+    (
+        account_dispersion_table,
+        account_dispersion_midrules,
+    ) = _create_account_dispersion_table(curr_strat)
 
-    account_table = pd.DataFrame(index=range(n_accounts))
-    account_table["Account"] = disp["dts"].index
-    account_table["DTS*(%)"] = disp["dts"].values
-    account_table["Account "] = disp["tsy_oad"].index
-    account_table["Tsy*OAD"] = disp["tsy_oad"].values
-    account_table[" Account "] = disp["cash"].index
-    account_table["Cash*(%)"] = disp["cash"].values
-
+    # %%
     # Build bond change in overweight table.
     n = n_table_rows
     bond_ow_df = pd.concat(
@@ -504,7 +525,7 @@ def save_single_latex_risk_page(
     ticker_ow_table[f"Current * {ow_metric} "] = ticker_ow_df["curr"].values[:n]
 
     # Build HY ticker overweight table if necessry.
-    if is_hy_eligible_strategy:
+    if curr_strat.is_plus_strategy:
         hy_ticker_ow_df = pd.concat(
             [
                 curr_strat.HY_ticker_overweights(ow_metric).rename("curr"),
@@ -585,7 +606,7 @@ def save_single_latex_risk_page(
             "right": 0.5,
             "top": 0.3,
             "bottom": 0.2,
-            "paperheight": 29.5,
+            "paperheight": 31.5 if curr_strat.is_plus_strategy else 28,
         },
         header=page.header(
             left="Strategy Risk Report",
@@ -628,8 +649,6 @@ def save_single_latex_risk_page(
         "Performance": "+1f",
     }
 
-    indents = {"Port DTS (%)", "BM DTS (%)"}
-
     ticker_sector_ow_table_kwargs = {
         "col_fmt": "lrc|rc|rcc|rcc",
         "multi_row_header": True,
@@ -648,12 +667,17 @@ def save_single_latex_risk_page(
         )
 
     # Overview tables.
+    if curr_strat.is_plus_strategy:
+        overview_widths = [0.42, 0.55]
+        rating_and_individual_bonds_widths = [0.29, 0.68]
+    else:
+        overview_widths = [0.38, 0.59]
+        rating_and_individual_bonds_widths = [0.32, 0.65]
     edits = {}
     (
         edits["overview"],
-        edits["top_level"],
-        edits["bm_tsy_buckets"],
-    ) = page.add_subfigures(n=3, valign="t", widths=[0.25, 0.15, 0.5])
+        edits["rating_and_individual_bonds"],
+    ) = page.add_minipages(n=2, valign="t", widths=overview_widths)
     with page.start_edit(edits["overview"]):
         page.add_table(
             overview_table,
@@ -662,51 +686,15 @@ def save_single_latex_risk_page(
             midrule_locs=general_overview_midrules,
             adjust=True,
         )
-    with page.start_edit(edits["top_level"]):
-        page.add_table(
-            gen_ow_table,
-            caption="\\scriptsize Rating/Top Level Sector Overweights",
-            col_fmt="lcc",
-            prec=2,
-            indent_subindexes=True,
-            midrule_locs=["Corp", "Non-Corp"],
-            adjust=True,
-            multi_row_header=True,
+    with page.start_edit(edits["rating_and_individual_bonds"]):
+        (
+            edits["top_level"],
+            edits["individual_bonds_change"],
+        ) = page.add_minipages(
+            n=2, valign="t", widths=rating_and_individual_bonds_widths
         )
-
-    bm_tsy_table.index = [
-        f"~{idx}" if idx in indents else idx for idx in bm_tsy_table.index
-    ]
-    with page.start_edit(edits["bm_tsy_buckets"]):
-        page.add_table(
-            bm_tsy_table,
-            caption="Curve Risk by Respective Benchmark Treasury",
-            col_fmt="l|rrrrrrr|r|r",
-            indent_subindexes=True,
-            midrule_locs=["Tsy MV", "Credit OAD OW", "DTS OW"],
-            adjust=True,
-            row_prec={idx: row_precs[idx] for idx in bm_tsy_table.index},
-        )
-
-    # Account dispersion and Individual bond purchases.
-    (
-        edits["account_dispersion"],
-        edits["individual_bonds_change"],
-    ) = page.add_subfigures(n=2, valign="t", widths=[0.475, 0.475])
-    with page.start_edit(edits["account_dispersion"]):
-        page.add_table(
-            account_table,
-            caption="Account Dispersion",
-            col_fmt="lrc|rc|rc",
-            multi_row_header=True,
-            midrule_locs=account_dispersion_midrules,
-            prec={"DTS*(%)": "1%", "Tsy*OAD": "2f", "Cash*(%)": "1%"},
-            font_size="scriptsize",
-            hide_index=True,
-            align="left",
-        )
-
-        if is_hy_eligible_strategy:
+        # Put HY issuer table below the other two.
+        if curr_strat.is_plus_strategy:
             page.add_table(
                 hy_ticker_ow_table,
                 caption="HY Issuers",
@@ -723,6 +711,18 @@ def save_single_latex_risk_page(
                 adjust=True,
                 align="left",
             )
+
+    with page.start_edit(edits["top_level"]):
+        page.add_table(
+            gen_ow_table,
+            caption="\\scriptsize Rating/Top Level Sector Overweights",
+            col_fmt="lcc",
+            prec=2,
+            indent_subindexes=True,
+            midrule_locs=["Corp", "Non-Corp"],
+            adjust=True,
+            multi_row_header=True,
+        )
     with page.start_edit(edits["individual_bonds_change"]):
         page.add_table(
             bond_ow_table,
@@ -732,7 +732,7 @@ def save_single_latex_risk_page(
             align="left",
             multi_row_header=True,
             hide_index=True,
-            font_size="scriptsize",
+            adjust=True,
         )
 
     # Issuer and sector overweight and change.
@@ -759,8 +759,32 @@ def save_single_latex_risk_page(
         **ticker_sector_ow_table_kwargs,
     )
 
+    # Account dispersion table.
+    page.add_table(
+        account_dispersion_table,
+        caption="Account Dispersion",
+        col_fmt=("l" + "rc|" * (len(account_dispersion_table.columns) // 2))[
+            :-1
+        ],
+        multi_row_header=True,
+        midrule_locs=account_dispersion_midrules,
+        prec={
+            "DTS*(%)": "1%",
+            "Barbell*(%)": "1%",
+            "Tracking*Error": "0f",
+            f"Curve ({curr_strat.curve_pivot_point}yr)*Duration": "2f",
+            "Tsy*OAD": "2f",
+            "Cash*(%)": "1%",
+        },
+        font_size="scriptsize",
+        hide_index=True,
+        align="left",
+        adjust=True,
+    )
+
     page.add_pagebreak()
     page.add_section(curr_strat.latex_name, bookmark=False)
+    indents = {"Port DTS (%)", "BM DTS (%)"}
 
     # Rating bucket risk.
     rating_risk_table.columns = [
@@ -783,6 +807,24 @@ def save_single_latex_risk_page(
             midrule_locs=["Credit OAD OW", "DTS OW"],
             adjust=True,
             row_prec={idx: row_precs[idx] for idx in rating_risk_table.index},
+        )
+
+    # Benchmark treasury table.
+    (_, edits["bm_treasury_buckets"], __) = page.add_subfigures(
+        n=3, valign="t", widths=[0.1, 0.75, 0.1]
+    )
+    bm_tsy_table.index = [
+        f"~{idx}" if idx in indents else idx for idx in bm_tsy_table.index
+    ]
+    with page.start_edit(edits["bm_treasury_buckets"]):
+        page.add_table(
+            bm_tsy_table,
+            caption="Curve Risk by Respective Benchmark Treasury",
+            col_fmt="l|rrrrrrr|r|r",
+            indent_subindexes=True,
+            midrule_locs=["Tsy MV", "Credit OAD OW", "DTS OW"],
+            adjust=True,
+            row_prec={idx: row_precs[idx] for idx in bm_tsy_table.index},
         )
 
     # Maturity bucket risk.
