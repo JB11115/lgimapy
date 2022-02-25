@@ -165,7 +165,7 @@ def update_EUR_spreads(doc, color, save=True):
         label=lbl,
     )
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    axes[0].legend(loc="upper right", fancybox=True, title=title, shadow=True)
+    axes[0].legend(loc="upper left", fancybox=True, title=title, shadow=True)
     axes[0].set_title(f"EUR Market Credit", fontweight="bold")
 
     # Plot short term scores below LC index.

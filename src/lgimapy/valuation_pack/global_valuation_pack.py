@@ -4,6 +4,7 @@ from lgimapy.latex import Document
 from GBP_overview import update_GBP_credit_overview
 from EUR_overview import update_EUR_credit_overview
 
+
 # %%
 
 

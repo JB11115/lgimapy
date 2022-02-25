@@ -122,7 +122,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     )
 
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    axes[0].legend(loc="upper right", fancybox=True, title=title, shadow=True)
+    axes[0].legend(loc="upper left", fancybox=True, title=title, shadow=True)
     axes[0].set_title("US Market Credit", fontweight="bold")
     # Plot short term scores below LC index.
     axes[1].plot(df["Short Term"], c="k", ls="--", lw=2)
@@ -203,7 +203,7 @@ def update_credit_overview(fig_dir, ix_d, save=True):
         label="Corrected Index",
     )
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    axes[0].legend(loc="upper right", fancybox=True, title=title, shadow=True)
+    axes[0].legend(loc="upper left", fancybox=True, title=title, shadow=True)
     axes[0].set_title("US Long Credit", fontweight="bold")
 
     # Plot short term scores below LC index.
