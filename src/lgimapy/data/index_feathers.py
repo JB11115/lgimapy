@@ -59,11 +59,11 @@ def create_feather(fid, db):
     # Add daily files to s3 drop point.
     s3_dirs_d = {
         "prod": [
-            "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds-history/",
+            "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds",
         ],
         "dev": [
-            "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds-history",
-            "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds-history",
+            "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds",
+            "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
             "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
         ],
     }
@@ -79,9 +79,9 @@ def create_feather(fid, db):
             filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
             for s3_dir in s3_dirs:
                 s3_fid = f"{s3_dir}/{mkt}/{filename}.parquet"
-                wr.s3.to_parquet(
-                    date_df, path=s3_fid, index=False, boto3_session=sess
-                )
+                # wr.s3.to_parquet(
+                #     date_df, path=s3_fid, index=False, boto3_session=sess
+                # )
 
 
 def fill_missing_HY_index_flags(ix):
