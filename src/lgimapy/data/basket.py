@@ -1342,3 +1342,6 @@ class BondBasket:
             return percentile(df[col], weights=df["MarketValue"], q=50)
 
         return self.df[cols].groupby("Date").apply(daily_median)
+
+    def is_empty(self):
+        return not len(self.df)
