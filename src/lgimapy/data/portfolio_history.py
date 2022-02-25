@@ -119,6 +119,8 @@ def update_date(date, fid, override_from_date, specific_strategies):
         "US Long Government/Credit",
     }
     strategies = list(all_strategies - ignored_strategies - large_strategies)
+    # Put largest strategies at the beginning of the list
+    # to maximize the use of parallel processing.
     for strategy in large_strategies:
         strategies.insert(0, strategy)
 
