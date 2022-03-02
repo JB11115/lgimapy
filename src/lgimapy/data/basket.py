@@ -2,7 +2,7 @@ import sys
 import warnings
 from bisect import bisect_left
 from collections import defaultdict, OrderedDict
-from functools import lru_cache
+from functools import lru_cache, cached_property
 from importlib import import_module
 from inspect import getfullargspec
 
@@ -75,12 +75,19 @@ class BondBasket:
         self.market = check_market(market)
         self._constraints = dict() if constraints is None else constraints
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def dates(self):
         """List[datetime]: Memoized unique sorted dates in index."""
         dates = list(pd.to_datetime(self.df["Date"].unique()))
         return [d for d in dates if d not in self._holiday_dates]
+
+    @cached_property
+    def start_date(self):
+        return self.dates[0]
+
+    @cached_property
+    def end_date(self):
+        return self.dates[-1]
 
     def _unique(self, col, df=None):
         """
@@ -90,38 +97,32 @@ class BondBasket:
         df = self.df if df is None else df
         return sorted(list(df[col].unique().dropna()))
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def cusips(self):
         """List[str]: Memoized unique CUSIPs in index."""
         return self._unique("CUSIP")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def isins(self):
         """List[str]: Memoized unique ISINs in index."""
         return self._unique("ISIN")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def sectors(self):
         """List[str]: Memoized unique sorted sectors in index."""
         return self._unique("Sector")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def subsectors(self):
         """List[str]: Memoized unique sorted subsectors in index."""
         return self._unique("Subsector")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def issuers(self):
         """List[str]: Memoized unique sorted issuers in index."""
         return self._unique("Issuer")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def tickers(self):
         """List[str]: Memoized unique sorted tickers in index."""
         return self._unique("Ticker")
@@ -131,28 +132,24 @@ class BondBasket:
         """List[:class:`Bond`]: List of individual bonds in index."""
         return [Bond(bond) for _, bond in self.df.iterrows()]
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def all_trade_dates(self):
         """List[datetime]: Memoized list of trade dates."""
         return list(self._trade_date_df.index)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _trade_dates(self):
         """List[datetime]: Memoized list of trade dates."""
         trade_dates = self._trade_date_df[self._trade_date_df["holiday"] == 0]
         return list(trade_dates.index)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _holiday_dates(self):
         """List[datetime]: Memoized list of holiday dates."""
         holidays = self._trade_date_df[self._trade_date_df["holiday"] == 1]
         return list(holidays.index)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _trade_date_df(self):
         """pd.DataFrame: Memoized trade date boolean series for holidays."""
         if self.market == "US":
@@ -161,8 +158,7 @@ class BondBasket:
             fid = root(f"data/{self.market}/trade_dates_{sys.platform}.parquet")
         return pd.read_parquet(fid)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _ratings(self):
         """Dict[str: int]: Ratings map from letters to numeric."""
         return load_json("ratings")
@@ -182,8 +178,7 @@ class BondBasket:
     def issuer_df(self):
         return groupby(self.df, "Issuer")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _ratings_changes_df(self):
         """pd.DataFrame: Rating change history of basket."""
         fid = root("data/rating_changes.parquet")
