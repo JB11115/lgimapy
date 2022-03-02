@@ -230,6 +230,51 @@ Curve Duration & $CurveDur_{n}$ & yr & it's complicated &
         the portfolio is in a steepener (flattener) around the pivot point.
     }\\
 
+\specialrule{2.5pt}{1pt}{1pt}
+Performance & $Perf_{t}$ & bp &
+    \makecell{
+        $R^{Port}_{t} -  R^{BM}_{t}$
+        \vspace{0.2cm} \\
+        \scriptsize
+        where $R^{Port}_{t} =
+            \dfrac{\sum^{Port}_{b} R_{t}(b) \cdot MV^{Port}_{t}(b)}{\sum^{Port}_{b} MV^{Port}_{t}(b)}$ \\
+        \scriptsize
+        and $R^{BM}_{t} =
+            \dfrac{\sum^{BM}_{b} R_{t}(b) \cdot MV^{BM}_{t}(b)}{\sum^{BM}_{b} MV^{BM}_{t}(b)}$ \\
+        \scriptsize
+        and $b$ refers to individual CUSIPs
+    } &
+    \makecell[l]{
+    Daily performance for day $t$ approximated by market value weighting
+    the total returns of each bond (including treasuries)\\ held in the
+    portfolio vs the benchmark. Intra-day transactions are not accounted for.
+    }\\
+\midrule
+Daily Attribution & $Attr_{t}$ & bp &
+    \makecell{
+        $\sum^{Bonds}_{b} \Delta OAS_{t}(b) \cdot \overline{OAD}^{OW}_{t}(b)$
+        \vspace{0.4cm} \\
+        \scriptsize
+        where $\Delta OAS_{t}(b) = OAS_{t}(b) - OAS_{t-1}(b)$
+        \vspace{0.2cm} \\
+        \scriptsize
+        and $\overline{OAD}^{OW}_{t}(b) =
+            \dfrac{OAD^{OW}_{t}(b) + OAD^{OW}_{t-1}(b)}{2}$ \\
+    } &
+    \makecell[l]{
+        Daily attribution for day $t$ approximated by multiplying the spread
+        change (from closing spreads) by our duration \\ overweight in individual
+        CUSIPs, and summing over the specified basket (ticker, sector, etc.).
+        This back-of-the-envelope \\ spread methodology does not take into account
+        intra-day moves or transactions levels.
+    }\\
+\midrule
+Attribution & $Attr$ & bp & $\sum_{t} Attr_{t}$ &
+    \makecell[l]{
+        Attribution over a specified period, calculated by simply summing
+        daily attribution values.
+    }\\
+
 \bottomrule
 \end{tabu}
 \end{adjustbox}
