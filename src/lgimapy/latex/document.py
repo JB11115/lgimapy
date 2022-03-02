@@ -14,7 +14,7 @@ import PyPDF4
 
 import lgimapy.vis as vis
 from lgimapy.latex import latex_array, latex_matrix, latex_table, latex_figure
-from lgimapy.utils import mkdir, root, to_list
+from lgimapy.utils import mkdir, root, to_list, replace_multiple
 
 # %%
 
@@ -462,6 +462,37 @@ class LatexScript:
             return unique_edit_IDs[0]
         else:
             return tuple(unique_edit_IDs)
+
+    def latex_fmt(self):
+        repl = {
+            "\$": "$",
+            "\\textbackslash ": "\\",
+            "\\{": "{",
+            "\{": "{",
+            "\\}": "}",
+            "\}": "}",
+            "\_": "_",
+            ">": "$>$",
+            "<": "$<$",
+            "\\textasciicircum ": "^",
+            "\\begin{tabular}": "\\begin{tabu} to \linewidth",
+            "\end{tabular}": "\end{tabu}",
+        }
+
+    @property
+    def font_sizes(self):
+        return [
+            "tiny",
+            "scriptsize",
+            "footnotesize",
+            "small",
+            "normalsize",
+            "large",
+            "Large",
+            "LARGE",
+            "huge",
+            "Huge",
+        ]
 
 
 class Document(LatexScript):
