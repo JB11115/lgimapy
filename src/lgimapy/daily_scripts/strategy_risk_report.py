@@ -9,6 +9,7 @@ from tqdm import tqdm
 import lgimapy.vis as vis
 from lgimapy.data import Database, update_portfolio_history
 from lgimapy.latex import Document, Page, merge_pdfs
+from lgimapy.portfolios import AttributionIndex
 from lgimapy.utils import load_json, root, replace_multiple, Time
 
 # %%
@@ -26,7 +27,7 @@ def main():
     dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
     # dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q3_2021"
 
-    ignored_accounts = set(["IMMC"])
+    ignored_accounts = set(["SESIBNM", "SEUIBNM"])
     pdf_path = root("reports/strategy_risk")
 
     strategy = "US Corporate IG"
@@ -72,13 +73,6 @@ def main():
         "INKA",
         "US Long Corporate A or better",
     ]
-    midrule_strats = [
-        "US Long Corporate",
-        "US Corporate IG",
-        "Liability Aware Long Duration Credit",
-        "80% US A or Better LC/20% US BBB LC",
-        "Barclays-Russell LDI Custom - DE",
-    ]
 
     # %%
 
@@ -120,70 +114,17 @@ def main():
         .reindex(strategies)
         .dropna(subset=["fid"])
     )
-    summary = pd.concat(df["summary"].values, axis=1, sort=False).T
-    summary.index = [ix.replace("_", " ") for ix in summary.index]
-    summary.index.rename("Strategy", inplace=True)
-    if len(summary.columns) > 15:
-        summary = summary[list(summary)[:15]]
-    prec = {}
-    for col in summary.columns:
-        if "OAD" in col:
-            prec[col] = "2f"
-        elif "Performance" in col:
-            prec[col] = "+1f"
-        elif "Tracking" in col:
-            prec[col] = "0f"
-        else:
-            prec[col] = "2%"
 
-    # %%
-    # Make summary page
     summary_page_fid = "summary"
-    summary_page = Document(summary_page_fid, path=pdf_path)
-    summary_page.add_preamble(
-        bookmarks=True,
-        orientation="landscape",
-        bar_size=7,
-        margin={
-            "left": 0.5,
-            "right": 0.5,
-            "top": 0.3,
-            "bottom": 0.2,
-        },
-        header=summary_page.header(
-            left="Strategy Risk Report",
-            right=f"EOD {date.strftime('%B %#d, %Y')}",
-        ),
-        footer=summary_page.footer(logo="LG_umbrella"),
-    )
-    summary_page.add_section("Summary")
-    saved_strategies = list(summary.index)
-    strategy_midrules = [
-        saved_strategies.index(strat)
-        for strat in midrule_strats
-        if strat in saved_strategies
-    ]
-    summary_page.add_table(
-        summary.reset_index(),
-        col_fmt="ll|c|c|cc|c|r|cccc|ccccc",
-        prec=prec,
-        multi_row_header=True,
-        adjust=True,
-        hide_index=True,
-        midrule_locs=strategy_midrules,
-    )
-    summary_page.save()
-
-    # Make methodology page.
+    build_summary_page(df, date, summary_page_fid, pdf_path)
+    attribution_page_fid = "attribution"
+    build_attribution_page("P-LD", attribution_page_fid, pdf_path)
     methodology_page_fid = "risk_report_methodology"
-    methodology_page = Document(
-        methodology_page_fid, path=pdf_path, load_tex=methodology_page_fid
-    )
-    methodology_page.save()
+    build_methodology_page(methodology_page_fid, pdf_path)
 
     # %%
     # Merge all files together to build to final report.
-    fids_to_merge = [summary_page_fid]
+    fids_to_merge = [summary_page_fid, attribution_page_fid]
     for fid in df["fid"]:
         fids_to_merge.append(fid)
         fids_to_merge.append(f"{fid}_history")
@@ -206,6 +147,162 @@ def main():
 
 
 # %%
+def build_summary_page(df, date, fid, pdf_path):
+    """Make summary page table and save the pdf."""
+    # Get summary table from parallel result.
+    summary = pd.concat(df["summary"].values, axis=1, sort=False).T
+    summary.index = [ix.replace("_", " ") for ix in summary.index]
+    summary.index.rename("Strategy", inplace=True)
+    # Remove any unnecessary columns.
+    if len(summary.columns) > 15:
+        summary = summary[list(summary)[:15]]
+
+    # Create LaTeX Document with proper preabmle.
+    summary_page = Document(fid, path=pdf_path)
+    summary_page.add_preamble(
+        bookmarks=True,
+        orientation="landscape",
+        bar_size=7,
+        margin={
+            "left": 0.5,
+            "right": 0.5,
+            "top": 0.3,
+            "bottom": 0.2,
+        },
+        header=summary_page.header(
+            left="Strategy Risk Report",
+            right=f"EOD {date.strftime('%B %#d, %Y')}",
+        ),
+        footer=summary_page.footer(logo="LG_umbrella"),
+    )
+    summary_page.add_section("Summary")
+
+    # Find midrule locations.
+    saved_strategies = list(summary.index)
+    midrule_strats = [
+        "US Long Corporate",
+        "US Corporate IG",
+        "Liability Aware Long Duration Credit",
+        "80% US A or Better LC/20% US BBB LC",
+        "Barclays-Russell LDI Custom - DE",
+    ]
+    strategy_midrules = [
+        saved_strategies.index(strat)
+        for strat in midrule_strats
+        if strat in saved_strategies
+    ]
+
+    # Get column precisions.
+    prec = {}
+    for col in summary.columns:
+        if "OAD" in col:
+            prec[col] = "2f"
+        elif "Performance" in col:
+            prec[col] = "+1f"
+        elif "Tracking" in col:
+            prec[col] = "0f"
+        else:
+            prec[col] = "2%"
+
+    # Format table and save.
+    summary_page.add_table(
+        summary.reset_index(),
+        col_fmt="ll|c|c|cc|c|r|cccc|ccccc",
+        prec=prec,
+        multi_row_header=True,
+        adjust=True,
+        hide_index=True,
+        midrule_locs=strategy_midrules,
+    )
+    summary_page.save()
+
+
+def build_attribution_page(account, fid, pdf_path):
+    db = Database()
+    attr = AttributionIndex(account, start=db.date("YTD"))
+    attribution_page = Document(fid, path=pdf_path)
+    attribution_page.add_preamble(
+        bookmarks=True,
+        orientation="landscape",
+        bar_size=7,
+        margin={
+            "left": 0.5,
+            "right": 0.5,
+            "top": 0.3,
+            "bottom": 0.2,
+        },
+        header=attribution_page.header(
+            left="Strategy Risk Report",
+            right=f"EOD {db.date('today').strftime('%B %#d, %Y')}",
+        ),
+        footer=attribution_page.footer(logo="LG_umbrella"),
+        table_caption_justification="c",
+    )
+    attribution_page.add_section(f"Attribution ({account})")
+    dates_d = {
+        "today": {
+            "name": f"Daily Attribution (for {db.date('today'):%b %-d})",
+            "prec": 2,
+        },
+        "1M": {
+            "name": f"1M Attribution (since {db.date('1M'):%b %-d})",
+            "prec": 1,
+        },
+        "YEAR_START": {
+            "name": f"YTD Attribution (since {db.date('YEAR_START'):%b %-d})",
+            "prec": 1,
+        },
+    }
+    table_widths = {"Ticker": 0.22, "Sector": 0.3, "Market Segment": 0.45}
+    fontsize = "tiny"
+    for date, d in dates_d.items():
+        attribution_page.add_subsection(d["name"], bookmark=False)
+        edits = attribution_page.add_minipages(
+            n=len(table_widths), valign="t", widths=table_widths.values()
+        )
+        PnL_cols = ["PnL", "PnL "]
+        col_prec = {col: f"+{d['prec']}f" for col in PnL_cols}
+        with attribution_page.start_edit(edits[0]):
+            table = attr.best_worst_df(
+                attr.tickers(start=db.date(date)), prec=d["prec"]
+            )
+            attribution_page.add_table(
+                table,
+                caption="Tickers",
+                font_size=fontsize,
+                col_fmt="l|cr|cr",
+                prec=col_prec,
+            )
+        with attribution_page.start_edit(edits[1]):
+            table = attr.best_worst_df(
+                attr.sectors(start=db.date(date)), prec=d["prec"]
+            )
+            attribution_page.add_table(
+                table,
+                caption="Sectors",
+                font_size=fontsize,
+                col_fmt="l|cr|cr",
+                prec=col_prec,
+            )
+        with attribution_page.start_edit(edits[2]):
+            table = attr.best_worst_df(
+                attr.market_segments(start=db.date(date)), prec=d["prec"]
+            )
+            attribution_page.add_table(
+                table,
+                caption="Market Segments",
+                font_size=fontsize,
+                col_fmt="l|cr|cr",
+                prec=col_prec,
+            )
+    attribution_page.save()
+
+
+def build_methodology_page(fid, pdf_path):
+    methodology_page = Document(fid, path=pdf_path, load_tex=fid)
+    methodology_page.save()
+
+
 def col_prec(df, ow_metric):
     prec = {}
     for col in df.columns:
@@ -339,7 +436,7 @@ def save_single_latex_risk_page(
     ]
     general_overview_midrules = ["Credit (\\%)", "Curve Dur (5yr)"]
     ow_metric = "OAD"
-    if curr_strat.is_plus_strategy:
+    if curr_strat.is_plus_strategy():
         ow_metric = "OASD"
         properties = [
             "dts_pct",
@@ -426,13 +523,11 @@ def save_single_latex_risk_page(
     ]
 
     # Build account dispersion table.
-    # %%
     (
         account_dispersion_table,
         account_dispersion_midrules,
     ) = _create_account_dispersion_table(curr_strat)
 
-    # %%
     # Build bond change in overweight table.
     n = n_table_rows
     bond_ow_df = pd.concat(
@@ -525,7 +620,7 @@ def save_single_latex_risk_page(
     ticker_ow_table[f"Current * {ow_metric} "] = ticker_ow_df["curr"].values[:n]
 
     # Build HY ticker overweight table if necessry.
-    if curr_strat.is_plus_strategy:
+    if curr_strat.is_plus_strategy():
         hy_ticker_ow_df = pd.concat(
             [
                 curr_strat.HY_ticker_overweights(ow_metric).rename("curr"),
@@ -606,7 +701,7 @@ def save_single_latex_risk_page(
             "right": 0.5,
             "top": 0.3,
             "bottom": 0.2,
-            "paperheight": 31.5 if curr_strat.is_plus_strategy else 28,
+            "paperheight": 31.5 if curr_strat.is_plus_strategy() else 28,
         },
         header=page.header(
             left="Strategy Risk Report",
@@ -667,7 +762,7 @@ def save_single_latex_risk_page(
         )
 
     # Overview tables.
-    if curr_strat.is_plus_strategy:
+    if curr_strat.is_plus_strategy():
         overview_widths = [0.42, 0.55]
         rating_and_individual_bonds_widths = [0.29, 0.68]
     else:
@@ -694,7 +789,7 @@ def save_single_latex_risk_page(
             n=2, valign="t", widths=rating_and_individual_bonds_widths
         )
         # Put HY issuer table below the other two.
-        if curr_strat.is_plus_strategy:
+        if curr_strat.is_plus_strategy():
             page.add_table(
                 hy_ticker_ow_table,
                 caption="HY Issuers",
