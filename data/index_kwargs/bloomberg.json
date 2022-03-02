@@ -2304,6 +2304,24 @@
         ],
         "in_stats_index": true
     },
+    "SOVEREIGN_EX_LATAM": {
+        "name": "Sovs Ex LATAM",
+        "OAS": [
+            -10,
+            3000
+        ],
+        "sector": [
+            "SOVEREIGN"
+        ],
+        "ticker": [
+            "CHILE",
+            "MEX",
+            "PANAMA",
+            "PERU"
+        ],
+        "special_rules": "~Ticker",
+        "in_stats_index": true
+    },
     "TOBACCO": {
         "name": "Tobacco",
         "OAS": [
