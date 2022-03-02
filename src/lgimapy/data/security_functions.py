@@ -60,6 +60,7 @@ def clean_dtypes(df):
             "MLFI_OAS",
             "MLFI_YieldtoMat",
             "MLFI_YieldtoWorst",
+            "PnL",
         ],
         "int8": [
             "OriginalMaturity",

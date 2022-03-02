@@ -1,4 +1,9 @@
-def IG_sectors(with_tildes=False, with_chevrons=False, drop_chevrons=False):
+def IG_sectors(
+    with_tildes=False,
+    with_chevrons=False,
+    drop_chevrons=False,
+    unique=False,
+):
     """
     List[str]:
         IG sectors used for daily snapshot.
@@ -58,6 +63,23 @@ def IG_sectors(with_tildes=False, with_chevrons=False, drop_chevrons=False):
         "SUPRANATIONAL",
         "UNIVERSITY",
     ]
+    if unique:
+        # Drop top level sectors
+        sectors = [s for s in sectors if not s.startswith(">")]
+
+        # Go through the sector list backwards, keeping
+        # the L3 sectors only if they don't have an L4.
+        unique_sectors = []
+        prev_sector_is_L4 = False
+        for sector in reversed(sectors):
+            is_L4 = sector.startswith("~")
+            if is_L4 or not prev_sector_is_L4:
+                unique_sectors.append(sector)
+            if sector == "~LATAM_SOVEREIGN":
+                unique_sectors.append("SOVEREIGN_EX_LATAM")
+            prev_sector_is_L4 = is_L4
+        sectors = reversed(unique_sectors)
+
     if drop_chevrons:
         sectors = [s for s in sectors if not s.startswith(">")]
     if not with_tildes:
