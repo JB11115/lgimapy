@@ -556,15 +556,31 @@ def plot_bb_outlooks(df, path):
     vis.close()
 
 
-def add_recent_table(db, doc, caption, n=10, **kwargs):
+def add_recent_table(db, doc, caption, n=10):
+    if caption == "Rising Stars":
+        index = "H0A0"
+        index_col = "H0A0Flag"
+        kwargs = {"rising_stars": True}
+    elif caption == "Fallen Angels":
+        index = "BBG-Barclays US IG Credit"
+        index_col = "USCreditReturnsFlag"
+        kwargs = {"fallen_angels": True}
+    else:
+        raise ValueError(
+            f"`caption` must be either 'Fallen Angels' or 'Rising Stars', "
+            f"received {caption}"
+        )
+
     recent_df = db.rating_changes(start=db.date("2y"), **kwargs)
+    recent_df["index_eligible"] = recent_df[index_col]
     amt_outstanding_col = "Amount (\\$M)*Outstanding"
+    cols_to_aggregate = ["AmountOutstanding", "Date_NEW", "index_eligible"]
     ticker_df = (
         groupby(
             recent_df,
             "Ticker",
-            cols_to_aggregate=["AmountOutstanding", "Date_NEW"],
-            additional_col_rules={"Date_NEW": mode},
+            cols_to_aggregate=cols_to_aggregate,
+            additional_col_rules={"Date_NEW": mode, "index_eligible": np.sum},
         )
         .rename(
             columns={
@@ -577,13 +593,23 @@ def add_recent_table(db, doc, caption, n=10, **kwargs):
     )
     ticker_df = ticker_df[ticker_df[amt_outstanding_col] > 0]
     ticker_df["Date"] = ticker_df["Date"].dt.strftime("%b %d, %Y")
+    ticker_df.index = [
+        f"\\textbf{{{ticker}}}" if index_eligible_bonds > 0 else ticker
+        for ticker, index_eligible_bonds in ticker_df["index_eligible"].items()
+    ]
+    table = ticker_df.drop("index_eligible", axis=1).head(n)
+
     doc.add_table(
-        ticker_df.head(n),
+        table,
         caption=f"Recent {caption}",
         font_size="scriptsize",
         multi_row_header=True,
         col_fmt="l|r|r",
         prec={amt_outstanding_col: "0f"},
+        table_notes=(
+            f"*Bold tickers indicate issuers with bonds "
+            f"formerly in {index} Index."
+        ),
     )
 
 
@@ -652,9 +678,9 @@ def update_fallen_angels_rising_stars(fid):
         recent_rs_table, recent_fa_table = doc.add_subfigures(n=2, valign="t")
         doc.add_figure("BB_outlooks")
     with doc.start_edit(recent_rs_table):
-        add_recent_table(db, doc, "Rising Stars", rising_stars=True)
+        add_recent_table(db, doc, "Rising Stars")
     with doc.start_edit(recent_fa_table):
-        add_recent_table(db, doc, "Fallen Angels", fallen_angels=True)
+        add_recent_table(db, doc, "Fallen Angels")
     doc.save()
 
 
