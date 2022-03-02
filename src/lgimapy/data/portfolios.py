@@ -1000,7 +1000,6 @@ class Strategy(BondBasket, Portfolio):
             else:
                 return (1, None)
 
-    @cached_property
     def is_plus_strategy(self):
         return True if "Plus" in self.name else False
 
