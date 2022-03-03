@@ -13,7 +13,7 @@ from lgimapy.utils import mkdir, root, Time
 # %%
 
 
-def create_feather(fid, db, force, s3):
+def create_feather(fid, db, force, s3, s3_limit=5):
     """
     Create feather files specified month from SQL.
 
@@ -92,7 +92,7 @@ def create_feather(fid, db, force, s3):
             )
             n_dates = len(df["Date"].unique())
             for i, (date, date_df) in enumerate(df.groupby("Date")):
-                if i < (n_dates - 5):
+                if i < (n_dates - s3_limit):
                     continue
                 filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
                 for s3_dir in s3_dirs:
