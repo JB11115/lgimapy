@@ -1390,7 +1390,7 @@ class BondBasket:
 
         db.load_market_data(date=from_date)
         prev_ix = db.build_market_index(isin=self.isins)
-        prev_oas_d = prev_ix.df[["ISIN", col]].set_index("ISIN")[col].to_dict()
+        prev_oas_d = dict(zip(prev_ix.df["ISIN"], prev_ix.df[col]))
         self.df[f"{col}_{date_str}"] = self.df["ISIN"].map(prev_oas_d)
         self.df[f"{col}_abs_Change_{date_str}"] = (
             self.df[f"{col}"] - self.df[f"{col}_{date_str}"]
