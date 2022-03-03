@@ -90,8 +90,10 @@ def create_feather(fid, db, force, s3):
                 aws_access_key_id=keys[f"{stage}_access_key"],
                 aws_secret_access_key=keys[f"{stage}_secret_access_key"],
             )
-
-            for date, date_df in df.groupby("Date"):
+            n_dates = len(df["Date"].unique())
+            for i, (date, date_df) in enumerate(df.groupby("Date")):
+                if i < (n_dates - 5):
+                    continue
                 filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
                 for s3_dir in s3_dirs:
                     s3_fid = f"{s3_dir}/{mkt}/{filename}.parquet"
