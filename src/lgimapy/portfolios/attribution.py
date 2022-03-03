@@ -26,15 +26,21 @@ class AttributionIndex:
 
     Parameters
     ----------
-    account: str or List[str], optional
-        Account(s) to include in scrape.
+    account: str, optional
+        Account to include use for attribution estimates.
     start: datetime, optional
-        Starting date for scrape.
+        Starting date for scrape. If none is provided (and no `ix` is
+        provided) defaults to most recent trade date.
     end: datetime, optional
-        Ending date for scrape.
+        Ending date for scrape. If none is provided (and no `ix` is
+        provided) defaults to most recent trade date.
+    ix: :class:`Index`, optional
+        An existing index to append an attribution column to.
+    db: :class:`Database`, optional
+        An existing :class:`Database` for loading required data.
+        Can be pre-loaded with data to improve performance.
     pbar: bool, default=False
         If ``True``, show a progress bar while loading data.
-    **portfolio_kws: Keyword arguments for :meth:`Database.load_portfolio`.
 
     Attributes
     ----------
@@ -71,13 +77,13 @@ class AttributionIndex:
     def __repr__(self):
         return (
             f"{self.__class__.__name__}("
-            f"{self.portfolio_type}='{self.account}', "
+            f"{self._portfolio_type}='{self.account}', "
             f"start='{self.start:%m/%d/%Y}', "
             f"end='{self.end:%m/%d/%Y}')"
         )
 
     @cached_property
-    def portfolio_type(self):
+    def _portfolio_type(self):
         if self.account is not None:
             return "Account"
         elif self.strategy is not None:
@@ -86,7 +92,7 @@ class AttributionIndex:
     @cached_property
     def _local_PnL_fid(self):
         data_dir = self._db.local(
-            f"portfolio_performance/{self.portfolio_type}"
+            f"portfolio_performance/{self._portfolio_type}"
         )
         mkdir(data_dir)
         # Clean portfolio name.
@@ -126,7 +132,9 @@ class AttributionIndex:
         if ix is None:
             self._db.load_market_data(start=start, end=end)
             ix = self._db.build_market_index()
-            self.start = to_datetime(start)
+            self.start = (
+                self._db.date("today") if start is None else to_datetime(start)
+            )
             self.end = (
                 self._db.date("today") if end is None else to_datetime(end)
             )
@@ -245,7 +253,11 @@ class AttributionIndex:
             return ticker_pnl
 
     def sectors(self, sectors=None, start=None, end=None):
-        """Find PnL of sectors."""
+        """
+        Find PnL of sectors, by default a unique (but not
+        comprehensive) list of tickers are used, as seen
+        in the morning IG snapshot
+        """
         ix = self.ix.subset(start=start, end=end)
         d = defaultdict(list)
         sectors = IG_sectors(unique=True) if sectors is None else sectors
@@ -294,6 +306,24 @@ class AttributionIndex:
             return isin_pnl
 
     def best_worst_df(self, s, n=10, prec=1):
+        """
+        Find the best and worst performing members of an input
+        series of PnL values.
+
+        Parameters
+        ----------
+        s: pd.Series
+            Series of members mapped to their respective PnL.
+        n: int, default=10
+            Number of rows in the returned table.
+        prec: int, default=1
+            Rounding precision for the table.
+
+        Returns
+        -------
+        pd.DataFrame
+            Table with best and worst performing members.
+        """
         worst = s.iloc[:n]
         best = s.iloc[-n:][::-1]
         df = pd.DataFrame()
@@ -321,7 +351,7 @@ class AttributionIndex:
 # self.best_worst_df(self.tickers())
 
 # %%
-class PerformanceComp:
+class AttributionComp:
     """
     Comapare performance between accounts/straegies.
 
@@ -330,15 +360,15 @@ class PerformanceComp:
 
     """
 
-    def __init__(self, *perf_ports):
-        self.perf_ports = list(*perf_ports)
-        self.port_names = [pp.name for pp in self.perf_ports]
+    def __init__(self, *attribution_indexes):
+        self.attribution_indexes = list(*attribution_indexes)
+        self.port_names = [attr.name for attr in self.attribution_indexes]
 
     def tickers(self, n=10, start=None, end=None):
         df = pd.concat(
             (
-                pp.tickers(start=start, end=end).rename(pp.name)
-                for pp in self.perf_ports
+                attr.tickers(start=start, end=end).rename(attr.name)
+                for attr in self.attribution_indexes
             ),
             axis=1,
         )
@@ -347,8 +377,8 @@ class PerformanceComp:
     def sectors(self, sectors=None, start=None, end=None, n=10):
         df = pd.concat(
             (
-                pp.sectors(sectors, start=start, end=end).rename(pp.name)
-                for pp in self.perf_ports
+                attr.sectors(sectors, start=start, end=end).rename(attr.name)
+                for attr in self.attribution_indexes
             ),
             axis=1,
         )
@@ -357,10 +387,10 @@ class PerformanceComp:
     def market_segments(self, segments=None, start=None, end=None, n=10):
         df = pd.concat(
             (
-                pp.market_segments(segments, start=start, end=end).rename(
-                    pp.name
+                attr.market_segments(segments, start=start, end=end).rename(
+                    attr.name
                 )
-                for pp in self.perf_ports
+                for attr in self.attribution_indexes
             ),
             axis=1,
         )
@@ -395,7 +425,7 @@ def parse_args():
 
 # %%
 # db = Database()
-# self = PerformanceComp(performance_ports.values())
+# self = AttributionComp(performance_ports.values())
 #
 # # %%
 # self.tickers(n=20)
