@@ -16,7 +16,7 @@ from lgimapy.utils import load_json, mkdir, root, Time, restart_program
 # %%
 
 
-def make_credit_snapshots(date=None, include_portfolio=True):
+def build_credit_snapshots(date=None, include_portfolio=True):
     """Build credit snapshots and sitch them together."""
     indexes = ["US_IG_10+", "US_IG", "US_HY"]
 
@@ -1128,7 +1128,7 @@ if __name__ == "__main__":
     date = Database().date("yesterday")
     date = Database().date("today")
     with Time():
-        make_credit_snapshots(date)
+        build_credit_snapshots(date)
 
     # %%
     index = "US_IG_10+"

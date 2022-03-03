@@ -13,7 +13,7 @@ from lgimapy.portfolios import AttributionIndex
 from lgimapy.utils import load_json, root, replace_multiple, Time
 
 # %%
-def main():
+def build_strategy_risk_report():
     # %%
     vis.style()
     debug = False

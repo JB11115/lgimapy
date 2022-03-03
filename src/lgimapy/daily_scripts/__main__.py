@@ -4,11 +4,12 @@ from datetime import datetime as dt
 
 from lgimapy.daily_scripts import (
     build_issuer_change_report,
-    make_credit_snapshots,
+    build_credit_snapshots,
     update_credit_snapshots,
     build_on_the_run_ticker_snapshot,
     build_month_end_extensions_report,
-    create_sector_report,
+    build_sector_report,
+    build_strategy_risk_report,
 )
 from lgimapy.data import (
     Database,

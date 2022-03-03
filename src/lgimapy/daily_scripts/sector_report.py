@@ -13,7 +13,7 @@ from lgimapy.utils import root
 # %%
 
 
-def create_sector_report():
+def build_sector_report():
     # %%
     db = Database()
     date = db.date("today")
@@ -300,4 +300,4 @@ def add_issuer_performance_tables(page, sector_kwargs, xsret_model_d):
 
 
 if __name__ == "__main__":
-    create_sector_report()
+    build_sector_report()
