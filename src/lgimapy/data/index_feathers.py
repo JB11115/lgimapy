@@ -13,7 +13,7 @@ from lgimapy.utils import mkdir, root, Time
 # %%
 
 
-def create_feather(fid, db):
+def create_feather(fid, db, force, s3):
     """
     Create feather files specified month from SQL.
 
@@ -33,14 +33,29 @@ def create_feather(fid, db):
         prev_last_of_month = db.trade_dates()[0]
 
     # Load index and drop holidays.
-    db.load_market_data(
-        start=prev_last_of_month, end=last_of_month, local=False
-    )
-    ix = db.build_market_index(drop_treasuries=False)
-    ix.df = ix.df[ix.df["Date"].isin(db.trade_dates())]
+    if db.market == "US" or force:
+        # Load data directly from Datamart or BASys.
+        db.load_market_data(
+            start=prev_last_of_month, end=last_of_month, local=False
+        )
+        ix = db.build_market_index(drop_treasuries=False)
+    else:
+        # For BASys data, use local data when possible, only
+        # load new data from BASys.
+        db.load_market_data(start=prev_last_of_month, end=last_of_month)
+        prev_ix = db.build_market_index(drop_treasuries=False)
+        if prev_ix.end_date == last_of_month:
+            ix = prev_ix  # no new data to load
+        else:
+            # Load new data directly from BASys and combine with local data.
+            new_start = db.trade_dates(exclusive_start=prev_ix.end_date)[0]
+            db.load_market_data(start=new_start, end=last_of_month, local=False)
+            new_ix = db.build_market_index(drop_treasuries=False)
+            ix = prev_ix + new_ix
 
-    # Add previous market value column.
-    ix._get_prev_market_value_history()
+    # Drop holidays and add previous market value column.
+    ix.df = ix.df[ix.df["Date"].isin(db.trade_dates())]
+    ix._get_prev_market_value_history(force=True)
 
     if db.market == "US":
         # Fill missing data with bloomberg data pre Oct-2018.
@@ -67,21 +82,22 @@ def create_feather(fid, db):
             "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
         ],
     }
-    mkt = db.market.lower()
-    keys = db._passwords["AWS"]
-    for stage, s3_dirs in s3_dirs_d.items():
-        sess = boto3.Session(
-            aws_access_key_id=keys[f"{stage}_access_key"],
-            aws_secret_access_key=keys[f"{stage}_secret_access_key"],
-        )
+    if s3:
+        mkt = db.market.lower()
+        keys = db._passwords["AWS"]
+        for stage, s3_dirs in s3_dirs_d.items():
+            sess = boto3.Session(
+                aws_access_key_id=keys[f"{stage}_access_key"],
+                aws_secret_access_key=keys[f"{stage}_secret_access_key"],
+            )
 
-        for date, date_df in df.groupby("Date"):
-            filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
-            for s3_dir in s3_dirs:
-                s3_fid = f"{s3_dir}/{mkt}/{filename}.parquet"
-                # wr.s3.to_parquet(
-                #     date_df, path=s3_fid, index=False, boto3_session=sess
-                # )
+            for date, date_df in df.groupby("Date"):
+                filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
+                for s3_dir in s3_dirs:
+                    s3_fid = f"{s3_dir}/{mkt}/{filename}.parquet"
+                    wr.s3.to_parquet(
+                        date_df, path=s3_fid, index=False, boto3_session=sess
+                    )
 
 
 def fill_missing_HY_index_flags(ix):
@@ -145,7 +161,7 @@ def find_missing_feathers(db, update_current=False):
     return sorted(missing_fids | missing_date_fids, reverse=True)
 
 
-def update_market_data_feathers(limit=20, update_current=False):
+def update_market_data_feathers(update_current=False, force=False, s3=False):
     """
     Update market data feather files for each market.
     Finds and creates any missing feather files.
@@ -162,7 +178,7 @@ def update_market_data_feathers(limit=20, update_current=False):
             print(f"Updating {market} Feather Files")
         for fid in tqdm(missing_fids, disable=(not pbar)):
             try:
-                create_feather(fid, db)
+                create_feather(fid=fid, db=db, force=force, s3=s3)
             except (KeyboardInterrupt, SystemExit):
                 raise
             except Exception as e:
@@ -179,4 +195,4 @@ if __name__ == "__main__":
     # db = Database(market=market)
     # missing_fids = find_missing_feathers(db, update_current=update_current)
     # fid = missing_fids[-1]
-    update_market_data_feathers(update_current=True)
+    update_market_data_feathers(update_current=True, force=True)
