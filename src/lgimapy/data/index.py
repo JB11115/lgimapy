@@ -775,13 +775,13 @@ class Index(BondBasket):
         """:class:`TreasuryCurve`:  Treasury curves."""
         return TreasuryCurve()
 
-    def _get_prev_market_value_history(self):
+    def _get_prev_market_value_history(self, force=False):
         """
         Add previous market value as column as
         `PrevMarketValue` in :attr:`Index.df`.
         """
         # Stop if column is column is already present.
-        if "PrevMarketValue" in list(self.df):
+        if "PrevMarketValue" in list(self.df) and not force:
             return
 
         # Build dict of cusip/date pairs to prev market value.
