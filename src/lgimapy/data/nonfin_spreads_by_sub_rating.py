@@ -1,7 +1,8 @@
 import pandas as pd
 
 from lgimapy.data import Database
-from lgimapy.utils import root
+
+# %%
 
 
 def update_nonfin_spreads():
@@ -23,7 +24,9 @@ def update_nonfin_spreads():
     df_lc = pd.concat(lc_oas_list, axis=1, sort=True)
 
     # Write each dataframe to a different worksheet.
-    fid = root("data/nonfin_spreads_by_rating.xlsx")
+    fid = Database.X_drive(
+        "Credit Strategy/lgimapy/data/nonfin_spreads_by_rating.xlsx"
+    )
     writer = pd.ExcelWriter(fid)
     df_mc.to_excel(writer, sheet_name="Market Credit")
     df_lc.to_excel(writer, sheet_name="Long Credit")

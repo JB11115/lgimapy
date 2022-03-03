@@ -16,6 +16,9 @@ from lgimapy.utils import root, restart_program
 
 def update_rating_changes(max_dates=100):
     fid = root("data/rating_changes.csv")
+    x_drive_fid = Database.X_drive(
+        "Credit Strategy/lgimapy/data/rating_changes.csv"
+    )
     db = Database()
     saved_df, last_saved_date = read_saved_data(fid)
     dates = db.trade_dates(start=last_saved_date)
@@ -48,6 +51,7 @@ def update_rating_changes(max_dates=100):
     updated_df.iloc[-1, 1] = curr_date
     try:
         updated_df.to_csv(fid)  # .csv for solutions team
+        updated_df.to_csv(x_drive_fid)  # .csv for solutions team
     except PermissionError:
         pass
 
