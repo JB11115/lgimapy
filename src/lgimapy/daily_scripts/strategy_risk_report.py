@@ -1077,4 +1077,4 @@ def save_single_latex_risk_page(
 # %%
 
 if __name__ == "__main__":
-    main()
+    build_strategy_risk_report()

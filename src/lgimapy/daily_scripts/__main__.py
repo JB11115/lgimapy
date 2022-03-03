@@ -69,6 +69,7 @@ def main():
     print("On the Run Ticker Snaphshot Complete\n")
     build_issuer_change_report()
     print("Issuer Change Report Complete\n")
+    build_strategy_risk_report()
     update_nonfin_spreads()
     print("Updated Nonfin Sub-Rating Spreads\n")
     save_bond_wishlist()
