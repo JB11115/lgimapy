@@ -1,3 +1,4 @@
+import argparse
 from time import sleep
 from datetime import datetime as dt
 
@@ -35,6 +36,8 @@ def main():
     """
     Run all daily scripts for updating database and creating reports.
     """
+    args = parse_args()
+
     trade_dates = Database().load_trade_dates()
     check_datamart_quality(trade_dates)
     print()
@@ -45,7 +48,7 @@ def main():
     update_hy_index_members()
     print("Updated HY Index Flags\n")
     update_treasury_curve_dates()
-    update_market_data_feathers()
+    update_market_data_feathers(s3=args.s3)
     print()
     update_lgima_sectors()
     print("Updated LGIMA sectors\n")
@@ -116,6 +119,15 @@ def check_datamart_quality(dates):
             n_bonds_prev = n_bonds
             n_bonds = len(ix.df)
             change = n_bonds - n_bonds_prev
+
+
+def parse_args():
+    """Collect settings from command line and set defaults."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-s3", "--s3", action="store_true", help="Push data to S3"
+    )
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
