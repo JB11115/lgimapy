@@ -63,7 +63,7 @@ def main():
     print("Updated Dealer Inventory\n")
     update_rating_changes()
     print("Updated Rating Changes\n")
-    make_credit_snapshots()
+    build_credit_snapshots()
     print("Credit Snapshots Complete\n")
     build_on_the_run_ticker_snapshot()
     print("On the Run Ticker Snaphshot Complete\n")
