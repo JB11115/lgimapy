@@ -27,6 +27,8 @@ def main():
     dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
     # dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q3_2021"
 
+    attribution_accounts = ["P-LD"]
+
     ignored_accounts = set(["SESIBNM", "SEUIBNM"])
     pdf_path = root("reports/strategy_risk")
 
@@ -117,14 +119,17 @@ def main():
 
     summary_page_fid = "summary"
     build_summary_page(df, date, summary_page_fid, pdf_path)
-    attribution_page_fid = "attribution"
-    build_attribution_page("P-LD", attribution_page_fid, pdf_path)
+    attribution_page_fids = []
+    for account in attribution_accounts:
+        attribution_page_fid = f"attribution_{account}"
+        attribution_page_fids.append(attribution_page_fid)
+        build_attribution_page(account, attribution_page_fid, pdf_path)
     methodology_page_fid = "risk_report_methodology"
     build_methodology_page(methodology_page_fid, pdf_path)
 
     # %%
     # Merge all files together to build to final report.
-    fids_to_merge = [summary_page_fid, attribution_page_fid]
+    fids_to_merge = [summary_page_fid, *attribution_page_fids]
     for fid in df["fid"]:
         fids_to_merge.append(fid)
         fids_to_merge.append(f"{fid}_history")
@@ -241,31 +246,42 @@ def build_attribution_page(account, fid, pdf_path):
     attribution_page.add_section(f"Attribution ({account})")
     dates_d = {
         "today": {
-            "name": f"Daily Attribution (for {db.date('today'):%b %-d})",
+            "name": (
+                "Daily Attribution (for {:%b %-d}), "
+                "Total Performance from Credit: {:+.1f} bp"
+            ),
             "prec": 2,
         },
         "1M": {
-            "name": f"1M Attribution (since {db.date('1M'):%b %-d})",
+            "name": (
+                "1M Attribution (since {:%b %-d}), "
+                "Total Performance from Credit: {:+.1f} bp"
+            ),
             "prec": 1,
         },
         "YEAR_START": {
-            "name": f"YTD Attribution (since {db.date('YEAR_START'):%b %-d})",
+            "name": (
+                "YTD Attribution (since {:%b %-d}), "
+                "Total Performance from Credit: {:+.1f} bp"
+            ),
             "prec": 1,
         },
     }
     table_widths = {"Ticker": 0.22, "Sector": 0.3, "Market Segment": 0.45}
     fontsize = "tiny"
-    for date, d in dates_d.items():
-        attribution_page.add_subsection(d["name"], bookmark=False)
+    for from_date, d in dates_d.items():
+        date = db.date(from_date)
+        attribution_page.add_subsection(
+            d["name"].format(date, attr.total(start=date)), bookmark=False
+        )
         edits = attribution_page.add_minipages(
             n=len(table_widths), valign="t", widths=table_widths.values()
         )
         PnL_cols = ["PnL", "PnL "]
         col_prec = {col: f"+{d['prec']}f" for col in PnL_cols}
+
         with attribution_page.start_edit(edits[0]):
-            table = attr.best_worst_df(
-                attr.tickers(start=db.date(date)), prec=d["prec"]
-            )
+            table = attr.best_worst_df(attr.tickers(start=date), prec=d["prec"])
             attribution_page.add_table(
                 table,
                 caption="Tickers",
@@ -274,9 +290,7 @@ def build_attribution_page(account, fid, pdf_path):
                 prec=col_prec,
             )
         with attribution_page.start_edit(edits[1]):
-            table = attr.best_worst_df(
-                attr.sectors(start=db.date(date)), prec=d["prec"]
-            )
+            table = attr.best_worst_df(attr.sectors(start=date), prec=d["prec"])
             attribution_page.add_table(
                 table,
                 caption="Sectors",
@@ -286,7 +300,7 @@ def build_attribution_page(account, fid, pdf_path):
             )
         with attribution_page.start_edit(edits[2]):
             table = attr.best_worst_df(
-                attr.market_segments(start=db.date(date)), prec=d["prec"]
+                attr.market_segments(start=date), prec=d["prec"]
             )
             attribution_page.add_table(
                 table,
