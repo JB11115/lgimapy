@@ -92,7 +92,7 @@ def create_feather(fid, db, force, s3, s3_limit=5):
             )
             n_dates = len(df["Date"].unique())
             for i, (date, date_df) in enumerate(df.groupby("Date")):
-                if i < (n_dates - s3_limit):
+                if s3_limit is not None and i < (n_dates - s3_limit):
                     continue
                 filename = f"security_analytics_{mkt}_{date:%Y%m%d}"
                 for s3_dir in s3_dirs:
