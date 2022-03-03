@@ -1,7 +1,6 @@
 import json
 import os
 import pickle
-import platform
 import sys
 import warnings
 from bisect import bisect_left
@@ -41,16 +40,19 @@ from lgimapy.data import (
 )
 from lgimapy.utils import (
     check_market,
+    current_platform,
     dump_json,
     load_json,
     nearest_date,
     replace_multiple,
     root,
     sep_str_int,
+    S_drive,
     to_datetime,
     to_int,
     to_list,
     to_set,
+    X_drive,
 )
 
 # %%
@@ -72,9 +74,9 @@ def get_basys_fids(market):
     """
     market = check_market(market)
     if sys.platform == "win32":
-        dir = Path(f"S:/FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{market}/")
+        dir = S_drive(f"FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{market}/")
     elif sys.platform == "linux":
-        dir = Path(f"/mnt/s/FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{market}/")
+        dir = S_drive(f"FrontOffice/Bonds/BASys/CSVFiles/MarkIT/{market}/")
     fids = dir.glob("*")
     files = {}
     for fid in fids:
@@ -135,19 +137,19 @@ class Database:
 
     @cached_property
     def current_env(self):
-        current_platform = platform.platform().upper()
-        env_keys = {
-            "WINDOW": "WINDOWS",
-            "AMZN": "DOMINO",
-            "WSL": "LINUX",
-        }
-        for key, env in env_keys.items():
-            if key in current_platform:
-                return env
+        return current_platform()
 
     @staticmethod
-    def local(fid):
+    def local(fid=""):
         return root(f"data/{fid}")
+
+    @staticmethod
+    def X_drive(fid=""):
+        return X_drive(fid)
+
+    @staticmethod
+    def S_drive(fid=""):
+        return S_drive(fid)
 
     @cached_property
     def _passwords(self):
@@ -3337,5 +3339,4 @@ def main():
     # %%
     db.load_market_data()
     # %%
-
-    # %%
+    Database.X_drive("FrontOffice")

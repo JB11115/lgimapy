@@ -1,8 +1,9 @@
 import os
 import json
 import itertools as it
-import pprint as pp
 import pickle
+import platform
+import pprint as pp
 import re
 import shutil
 import string
@@ -25,6 +26,28 @@ import psutil
 from tabulate import tabulate
 
 # %%
+def current_platform():
+    current_platform = platform.platform().upper()
+    env_keys = {
+        "WINDOW": "WINDOWS",
+        "AMZN": "DOMINO",
+        "WSL": "LINUX",
+    }
+    for key, env in env_keys.items():
+        if key in current_platform:
+            return env
+
+
+def S_drive(fid=""):
+    return {"WINDOWS": Path(f"S:/{fid}"), "LINUX": Path(f"/mnt/s/{fid}")}[
+        current_platform()
+    ]
+
+
+def X_drive(fid=""):
+    return {"WINDOWS": Path(f"X:/{fid}"), "LINUX": Path(f"/mnt/x/{fid}")}[
+        current_platform()
+    ]
 
 
 def to_clipboard(obj, index=False, header=False):
