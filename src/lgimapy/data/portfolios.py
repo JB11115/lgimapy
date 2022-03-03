@@ -609,7 +609,7 @@ class Account(BondBasket, Portfolio):
         ix = (
             self.df["Ticker"].astype(str)
             + " "
-            + self.df["Coupon"].apply(lambda x: f"{x:.2f}")
+            + self.df["CouponRate"].apply(lambda x: f"{x:.2f}")
             + " "
             + self.df["MaturityDate"]
             .apply(lambda x: f"`{x.strftime('%y')}")
