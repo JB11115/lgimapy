@@ -1131,6 +1131,28 @@ class BondBasket:
         g = df[["Date", weight, "mvw_col"]].groupby("Date").sum()
         return (g["mvw_col"] / g[weight]).rename(col)
 
+    def SUM(self, col):
+        """
+        Daily mean for specified column.
+
+        Parameters
+        ----------
+        col: str
+            Column to compute mean on.
+
+        Returns
+        -------
+        pd.Series:
+            Daily mean with datetime index.
+        """
+        cols = ["Date", col]
+
+        def daily_sum(df):
+            """Sum for single day."""
+            return np.sum(df[col])
+
+        return self.df[cols].groupby("Date").apply(daily_sum)
+
     def MEAN(self, col, weights="MarketValue"):
         """
         Daily mean for specified column.
@@ -1340,3 +1362,35 @@ class BondBasket:
 
     def is_empty(self):
         return not len(self.df)
+
+    def add_change(self, col, date, db):
+        """
+        Add column change since specified date to :attr:`df`.
+
+        Parameters
+        ----------
+        col: str
+            Column to find change on
+        date: str or Datetime
+            Date from which to compute change.1
+        db: :class:`Database`
+            Database to load data.
+
+        """
+        if isinstance(date, pd.Timestamp):
+            from_date = date
+            date_str = date.strftime("%m-%d-%Y")
+        else:
+            from_date = db.date(date)
+            date_str = date
+
+        db.load_market_data(date=from_date)
+        prev_ix = db.build_market_index(isin=self.isins)
+        prev_oas_d = prev_ix.df[["ISIN", col]].set_index("ISIN")[col].to_dict()
+        self.df[f"{col}_{date_str}"] = self.df["ISIN"].map(prev_oas_d)
+        self.df[f"{col}_abs_Change_{date_str}"] = (
+            self.df[f"{col}"] - self.df[f"{col}_{date_str}"]
+        )
+        self.df[f"{col}_pct_Change_{date_str}"] = (
+            self.df[f"{col}"] / self.df[f"{col}_{date_str}"]
+        )
