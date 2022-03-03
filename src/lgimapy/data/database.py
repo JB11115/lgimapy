@@ -58,7 +58,7 @@ from lgimapy.utils import (
 
 def get_basys_fids(market):
     """
-    Get list of basys fids for given market.
+    Get list of BASys fids for given market.
 
     Parameters
     ----------
@@ -2292,6 +2292,7 @@ class Database:
         col_map = {
             "Maturity": "MaturityDate",
             "Seniority": "CollateralType",
+            "Coupon": "CouponRate",
             "Country": "CountryOfRisk",
             "Moody": "MoodyRating",
             "S&P": "SPRating",
@@ -3312,12 +3313,20 @@ def main():
     # %%
     import time
     from collections import defaultdict
-    from lgimapy import vis
-    from lgimapy.utils import Time, load_json, dump_json
-    from lgimapy.bloomberg import bdp, bdh
     from tqdm import tqdm
-    from lgimapy.utils import to_sql_list, to_clipboard, mkdir
+
+    from lgimapy import vis
+    from lgimapy.bloomberg import bdp, bdh
     from lgimapy.data import IG_sectors, HY_sectors
+    from lgimapy.portfolios import AttributionIndex
+    from lgimapy.utils import (
+        Time,
+        load_json,
+        dump_json,
+        to_sql_list,
+        to_clipboard,
+        mkdir,
+    )
 
     vis.style()
     self = Database()
@@ -3326,4 +3335,7 @@ def main():
 
     db = Database()
     # %%
+    db.load_market_data()
+    # %%
+
     # %%
