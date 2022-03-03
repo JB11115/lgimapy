@@ -11,18 +11,23 @@ from lgimapy.utils import root, mkdir, load_json, to_list
 
 
 def main():
-    # override_from_date = Database().date("portfolio_start")
-    override_from_date = None
+    override_from_date = Database().date("portfolio_start")
     override_to_date = None
-    # specific_strategies = "US Credit Plus"
-    specific_strategies = None
+    specific_strategies = "US Intermediate Credit A or better"
+    ignored_accounts = set(["SESIBNM", "SEUIBNM"])
     update_portfolio_history(
-        override_from_date, override_to_date, specific_strategies
+        override_from_date,
+        override_to_date,
+        specific_strategies,
+        ignored_accounts,
     )
 
 
 def update_portfolio_history(
-    override_from_date=None, override_to_date=None, specific_strategies=None
+    override_from_date=None,
+    override_to_date=None,
+    specific_strategies=None,
+    ignored_accounts=None,
 ):
     data_dir = root("data/portfolios/history")
     mkdir(data_dir / "Strategy")
@@ -33,7 +38,9 @@ def update_portfolio_history(
     for date in tqdm(
         get_dates_to_update(fid, override_from_date, override_to_date)
     ):
-        update_date(date, fid, override_from_date, specific_strategies)
+        update_date(
+            date, fid, override_from_date, specific_strategies, ignored_accounts
+        )
 
 
 def get_dates_to_update(fid, override_from_date, override_to_date):
@@ -54,7 +61,7 @@ def get_dates_to_update(fid, override_from_date, override_to_date):
     return db.trade_dates(exclusive_start=last_date)
 
 
-def update_strategy(date, strategy, override_from_date):
+def update_strategy(date, strategy, override_from_date, ignored_accounts):
     db = Database()
     if override_from_date is None:
         # See if date has already been scraped for this strategy.
@@ -69,7 +76,9 @@ def update_strategy(date, strategy, override_from_date):
             if date in scraped_dates.index:
                 return
     try:
-        port = db.load_portfolio(strategy=strategy, date=date)
+        port = db.load_portfolio(
+            strategy=strategy, date=date, ignored_accounts=ignored_accounts
+        )
     except ValueError:
         # No data.
         return
@@ -84,7 +93,13 @@ def update_strategy(date, strategy, override_from_date):
         raise e
 
 
-def update_date(date, fid, override_from_date, specific_strategies):
+def update_date(
+    date,
+    fid,
+    override_from_date,
+    specific_strategies,
+    ignored_accounts,
+):
     all_strategies = set(load_json("strategy_accounts"))
     ignored_strategies = {
         "LDI No Benchmark",
@@ -129,7 +144,9 @@ def update_date(date, fid, override_from_date, specific_strategies):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         joblib.Parallel(n_jobs=6)(
-            joblib.delayed(update_strategy)(date, strategy, override_from_date)
+            joblib.delayed(update_strategy)(
+                date, strategy, override_from_date, ignored_accounts
+            )
             for strategy in strategies
         )
         # for strategy in strategies:
