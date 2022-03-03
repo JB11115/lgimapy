@@ -1376,6 +1376,10 @@ class BondBasket:
         db: :class:`Database`
             Database to load data.
 
+        Returns
+        -------
+        List[str]:
+            List of newly created column names.
         """
         if isinstance(date, pd.Timestamp):
             from_date = date
@@ -1393,4 +1397,19 @@ class BondBasket:
         )
         self.df[f"{col}_pct_Change_{date_str}"] = (
             self.df[f"{col}"] / self.df[f"{col}_{date_str}"]
+        )
+
+        return [
+            f"{col}_{date_str}",
+            f"{col}_abs_Change_{date_str}",
+            f"{col}_pct_Change_{date_str}",
+        ]
+
+    def add_bond_description(self):
+        self.df["BondDescription"] = (
+            self.df["Ticker"].astype(str)
+            + " "
+            + self.df["CouponRate"].apply(lambda x: f"{x:.2f}")
+            + " "
+            + self.df["MaturityDate"].apply(lambda x: f"`{x:%y}").astype(str)
         )
