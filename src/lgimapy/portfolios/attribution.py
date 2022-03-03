@@ -305,7 +305,35 @@ class AttributionIndex:
         else:
             return isin_pnl
 
-    def best_worst_df(self, s, n=10, prec=1):
+    def groupby(self, col, subset=None, start=None, end=None):
+        """
+        pd.Series:
+            Find PnL grouping of any column.
+        """
+        df = self.ix.subset(start=start, end=end).df
+        group_pnl = (
+            df[[col, "PnL"]]
+            .groupby(col, observed=True)
+            .sum()
+            .squeeze()
+            .sort_values()
+            .rename_axis(None)
+        )
+        group_pnl.index = group_pnl.index.astype(str)
+
+        if subset is not None:
+            subset_set = to_set(subset, dtype=str)
+            subset_pnl = group_pnl[group_pnl.index.isin(subset_set)]
+            missing_subset = subset_set - set(subset_pnl.index)
+            missing_pnl = pd.Series(
+                np.full(len(missing_subset), np.nan), index=missing_subset
+            )
+            return pd.concat((subset_pnl, missing_pnl))
+        else:
+            return group_pnl
+
+    @staticmethod
+    def best_worst_df(s, n=10, prec=1):
         """
         Find the best and worst performing members of an input
         series of PnL values.
@@ -324,6 +352,7 @@ class AttributionIndex:
         pd.DataFrame
             Table with best and worst performing members.
         """
+        s = s.sort_values()
         worst = s.iloc[:n]
         best = s.iloc[-n:][::-1]
         df = pd.DataFrame()
