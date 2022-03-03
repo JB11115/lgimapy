@@ -231,7 +231,7 @@ Curve Duration & $CurveDur_{n}$ & yr & it's complicated &
     }\\
 
 \specialrule{2.5pt}{1pt}{1pt}
-Performance & $Perf_{t}$ & bp &
+Performance & $Perf(t)$ & bp &
     \makecell{
         $R^{Port}_{t} -  R^{BM}_{t}$
         \vspace{0.2cm} \\
@@ -250,7 +250,7 @@ Performance & $Perf_{t}$ & bp &
     portfolio vs the benchmark. Intra-day transactions are not accounted for.
     }\\
 \midrule
-Daily Attribution & $Attr_{t}$ & bp &
+Daily Attribution & $Attr(t)$ & bp &
     \makecell{
         $\sum^{Bonds}_{b} \Delta OAS_{t}(b) \cdot \overline{OAD}^{OW}_{t}(b)$
         \vspace{0.4cm} \\
@@ -269,7 +269,7 @@ Daily Attribution & $Attr_{t}$ & bp &
         intra-day moves or transactions levels.
     }\\
 \midrule
-Attribution & $Attr$ & bp & $\sum_{t} Attr_{t}$ &
+Attribution & $Attr(t-n, t)$ & bp & $\sum^{n}_{i=0} Attr(t-i)$ &
     \makecell[l]{
         Attribution over a specified period, calculated by simply summing
         daily attribution values.
