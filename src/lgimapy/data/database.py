@@ -315,19 +315,24 @@ class Database:
         sector_df = pd.read_parquet(fid)
         return sorted(sector_df["Sector"].values)
 
-    def credit_sectors(self, *args, **kwargs):
+    @staticmethod
+    def credit_sectors(*args, **kwargs):
         return credit_sectors(*args, **kwargs)
 
-    def HY_sectors(self, *args, **kwargs):
+    @staticmethod
+    def HY_sectors(*args, **kwargs):
         return HY_sectors(*args, **kwargs)
 
-    def IG_sectors(self, *args, **kwargs):
+    @staticmethod
+    def IG_sectors(*args, **kwargs):
         return IG_sectors(*args, **kwargs)
 
-    def IG_market_segments(self, *args, **kwargs):
+    @staticmethod
+    def IG_market_segments(*args, **kwargs):
         return IG_market_segments(*args, **kwargs)
 
-    def fid_safe_str(self, s):
+    @staticmethod
+    def fid_safe_str(s):
         repl = {" ": "_", "/": "_", "%": "pct"}
         return replace_multiple(s, repl)
 
@@ -3339,4 +3344,3 @@ def main():
     # %%
     db.load_market_data()
     # %%
-    Database.X_drive("FrontOffice")
