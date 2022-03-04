@@ -294,7 +294,7 @@ def inspect_extension(df_ret, df_stats):
     d = defaultdict(dict)
     for df in [df_ret, df_stats]:
         for col in map_cols:
-            map = df.set_index("CUSIP")[col].to_dict()
+            map = dict(zip(df["CUSIP"], df[col]))
             d[col] = {**map, **d[col]}
 
     df = pd.concat((ret_oad, stats_oad), axis=1).fillna(0)
