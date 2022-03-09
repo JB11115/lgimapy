@@ -5,11 +5,11 @@ from datetime import datetime as dt
 from lgimapy.daily_scripts import (
     build_issuer_change_report,
     build_credit_snapshots,
-    update_credit_snapshots,
     build_on_the_run_ticker_snapshot,
     build_month_end_extensions_report,
     build_sector_report,
     build_strategy_risk_report,
+    update_current_reports_on_X_drive,
 )
 from lgimapy.data import (
     Database,
@@ -80,9 +80,11 @@ def main():
     if dt.today().weekday() == 0:
         # Monday
         print("Building Sector Report:")
-        create_sector_report()
+        build_sector_report()
         print()
 
+    if args.s3:
+        update_current_reports_on_X_drive()
     # update_strategy_overweights()
     # print("Updated Strategy Overweights\n")
 

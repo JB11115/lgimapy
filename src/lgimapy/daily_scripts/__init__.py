@@ -15,6 +15,9 @@ from lgimapy.daily_scripts.sector_report import build_sector_report
 from lgimapy.daily_scripts.strategy_risk_report import (
     build_strategy_risk_report,
 )
+from lgimapy.daily_scripts.cp_current_reports import (
+    update_current_reports_on_X_drive,
+)
 
 __all__ = [
     "build_issuer_change_report",
@@ -24,4 +27,5 @@ __all__ = [
     "build_month_end_extensions_report",
     "build_sector_report",
     "build_strategy_risk_report",
+    "update_current_reports_on_X_drive",
 ]
