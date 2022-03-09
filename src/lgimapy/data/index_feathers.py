@@ -13,6 +13,11 @@ from lgimapy.utils import mkdir, root, Time
 # %%
 
 
+def load_index(db, start, end, local):
+    db.load_market_data(start=start, end=end, local=local)
+    return db.build_market_index(drop_treasuries=False)
+
+
 def create_feather(fid, db, force, s3, s3_limit=5):
     """
     Create feather files specified month from SQL.
@@ -35,23 +40,25 @@ def create_feather(fid, db, force, s3, s3_limit=5):
     # Load index and drop holidays.
     if db.market == "US" or force:
         # Load data directly from Datamart or BASys.
-        db.load_market_data(
-            start=prev_last_of_month, end=last_of_month, local=False
-        )
-        ix = db.build_market_index(drop_treasuries=False)
+        ix = load_index(db, prev_last_of_month, last_of_month, local=False)
     else:
         # For BASys data, use local data when possible, only
         # load new data from BASys.
-        db.load_market_data(start=prev_last_of_month, end=last_of_month)
-        prev_ix = db.build_market_index(drop_treasuries=False)
-        if prev_ix.end_date == last_of_month:
-            ix = prev_ix  # no new data to load
+        try:
+            prev_ix = load_index(
+                db, prev_last_of_month, last_of_month, local=True
+            )
+        except FileNotFoundError:
+            # Load data directly from BASys.
+            ix = load_index(db, prev_last_of_month, last_of_month, local=False)
         else:
-            # Load new data directly from BASys and combine with local data.
-            new_start = db.trade_dates(exclusive_start=prev_ix.end_date)[0]
-            db.load_market_data(start=new_start, end=last_of_month, local=False)
-            new_ix = db.build_market_index(drop_treasuries=False)
-            ix = prev_ix + new_ix
+            if prev_ix.end_date == last_of_month:
+                ix = prev_ix  # no new data to load
+            else:
+                # Load new data directly from BASys and combine with local data.
+                new_start = db.trade_dates(exclusive_start=prev_ix.end_date)[0]
+                new_ix = load_index(db, new_start, last_of_month, local=False)
+                ix = prev_ix + new_ix
 
     # Drop holidays and add previous market value column.
     ix.df = ix.df[ix.df["Date"].isin(db.trade_dates())]
