@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from blpapi import NotFoundException
 
-from lgimapy.utils import root, mkdir
+from lgimapy.utils import root, mkdir, X_drive
 from lgimapy.bloomberg import bds, fmt_bbg_dt
 
 # %%
@@ -30,6 +30,11 @@ def get_cashflows(cusip, maturity_date=None):
         cash_flows_df = scrape_cash_flows(cusip, maturity_date)
         mkdir(fid.parent)
         cash_flows_df.to_parquet(fid)
+        X_drive_fid = X_drive(
+            "Credit Strategy/lgimapy/data/cashflows/{cusip}.parquet"
+        )
+        cash_flows_df.to_parquet(X_drive_fid)
+
     return cash_flows_df["cash_flows"]
 
 
