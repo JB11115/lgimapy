@@ -66,12 +66,20 @@ def update_bbb_a_ratios(doc, ix_d, c_10, c_30):
     ax_right = ax_left.twinx()
     ax_right.grid(False)
 
+    right_last = 100 * df["30 yr"].rank(pct=True).iloc[-1]
+    right_label = f"30 yr: {right_last:.0f}{get_ordinal(right_last)} %tile"
+    left_last = 100 * df["10 yr"].rank(pct=True).iloc[-1]
+    left_label = f"10 yr: {left_last:.0f}{get_ordinal(left_last)} %tile"
+
     ax_left.plot(df["10 yr"], c=c_10, alpha=0.9, lw=2)
+    ax_right.plot(
+        df["30 yr"].iloc[:2], c=c_10, alpha=0.9, lw=2, label=left_label
+    )
     ax_left.set_ylabel("10 yr", color=c_10)
     ax_left.tick_params(axis="y", colors=c_10)
     ax_left.axhline(np.median(df["10 yr"]), ls=":", lw=1.5, color=c_10)
 
-    ax_right.plot(df["30 yr"], c=c_30, alpha=0.9, lw=2)
+    ax_right.plot(df["30 yr"], c=c_30, alpha=0.9, lw=2, label=right_label)
     ax_right.axhline(
         np.median(df["30 yr"]),
         ls=":",

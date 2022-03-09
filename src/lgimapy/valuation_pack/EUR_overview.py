@@ -82,8 +82,10 @@ def update_bbb_a_ratios(doc, ix_d, c_10):
     df["10 yr"] = df["10_BBB"] / df["10_A"]
     # Plot
     fig, ax = vis.subplots(figsize=(9, 6))
+    last = 100 * df["10 yr"].rank(pct=True).iloc[-1]
+    label = f"10 yr: {last:.0f}{get_ordinal(last)} %tile"
 
-    ax.plot(df["10 yr"], c=c_10, alpha=0.9, lw=2)
+    ax.plot(df["10 yr"], c=c_10, alpha=0.9, lw=2, label=label)
     ax.set_ylabel("10 yr", color=c_10)
     ax.axhline(np.median(df["10 yr"]), ls=":", lw=1.5, color=c_10)
     pct = {x: np.percentile(df["10 yr"], x) for x in [5, 95]}
