@@ -5,6 +5,7 @@ from collections import defaultdict, OrderedDict
 from functools import lru_cache, cached_property
 from importlib import import_module
 from inspect import getfullargspec
+from numbers import Number
 
 import numpy as np
 import pandas as pd
@@ -59,12 +60,7 @@ class BondBasket:
     """
 
     def __init__(
-        self,
-        df,
-        name=None,
-        market="US",
-        index="CUSIP",
-        constraints=None,
+        self, df, name=None, market="US", index="CUSIP", constraints=None,
     ):
         self.index = index
         if index is not None:
@@ -760,9 +756,7 @@ class BondBasket:
             df = df.drop(temp_cols, axis=1, errors="ignore")
 
         return self._child_class(
-            df=df,
-            name=name,
-            constraints=subset_index_constraints,
+            df=df, name=name, constraints=subset_index_constraints,
         )
 
     def _child_class(self, **kwargs):
@@ -771,26 +765,15 @@ class BondBasket:
         """
         class_name = self.__class__.__name__
         if class_name == "BondBasket":
-            return BondBasket(
-                market=self.market,
-                index=self.index,
-                **kwargs,
-            )
+            return BondBasket(market=self.market, index=self.index, **kwargs,)
         elif class_name in {"Account", "Strategy"}:
             child_class = getattr(import_module("lgimapy.data"), class_name)
             return child_class(
-                date=self.date,
-                market=self.market,
-                index=self.index,
-                **kwargs,
+                date=self.date, market=self.market, index=self.index, **kwargs,
             )
         else:
             child_class = getattr(import_module("lgimapy.data"), class_name)
-            return child_class(
-                market=self.market,
-                index=self.index,
-                **kwargs,
-            )
+            return child_class(market=self.market, index=self.index, **kwargs,)
 
     def _add_category_input(self, input_val, col_name):
         """
@@ -911,6 +894,7 @@ class BondBasket:
             5: (None, 1.5),
             7: (None, 2),
             10: (None, 2),
+            12: (None, 2),
             20: (None, 4),
             30: (None, 5),
         }[maturity]
@@ -922,6 +906,7 @@ class BondBasket:
             5: (3.5, 5.5),
             7: (5.5, 7.5),
             10: (8.25, 11.5),
+            12: (10, 12.5),
             20: (17, 22),
             30: (25, 32),
         }[maturity]
@@ -942,7 +927,7 @@ class BondBasket:
             :class:`BondBasket` subset to on the run bonds only.
         """
         df_list = []
-        for maturity in maturites:
+        for maturity in to_list(maturites, dtype=Number):
             maturity_ix = self.subset(
                 maturity=self._on_the_run_maturity_years(maturity),
                 issue_years=self._on_the_run_issue_years(maturity),
