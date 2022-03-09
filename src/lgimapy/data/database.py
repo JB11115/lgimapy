@@ -761,7 +761,9 @@ class Database:
 
         if isinstance(ratings, pd.Series):
             return ratings.map(self._numeric_to_letter_ratings)
-        elif isinstance(ratings, (float, int)):
+        elif isinstance(ratings, int):
+            return self._numeric_to_letter_ratings[ratings]
+        elif isinstance(ratings, float):
             if ratings.is_integer():
                 return self._numeric_to_letter_ratings[int(ratings)]
             else:
@@ -3342,5 +3344,20 @@ def main():
 
     db = Database()
     # %%
-    db.load_market_data()
+    db.load_market_data(start=db.date("1m"))
     # %%
+    ix = db.build_market_index(
+        **db.index_kwargs(
+            "SIFI_BANKS_SR", rating=("BBB+", "BBB-"), maturity=(10, 30)
+        )
+    )
+    ix.df
+    db.convert_numeric_ratings(5)
+    ix = db.build_market_index(cusip="95000U2U6")
+    ix.df
+    ix.OAS()
+    # %%
+    df = db.load_bbg_data(
+        ["US_IG", "US_IG_10+"], "OAS", start=db.date("5y"), end="1/31/2022"
+    )
+    df.rank(pct=True).iloc[-1]
