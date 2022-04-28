@@ -132,7 +132,9 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     axes[1].set_yticklabels(ytick_labels)
     axes[1].set_ylabel("Short Term\nStrategy Score", fontsize=12)
     cmap = sns.diverging_palette(348, 69, l=30, n=7).as_hex()
-    plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
+    plot_scores = pd.concat(
+        (scores_df, df["Short Term"].iloc[[0, -1]])
+    ).sort_index()
     fill = [np.min(plot_scores), np.max(plot_scores)]
     for i, (date, _) in enumerate(plot_scores.iloc[1:].items()):
         color_ix = int(plot_scores[i] + 3)
@@ -214,7 +216,9 @@ def update_credit_overview(fig_dir, ix_d, save=True):
     axes[1].set_yticks(yticks)
     axes[1].set_yticklabels(ytick_labels)
     cmap = sns.diverging_palette(348, 69, l=30, n=7).as_hex()
-    plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
+    plot_scores = pd.concat(
+        (scores_df, df["Short Term"].iloc[[0, -1]])
+    ).sort_index()
     fill = [np.min(plot_scores), np.max(plot_scores)]
     for i, (date, _) in enumerate(plot_scores.iloc[1:].items()):
         color_ix = int(plot_scores[i] + 3)
@@ -473,7 +477,7 @@ def update_strategy_scores(fid, fig_dir):
 
     # Drop non-credit scores.
     scores_df = scores_df[["(" not in name for name in scores_df.index]]
-    avg_scores = np.mean(scores_df)
+    avg_scores = np.mean(scores_df, axis=0)
     # Drop people with no new scores.
     prev_date, curr_date = scores_df.columns
     scores_df = scores_df[~scores_df[curr_date].isna()]

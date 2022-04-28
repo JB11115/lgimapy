@@ -170,7 +170,7 @@ def make_tail_position_table(df_tail, doc):
         total.loc[col] = (df_table[col] * df_table[mv]).sum() / df_table[
             mv
         ].sum()
-    table = df_table.append(pd.Series(total, name="Total"))
+    table = pd.concat((df_table, pd.Series(total, name="Total").to_frame().T))
     footnote = (
         "\\scriptsize The \\textit{tail} for each crisis was constructed by "
         "finding issuers (comprising 10\\% of the index by market value) with "
@@ -282,16 +282,21 @@ def get_crises_tail_recovery_dfs():
     return xsret_d, spread_d
 
 
-def plot_xsret_crises_recoveries(xsret_dict, path):
-    index_ex_tail_df = pd.concat(xsret_dict["index_ex_tail"], axis=1).fillna(
-        method="bfill"
+def plot_xsret_crises_recoveries(xsret_d, path):
+    index_ex_tail_df = (
+        pd.concat(xsret_d["index_ex_tail"], axis=1)
+        .sort_index()
+        .fillna(method="bfill")
     )
-    in_index_tail_df = pd.concat(xsret_dict["in_index_tail"], axis=1).fillna(
-        method="bfill"
+    in_index_tail_df = (
+        pd.concat(xsret_d["in_index_tail"], axis=1)
+        .sort_index()
+        .fillna(method="bfill")
     )
+    index_ex_tail_df
     xsret_df_in_index = in_index_tail_df - index_ex_tail_df
-
-    tail_df = pd.concat(xsret_dict["tail"], axis=1).fillna(method="bfill")
+    xsret_df_in_index
+    tail_df = pd.concat(xsret_d["tail"], axis=1).fillna(method="bfill")
     in_index_diff = in_index_tail_df - index_ex_tail_df
     fallen_angel_diff = tail_df - index_ex_tail_df
     current_date = in_index_diff["Covid-19"].dropna().index[-1]
@@ -337,13 +342,19 @@ def plot_xsret_crises_recoveries(xsret_dict, path):
     vis.close()
 
 
-def plot_spread_crises_recoveries(spread_dict, path):
-    index_ex_tail_df = pd.concat(spread_dict["index_ex_tail"], axis=1).fillna(
-        method="bfill"
+def plot_spread_crises_recoveries(spread_d, path):
+    index_ex_tail_df = (
+        pd.concat(spread_d["index_ex_tail"], axis=1)
+        .sort_index()
+        .fillna(method="bfill")
     )
-    in_index_tail_df = pd.concat(spread_dict["in_index_tail"], axis=1).fillna(
-        method="bfill"
+    in_index_tail_df = (
+        pd.concat(spread_d["in_index_tail"], axis=1)
+        .sort_index()
+        .fillna(method="bfill")
     )
+    spread_d["in_index_tail"]
+
     in_index_diff = in_index_tail_df - index_ex_tail_df
     current_date = in_index_diff["Covid-19"].dropna().index[-1]
     current_df = in_index_diff[in_index_diff.index <= current_date].iloc[-1]

@@ -46,6 +46,7 @@ def potential_rising_star_dfs():
     hy_ix = db.build_market_index(in_H0A0_index=True)
     bb_ix = hy_ix.subset(rating=("BB+", "BB-"))
     ix_rs = simulate_rating_migrations(
+        db,
         bb_ix,
         "upgrade",
         threshold="BB+",
@@ -131,7 +132,7 @@ def build_potential_fallen_angel_table():
     hy_ix = db.build_market_index(in_H0A0_index=True)
     bbb_ix = ig_ix.subset(rating=("BBB+", "BBB-"))
     ix_fa = simulate_rating_migrations(
-        bbb_ix, "downgrade", threshold="BBB-", notches=[1, 2, 3]
+        db, bbb_ix, "downgrade", threshold="BBB-", notches=[1, 2, 3]
     )
 
     ig_mv = ig_ix.total_value().iloc[0]

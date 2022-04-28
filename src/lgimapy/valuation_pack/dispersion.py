@@ -11,19 +11,14 @@ from lgimapy.models import Dispersion
 
 
 def update_dispersion(fid):
-    # %%
-
     db = Database()
     disp = Dispersion("IG", db)
     disp.update()
-
     doc = Document(
         fid, path="reports/valuation_pack", fig_dir=True, load_tex=True
     )
     doc = edit_dispersion_tables(doc, disp)
     doc.save_tex()
-
-    # %%
 
 
 def build_dispersion_sheet(fid, disp):

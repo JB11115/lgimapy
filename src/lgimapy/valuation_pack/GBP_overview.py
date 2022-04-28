@@ -176,7 +176,9 @@ def update_GBP_spreads(doc, region, color, save=True):
     axes[1].plot(df["Short Term"], c="k", ls="--", lw=2)
     axes[1].set_ylabel("Short Term\nStrategy Score", fontsize=12)
     cmap = sns.diverging_palette(348, 69, l=30, n=7).as_hex()
-    plot_scores = scores_df.append(df["Short Term"].iloc[[0, -1]]).sort_index()
+    plot_scores = pd.concat(
+        (scores_df, df["Short Term"].iloc[[0, -1]])
+    ).sort_index()
     fill = [np.min(plot_scores), np.max(plot_scores)]
     for i, (date, _) in enumerate(plot_scores.iloc[1:].items()):
         color_ix = int(plot_scores[i] + 3)
