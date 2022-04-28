@@ -32,7 +32,7 @@ def main():
     db.load_market_data(local=True, start=db.date("5y"))
     update_cover_page(fid, db)
     update_market_review(fid)
-    update_lc_tail(fid)
+    # update_lc_tail(fid)
     update_macro_indicators(fid)
     update_equilibrium_model(fid)
     update_dispersion(fid)
