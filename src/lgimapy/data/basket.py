@@ -60,7 +60,12 @@ class BondBasket:
     """
 
     def __init__(
-        self, df, name=None, market="US", index="CUSIP", constraints=None,
+        self,
+        df,
+        name=None,
+        market="US",
+        index="CUSIP",
+        constraints=None,
     ):
         self.index = index
         if index is not None:
@@ -91,7 +96,7 @@ class BondBasket:
             Sorted list of unique values for a columns in :attr:`df`.
         """
         df = self.df if df is None else df
-        return sorted(list(df[col].unique().dropna()))
+        return sorted(list(df[col].dropna().unique()))
 
     @cached_property
     def cusips(self):
@@ -179,6 +184,8 @@ class BondBasket:
         """pd.DataFrame: Rating change history of basket."""
         fid = root("data/rating_changes.parquet")
         df = pd.read_parquet(fid)
+        for col in ["Date_NEW", "Date_PREV"]:
+            df[col] = pd.to_datetime(df[col])
         return df[
             (df["Date_PREV"] >= self.dates[0])
             & (df["Date_NEW"] <= self.dates[-1])
@@ -756,7 +763,11 @@ class BondBasket:
             df = df.drop(temp_cols, axis=1, errors="ignore")
 
         return self._child_class(
-            df=df, name=name, constraints=subset_index_constraints,
+            df=df,
+            name=name,
+            market=self.market,
+            index=self.index,
+            constraints=subset_index_constraints,
         )
 
     def _child_class(self, **kwargs):
@@ -765,15 +776,17 @@ class BondBasket:
         """
         class_name = self.__class__.__name__
         if class_name == "BondBasket":
-            return BondBasket(market=self.market, index=self.index, **kwargs,)
+            return BondBasket(**kwargs)
         elif class_name in {"Account", "Strategy"}:
             child_class = getattr(import_module("lgimapy.data"), class_name)
             return child_class(
-                date=self.date, market=self.market, index=self.index, **kwargs,
+                date=self.date,
+                account_market_values=self._account_market_values,
+                **kwargs,
             )
         else:
             child_class = getattr(import_module("lgimapy.data"), class_name)
-            return child_class(market=self.market, index=self.index, **kwargs,)
+            return child_class(**kwargs)
 
     def _add_category_input(self, input_val, col_name):
         """
@@ -938,6 +951,7 @@ class BondBasket:
                 maturity_df[["IssueDate", "Ticker"]]
                 .groupby("Ticker", observed=True)
                 .idxmax()
+                .dropna()
                 .squeeze()
             )
             df_list.append(maturity_ix.subset(isin=on_the_run_isins).df)
