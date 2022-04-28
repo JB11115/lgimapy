@@ -6,7 +6,7 @@ import pandas as pd
 from lgimapy import vis
 from lgimapy.data import Database, groupby
 from lgimapy.latex import Document
-from lgimapy.models import simulate_rating_migrations, add_rating_outlooks
+from lgimapy.models import simulate_rating_migrations
 from lgimapy.stats import mode
 from lgimapy.utils import root, to_list
 
@@ -46,6 +46,7 @@ def potential_rising_star_dfs():
     hy_ix = db.build_market_index(in_H0A0_index=True)
     bb_ix = hy_ix.subset(rating=("BB+", "BB-"))
     ix_rs = simulate_rating_migrations(
+        db,
         bb_ix,
         "upgrade",
         threshold="BB+",
@@ -131,7 +132,7 @@ def build_potential_fallen_angel_table():
     hy_ix = db.build_market_index(in_H0A0_index=True)
     bbb_ix = ig_ix.subset(rating=("BBB+", "BBB-"))
     ix_fa = simulate_rating_migrations(
-        bbb_ix, "downgrade", threshold="BBB-", notches=[1, 2, 3]
+        db, bbb_ix, "downgrade", threshold="BBB-", notches=[1, 2, 3]
     )
 
     ig_mv = ig_ix.total_value().iloc[0]
@@ -723,13 +724,18 @@ def comp_d(ticker):
         "RWLVCA": (["US76120HAC16"], ["US571903BG74"]),
         "RWNYNY": (["US37255JAA07"], ["US517834AE74"]),
         "VIVENE": (["US92856HAB06"], ["_BBB_COMP_ISINs_"]),
+        "WES": (["US958254AD64"], ["US87612BBU52", "US682680BE21"]),
+        "MAT": (["US577081BF84"], ["US418056AZ06"]),
+        "SLM": (["US78442PGE07"], ["US02005NBJ81", "US87165BAL71"]),
+        "NOKIA": (["US654902AE56"], ["US48203RAM60"]),
+        "NMRK": (["US65158NAB82"], ["US12505BAD29", "US138616AE73"]),
         "_RS_TICKER_": (["_RS_ISINs_"], ["_BBB_COMP_ISINs_"]),
     }[ticker]
 
 
 def comp_check():
     # %%
-    ticker = "VIVENE"
+    ticker = "NMRK"
     db = Database()
     db.load_market_data()
     ticker_ix = db.build_market_index(ticker=ticker, in_H0A0_index=True)
@@ -738,9 +744,9 @@ def comp_check():
         in_stats_index=True, rating="BBB-", sector=sector
     )
     bbb_ix = db.build_market_index(
-        in_stats_index=None,
-        ticker=["LVS"],
-        rating=(None, "BBB-"),
+        # in_stats_index=None,
+        ticker=["CBG", "JLL", "CANTOR"],
+        # rating=(None, "BBB-"),
         # issue_years=(None, 2),
     )
     cols = ["ISIN", "Ticker", "MaturityYears", "IssueYears", "OAS"]
