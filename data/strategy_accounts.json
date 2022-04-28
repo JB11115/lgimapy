@@ -25,6 +25,7 @@
         "DELBNM",
         "DHSBNM",
         "DRDBNM",
+        "DSGBNM",
         "DVNBNM",
         "ECBNM",
         "FCABNM",
@@ -38,7 +39,11 @@
         "HPDBNM",
         "HSBCBNM",
         "IMBBNM",
+        "JMCBNM",
+        "JMCSBNM",
+        "JMEBNM",
         "KELBNM",
+        "KOCHBNM",
         "LEGSBNM",
         "LL1BNM",
         "LL2BNM",
@@ -65,6 +70,7 @@
         "RRSCP",
         "SALBNM",
         "SAULBNM",
+        "SCABNM",
         "SCGBNM",
         "SCIBNM",
         "SHSBNM",
@@ -90,6 +96,7 @@
         "EHLA",
         "EHOPLA",
         "JOYLA",
+        "KAMLA",
         "NFLLA"
     ],
     "US Government: Long": [
@@ -184,7 +191,9 @@
         "AONSTRP",
         "BAESTRP",
         "CNPSTRP",
-        "GENMSTRP"
+        "GENMSTRP",
+        "KFBSTRP",
+        "ONESTRP"
     ],
     "US Long Credit - Custom": [
         "ARCLD",
@@ -196,7 +205,6 @@
     ],
     "US Long Government/Credit": [
         "BACLGC",
-        "BPGC",
         "CMAGC",
         "HRLGC",
         "KOLGC",
@@ -265,7 +273,6 @@
         "LGPLWH7",
         "LGPLWH8",
         "PRTFHSA",
-        "ULSTRP",
         "WNT-DR1A",
         "WNT-PU1B",
         "WPFWA",
@@ -282,8 +289,23 @@
     ],
     "US Long Corp 2% Cap": [
         "BLUELC",
+        "CEGLC",
+        "CEGLC",
         "EXCLC",
         "JNJLC"
+    ],
+    "US Credit": [
+        "BPMC",
+        "CITMC",
+        "CSMC",
+        "DCMC",
+        "ERICMC",
+        "IMMC",
+        "LHMC",
+        "MYMC",
+        "NFLMC",
+        "PMCALL",
+        "SEMMC"
     ],
     "BNM - ICE BofA US Non-Financial Index": [
         "BSPBNM"
@@ -307,18 +329,6 @@
     ],
     "BNM - US 1-5 Yr Credit": [
         "CFMBNM"
-    ],
-    "US Credit": [
-        "CITMC",
-        "CSMC",
-        "DCMC",
-        "ERICMC",
-        "IMMC",
-        "LHMC",
-        "MYMC",
-        "NFLMC",
-        "PMCALL",
-        "SEMMC"
     ],
     "US Strips 15+ Yr": [
         "CITSTRP",

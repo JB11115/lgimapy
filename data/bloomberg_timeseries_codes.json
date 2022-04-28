@@ -444,6 +444,62 @@
         "YTW": "I00152US Index|INDEX_YIELD_TO_WORST",
         "MV": "I00152US Index|INDEX_MARKET_VALUE"
     },
+    "US_IG_10+_EX_EM": {
+        "NAME": "US Long Credit ex Emerging Markets",
+        "TRET": "I31930US Index|INDEX_VALUE"
+    },
+    "US_CORP_1PCT_CAP": {
+        "NAME": "US Corp 1% Cap",
+        "TRET": "I28215US Index|INDEX_VALUE"
+    },
+    "US_IG_1-10_A+": {
+        "NAME": "US Intermediate Credit A or Better",
+        "TRET": "I22253US Index|INDEX_VALUE"
+    },
+    "US_10+_GC_70_30": {
+        "NAME": "US 70% Long Credit, 30% Long Govt",
+        "TRET": "I31661US Index|INDEX_VALUE"
+    },
+    "US_10+_GC_75_25": {
+        "NAME": "US 75% Long Credit, 25% Long Govt",
+        "TRET": "I21078US Index|INDEX_VALUE"
+    },
+    "US_10+_GC_80_20": {
+        "NAME": "US 80% Long Credit, 20% Long Govt",
+        "TRET": "I31809US Index|INDEX_VALUE"
+    },
+    "US_GC_10+": {
+        "NAME": "US Long Gov/Credit",
+        "TRET": "I00005US Index|INDEX_VALUE"
+    },
+    "US_IG_10+_LIABILITY_AWARE_BM": {
+        "NAME": "Liability Aware Long Credit",
+        "TRET": "I30179US Index|INDEX_VALUE"
+    },
+    "US_IG_A+": {
+        "NAME": "US Credit A or Bettor",
+        "TRET": "I01151US Index|INDEX_VALUE"
+    },
+    "US_IG_10+_A+": {
+        "NAME": "US Long Credit A or Bettor",
+        "TRET": "I03602US Index|INDEX_VALUE"
+    },
+    "US_IG_10+_80PCT_A+_20PCT_BBB": {
+        "NAME": "US Long Credit 80% A or Better, 20% BBB",
+        "TRET": "I34043US Index|INDEX_VALUE"
+    },
+    "US_LDI_10": {
+        "NAME": "US LDI 10yr",
+        "TRET": "I28341US Index|INDEX_VALUE"
+    },
+    "US_IG_7+_A+": {
+        "NAME": "US Credit 7+, A or Better",
+        "TRET": "I20585US Index|INDEX_VALUE"
+    },
+    "US_CORP_10+_A+": {
+        "NAME": "US Long Corporate A or Better",
+        "TRET": "I04536US Index|INDEX_VALUE"
+    },
     "GLOBAL_HY": {
         "NAME": "Global HY",
         "OAS": "I00039 Index|INDEX_OAS_TSY",
@@ -498,6 +554,22 @@
         "XSRET": "I02783US Index|INDEX_EXCESS_RETURN_MTD",
         "YTW": "I02783US Index|INDEX_YIELD_TO_WORST",
         "MV": "I02783US Index|INDEX_MARKET_VALUE"
+    },
+    "US_CORP_10+_2PCT_CAP": {
+        "NAME": "US Long Corp 2% Cap",
+        "TRET": "I30617US Index|INDEX_VALUE"
+    },
+    "GLOBAL_AGG_USD_CORP": {
+        "NAME": "Global Agg USD Corp",
+        "TRET": "I05927US Index|INDEX_VALUE"
+    },
+    "US_CORP_EX_FINS": {
+        "NAME": "US Corp ex Fins",
+        "TRET": "I20819US Index|INDEX_VALUE"
+    },
+    "GM_BLEND_BM": {
+        "NAME": "US IG 50% 5-10yr, 50% 10+yr (30% BBB Cap)",
+        "TRET": "I32255US Index|INDEX_VALUE"
     },
     "US_AAA": {
         "NAME": "US AAA",
