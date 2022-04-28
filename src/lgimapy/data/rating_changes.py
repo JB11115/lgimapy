@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
@@ -45,10 +46,16 @@ def update_rating_changes(max_dates=100):
 
     # Combine saved data with newly computed data, and append
     # blank row with last scraped date.
-    updated_df = pd.concat(df_list, axis=0, sort=False).append(
-        pd.Series(dtype="float64"), ignore_index=True
+    last_df = df_list[-1]
+    blank_row = pd.DataFrame(
+        [[np.nan] * last_df.shape[1]], columns=last_df.columns
     )
-    updated_df.iloc[-1, 1] = curr_date
+    blank_row.loc[0, "Date_NEW"] = curr_date
+    df_list.append(blank_row)
+    updated_df = pd.concat(df_list)
+    for col in ["Date_NEW", "Date_PREV"]:
+        updated_df[col] = pd.to_datetime(updated_df[col]).dt.date
+
     try:
         updated_df.to_csv(fid)  # .csv for solutions team
         updated_df.to_csv(x_drive_fid)  # .csv for solutions team
@@ -238,3 +245,4 @@ if __name__ == "__main__":
         print(last_date)
         if psutil.virtual_memory().percent > 90:
             quit()
+    max_dates = 100
