@@ -16,6 +16,7 @@ from lgimapy.data import (
     IG_market_segments,
     index_kwargs,
 )
+from lgimapy.models import tracking_error, normalized_tracking_error
 from lgimapy.utils import (
     get_ordinal,
     replace_multiple,
@@ -32,16 +33,16 @@ from lgimapy.utils import (
 
 
 class Portfolio:
-    def __init__(self, date, name, class_name=None):
+    def __init__(self, name, date, account_market_values):
         self.date = to_datetime(date)
         self.name = name
-        self._class_name = (
-            self.__class__.__name__ if class_name is None else class_name
-        )
+        self._account_market_values = account_market_values
 
     def __repr__(self):
-        date = self.date.strftime("%m/%d/%Y")
-        return f"{self.name} {self._class_name} {date}"
+        return (
+            f"{self.__class__.__name__}"
+            f"(name='{self.name}', date='{self.date:%m/%d/%Y}')"
+        )
 
     @property
     def fid(self):
@@ -51,7 +52,7 @@ class Portfolio:
 
     @property
     def _stored_properties_history_fid(self):
-        data_dir = root(f"data/portfolios/history/{self._class_name}")
+        data_dir = root(f"data/portfolios/history/{self.__class__.__name__}")
         return data_dir / f"{self.fid}.parquet"
 
     @property
@@ -71,18 +72,7 @@ class Portfolio:
     def _tsy_bins(self):
         return [2, 3, 5, 7, 10, 20, 30]
 
-    @property
-    @lru_cache(maxsize=None)
-    def _long_credit_A_rated_OAS(self):
-        snapshot_fid = root(
-            f"data/credit_snapshots/{self.date.strftime('%Y-%m-%d')}"
-            "_Long_Credit_Snapshot.csv"
-        )
-        df = pd.read_csv(snapshot_fid, index_col=0)
-        return df.loc["A", "Close*OAS"]
-
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _otr_tsy_s(self):
         fid = root("data/OTR_treasury_OAD_values.parquet")
         s = pd.read_parquet(fid).loc[self.date]
@@ -106,21 +96,17 @@ class Portfolio:
         if df is None:
             return np.nan
 
-        # If there is not enough data, return nan
-        start_date = self.date - relativedelta(months=lookback_months)
-        df_prev = df[df.index < start_date]
-        if not len(df_prev):
-            return np.nan
-
-        # Get performance in the current lookback period.
-        lookback_df = df[(df.index >= start_date) & (df.index <= self.date)]
-        lookback_perf = list(lookback_df["performance"])
-        # Add today's performance.
-        lookback_perf.append(self.performance())
-        return np.sqrt(252) * np.std(lookback_perf)
+        return tracking_error(
+            performance=self.stored_properties_history_df["performance"],
+            lookback_months=lookback_months,
+            date=self.date,
+            date_performance=self.performance(),
+        )
 
     def normalized_tracking_error(self, lookback_months=1):
-        return self.tracking_error(lookback_months) / self.bm_oas()
+        return normalized_tracking_error(
+            self.tracking_error(lookback_months), self.bm_oas()
+        )
 
     def stored_properties(self):
         return pd.Series(
@@ -164,14 +150,22 @@ class Portfolio:
         if df is None:
             properties.to_parquet(self._stored_properties_history_fid)
         else:
-            updated_df = pd.concat(
+            df = pd.concat(
                 (df[~df.index.isin(properties.index)], properties)
             ).sort_index()
+            updated_df = self._update_stored_properties_df_historically(df)
             updated_df.to_parquet(self._stored_properties_history_fid)
 
-        if self._class_name == "Strategy":
+        if self.__class__.__name__ == "Strategy":
             for acnt in self.accounts.values():
                 acnt.save_stored_properties()
+
+    def _update_stored_properties_df_historically(self, df):
+        df["tracking_error"] = tracking_error(df["performance"])
+        df["normalized_tracking_error"] = normalized_tracking_error(
+            tracking_error(df["performance"], lookback_months=1), df["bm_oas"]
+        )
+        return df
 
     def plot_tsy_weights(self, ax=None, figsize=(8, 4)):
         """
@@ -274,10 +268,22 @@ class Portfolio:
         monthly_performance_df = (
             df.groupby(pd.Grouper(freq="M")).sum().iloc[-13:]
         )
+
+        def mid_month_val(df):
+            """Get value from middle of the month in a groupby."""
+            try:
+                return df.iloc[int(len(df) / 2)]
+            except IndexError:
+                # No data for the month, return an empty row.
+                return pd.Series(
+                    np.full(len(df.columns), np.nan), index=df.columns
+                )
+
         monthly_df = (
-            df.groupby(pd.Grouper(freq="M"))
-            .apply(lambda gdf: gdf.iloc[int(len(gdf) / 2)])
-            .iloc[-13:]
+            df.groupby(pd.Grouper(freq="M")).apply(mid_month_val).iloc[-13:]
+        )
+        monthly_df = (
+            df.groupby(pd.Grouper(freq="M")).apply(mid_month_val).iloc[-13:]
         )
         monthly_df["performance"] = monthly_performance_df["performance"]
         monthly_df.index = pd.Series(monthly_df.index).dt.strftime("%b*%Y")
@@ -368,7 +374,14 @@ class Portfolio:
 
 class Account(BondBasket, Portfolio):
     def __init__(
-        self, df, name, date, market="US", constraints=None, index="CUSIP"
+        self,
+        df,
+        name,
+        date,
+        account_market_values,
+        market="US",
+        constraints=None,
+        index="CUSIP",
     ):
         BondBasket.__init__(
             self,
@@ -378,7 +391,12 @@ class Account(BondBasket, Portfolio):
             constraints=constraints,
             index=index,
         )
-        Portfolio.__init__(self, date=date, name=name)
+        Portfolio.__init__(
+            self,
+            date=date,
+            name=name,
+            account_market_values=account_market_values,
+        )
         self.full_df = df.copy()
         self.df, self.tsy_df, self.cash_df = self._split_credit_tsy_cash(df)
 
@@ -444,11 +462,9 @@ class Account(BondBasket, Portfolio):
     def top_level_sector_df(self):
         return groupby(self.df, "LGIMATopLevelSector")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def market_value(self):
-        fid = root("data/account_values.parquet")
-        return pd.read_parquet(fid).loc[self.date, self.name]
+        return self._account_market_values.loc[self.name]
 
     def n_cusips(self):
         return len(self.port_df)
@@ -456,7 +472,9 @@ class Account(BondBasket, Portfolio):
     def dts(self, method="pct"):
         method = method.lower()
         if method == "pct":
-            return self.dts("port") / self.dts("bm")
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RuntimeWarning)
+                return self.dts("port") / self.dts("bm")
         elif method == "abs":
             return np.sum(self.df["DTS_Diff"])
         elif method == "duration":
@@ -542,7 +560,11 @@ class Account(BondBasket, Portfolio):
         return self.port_oas() - self.bm_oas()
 
     def barbell(self):
-        tsy_implied_dts = 1 - (self.tsy_oad() / self.full_df["BM_OAD"].sum())
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning)
+            tsy_implied_dts = 1 - (
+                self.tsy_oad() / self.full_df["BM_OAD"].sum()
+            )
         return self.dts() - tsy_implied_dts
 
     @property
@@ -572,7 +594,7 @@ class Account(BondBasket, Portfolio):
             ).sum() / self.full_df["P_Weight"].sum()
 
     def tsy_weights(self):
-        ix = pd.Series(index=self._tsy_bins)
+        ix = pd.Series(index=self._tsy_bins, dtype="float64")
         weights = groupby(self.tsy_df, "MaturityBin")["P_Weight"]
         return weights.add(ix, fill_value=0).fillna(0)
 
@@ -702,18 +724,15 @@ class Account(BondBasket, Portfolio):
         s = pd.Series(overweights, index=sectors, name=by)
         return s if len(s) > 1 else s.values[0]
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _port_total_return(self):
         return (self.full_df["TRet"] * self.full_df["P_Weight"]).sum()
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _bm_total_return(self):
         return (self.full_df["TRet"] * self.full_df["BM_Weight"]).sum()
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _port_credit_total_return(self):
         return (self.df["TRet"] * self.df["P_Weight"]).sum() / self.df[
             "P_Weight"
@@ -737,8 +756,7 @@ class Account(BondBasket, Portfolio):
     def performance(self):
         return 1e4 * self.total_return("relative")
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _otr_treasury_oad(self):
         fid = root("data/OTR_treasury_OAD_values.parquet")
         oad_s = pd.read_parquet(fid).loc[self.date]
@@ -903,11 +921,11 @@ class Account(BondBasket, Portfolio):
             maturity_bucket_port = self.subset(maturity=maturity_bucket)
             try:
                 _, oas_bins = pd.qcut(
-                    maturity_bucket_port.bm_df["OAS"],
+                    maturity_bucket_port.bm_df["OAS"].dropna(),
                     q=n_oas_buckets,
                     retbins=True,
                 )
-            except ValueError:
+            except (ValueError, IndexError):
                 for _ in range(n_oas_buckets):
                     d[label].append(np.nan)
                 continue
@@ -953,6 +971,7 @@ class Strategy(BondBasket, Portfolio):
         df,
         name,
         date,
+        account_market_values,
         market="US",
         constraints=None,
         index="CUSIP",
@@ -973,7 +992,12 @@ class Strategy(BondBasket, Portfolio):
             constraints=constraints,
             index=index,
         )
-        Portfolio.__init__(self, date=date, name=name)
+        Portfolio.__init__(
+            self,
+            date=date,
+            name=name,
+            account_market_values=account_market_values,
+        )
         self.name = name
 
         # Separate all accounts in the strategy.
@@ -1001,7 +1025,11 @@ class Strategy(BondBasket, Portfolio):
                 return (1, None)
 
     def is_plus_strategy(self):
-        return True if "Plus" in self.name else False
+        return "Plus" in self.name
+
+    def is_GC(self):
+        gc_str_list = ["Government/Credit", " GC "]
+        return any(gc_str in self.name for gc_str in gc_str_list)
 
     @cached_property
     def curve_pivot_point(self):
@@ -1016,7 +1044,12 @@ class Strategy(BondBasket, Portfolio):
 
     def _split_accounts(self):
         return {
-            account_name: Account(df, account_name, self.date)
+            account_name: Account(
+                df,
+                name=account_name,
+                date=self.date,
+                account_market_values=self._account_market_values,
+            )
             for account_name, df in self.df.groupby("Account", observed=True)
         }
 
@@ -1038,6 +1071,7 @@ class Strategy(BondBasket, Portfolio):
             self.df,
             name=self.name,
             date=self.date,
+            account_market_values=self._account_market_values,
             market=self.market,
             constraints=self.constraints,
             index=self.index,
@@ -1047,17 +1081,13 @@ class Strategy(BondBasket, Portfolio):
     def drop_empty_accounts(self):
         return self.add_ignored_accounts(self.empty_accounts())
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def account_market_values(self):
-        return (
-            pd.read_parquet(root("data/account_values.parquet"))
-            .loc[self.date, self.account_names]
-            .rename("MarketValue")
+        return self._account_market_values.loc[self.account_names].rename(
+            "MarketValue"
         )
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def market_value(self):
         return np.sum(self.account_market_values)
 
@@ -1079,7 +1109,12 @@ class Strategy(BondBasket, Portfolio):
         if ret_df:
             return pd.concat(account_vals, axis=1).T
         else:
-            return pd.Series(account_vals, index=self.account_names, name=name)
+            return pd.Series(
+                account_vals,
+                index=self.account_names,
+                name=name,
+                dtype="float64",
+            )
 
     def account_value_weight(self, account_vals, skipna=True):
         if isinstance(account_vals, pd.DataFrame):
@@ -1623,7 +1658,7 @@ class Strategy(BondBasket, Portfolio):
         )
         tsy_df["MaturityBin"] = tsy_df["MaturityBin"].map(bin_map)
 
-        ix = pd.Series(index=self._tsy_bins)
+        ix = pd.Series(index=self._tsy_bins, dtype="float64")
         tsy_df["AV_P_Weight"] = tsy_df["P_Weight"] * tsy_df["AccountValue"]
         weights = (
             tsy_df.groupby("MaturityBin").sum()["AV_P_Weight"]
