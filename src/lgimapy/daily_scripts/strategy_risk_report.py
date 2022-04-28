@@ -18,10 +18,10 @@ def build_strategy_risk_report():
     vis.style()
     debug = False
     db = Database()
-    db.update_portfolio_account_data()
     date = db.date("today")
-    # date = db.date("MONTH_START")
-    prev_date = db.date("1w")
+    # date = db.date("LAST_YEAR_END")
+    # date = db.date("LAST_MONTH_END")
+    prev_date = db.date("1w", date)
     # prev_date = pd.to_datetime("4/1/2021")
 
     dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
@@ -147,7 +147,7 @@ def build_strategy_risk_report():
     merge_pdfs(dated_fid, fids_to_merge, path=pdf_path, keep_bookmarks=True)
 
     # Update history for every portfolio.
-    update_portfolio_history()
+    # update_portfolio_history()
     # %%
 
 
@@ -485,17 +485,18 @@ def save_single_latex_risk_page(
         axis=1,
         sort=False,
     )
-    # Drop derivatives from table if there are none in the portfolio.
-    overview_table = overview_table[
-        (~overview_table.index.str.contains("Derivatives"))
-        | (overview_table.abs().sum(axis=1) > 0)
-    ]
-
+    # Find empty rows in strategies with no derivatives.
+    non_empty_rows_loc = (~overview_table.index.str.contains("Derivatives")) | (
+        overview_table.abs().sum(axis=1) > 0
+    )
+    # Format values in each row.
     prop_formats = curr_strat.property_latex_formats(properties)
     for prop, fmt in zip(overview_table.index, prop_formats):
         overview_table.loc[prop] = [
             "{:.{}}".format(v, fmt) for v in overview_table.loc[prop]
         ]
+    # Drop empty rows.
+    overview_table = overview_table[non_empty_rows_loc]
 
     # Build rating overweight table.
 
@@ -826,7 +827,7 @@ def save_single_latex_risk_page(
             gen_ow_table,
             caption="\\scriptsize Rating/Top Level Sector Overweights",
             col_fmt="lcc",
-            prec=2,
+            prec="2f",
             indent_subindexes=True,
             midrule_locs=["Corp", "Non-Corp"],
             adjust=True,
@@ -837,7 +838,7 @@ def save_single_latex_risk_page(
             bond_ow_table,
             caption="Individual Bonds",
             col_fmt="lrc|rc",
-            prec=3,
+            prec={col: "3f" for col in bond_ow_table.columns if "Delta" in col},
             align="left",
             multi_row_header=True,
             hide_index=True,
