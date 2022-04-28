@@ -249,10 +249,26 @@ def apply_row_fmt(fout, row_fmt_d, fmt_str, ix_map, hide_index):
 
 
 def float_cast(v):
+    """Cast values into a float, using np.nan on errors."""
     try:
         return float(v)
     except ValueError:
         return np.nan
+
+
+def fmt_v(v, fmt):
+    """Format values for LaTeX rendering."""
+    # Convert val into a float and get string version.
+    float_v = float_cast(v)
+    str_v = f"{float_v:.{fmt.strip('+')}}"
+
+    if pd.isna(float_v):
+        str_v = str_v.strip("%")
+
+    if fmt.startswith("+") and float_v > 0:
+        str_v = f"+{str_v}"
+
+    return str_v
 
 
 def latex_table(
@@ -517,26 +533,19 @@ def latex_table(
     # Round values to specified precision.
     if isinstance(prec, int):
         df = df.round(prec).copy()
+
+    elif isinstance(prec, str):
+        for col in df.columns:
+            df[col] = [fmt_v(v, prec) for v in df[col]]
+
     elif isinstance(prec, dict):
         for col, fmt in prec.items():
-            if fmt.startswith("+"):
-                df[col] = [
-                    f"{'+' if float_cast(v) > 0 else ''}{float_cast(v):.{fmt.strip('+')}}"
-                    for v in df[col]
-                ]
-            else:
-                df[col] = [f"{v:.{fmt}}" for v in df[col]]
+            df[col] = [fmt_v(v, fmt) for v in df[col]]
 
     # Round row values to specified precision.
     if isinstance(row_prec, dict):
         for row, fmt in row_prec.items():
-            if fmt.startswith("+"):
-                df.loc[row] = [
-                    f"{'+' if float_cast(v) > 0 else ''}{float_cast(v):.{fmt.strip('+')}}"
-                    for v in df.loc[row]
-                ]
-            else:
-                df.loc[row] = [f"{v:.{fmt}}" for v in df.loc[row]]
+            df.loc[row] = [fmt_v(v, fmt) for v in df.loc[row]]
 
     # Hide index if required.
     if hide_index:
@@ -687,7 +696,13 @@ def latex_table(
 
     # Create multi-row header if specified.
     if multi_row_header:
-        header = df.to_latex().split("toprule\n")[1].split("\\\\\n\midrule")[0]
+        header = (
+            df.style.format_index(escape="latex", axis="columns")
+            .format_index(escape="latex", axis="index")
+            .to_latex(hrules=True)
+            .split("toprule\n")[1]
+            .split("\\\\\n\midrule")[0]
+        )
         new_header = ""
         for i, h in enumerate(header.split("&")):
             if i == 0:
@@ -699,7 +714,13 @@ def latex_table(
         repl[latex_fmt(header)] = latex_fmt(new_header)
 
     # Build table with LaTeX formatting.
-    fout += latex_fmt(df.to_latex(column_format=cfmt))
+    fout += latex_fmt(
+        df.replace("&", "\&", regex=True)
+        .replace("%", "\%", regex=True)
+        .style.format_index(escape="latex", axis="columns")
+        .format_index(escape="latex", axis="index")
+        .to_latex(column_format=cfmt, hrules=True)
+    )
 
     # Add midrules if necesary.
     if midrule_locs is not None:
@@ -774,3 +795,10 @@ def latex_table(
 
 
 # %%
+# from lgimapy.utils import mock_df
+#
+# df = mock_df(3, 3)
+# df.columns = ["%j", "$f", "d"]
+# print(latex_table(df, prec={"d": "1%"}))
+# # %%
+# print(df.to_latex())
