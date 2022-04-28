@@ -47,10 +47,10 @@ def build_month_end_extensions_report():
     # %%
     db = Database()
     db.load_market_data()
-    db.update_portfolio_account_data()
 
-    strategy_accounts = load_json("strategy_accounts")
-    manager_accounts = load_json("manager_accounts")
+    strategy_accounts = db._strategy_account_map()
+    account_strategy = db._account_strategy_map()
+    manager_accounts = get_PM_accounts(db)
     account_manager = {}
     for manager, accounts in manager_accounts.items():
         for account in accounts:
@@ -70,32 +70,44 @@ def build_month_end_extensions_report():
     d = defaultdict(list)
     large_ticker_deltas_list = []
     for strategy, accounts in tqdm(strategy_accounts.items()):
-        # if strategy == "Liability Aware Long Duration Credit":
+        # if strategy == "US Long GC 75/25":
         #     break
         # else:
         #     continue
         if strategy in strategies_with_no_benchmark:
             continue
+
+        strat = db.load_portfolio(strategy=strategy, empty=True)
         for account in accounts:
             kwargs = {"account": account, "ret_df": True, "market_cols": False}
             try:
-                df_ret = db.load_portfolio(universe="returns", **kwargs)
-                df_stats = db.load_portfolio(universe="stats", **kwargs)
+                ret_df = db.load_portfolio(universe="returns", **kwargs)
+                stats_df = db.load_portfolio(universe="stats", **kwargs)
             except ValueError:
                 # except (ValueError, pd.io.sql.DatabaseError):
                 continue
             else:
                 pm = account_manager[account]
-                next_oad, next_dts = port_metrics(df_stats, strategy)
-                curr_oad, curr_dts = port_metrics(df_ret)
+                next_oad, next_dts = port_metrics(stats_df, strategy)
+                curr_oad, curr_dts = port_metrics(ret_df)
 
                 d["PM"].append(pm)
                 d["Strategy"].append(strategy.replace("_", " "))
                 d["last_name"].append(pm.split()[1])
-                d["OAD"].append(next_oad - curr_oad)
-                d["DTS"].append(next_dts - curr_dts)
+                d["$\Delta$OAD"].append(next_oad - curr_oad)
+                d["$\Delta$DTS"].append(next_dts / curr_dts - 1)
+                if strat.is_GC():
+                    next_credit_oad, _ = port_metrics(
+                        stats_df, strategy, credit=True
+                    )
+                    curr_credit_oad, _ = port_metrics(ret_df, credit=True)
+                    d["Credit*$\Delta$OAD"].append(
+                        next_credit_oad - curr_credit_oad
+                    )
+                else:
+                    d["Credit*$\Delta$OAD"].append(np.nan)
 
-                large_ticker_deltas_df = inspect_extension(df_ret, df_stats)
+                large_ticker_deltas_df = inspect_extension(ret_df, stats_df)
                 if len(large_ticker_deltas_df):
                     large_ticker_deltas_df["Strategy"] = strategy
                     large_ticker_deltas_list.append(large_ticker_deltas_df)
@@ -127,24 +139,23 @@ def build_month_end_extensions_report():
     doc = Document(fid, path="reports/month_end_extensions")
     doc.add_preamble(
         ignore_bottom_margin=True,
-        margin={
-            "left": 0.5,
-            "right": 0.5,
-            "top": 0.5,
-            "bottom": 0.2,
-        },
+        margin={"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2,},
         header=doc.header(
-            left="Month End Extensions",
-            right=today.strftime("%B %Y"),
+            left="Month End Extensions", right=today.strftime("%B %Y"),
         ),
         footer=doc.footer(logo="LG_umbrella"),
         table_caption_justification="c",
     )
     doc.add_table(
         ext_df,
-        prec={"OAD": "2f", "DTS": "0f"},
+        prec={
+            "$\Delta$OAD": "+2f",
+            "$\Delta$DTS": "+2%",
+            "Credit*$\Delta$OAD": "+2f",
+        },
         hide_index=True,
-        col_fmt="llrc|c",
+        col_fmt="llrr|r|r",
+        multi_row_header=True,
         midrule_locs=midrule_locs,
         alternating_colors=(None, "lightgray"),
     )
@@ -164,10 +175,17 @@ def build_month_end_extensions_report():
         midrule_locs = [
             i for i, v in enumerate(ticker_deltas_table["Strategy"]) if v != " "
         ][1:]
+        prec = {}
+        for col in ticker_deltas_table.columns:
+            if "Delta" in col:
+                prec[col] = "+2f"
+            elif "CTD" in col:
+                prec[col] = "2f"
+
         doc.add_table(
             ticker_deltas_table,
             caption="Large Ticker changes in CTD",
-            prec=2,
+            prec=prec,
             multi_row_header=True,
             midrule_locs=midrule_locs,
             hide_index=True,
@@ -185,14 +203,39 @@ def build_month_end_extensions_report():
     # %%
 
 
-def port_metrics(df, strategy=None):
+def get_PM_accounts(db):
+    sql = """\
+        SELECT\
+            BloombergId,\
+            PrimaryPortfolioManager,\
+            s.[Name] as PMStrategy\
+        FROM [LGIMADatamart].[dbo].[DimAccount] a (NOLOCK)\
+        INNER JOIN LGIMADatamart.dbo.DimStrategy s (NOLOCK)\
+            ON a.StrategyKey = s.StrategyKey\
+        WHERE a.DateEnd = '9999-12-31'\
+            AND a.DateClose IS NULL\
+        ORDER BY BloombergID\
+        """
+    df = db.query_datamart(sql)
+    df.columns = ["account", "manager", "strategy"]
+    return {
+        pm: list(df[df["manager"] == pm]["account"])
+        for pm in df["manager"].unique()
+    }
+
+
+def port_metrics(df, strategy=None, credit=False):
     """
     Perform special rules for specifying return index
     for next month from current stats index, and return
     OAD and DTS for benchmark portfolio.
     """
     if strategy is None:
-        bm_oad = df["BM_OAD"].sum()
+        if credit:
+            df_credit = df[df["Sector"] != "TREASURIES"]
+            bm_oad = df_credit["BM_OAD"].sum()
+        else:
+            bm_oad = df["BM_OAD"].sum()
         bm_dts = (df["BM_OASD"] * df["OAS"]).sum()
         return bm_oad, bm_dts
 
@@ -271,28 +314,37 @@ def port_metrics(df, strategy=None):
     dropped_maturities = pd.to_datetime(
         dt.today() + relativedelta(years=minimum_years, months=minimum_months)
     ).to_period("M")
-    next_month_ret_df = df[df["MaturityMonth"] > dropped_maturities]
+    next_month_ret_df = df[df["MaturityMonth"] > dropped_maturities].copy()
     # Re-Weight index with only bonds that will be in it.
-    bm_oad = (
+
+    next_month_ret_df["Estimated_OAD"] = (
         next_month_ret_df["DataMart_OAD"]
         * next_month_ret_df["BM_Weight"]
         / next_month_ret_df["BM_Weight"].sum()
-    ).sum()
-    bm_dts = (
+    )
+    if credit:
+        next_month_credit_ret_df = next_month_ret_df[
+            next_month_ret_df["Sector"] != "TREASURIES"
+        ]
+        bm_oad = next_month_credit_ret_df["Estimated_OAD"].sum()
+    else:
+        bm_oad = next_month_ret_df["Estimated_OAD"].sum()
+    next_month_ret_df["Estimated_DTS"] = (
         next_month_ret_df["OAS"]
         * next_month_ret_df["DataMart_OASD"]
         * next_month_ret_df["BM_Weight"]
         / next_month_ret_df["BM_Weight"].sum()
-    ).sum()
+    )
+    bm_dts = next_month_ret_df["Estimated_DTS"].sum()
     return bm_oad, bm_dts
 
 
-def inspect_extension(df_ret, df_stats):
-    ret_oad = df_ret.set_index("CUSIP")["BM_OAD"].rename("Returns*CTD")
-    stats_oad = df_stats.set_index("CUSIP")["BM_OAD"].rename("Stats*CTD")
+def inspect_extension(ret_df, stats_df):
+    ret_oad = ret_df.set_index("CUSIP")["BM_OAD"].rename("Returns*CTD")
+    stats_oad = stats_df.set_index("CUSIP")["BM_OAD"].rename("Stats*CTD")
     map_cols = ["Ticker", "Sector"]
     d = defaultdict(dict)
-    for df in [df_ret, df_stats]:
+    for df in [ret_df, stats_df]:
         for col in map_cols:
             map = dict(zip(df["CUSIP"], df[col]))
             d[col] = {**map, **d[col]}
