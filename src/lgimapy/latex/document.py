@@ -909,7 +909,7 @@ class Document(LatexScript):
         fid: str
             Filename with path of saved .pdf file.
         """
-        for extension in ["aux", "log", "out"]:
+        for extension in ["aux", "log", "out", "fdb_latexmk", "fls"]:
             try:
                 os.remove(f"{fid}.{extension}")
             except FileNotFoundError:
@@ -1020,6 +1020,7 @@ class Document(LatexScript):
                     shell=False,
                     stderr=subprocess.STDOUT,
                     stdout=subprocess.DEVNULL,
+                    timeout=10,
                 )
 
         n = 2 if "\\transparent" in doc else 1
