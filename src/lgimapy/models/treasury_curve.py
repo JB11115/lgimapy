@@ -6,22 +6,19 @@ from collections import defaultdict, namedtuple
 from dateutil.relativedelta import relativedelta
 from functools import lru_cache
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore", RuntimeWarning)
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from scipy.interpolate import interp1d
+from scipy.optimize import fsolve, minimize, OptimizeWarning
+from tqdm import tqdm
 
-    import matplotlib.pyplot as plt
-    import matplotlib.ticker as mtick
-    import numpy as np
-    import pandas as pd
-    import seaborn as sns
-    from scipy.interpolate import interp1d
-    from scipy.optimize import fsolve, minimize, OptimizeWarning
-    from tqdm import tqdm
-
-    import lgimapy.vis as vis
-    from lgimapy.bloomberg import get_bloomberg_ticker
-    from lgimapy.data import Database, TBond, SyntheticTBill, TreasuryCurve
-    from lgimapy.utils import nearest, mkdir, root, smooth_weight
+import lgimapy.vis as vis
+from lgimapy.bloomberg import get_bloomberg_ticker
+from lgimapy.data import Database, TBond, SyntheticTBill, TreasuryCurve
+from lgimapy.utils import nearest, mkdir, root, smooth_weight
 
 vis.style()
 
@@ -43,6 +40,73 @@ def svensson(t, B):
                 + B[3] * (aux2 / gam2 + aux2 - 1)
             ),
         )
+
+
+def clean_treasuries(df):
+    """
+    Get clean treasuries bond data for building the model curve.
+
+    Keep only non-callable treasuries. Additionally,
+    remove bonds that have current maturities less than
+    the original maturity of another tenor (e.g., remove
+    30 year bonds once their matuirty is less than 10 years,
+    10 and 7,7 and 5, etc.).
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+
+    Returns
+    -------
+    pd.DataFrame
+    """
+    # Get Bloomberg ticker.
+    df["BTicker"] = get_bloomberg_ticker(df["CUSIP"].values)
+    treasury_tickers = {"US/T", "T"}
+    strip_tickers = {"S", "SP", "SPX", "SPY"}
+    bill_tickers = set("B")
+
+    # Make maturity map for finding on-the-run bonds.
+    otr_maturity_map = {
+        30: 10,
+        10: 7,
+        8: 5,
+        7: 5,
+        5: 3,
+        3: 2,
+        2: 3 / 12,
+    }
+    next_og_tenor = df["OriginalMaturity"].map(otr_maturity_map)
+    is_on_the_run = (df["MaturityYears"] - next_og_tenor) > 0
+
+    is_a_treasury = df["BTicker"].isin(treasury_tickers)
+    is_bill_or_strip = df["BTicker"].isin(bill_tickers | strip_tickers)
+    is_not_treasury_strip = ~df["BTicker"].isin(strip_tickers)
+    has_zero_coupon = (df["CouponType"] == "ZERO COUPON") | (
+        (df["CouponType"] == "FIXED") & (df["CouponRate"] == 0)
+    )
+    has_USD_currency = df["Currency"] == "USD"
+    is_US_bond = df["CountryOfRisk"] == "US"
+    matures_on_the_15th = df["MaturityDate"].dt.day == 15
+    is_not_callable = df["CallType"] == "NONCALL"
+    oas_isnt_too_high = df["OAS"] < 40
+    oas_isnt_too_low = df["OAS"] > -30
+    has_standard_maturity = df["OriginalMaturity"].isin(otr_maturity_map.keys())
+    matures_in_more_than_3_months = df["MaturityYears"] > (3 / 12)
+
+    # Apply all rules.
+    return df[
+        (is_a_treasury | has_zero_coupon)
+        & (is_not_treasury_strip | matures_on_the_15th)
+        & (is_on_the_run | is_bill_or_strip)
+        & is_US_bond
+        & has_USD_currency
+        & has_standard_maturity
+        & is_not_callable
+        & oas_isnt_too_high
+        & oas_isnt_too_low
+        & matures_in_more_than_3_months
+    ].copy()
 
 
 class TreasuryCurveBuilder:
@@ -71,15 +135,16 @@ class TreasuryCurveBuilder:
         if ix is not None:
             # Load all index features.
             ix = ix.copy()
-            ix.df["BTicker"] = get_bloomberg_ticker(ix.df["CUSIP"].values)
             self._full_df = ix.df.copy()  # for debugging
-            ix.clean_treasuries()
-            strips = {"SP", "S", "SPY", "SPX"}
-            self._treasuries_df = ix.df[ix.df["BTicker"] == "T"].copy()
-            self._strips_df = ix.df[ix.df["BTicker"].isin(strips)].copy()
-            self._bills_df = ix.df[ix.df["BTicker"] == "B"].copy()
-            self.df = ix.df.copy()
-            self.date = ix.dates[0]
+            df = clean_treasuries(ix.df)
+
+            tsy_tickers = {"US/T", "T"}
+            strip_tickers = {"SP", "S", "SPY", "SPX"}
+            self._treasuries_df = df[df["BTicker"].isin(tsy_tickers)].copy()
+            self._strips_df = df[df["BTicker"].isin(strip_tickers)].copy()
+            self._bills_df = df[df["BTicker"] == "B"].copy()
+            self.df = df.copy()
+            self.date = df["Date"].iloc[0]
             self._all_bonds = self._preprocess_bonds()
         else:
             # Load parameters from parquet file.
@@ -538,7 +603,7 @@ class TreasuryCurveBuilder:
             df = self._curves_df.copy()
             df.columns = df.columns.astype(float)
             df = df[df.index != self.date].copy()  # drop date if it exists.
-            df = df.append(new_row, sort=False)
+            df = pd.concat((df, new_row))
             if df.index[-1] != np.max(df.index):
                 # Date added is not last date in file, sort file.
                 df.sort_index(inplace=True)
@@ -557,7 +622,7 @@ class TreasuryCurveBuilder:
             # File exists, append to it and sort.
             df = self._params_df.copy()
             df = df[df.index != self.date].copy()  # drop date if it exists.
-            df = df.append(new_row, sort=False)
+            df = pd.concat((df, new_row))
             if df.index[-1] != np.max(df.index):
                 # Date added is not last date in file, sort file.
                 df.sort_index(inplace=True)
@@ -993,3 +1058,15 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# %%
+# db = Database()
+# db.load_market_data()
+# ix = db.build_market_index(drop_treasuries=False, sector="TREASURIES")
+# tsy_ix = db.build_market_index(drop_treasuries=False)
+# tsy_ix.clean_treasuries()
+# df_old = tsy_ix.df.copy()
+#
+# # %%
+# df_new["Date"].iloc[0]

@@ -6,7 +6,7 @@ import pandas as pd
 import statsmodels.api as sm
 
 from lgimapy.stats import percentile
-from lgimapy.utils import to_list, root
+from lgimapy.utils import to_list, to_datetime, root
 
 
 # %%
@@ -33,7 +33,7 @@ class XSRETPerformance:
         fid = root("data/xsret_model_history.parquet")
         return pd.read_parquet(fid)
 
-    def train(self, forecast="1m", date=None, **kwargs):
+    def train(self, forecast="1m", date=None, predict_from_date=None, **kwargs):
         """
         Train the model over given period of time.
 
@@ -51,14 +51,18 @@ class XSRETPerformance:
         """
         self.date = pd.to_datetime(date)
         self.forecast = forecast.upper()
-        self.predict_from_date = self.db.date(
-            forecast, reference_date=self.date
-        )
+        if predict_from_date is None:
+            self.predict_from_date = self.db.date(
+                forecast, reference_date=self.date
+            )
+        else:
+            self.predict_from_date = to_datetime(predict_from_date)
+
         self.predict_from_fmt_date = self.predict_from_date.strftime("%#m/%d")
         required_dates = set(
             self.db.trade_dates(start=self.predict_from_date, end=date)
         )
-        if not required_dates < set(self.db.loaded_dates):
+        if not required_dates <= set(self.db.loaded_dates):
             # Database is not loaded with all required dates.
             raise IndexError("Database does not have required dates loaded")
 
@@ -142,6 +146,7 @@ class XSRETPerformance:
             # date to the forecast date.
             ix_from_date = self.ix.subset(start=date)
             xsrets = ix_from_date.accumulate_individual_excess_returns()
+            trets = ix_from_date.accumulate_individual_total_returns()
             weights = ix_from_date.get_value_history("MarketValue").sum()
 
             # Find median DTS on that day and XSRet of index over the forecast.
@@ -160,6 +165,7 @@ class XSRETPerformance:
                         cols,
                     ],
                     xsrets,
+                    trets,
                     weights.rename("weight"),
                 ),
                 axis=1,
@@ -174,6 +180,7 @@ class XSRETPerformance:
                 d["FCast*XSRet"][key] = row["fcast"]
                 d["Real*XSRet"][key] = row["XSRet"]
                 d["Out*Perform"][key] = row["XSRet"] - row["fcast"]
+                d["TRet"][key] = row["TRet"]
                 d["weight"][key] = row["weight"]
                 d["Ticker"][key] = row["Ticker"]
                 d["Maturity"][key] = row["MaturityYears"]
@@ -202,8 +209,8 @@ class XSRETPerformance:
             return mae
         else:
             mae_history = self._model_history_df[f"MAE_{pctile}"].dropna()
-            updated_history = mae_history.append(
-                pd.Series(mae), ignore_index=True
+            updated_history = pd.concat(
+                (mae_history, pd.Series(mae)), ignore_index=True
             )
             return int(100 * updated_history.rank(pct=True).iloc[-1])
 
@@ -220,8 +227,8 @@ class XSRETPerformance:
             return mad
         else:
             mad_history = self._model_history_df[f"MAD_{pctile}"].dropna()
-            updated_history = mad_history.append(
-                pd.Series(mad), ignore_index=True
+            updated_history = pd.concat(
+                (mad_history, pd.Series(mad)), ignore_index=True
             )
             return int(100 * updated_history.rank(pct=True).iloc[-1])
 
@@ -230,7 +237,7 @@ class XSRETPerformance:
     def _weighted_average(self, col, df):
         return 1e4 * (df[col] @ df["weight"]) / np.sum(df["weight"])
 
-    def get_sector_table(self):
+    def get_sector_table(self, trets=False):
         """
         Aggregate forecast by sector and show performance
         over specified horizon.
@@ -270,7 +277,10 @@ class XSRETPerformance:
                 )
 
                 # Get excess return forecast and realized values in bp.
-                for col in ["FCast*XSRet", "Real*XSRet", "Out*Perform"]:
+                cols = ["FCast*XSRet", "Real*XSRet", "Out*Perform"]
+                if trets:
+                    cols.append("TRet")
+                for col in cols:
                     d[col].append(self._weighted_average(col, fcast_xsret_df))
         return (
             pd.DataFrame(d)
@@ -412,8 +422,7 @@ class XSRETPerformance:
                     row_d[col] = self._weighted_average(
                         col, rating_df_d[rating]
                     )
-                row = pd.Series(row_d)
-                table = table.append(row, ignore_index=True)
+                table = pd.concat((table, pd.Series(row_d).to_frame().T))
 
         table = table.sort_values("Out*Perform", ascending=False).reset_index(
             drop=True
@@ -479,8 +488,7 @@ class XSRETPerformance:
             "Real*XSRet": self._weighted_average("Real*XSRet", self._fcast_df),
             "Out*Perform": 0,
         }
-        row = pd.Series(row_d)
-        return df.append(row, ignore_index=True)
+        return pd.concat((df, pd.Series(row_d).to_frame().T))
 
     @property
     def sectors(self):
@@ -530,45 +538,28 @@ class XSRETPerformance:
 def main():
     pass
     # %%
+    # Code for testing
     from lgimapy.data import Database
 
-    forecast = "1m"
     db = Database()
     db.load_market_data(start=db.date("2m"))
-    date = None
-    self = XSRETPerformance(db)
-    self.train(forecast=forecast, date=date, maturity=(5, 10))
-    kwargs = db.index_kwargs("MIDSTREAM")
-    curr = self.get_issuer_table(**kwargs)
 
     # %%
-    # n_points = 500
-    # window = 4
-    # curve_table = (
-    #     self.get_curve_table(window=window, n_points=n_points)
-    #     .rolling(10, min_periods=0)
-    #     .mean()
-    # )
-    #
-    # from lgimapy import vis
-    # vis.style()
-    #
-    # # %%
-    # fig, ax = vis.subplots(figsize=(10, 6))
-    # kws = {"alpha": 0.6}
-    # ax.fill_between(
-    #     curve_table.index, 0, curve_table["A"], color="navy", label="A", **kws
-    # )
-    # ax.fill_between(
-    #     curve_table.index,
-    #     0,
-    #     curve_table["BBB"],
-    #     color="goldenrod",
-    #     label="BBB",
-    #     **kws,
-    # )
-    # ax.legend(fancybox=True, shadow=True)
-    # ax.set_title(f"Curve Outperformance since {self.predict_from_fmt_date}")
-    # ax.set_ylabel("Excess Return (bp)")
-    # ax.set_
+    forecast = "YTD"
+    maturity = (10, None)
+    self = XSRETPerformance(db)
+    self.train(forecast=forecast, maturity=maturity)
+
     # %%
+    kwargs = db.index_kwargs("SIFI_BANKS_SR")
+    issuer_table = self.get_issuer_table(**kwargs)
+    sector_table = self.get_sector_table()
+    sector_table = self.add_index_row(
+        sector_table, name="Long Credit Stats Index"
+    )
+    # %%
+    issuer_table
+    df = issuer_table[issuer_table["RatingBucket"] == "A"].round(0)
+    df.drop(["Impact*Factor", "RatingBucket"], axis=1).set_index(
+        "Issuer"
+    ).astype(int)

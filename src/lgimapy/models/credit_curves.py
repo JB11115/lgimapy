@@ -6,7 +6,7 @@ from scipy.optimize import fsolve, minimize, LinearConstraint
 import pandas as pd
 
 
-from lgimapy.data import Database, TreasuryCurve, Bond, SyntheticBond
+from lgimapy.data import TreasuryCurve, Bond, SyntheticBond
 from lgimapy.utils import to_list, Time
 
 # %%
@@ -88,7 +88,7 @@ class CreditCurve:
         self._t = np.zeros([self._n, self._m])
         for i, b in enumerate(bonds):
             self._PV[i] = b.DirtyPrice
-            self._w[i] = 1 / (b.OASD ** 2)
+            self._w[i] = 1 / (b.OASD**2)
             for j, (cf, t) in enumerate(zip(b.cash_flows, b.coupon_years)):
                 self._cf[i, j] = cf
                 self._t[i, j] = t

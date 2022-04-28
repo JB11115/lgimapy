@@ -257,7 +257,7 @@ class DefaultRates:
         d["mv_start"] = prev["mv_start"]
         d["mv_CDR"] = defaulted_mv / prev["mv_start"]
         new_row = pd.Series(d, name=fid).to_frame().T
-        new_table = table.append(new_row)
+        new_table = pd.concat((table, new_row))
         new_table.to_parquet(table_fid)
 
     def update_CDR_tables(self, fid, ix):

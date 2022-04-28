@@ -4,13 +4,12 @@ import numpy as np
 import pandas as pd
 
 from lgimapy.bloomberg import bdp
-from lgimapy.data import Database
 from lgimapy.utils import to_list
 
 # %%
 
 
-def add_rating_outlooks(ix):
+def add_rating_outlooks(db, ix):
     """
     Add the current outlook and current numeric rating for each
     rating agency in columns to :attr:`Index.df`.
@@ -26,7 +25,6 @@ def add_rating_outlooks(ix):
         Index with rating outlook and individual numberic rating
         columns added for each rating agency.
     """
-    db = Database()
     rating_agencies = ["SP", "Moody", "Fitch"]
     outlook_map = {"NEG": 1, "POS": -1, "STABLE": 0, np.nan: 0}
 
@@ -57,6 +55,7 @@ def _simulate_rating_action(df, agency, n_notches):
 
 
 def simulate_rating_migrations(
+    db,
     ix,
     migration,
     threshold,
@@ -98,9 +97,8 @@ def simulate_rating_migrations(
         Index with boolean columns for each set of notches
         that result in a rating migration past given threshold.
     """
-    db = Database()
     if add_rating_outlook_columns:
-        ix = add_rating_outlooks(ix)
+        ix = add_rating_outlooks(db, ix)
 
     rating_agencies = ["SP", "Moody", "Fitch"]
     rating_cols = [f"{agency}NumericRating" for agency in rating_agencies]
@@ -199,32 +197,3 @@ def simulate_rating_migrations(
 
         ix.df[new_column_name.format(notch)] = breaks_threshold
     return ix
-
-
-# %%
-# max_individual_agency_notches = 2
-# new_column_name = "{}Notch"
-# add_rating_outlook_columns = True
-# migration = "upgrade"
-# threshold = "BB+"
-# add_rating_outlook_columns = False
-# notches = [2]
-
-# db = Database()
-# db.load_market_data()
-# hy_ix = db.build_market_index(in_H0A0_index=True)
-# ix = hy_ix.subset(rating=("BB+", "BB-"))
-# ix = add_rating_outlooks(ix)
-
-
-# %%
-
-# ix_sim = simulate_rating_migrations(
-#     ix,
-#     "upgrade",
-#     threshold="BB+",
-#     notches=[2],
-#     max_individual_agency_notches=1,
-# )
-# %%
-# list(ix_sim.df[ix_sim.df["2Notch"] == 1]["Ticker"].unique())
