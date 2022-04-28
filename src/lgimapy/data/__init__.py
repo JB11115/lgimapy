@@ -42,7 +42,12 @@ from lgimapy.data.strategy_overweights import update_strategy_overweights
 from lgimapy.data.rating_changes import update_rating_changes
 from lgimapy.data.hy_index_members import update_hy_index_members
 from lgimapy.data.wishlist import save_bond_wishlist
+from lgimapy.data.account_strategy_maps import (
+    update_account_strategy_maps,
+    get_account_strategy_map_list,
+)
 from lgimapy.data.portfolio_history import update_portfolio_history
+
 
 __all__ = [
     "IG_sectors",
@@ -84,5 +89,7 @@ __all__ = [
     "update_rating_changes",
     "update_hy_index_members",
     "save_bond_wishlist",
+    "update_account_strategy_maps",
+    "get_account_strategy_map_list",
     "update_portfolio_history",
 ]
