@@ -31,7 +31,7 @@ def get_cashflows(cusip, maturity_date=None):
         mkdir(fid.parent)
         cash_flows_df.to_parquet(fid)
         X_drive_fid = X_drive(
-            "Credit Strategy/lgimapy/data/cashflows/{cusip}.parquet"
+            f"Credit Strategy/lgimapy/data/cashflows/{cusip}.parquet"
         )
         cash_flows_df.to_parquet(X_drive_fid)
 
