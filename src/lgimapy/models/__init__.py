@@ -1,6 +1,10 @@
 from lgimapy.models.total_least_squares import TLS
 from lgimapy.models.drawdown import find_drawdowns, plot_drawdown_timeseries
 from lgimapy.models.rolling import rolling_zscore
+from lgimapy.models.tracking_error import (
+    tracking_error,
+    normalized_tracking_error,
+)
 from lgimapy.models.xsret_performance import XSRETPerformance
 from lgimapy.models.rating_migrations import (
     add_rating_outlooks,
@@ -9,6 +13,7 @@ from lgimapy.models.rating_migrations import (
 from lgimapy.models.credit_curves import CreditCurve
 from lgimapy.models.dispersion import Dispersion
 from lgimapy.models.default_rate import DefaultRates
+
 
 __all__ = [
     "TLS",
@@ -21,4 +26,6 @@ __all__ = [
     "CreditCurve",
     "Dispersion",
     "DefaultRates",
+    "tracking_error",
+    "normalized_tracking_error",
 ]
