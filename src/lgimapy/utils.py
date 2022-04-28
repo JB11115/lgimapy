@@ -150,7 +150,7 @@ def load_json(filename=None, empty_on_error=False, full_fid=None):
     if full_fid is None:
         json_fid = root(f"data/{filename}.json")
     else:
-        json_fid = Path(full_fid)
+        json_fid = Path(full_fid).with_suffix(".json")
     try:
         with open(json_fid, "r") as fid:
             return json.load(fid)
@@ -180,7 +180,7 @@ def dump_json(d, filename=None, full_fid=None, **kwargs):
     if full_fid is None:
         json_fid = root(f"data/{filename}.json")
     else:
-        json_fid = Path(full_fid)
+        json_fid = Path(full_fid).with_suffix(".json")
     dump_kwargs = {"indent": 4}
     dump_kwargs.update(**kwargs)
     with open(json_fid, "w") as fid:
