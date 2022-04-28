@@ -45,8 +45,14 @@ def get_maturity_wall_df(ix):
 def get_maturity_walls():
     db = Database()
     dates = {
-        date.strftime("%#m/%d/%Y"): date
-        for date in [db.date("1y"), db.date("today")]
+        date.strftime("%-m/%d/%Y"): date
+        for date in [
+            # db.date("10y"),
+            # db.date("5y"),
+            # db.date("3y"),
+            db.date("1y"),
+            db.date("today"),
+        ]
     }
     ratings = {"BB": ("BB+", "BB-"), "B": ("B+", "B-"), "CCC": ("CCC+", "CCC-")}
     d = defaultdict(dict)
@@ -62,7 +68,7 @@ def get_maturity_walls():
 
 
 def plot_maturity_walls(mat_walls, doc):
-    fig, axes = vis.subplots(3, 2, figsize=(10, 12))
+    fig, axes = vis.subplots(3, 2, figsize=(10, 12))  # 25
     colors = dict(zip(mat_walls.keys(), vis.colors("ryb")))
     for i, (rating, date_d) in enumerate(mat_walls.items()):
         cols = ["MV", "MV_%"]
@@ -74,7 +80,14 @@ def plot_maturity_walls(mat_walls, doc):
         for j, col in enumerate(cols):
             ax = axes[i, j]
             df = pd.concat(d[col], axis=1)
-            df.plot.bar(color=["grey", colors[rating]], alpha=0.8, rot=0, ax=ax)
+            color_list = [
+                # "dimgray",
+                "gray",
+                # "darkgray",
+                # "lightgray",
+                colors[rating],
+            ]
+            df.plot.bar(color=color_list, alpha=0.8, rot=0, ax=ax)
             ax.grid(False, axis="x")
 
             if col.endswith("%"):
@@ -104,15 +117,20 @@ def update_maturity_walls(fid):
     doc = Document(fid, path="reports/HY", fig_dir=True)
     doc.add_preamble(
         bookmarks=True,
-        margin={"left": 0.5, "right": 0.5, "top": 1.5, "bottom": 1},
+        margin={
+            "left": 0.5,
+            "right": 0.5,
+            "top": 1.5,
+            "bottom": 1,
+            # "paperwidth": 35,
+            # "paperheight": 20,
+        },
         footer=doc.footer(logo="LG_umbrella", height=-0.5, width=0.09),
     )
     doc.add_section("Maturity Walls")
     plot_maturity_walls(maturity_wall_data, doc)
     doc.save()
 
-
-# %%
 
 if __name__ == "__main__":
     fid = "Maturity_Walls"

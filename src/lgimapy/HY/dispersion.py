@@ -168,14 +168,21 @@ def plot_current_histograms(doc):
     col = "OAS"
     db = Database()
     dates = {
-        "Current": db.date("today"),
-        "1 Month Ago": db.date("1m"),
-        "Wides (3/23)": pd.to_datetime("3/23/2020"),
-        "Tights (1/17)": pd.to_datetime("1/17/2020"),
+        "Current": (db.date("today"), "k"),
+        "1 Month Ago": (db.date("1m"), "indigo"),
+        "Dec. '21": (db.nearest_date("12/5/2021"), "dodgerblue"),
+        "Pre-Covid Tights (Jan '20)": (
+            pd.to_datetime("1/17/2020"),
+            "goldenrod",
+        ),
+        "Sept. '18": (db.nearest_date("9/5/2018"), "firebrick"),
+        "June '14": (db.nearest_date("6/5/2014"), "hotpink"),
     }
     spread_d = defaultdict(list)
     weight_d = defaultdict(list)
-    for name, date in dates.items():
+    colors = []
+    for name, (date, color) in dates.items():
+        colors.append(color)
         db.load_market_data(date=date, local=True)
         mv_ix = db.build_market_index(in_hy_stats_index=True)
         titles = ["Market Value Weighted", "Issuer Weighted"]
@@ -193,7 +200,6 @@ def plot_current_histograms(doc):
                     ix.df["MarketValue"].rename(name)
                 )
 
-    colors = ["k", "dodgerblue", "indigo", "darkgreen"]
     fig, axes = vis.subplots(2, 2, figsize=(12, 7))
     for ax, (title, spreads_list) in zip(axes.flat, spread_d.items()):
         weights_list = weight_d[title]
@@ -224,7 +230,7 @@ def plot_current_histograms(doc):
             )
             ax.axes.yaxis.set_ticks([])
             ax.set_title(title, fontweight="bold", fontsize=14)
-            ax.set_xlim((0, 2000))
+            ax.set_xlim((0, 1000))
     axes[0, 1].legend(shadow=True, fancybox=True)
     vis.savefig(doc.fig_dir / "current_histograms", dpi=200)
 
@@ -271,9 +277,15 @@ def make_section_plots(section, df, doc):
 
     dates = {
         "Current": (db.date("today"), "k"),
-        "1 Month Ago": (db.date("1m"), "dodgerblue"),
-        "Wides (3/23)": (pd.to_datetime("3/23/2020"), "indigo"),
-        "Tights (1/17)": (pd.to_datetime("1/17/2020"), "darkgreen"),
+        "1 Month Ago": (db.date("1m"), "indigo"),
+        "Dec. '21": (db.nearest_date("12/5/2021"), "dodgerblue"),
+        "Covid Wides (March '20)": (pd.to_datetime("3/23/2020"), "darkgreen"),
+        "Pre-Covid Tights (Jan '20)": (
+            pd.to_datetime("1/17/2020"),
+            "goldenrod",
+        ),
+        "Sept. '18": (db.nearest_date("9/5/2018"), "firebrick"),
+        "June '14": (db.nearest_date("6/5/2014"), "hotpink"),
     }
     df_jp = df[[f"median_{section}_", f"IQR_90_10_{section}_"]].copy()
     df_jp.columns = ["Median OAS", "IDR"]
@@ -297,8 +309,9 @@ def make_section_plots(section, df, doc):
             "o",
             ms=5,
             color=color,
+            alpha=0.8,
             label=lbl,
-            zorder=5 - i,
+            zorder=len(dates) + 1 - i,
         )
     vis.savefig(doc.fig_dir / f"{section}_abs_jointplot", dpi=200)
 
@@ -324,8 +337,9 @@ def make_section_plots(section, df, doc):
             "o",
             ms=5,
             color=color,
+            alpha=0.8,
             label=lbl,
-            zorder=5 - i,
+            zorder=len(dates) + 1 - i,
         )
     g.ax_joint.legend(fancybox=True, shadow=True, fontsize=8)
     vis.savefig(doc.fig_dir / f"{section}_rel_jointplot", dpi=200)
@@ -358,14 +372,9 @@ def get_decile_table(df, subset):
         vals = df_sub[col].dropna().round(2)
         d[current_date].append(int(np.round(vals[-1])) if int_col else vals[-1])
         d["Percentile"].append(np.round(100 * vals.rank(pct=True)[-1]))
-        med = np.median(vals)
-        d["Median"].append(int(np.round(med)) if int_col else med)
-        d["Max"].append(
-            int(np.round(np.max(vals))) if int_col else np.max(vals)
-        )
-        d["Min"].append(
-            int(np.round(np.min(vals))) if int_col else np.min(vals)
-        )
+        d["Median"].append(np.median(vals))
+        d["Max"].append(np.max(vals))
+        d["Min"].append(np.min(vals))
         quantiles = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100]
         __, bins = pd.qcut(vals, np.array(quantiles) / 100, retbins=True)
         if col in float_cols:
@@ -416,7 +425,16 @@ def make_decile_tables(df, doc):
             caption=title,
             col_fmt="l|r|rrr|rrr",
             font_size="small",
-            int_vals=True,
+            prec={
+                "$ \mu - \\tilde{x} $": "0f",
+                "Std Dev": "0f",
+                "IDR": "0f",
+                "IQR": "0f",
+                "RSD": "2f",
+                "DCV": "2f",
+                "QCV": "2f",
+            },
+            row_prec={"Percentile": "0f"},
             midrule_locs=["Median"],
             specialrule_locs=["0-9"],
             loc_style=color_locs,

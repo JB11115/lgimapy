@@ -35,6 +35,7 @@ def update_spreads_yields_returns(fid):
     sections = {
         "Spreads Overview": {
             "df": spreads_df,
+            "prec": "0f",
             "cols": [
                 "H0A0*US HY",
                 "HC1N*US BB",
@@ -54,6 +55,7 @@ def update_spreads_yields_returns(fid):
         },
         "Spreads Fin/Non-Fin": {
             "df": spreads_df,
+            "prec": "0f",
             "cols": [
                 "CF40*US*BBB f",
                 "C4NF*US*BBB nf",
@@ -70,6 +72,7 @@ def update_spreads_yields_returns(fid):
         },
         "Spreads Differences": {
             "df": spreads_df,
+            "prec": "0f",
             "cols": [
                 "US*B-BB",
                 "US nf*BB-BBB",
@@ -85,6 +88,7 @@ def update_spreads_yields_returns(fid):
         "Yields Overview": {
             "df": yields_df,
             "yields": True,
+            "prec": "2f",
             "cols": [
                 "H0A0*US HY",
                 "HC1N*US BB",
@@ -144,18 +148,27 @@ def update_spreads_yields_returns(fid):
     # Add percentile tables for spreads and yields.
     doc.add_bookmark("Decile Tables")
     doc.add_bookmark("Spreads", level=1)
+    prec_base = {"Percentile": "0f"}
     for section, kwargs in sections.items():
         if section.startswith("Yield"):
             doc.add_bookmark("Yields", level=1)
+
         df, cols, yields = (
             kwargs["df"],
             kwargs["cols"],
             kwargs.get("yields", False),
         )
+
         table, color_locs, notes = make_table(df[cols], yields=yields)
+        prec = prec_base.copy()
+        for idx in table.index:
+            if idx in {"Start Date", "Percentile"}:
+                continue
+            prec[idx] = kwargs["prec"]
         doc.add_table(
             table,
             caption=section,
+            row_prec=prec,
             table_notes=notes,
             table_notes_justification="c",
             col_fmt=kwargs["col_fmt"],
@@ -187,7 +200,8 @@ def update_spreads_yields_returns(fid):
                 "cmin": "firebrick",
             }
         doc.add_table(
-            table.round(2),
+            table,
+            prec={col: "2f" for col in df.columns if col != "Index"},
             caption=title,
             col_fmt="l|l|rrrrr|rrr",
             font_size="Large",

@@ -197,7 +197,7 @@ def update_sharpe_ratios_and_correlations(fid):
     # cols = db.bbg_names(sr_df.columns[:-1]) + ['HUFN']
     # sr_df.columns = cols
     sr_df.index = [f"{p}yr" for p in periods]
-    doc.add_table(sr_df, prec=2, caption="Annualized Sharpe Ratios")
+    doc.add_table(sr_df, prec="2f", caption="Annualized Sharpe Ratios")
     doc.add_figure("sharpe_ratios", savefig=True)
     doc.save()
 

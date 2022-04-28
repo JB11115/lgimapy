@@ -13,8 +13,9 @@ def update_valuations(fid, db):
     doc = Document(fid, path="reports/HY", fig_dir=True)
     date = db.date("today").strftime("%B %#d, %Y")
     doc.add_preamble(
+        orientation="landscape",
         margin={
-            "paperheight": 32,
+            # "paperheight": 33,
             "left": 0.5,
             "right": 0.5,
             "top": 0.5,
@@ -129,18 +130,23 @@ def update_valuations(fid, db):
             "B*OAS",
             "B*YTW",
         ]
+        left, right = doc.add_minipages(n=2, widths=[0.3, 0.65])
         prec = {col: "0f" if "OAS" in col else "2%" for col in table.columns}
-
+        year_starts = [idx for idx in table.index if idx.startswith("01")][2:]
         cap = f"{section} \\$ weighted summary."
-        doc.add_table(
-            table,
-            col_fmt="l|cc|cc|cc",
-            font_size="scriptsize",
-            prec=prec,
-            multi_row_header=True,
-            caption=cap,
-        )
-        doc.add_figure(section, width=0.95, savefig=True)
+        with doc.start_edit(left):
+            doc.add_table(
+                table,
+                col_fmt="l|cc|cc|cc",
+                font_size="scriptsize",
+                midrule_locs=year_starts,
+                prec=prec,
+                multi_row_header=True,
+                caption=cap,
+            )
+        with doc.start_edit(right):
+            doc.add_figure(section, width=0.95, savefig=True)
+        doc.add_pagebreak()
 
         # Round spreads.
         for col in df.columns:
