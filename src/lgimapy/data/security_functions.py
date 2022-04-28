@@ -485,7 +485,7 @@ def groupby(
         cols_to_keep = concat_lists(groupby_cols, cols_to_aggregate)
         df_to_group = df[cols_to_keep].copy()
     else:
-        df_to_group = df.copy()
+        df_to_group = df.dropna(subset=groupby_cols, how="all").copy()
 
     # Collect columns that should be market value weighted
     # and create a mv weighted column for each that is present.
