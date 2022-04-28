@@ -16,6 +16,7 @@ from lgimapy.data import (
     update_bloomberg_data,
     update_market_data_feathers,
     update_account_market_values,
+    update_account_strategy_maps,
     update_treasury_oad_values,
     update_fed_funds,
     update_trade_dates,
@@ -57,6 +58,8 @@ def main():
     print("Updated On-the-run Treasury OADs\n")
     update_account_market_values()
     print("Updated Account Market Values\n")
+    update_account_strategy_maps()
+    print("Updated Account-Strategy Maps\n")
     update_bloomberg_data()
     print("Updated Bloomberg Data\n")
     update_dealer_inventory()
@@ -70,6 +73,7 @@ def main():
     build_issuer_change_report()
     print("Issuer Change Report Complete\n")
     build_strategy_risk_report()
+    print()
     update_nonfin_spreads()
     print("Updated Nonfin Sub-Rating Spreads\n")
     save_bond_wishlist()
