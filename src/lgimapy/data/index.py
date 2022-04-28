@@ -708,7 +708,7 @@ class Index(BondBasket):
         weights_df = mv_df.divide(np.sum(mv_df, axis=1).values, axis=0) ** 2
         vol = (np.sum(var_df * weights_df, axis=1) ** 0.5)[window_size - 1 :]
         if annualized:
-            vol *= 252 ** 0.5
+            vol *= 252**0.5
         return vol
 
     def find_rating_changes(self, rating_agency):
@@ -986,7 +986,7 @@ class Index(BondBasket):
         if end_date is not None:
             t_ret_df = t_ret_df[t_ret_df.index <= to_datetime(end_date)]
 
-        total_ret = np.prod(1 + t_ret_df) - 1
+        total_ret = (np.prod(1 + t_ret_df) - 1).rename("TRet")
         if return_total_ret_timeseries:
             return total_ret, t_ret_df
         else:
