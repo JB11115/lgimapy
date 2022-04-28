@@ -6,7 +6,7 @@ from tqdm import tqdm
 from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.portfolios import PerformancePortfolio
+from lgimapy.portfolios import AttributionIndex
 from lgimapy.utils import load_json
 
 vis.style()
@@ -16,11 +16,12 @@ db = Database()
 
 account = "P-LD"
 bm_index = "STATS_US_IG_10+"
-start_date = db.date("ytd", "1/5/2020")
-end_date = db.date("ytd", "1/5/2021")
+
+year = 2019
+start_date = db.date("YEAR_START", year)
+end_date = db.date("YEAR_END", year)
 n_tickers = 15
 n_sectors = 10
-ignored_sectors = {"ENERGY"}
 
 fid = f"{account}_batting_average_{start_date:%Y-%m-%d}_to_{end_date:%Y-%m-%d}"
 # %%
@@ -73,11 +74,7 @@ tickers = ticker_impact.index
 
 
 sector_d = defaultdict(dict)
-sectors = [
-    sector
-    for sector in db.IG_sectors(drop_chevrons=True)
-    if sector not in ignored_sectors
-]
+sectors = db.IG_sectors(unique=True)
 sectors.append(bm_index)
 for sector in tqdm(sectors):
     kwargs = db.index_kwargs(sector)
@@ -91,7 +88,6 @@ sector_xsret = (
     pd.Series(sector_d["xsret"]).sort_values(ascending=False).dropna()
 )
 
-
 p_weight_dates = db.date("MONTH_STARTS", start=start_date)[1:]
 p_weight_s_list = []
 for date in tqdm(p_weight_dates):
@@ -102,8 +98,8 @@ p_weights = pd.concat(p_weight_s_list, axis=1).fillna(0).sum(axis=1)
 p_weights /= p_weights.sum()
 
 # %%
-pp = PerformancePortfolio("P-LD", start=start_date, end=end_date, pbar=True)
-sector_performance = pp.sectors()
+pp = AttributionIndex("P-LD", start=start_date, end=end_date, pbar=True)
+sector_performance = pp.sectors(sectors[::-1])
 strat_performance = pp.total()
 # %%
 ticker_df = pd.DataFrame(index=tickers)

@@ -72,7 +72,7 @@ for i, p in enumerate(bottom_ax.patches):
         va="bottom" if y >= 0 else "top",
         ha="center",
         fontweight="bold",
-        fontsize=10,
+        fontsize=8,
         color="navy",
     )
 
