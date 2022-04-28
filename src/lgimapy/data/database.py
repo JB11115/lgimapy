@@ -14,7 +14,7 @@ from pathlib import Path
 
 import boto3
 import datetime as dt
-from fuzzywuzzy import process
+import fuzzywuzzy
 import numpy as np
 import pandas as pd
 import pyodbc
@@ -106,9 +106,6 @@ class Database:
     def __init__(self, server="LIVE", market="US"):
         self.server = server
         self.market = check_market(market)
-        # Load mapping from standard ratings to numeric values.
-        self._bbg_dfs = {}
-        self._baml_dfs = {}
 
     @cached_property
     def _datamart_conn(self):
@@ -150,6 +147,27 @@ class Database:
     @staticmethod
     def S_drive(fid=""):
         return S_drive(fid)
+
+    def query_datamart(self, sql, **kwargs):
+        """
+        Query datamart using an SQL query.
+
+        Parameters
+        ----------
+        sql: str
+            SQL query to be executed or a table name.
+        kwargs:
+            Keyword arguments for ``pandas.read_sql()``.
+
+        Returns
+        -------
+            pd.DataFrame or Iterator[pd.DataFrame]
+        """
+        with warnings.catch_warnings():
+            # ignore warning for non-SQLAlchemy Connecton
+            # see github.com/pandas-dev/pandas/issues/45660
+            warnings.simplefilter("ignore", UserWarning)
+            return pd.read_sql(sql, self._datamart_conn, **kwargs)
 
     @cached_property
     def _passwords(self):
@@ -276,7 +294,10 @@ class Database:
     def _rating_changes_df(self):
         """pd.DataFrame: Rating change history."""
         fid = self.local("rating_changes.parquet")
-        return pd.read_parquet(fid)
+        df = pd.read_parquet(fid)
+        for col in ["Date_NEW", "Date_PREV"]:
+            df[col] = pd.to_datetime(df[col])
+        return df
 
     @cached_property
     def _ticker_changes(self):
@@ -664,13 +685,15 @@ class Database:
                     **kwargs,
                 )
 
-    def account_values(self):
-        query = f"""
+    def get_account_market_values(self):
+        sql = f"""
             SELECT AV.DateKey, AV.MarketValue, DA.BloombergID
             FROM dbo.AccountValue AV
             JOIN dbo.DimAccount DA ON AV.AccountKey = DA.AccountKey
+            WHERE AV.DateKey >= {self.date("PORTFOLIO_START"):%Y%m%d}
             """
-        df = pd.read_sql(query, self._datamart_conn)
+
+        df = self.query_datamart(sql)
         df["DateKey"] = pd.to_datetime(df["DateKey"], format="%Y%m%d")
         return (
             pd.pivot_table(
@@ -683,14 +706,27 @@ class Database:
         ).round(6)
 
     @cached_property
-    def _account_to_strategy(self):
-        """Dict[str: str]: Account name to strategy map."""
-        return load_json("account_strategy")
+    def account_market_values(self):
+        fid = self.local("account_market_values.parquet")
+        return pd.read_parquet(fid)
 
     @cached_property
-    def _strategy_to_accounts(self):
+    def _strategy_benchmark_map(self):
+        return load_json("strategy_benchmarks")
+
+    @lru_cache(maxsize=None)
+    def _account_strategy_map(self, date=None):
+        """Dict[str: str]: Account name to strategy map."""
+        date = self.date("today") if date is None else to_datetime(date)
+        fid = self.local(f"portfolios/account_strategy_maps/{date:%Y-%m-%d}")
+        return load_json(full_fid=fid)
+
+    @lru_cache(maxsize=None)
+    def _strategy_account_map(self, date=None):
         """Dict[str: str]: Respective accounts for each strategy."""
-        return load_json("strategy_accounts")
+        date = self.date("today") if date is None else to_datetime(date)
+        fid = self.local(f"portfolios/strategy_account_maps/{date:%Y-%m-%d}")
+        return load_json(full_fid=fid)
 
     @cached_property
     def _manager_to_accounts(self):
@@ -727,12 +763,11 @@ class Database:
 
     def load_trade_dates(self):
         """List[datetime]: Dates with credit data."""
-        dates_sql = "select distinct effectivedatekey from \
+        sql = "select distinct effectivedatekey from \
             dbo.InstrumentAnalytics order by effectivedatekey"
-
         return list(
             pd.to_datetime(
-                pd.read_sql(dates_sql, self._datamart_conn).values.ravel(),
+                self.query_datamart(sql).values.ravel(),
                 format="%Y%m%d",
             )
         )
@@ -1542,10 +1577,12 @@ class Database:
         # Alert user to missing utilities
         loaded_issuers = set(df.loc[utes]["Issuer"].unique())
         missing_issuers = loaded_issuers - set(utility_map.keys())
-        missing_utes = groupby(
-            df[df["Issuer"].isin(missing_issuers)], "Issuer"
-        )["Ticker"]
-        if len(missing_utes):
+        cols = ["Issuer", "Ticker"]
+        missing_issuers_df = df[df["Issuer"].isin(missing_issuers)].dropna(
+            subset=cols
+        )
+        if len(missing_issuers_df):
+            missing_utes = groupby(missing_issuers_df[cols], "Issuer")["Ticker"]
             print("\nMissing Utility Business Structures:")
             for issuer, ticker in missing_utes.items():
                 print(f"    {ticker: <8}: {issuer}")
@@ -1596,7 +1633,7 @@ class Database:
 
         # Load data into a DataFrame form SQL in chunks to
         # reduce memory usage, cleaning them on the fly.
-        df_chunk = pd.read_sql(query, self._datamart_conn, chunksize=50_000)
+        df_chunk = self.query_datamart(query, chunksize=50_000)
         chunk_list = []
         for chunk in df_chunk:
             # Preprocess chunk.
@@ -2562,6 +2599,7 @@ class Database:
         get_mv=False,
         hy_duration_adjustment=0.5,
         raw=False,
+        empty=False,
     ):
         """
         Load portfolio data from SQL server. If end is not specified
@@ -2572,10 +2610,6 @@ class Database:
         ----------
         date: datetime, optional
             Single date to scrape.
-        start: datetime, optional
-            Starting date for scrape.
-        end: datetime, optional
-            Ending date for scrape.
         name: str, optional
             Name for returned portfolio.
         account: str or List[str], optional
@@ -2593,20 +2627,23 @@ class Database:
         hy_duration_adjustment: float, default=0.5,
             Empirical adjustment to duration for HY bonds in IG
             portfolios since they do not trade with full duration.
+        raw: bool, default=False
+            If ``True``, do not perform any preprocessing to the data
+            and simply return the pd.DataFrame of raw data.
+        empty: bool, default=False,
+            If ``True``, return a portfolio with empty DataFrames.
+            This is useful to simply look at the stored property
+            history or get the portfolio's fid.
+
         Returns
         -------
-        df: pd.DataFrame
-            Portfolio history over specified date range.
+        :class:`Account` or :class:`Strategy`:
+            Portfolio class for specified date.
         """
         # Format dates for SQL call.
         fmt = "%Y%m%d"
-        current_date = self.trade_dates()[-1].strftime(fmt)
-        if date is not None:
-            start = end = date
-        start = (
-            current_date if start is None else to_datetime(start).strftime(fmt)
-        )
-        end = current_date if end is None else to_datetime(end).strftime(fmt)
+        date = self.date("today") if date is None else to_datetime(date)
+        start = end = date.strftime(fmt)
 
         # Convert inputs for SQL call.
         if account is None:
@@ -2636,28 +2673,45 @@ class Database:
         sql_portfolio = ", ".join(inputs + ["2"])
         sql_both = ", ".join(inputs)
 
-        # # Query SQL.
-        df = pd.read_sql(sql_base + sql_both, self._datamart_conn)
+        if empty:
+            required_cols = [
+                "CUSIP",
+                "ISIN",
+                "Account",
+                "Sector",
+                "L3",
+                "MaturityYears",
+            ]
+            df = pd.DataFrame(columns=required_cols)
+        else:
+            df = self.query_datamart(sql_base + sql_both)
         if raw:
             return df
-        df = self._preprocess_portfolio_data(df)
-        if not len(df):
-            port = strategy or account
-            date_fmt = pd.to_datetime(start).strftime("%m/%d/%Y")
-            raise ValueError(f"No data for {port} {universe} on {date_fmt}.")
 
-        if not market_cols:
+        if not empty:
+            df = self._preprocess_portfolio_data(df)
+
+        if not empty and not len(df):
+            port = account or strategy
+            raise ValueError(
+                f"No data for {port} {universe} on {date:%m/%d/%Y}."
+            )
+
+        if empty:
+            pass
+        elif not market_cols:
             df.sort_values(["Date", "Account", "Ticker"], inplace=True)
         else:
             # Get market data, loading if required.
             if (
                 self.loaded_dates is None
-                or to_datetime(start) < self.loaded_dates[0]
-                or to_datetime(end) > self.loaded_dates[-1]
+                or not self.loaded_dates
+                or date < self.loaded_dates[0]
+                or date > self.loaded_dates[-1]
             ):
-                self.load_market_data(start=start, end=end)
+                self.load_market_data(date=date)
             market_df = self.build_market_index(
-                start=start, end=end, drop_treasuries=False
+                date=date, drop_treasuries=False
             ).df
 
             # Subset columns to append to portfolio data.
@@ -2665,114 +2719,90 @@ class Database:
                 market_cols = list(set(market_df) - set(df))
             else:
                 market_cols = to_list(market_cols, dtype=str)
-            ix = ["Date", "CUSIP"]
-            market_cols.extend(ix)
+            idx = ["Date", "CUSIP"]
+            market_cols.extend(idx)
 
             # Combine market data to portfolio data.
             df = (
-                df.set_index(ix)
-                .join(market_df[market_cols].set_index(ix), on=ix)
+                df.set_index(idx)
+                .join(market_df[market_cols].set_index(idx), on=idx)
                 .reset_index()
                 .sort_values(["Date", "Account", "Ticker"])
             )
 
-        # Return correct class.
-        if start == end:
-            date = pd.to_datetime(start).strftime("%Y-%m-%d")
-            lgima_sectors = load_json(f"lgima_sector_maps/{date}")
+        if not empty:
+            date_fid = date.strftime("%Y-%m-%d")
+            lgima_sectors = load_json(f"lgima_sector_maps/{date_fid}")
             df["LGIMASector"] = df["CUSIP"].map(lgima_sectors)
-            lgima_top_sectors = load_json(f"lgima_top_level_sector_maps/{date}")
+            lgima_top_sectors = load_json(
+                f"lgima_top_level_sector_maps/{date_fid}"
+            )
             df["LGIMATopLevelSector"] = df["CUSIP"].map(lgima_top_sectors)
 
-        if get_mv:
-            missing_ix = df["AmountOutstanding"].isna()
-            cusips = set(df.loc[missing_ix, "CUSIP"])
-            mv = bdp(cusips, "Corp", "AMT_OUTSTANDING").squeeze() / 1e6
-            cusip_mv = df.loc[missing_ix, "CUSIP"].map(mv.to_dict())
-            df.loc[missing_ix, "AmountOutstanding"] = cusip_mv
-            df["MarketValue"] = df["AmountOutstanding"] * df["DirtyPrice"] / 100
+            if get_mv:
+                missing_ix = df["AmountOutstanding"].isna()
+                cusips = set(df.loc[missing_ix, "CUSIP"])
+                mv = bdp(cusips, "Corp", "AMT_OUTSTANDING").squeeze() / 1e6
+                cusip_mv = df.loc[missing_ix, "CUSIP"].map(mv.to_dict())
+                df.loc[missing_ix, "AmountOutstanding"] = cusip_mv
+                df["MarketValue"] = (
+                    df["AmountOutstanding"] * df["DirtyPrice"] / 100
+                )
 
-        # Correct BB's OAD for IG accounts.
-        hy_eligible_strategies = ["US Credit Plus", "US Long Credit Plus"]
-        hy_eligible_accounts = list(
-            chain(
-                *[
-                    self._strategy_to_accounts[strat]
-                    for strat in hy_eligible_strategies
-                ]
+            # Correct BB's OAD for IG accounts.
+            hy_eligible_strategies = ["US Credit Plus", "US Long Credit Plus"]
+            hy_eligible_accounts = list(
+                chain(
+                    *[
+                        self._strategy_account_map(date)[strat]
+                        for strat in hy_eligible_strategies
+                    ]
+                )
             )
-        )
-        if (
-            strategy in hy_eligible_strategies
-            or account in hy_eligible_accounts
-        ):
-            df.loc[
-                (df["NumericRating"] >= 11) & (df["NumericRating"] <= 13),
-                ["OAD_Diff", "P_OAD"],
-            ] *= hy_duration_adjustment
+            if (
+                strategy in hy_eligible_strategies
+                or account in hy_eligible_accounts
+            ):
+                df.loc[
+                    (df["NumericRating"] >= 11) & (df["NumericRating"] <= 13),
+                    ["OAD_Diff", "P_OAD"],
+                ] *= hy_duration_adjustment
 
-        df = self._add_calculated_portfolio_columns(df)
+            df = self._add_calculated_portfolio_columns(df)
 
         if ret_df:
             return df
+
+        account_market_values = self.account_market_values.loc[date]
         if start == end:
             if sql_strategy != "NULL":
                 return Strategy(
                     df,
                     name=sql_strategy.strip("'"),
                     date=start,
+                    account_market_values=account_market_values,
                     ignored_accounts=ignored_accounts,
                 )
             elif sql_account != "NULL":
                 if len(acnts) == 1:
-                    return Account(df, sql_account.strip("'"), date=start)
+                    return Account(
+                        df,
+                        sql_account.strip("'"),
+                        date=start,
+                        account_market_values=account_market_values,
+                    )
                 else:
                     return Strategy(
                         df,
                         sql_account,
                         date=start,
+                        account_market_values=account_market_values,
                         ignored_accounts=ignored_accounts,
                     )
             else:
                 return df
         else:
             return df
-
-    def update_portfolio_account_data(self):
-        # Load SQL table.
-        sql = """\
-            SELECT\
-                BloombergId,\
-                PrimaryPortfolioManager,\
-                s.[Name] as PMStrategy\
-            FROM [LGIMADatamart].[dbo].[DimAccount] a (NOLOCK)\
-            INNER JOIN LGIMADatamart.dbo.DimStrategy s (NOLOCK)\
-                ON a.StrategyKey = s.StrategyKey\
-            WHERE a.DateEnd = '9999-12-31'\
-                AND a.DateClose IS NULL\
-            ORDER BY BloombergID\
-            """
-        df = pd.read_sql(sql, self._datamart_conn)
-        df.columns = ["account", "manager", "strategy"]
-        # Save account: strategy json.
-        account_strategy = {
-            row["account"]: row["strategy"] for _, row in df.iterrows()
-        }
-        dump_json(account_strategy, "account_strategy")
-
-        # Save PM: accounts json.
-        pm_accounts = {
-            pm: list(df[df["manager"] == pm]["account"])
-            for pm in df["manager"].unique()
-        }
-        dump_json(pm_accounts, "manager_accounts")
-
-        # Save Strategy: accounts json.
-        strategy_accounts = {
-            strat: list(df[df["strategy"] == strat]["account"])
-            for strat in df["strategy"].unique()
-        }
-        dump_json(strategy_accounts, "strategy_accounts")
 
     def _read_bbg_df(self, field):
         """
@@ -2789,17 +2819,12 @@ class Database:
         pd.DataFrame:
             Bloomberg data for specified field.
         """
-        try:
-            return self._bbg_dfs[field]
-        except KeyError:
-            df = pd.read_csv(
-                self.local(f"bloomberg_timeseries/{field}.csv"),
-                index_col=0,
-                parse_dates=True,
-                infer_datetime_format=True,
-            )
-            self._bbg_dfs[field] = df
-            return df
+        return pd.read_csv(
+            self.local(f"bloomberg_timeseries/{field}.csv"),
+            index_col=0,
+            parse_dates=True,
+            infer_datetime_format=True,
+        )
 
     def _clean_baml_df(self, df):
         """pd.DataFrame: clean columns in BAML decile report DataFrames."""
@@ -2825,10 +2850,11 @@ class Database:
                 new_df[col] = df[col]
         return new_df.copy()
 
+    @lru_cache(maxsize=None)
     def _read_baml_df(self, field):
         """
         Read cached Bloomberg data file. If not cached,
-        load and cache file before returning.
+        load and cache file beforedont  returning.
 
         Parameters
         ----------
@@ -2842,18 +2868,14 @@ class Database:
         """
         fid_d = {"OAS": "report_spreads", "YTW": "report_yields"}
 
-        try:
-            return self._baml_dfs[field]
-        except KeyError:
-            raw_df = pd.read_csv(
-                self.local(f"HY/{fid_d[field]}.csv"),
-                index_col=0,
-                parse_dates=True,
-                infer_datetime_format=True,
-            )
-            df = self._clean_baml_df(raw_df)
-            self._bbg_dfs[field] = df.copy()
-            return df
+        raw_df = pd.read_csv(
+            self.local(f"HY/{fid_d[field]}.csv"),
+            index_col=0,
+            parse_dates=True,
+            infer_datetime_format=True,
+        )
+        df = self._clean_baml_df(raw_df)
+        return df
 
     def load_bbg_data(
         self,
@@ -3216,7 +3238,7 @@ class Database:
             order by i.cusip
             """
         )
-        df = pd.read_sql(sql, self._datamart_conn)
+        df = self.query_datamart(sql)
         s = pd.to_datetime(df.set_index("CUSIP")["DateEnd"])
         if start is not None:
             s = s[s >= to_datetime(start)]
@@ -3293,7 +3315,7 @@ class Database:
         state_codes = []
         all_states = set(self.state_codes.keys())
         for state in to_list(states, dtype=str):
-            key, score = process.extract(state, all_states)[0]
+            key, score = fuzzywuzzy.process.extract(state, all_states)[0]
             if score > 85:
                 state_codes.append(self.state_codes[key])
             else:
@@ -3315,6 +3337,19 @@ class Database:
             boto3_session=self._3PDH_sess,
         )
 
+    def account_flows(self, account):
+        mv = self.account_market_values[account].dropna()
+        strategy = self._account_strategy_map()[account]
+        bm = self._strategy_benchmark_map[strategy]
+        tret_level = self.load_bbg_data(
+            bm, "TRET", start=mv.index[0], end=mv.index[-1]
+        )
+        dates = sorted(list(set(mv.index) & set(tret_level.index)))
+
+        mv_pct_chg = mv.loc[dates].pct_change()
+        tret = tret_level.loc[dates].pct_change()
+        return (mv_pct_chg - tret).dropna()
+
 
 # %%
 def main():
@@ -3325,13 +3360,11 @@ def main():
     from tqdm import tqdm
 
     from lgimapy import vis
-    from lgimapy.bloomberg import bdp, bdh
+    from lgimapy.bloomberg import bdp, bdh, get_cashflows
     from lgimapy.data import IG_sectors, HY_sectors
     from lgimapy.portfolios import AttributionIndex
     from lgimapy.utils import (
         Time,
-        load_json,
-        dump_json,
         to_sql_list,
         to_clipboard,
         mkdir,
@@ -3344,20 +3377,27 @@ def main():
 
     db = Database()
     # %%
-    db.load_market_data(start=db.date("1m"))
+
     # %%
-    ix = db.build_market_index(
-        **db.index_kwargs(
-            "SIFI_BANKS_SR", rating=("BBB+", "BBB-"), maturity=(10, 30)
-        )
-    )
-    ix.df
-    db.convert_numeric_ratings(5)
-    ix = db.build_market_index(cusip="95000U2U6")
-    ix.df
-    ix.OAS()
-    # %%
-    df = db.load_bbg_data(
-        ["US_IG", "US_IG_10+"], "OAS", start=db.date("5y"), end="1/31/2022"
-    )
-    df.rank(pct=True).iloc[-1]
+    month_ends = db.date("MONTH_ENDS")[-13:-1]
+    month_starts = db.date("MONTH_STARTS")[-12:]
+
+    dw = []
+    for ms, me in zip(month_starts, month_ends):
+        db.load_market_data(date=me)
+        me_ix = db.build_market_index(in_H4UN_index=True)
+        df = me_ix.df.set_index("ISIN")
+        old_weight = (df["MarketValue"] / df["MarketValue"].sum()).rename("w0")
+
+        db.load_market_data(date=ms)
+        ms_ix = db.build_market_index(in_H4UN_index=True)
+        df = ms_ix.df.set_index("ISIN")
+        new_weight = (df["MarketValue"] / df["MarketValue"].sum()).rename("w1")
+
+        df = pd.concat((old_weight, new_weight), axis=1).fillna(0)
+        df["dw"] = df["w1"] - df["w0"]
+        turnover = df[df["dw"] > 0]["dw"].sum()
+        dw.append(turnover)
+
+    sum(dw) * 0.35 / 100 * 1e4
+    sum(dw)
