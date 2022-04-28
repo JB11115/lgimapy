@@ -189,7 +189,7 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
                 )
             )
 
-    ratings = np.mean(pd.DataFrame(ratings_list)).round(0).astype(int)
+    ratings = np.mean(pd.DataFrame(ratings_list), axis=0).round(0).astype(int)
     df_list.append(Database().convert_numeric_ratings(ratings).rename("Rating"))
     df = pd.DataFrame(df_list).T.rename_axis(None)
     ticker_df = strategy_d["US MC"].ticker_df.copy()
@@ -207,7 +207,7 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
             except KeyError:
                 analyst_rating = np.nan
             s = pd.Series({"AnalystRating": analyst_rating}, name=ticker)
-            ticker_df = ticker_df.append(s, ignore_index=False)
+            ticker_df = pd.concat((ticker_df, s.to_frame().T))
 
     df["Analyst*Score"] = ticker_df["AnalystRating"][df.index].round(0)
     mv_weighted_dts = (ticker_df["DTS"] * ticker_df["MarketValue"])[df.index]
@@ -236,7 +236,7 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
             )
         for col in str_cols:
             df_row[col] = "-"
-        summary_df = summary_df.append(df_row)
+        summary_df = pd.concat((summary_df, df_row.to_frame().T))
 
     # Create `other` row if required.
     if len(df) > n:
@@ -250,8 +250,11 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
         other_tickers = df_other_tickers.sum().rename("Other")
         other_tickers["Rating"] = "-"
         other_tickers["Analyst*Score"] = "-"
-        table_df = df_top_tickers.sort_values("ow", ascending=False).append(
-            other_tickers
+        table_df = pd.concat(
+            (
+                df_top_tickers.sort_values("ow", ascending=False),
+                other_tickers.to_frame().T,
+            )
         )
         other_tickers = ", ".join(sorted(df_other_tickers.index))
         note = f"\\scriptsize \\textit{{Other}} consists of {other_tickers}."
@@ -259,7 +262,7 @@ def _get_overview_table(sector_kwargs, strategy_d, n):
         table_df = df.sort_values("ow", ascending=False)
         note = None
 
-    return summary_df.append(table_df)[table_cols], note
+    return pd.concat((summary_df, table_df))[table_cols], note
 
 
 def add_issuer_performance_tables(page, sector_kwargs, xsret_model_d):

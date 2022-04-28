@@ -1127,6 +1127,9 @@ if __name__ == "__main__":
     date = "9/30/2021"
     date = Database().date("yesterday")
     date = Database().date("today")
+    import warnings
+
+    warnings.simplefilter("error", FutureWarning)
     with Time():
         build_credit_snapshots(date)
 
