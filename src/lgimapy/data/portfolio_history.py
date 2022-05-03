@@ -4,7 +4,7 @@ from functools import cached_property, lru_cache
 
 import joblib
 import pandas as pd
-from tqdm import tqdm
+from oslo_concurrency import lockutils
 
 from lgimapy.data import Database, get_account_strategy_map_list
 from lgimapy.utils import (
@@ -17,25 +17,6 @@ from lgimapy.utils import (
 )
 
 # %%
-
-
-def update_portfolio_history():
-    pass
-
-
-def old_main():
-    # override_from_date = Database().date("portfolio_start")
-    override_from_date = None
-    override_to_date = None
-    # specific_strategies = "US Intermediate Credit A or better"
-    specific_strategies = None
-    ignored_accounts = set(["SESIBNM", "SEUIBNM"])
-    update_portfolio_history(
-        override_from_date,
-        override_to_date,
-        specific_strategies,
-        ignored_accounts,
-    )
 
 
 class PortfolioHistory:
@@ -52,7 +33,7 @@ class PortfolioHistory:
 
     @property
     def _processed_ignored_accounts_fid(self):
-        return "portfolio_history_ignored_accounts"
+        return "portfolio_processed_history_ignored_accounts"
 
     @property
     def _desired_ignored_accounts_fid(self):
@@ -73,6 +54,12 @@ class PortfolioHistory:
         return load_json(
             self._desired_ignored_accounts_fid, empty_on_error=True
         )
+
+    def desired_ignored_accounts(self, date):
+        try:
+            return set(self.desired_ignored_accounts_d[self._fmt_date(date)])
+        except KeyError:
+            return set()
 
     @property
     def processed_ignored_accounts_d(self):
@@ -160,6 +147,11 @@ class PortfolioHistory:
                 list(ignored_accounts)
             )
 
+    @lockutils.synchronized(
+        "erroneous_ignored_accounts",
+        external=True,
+        lock_path=Database().local(),
+    )
     def _add_erroneous_ignored_account(self, account, date):
         date = self._fmt_date(date)
         erroneous_ignored_accounts_d = self._erroneous_ignored_accounts_d
@@ -186,6 +178,11 @@ class PortfolioHistory:
             sort_keys=True,
         )
 
+    @lockutils.synchronized(
+        "processed_ignored_accounts",
+        external=True,
+        lock_path=Database().local(),
+    )
     def _add_processed_ignored_account(self, account, date):
         date = self._fmt_date(date)
         processed_ignored_accounts_d = self.processed_ignored_accounts_d
@@ -202,6 +199,11 @@ class PortfolioHistory:
             sort_keys=True,
         )
 
+    @lockutils.synchronized(
+        "processed_ignored_accounts",
+        external=True,
+        lock_path=Database().local(),
+    )
     def _remove_processed_ignored_account(self, account, date):
         date = self._fmt_date(date)
         ignored_d = self.processed_ignored_accounts_d.copy()
@@ -409,29 +411,6 @@ class PortfolioHistory:
             last_date = completed_dates.iloc[-1]
             return self._db.trade_dates(exclusive_start=last_date)
 
-    # def update_portfolio_history(self):
-    #     self.build_ignored_accounts_file()
-
-    def override_portfolio_history(
-        override_from_date=None,
-        override_to_date=None,
-        specific_strategies=None,
-        ignored_accounts=None,
-    ):
-
-        fid = data_dir / "completed_dates.parquet"
-
-        for date in tqdm(
-            get_dates_to_update(fid, override_from_date, override_to_date)
-        ):
-            update_date(
-                date,
-                fid,
-                override_from_date,
-                specific_strategies,
-                ignored_accounts,
-            )
-
     @property
     def _completed_dates_fid(self):
         return self._db.local("portfolios/history/completed_dates.parquet")
@@ -459,15 +438,35 @@ class PortfolioHistory:
                 self._completed_dates_fid
             )
 
+    def _strategies_to_update(self, date):
+        strategies_to_update = []
+        for strategy in self.strategies:
+            port = self._db.load_portfolio(strategy=strategy, empty=True)
+            try:
+                completed_dates = set(port.stored_properties_history_df.index)
+            except AttributeError:
+                # Strategy has no stored property history yet.
+                strategies_to_update.append(strategy)
+
+            if date in completed_dates:
+                continue
+            else:
+                strategies_to_update.append(strategy)
+        return strategies_to_update
+
     def update_date(
+        self,
         date,
         specific_strategies=None,
+        force=True,
     ):
         date = to_datetime(date)
         if specific_strategies is not None:
             strategies = to_list(specific_strategies, dtype=str)
-        else:
+        elif force:
             strategies = self._sorted_strategies
+        else:
+            strategies = self._strategies_to_update(date)
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -525,17 +524,19 @@ class PortfolioHistory:
 
         try:
             port.save_stored_properties()
-
-            for account in accounts_to_ignore:
-                self._remove_date(date, account=account)
-                if account in port._all_accounts:
-                    self._add_processed_ignored_account(account, date)
-                else:
-                    self._add_erroneous_ignored_account(account, date)
+            self.update_attemped_ignored_accounts(port)
 
         except Exception as e:
             print(f"Failure on {port}")
             raise e
+
+    def update_attemped_ignored_accounts(self, port):
+        for account in self._accounts_to_ignore(port.name, port.date):
+            self._remove_date(port.date, account=account)
+            if account in port._all_accounts:
+                self._add_processed_ignored_account(account, port.date)
+            else:
+                self._add_erroneous_ignored_account(account, port.date)
 
     def _get_strategies_to_account_map_from_accounts(self, date, accounts):
         full_account_strategy_map = self._db._account_strategy_map(
@@ -556,8 +557,18 @@ class PortfolioHistory:
 
         return strategy_to_account_map
 
-    def fix_history(self):
+    def _fill_history(self):
+        all_dates = self._db.trade_dates(start=self._db.date("PORTFOLIO_START"))
+        dates_to_fill = list(set(all_dates) - set(self._completed_dates))
+        for date in sorted(dates_to_fill):
+            self.update_date(date, force=False)
+            self._add_completed_date(date)
+
+    def _fix_history(self):
+        today = self._fmt_date(self._db.date("today"))
         for date, accounts in self.dates_to_fix.items():
+            if date == today:
+                continue
             strategies_to_fix = (
                 self._get_strategies_to_account_map_from_accounts(
                     date, accounts
@@ -566,18 +577,15 @@ class PortfolioHistory:
             for strategy in strategies_to_fix:
                 self._update_strategy_for_date(strategy, date)
 
+    def update_history(self):
+        self._fix_history()
+        self._fill_history()
+
 
 # %%
 if __name__ == "__main__":
     # def main():
     # %%
-    self = PortfolioHistory(verbose=True)
+    self = PortfolioHistory()
     self.build_ignored_accounts_file()
-    self.dates_to_fix
-    # date = "2019-02-19"
-    # self.dates_to_fix[date]
-    # self.desired_ignored_accounts_d[date]
-    #
-    # self.processed_ignored_accounts_d[date]
-
-    self.fix_history()
+    self.update_history()
