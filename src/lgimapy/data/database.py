@@ -728,6 +728,12 @@ class Database:
         fid = self.local(f"portfolios/strategy_account_maps/{date:%Y-%m-%d}")
         return load_json(full_fid=fid)
 
+    def strategies(self, date=None):
+        return sorted(list(self._strategy_account_map(date).keys()))
+
+    def accounts(self, date=None):
+        return sorted(list(self._account_strategy_map(date).keys()))
+
     @cached_property
     def _manager_to_accounts(self):
         """Dict[str: str]: Respective accounts for each PM."""
@@ -3377,27 +3383,16 @@ def main():
 
     db = Database()
     # %%
+    db.load_market_data()
+    # %%
+    ix = db.build_market_index(ticker="EQT")
+    ix.df
 
     # %%
-    month_ends = db.date("MONTH_ENDS")[-13:-1]
-    month_starts = db.date("MONTH_STARTS")[-12:]
+    df = db.load_bbg_data(["US_BB", "US_B"], "OAS", start=db.date("3m"))
+    df["diff"] = df["US_B"] - df["US_BB"]
 
-    dw = []
-    for ms, me in zip(month_starts, month_ends):
-        db.load_market_data(date=me)
-        me_ix = db.build_market_index(in_H4UN_index=True)
-        df = me_ix.df.set_index("ISIN")
-        old_weight = (df["MarketValue"] / df["MarketValue"].sum()).rename("w0")
+    vis.plot_timeseries(df["diff"], ylabel="B - BB spread", median_line=True)
+    vis.show()
 
-        db.load_market_data(date=ms)
-        ms_ix = db.build_market_index(in_H4UN_index=True)
-        df = ms_ix.df.set_index("ISIN")
-        new_weight = (df["MarketValue"] / df["MarketValue"].sum()).rename("w1")
-
-        df = pd.concat((old_weight, new_weight), axis=1).fillna(0)
-        df["dw"] = df["w1"] - df["w0"]
-        turnover = df[df["dw"] > 0]["dw"].sum()
-        dw.append(turnover)
-
-    sum(dw) * 0.35 / 100 * 1e4
-    sum(dw)
+    # %%
