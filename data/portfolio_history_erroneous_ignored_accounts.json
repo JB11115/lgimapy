@@ -1,0 +1,2190 @@
+{
+    "2018-09-05": [
+        "REXAMMC"
+    ],
+    "2018-09-06": [
+        "REXAMMC"
+    ],
+    "2018-09-07": [
+        "REXAMMC"
+    ],
+    "2018-09-10": [
+        "REXAMMC"
+    ],
+    "2018-09-11": [
+        "REXAMMC"
+    ],
+    "2018-09-12": [
+        "REXAMMC"
+    ],
+    "2018-09-13": [
+        "REXAMMC"
+    ],
+    "2018-09-14": [
+        "REXAMMC"
+    ],
+    "2018-09-17": [
+        "REXAMMC"
+    ],
+    "2018-09-18": [
+        "REXAMMC"
+    ],
+    "2018-09-19": [
+        "REXAMMC"
+    ],
+    "2018-09-20": [
+        "AETLD",
+        "REXAMMC"
+    ],
+    "2018-09-21": [
+        "AETLD",
+        "PMCLD2",
+        "REXAMMC"
+    ],
+    "2018-09-24": [
+        "AETLD",
+        "PMCLD2",
+        "REXAMMC"
+    ],
+    "2018-09-25": [
+        "AETLD",
+        "GENMLD",
+        "PMCLD2",
+        "REXAMMC"
+    ],
+    "2018-09-26": [
+        "AETLD",
+        "GENMLD",
+        "PMCLD2",
+        "REXAMMC"
+    ],
+    "2018-09-27": [
+        "AETLD",
+        "FELD",
+        "GENMLD",
+        "HEKLD",
+        "REXAMMC"
+    ],
+    "2018-09-28": [
+        "REXAMMC"
+    ],
+    "2018-10-01": [
+        "AETLD",
+        "GENMLD",
+        "REXAMMC"
+    ],
+    "2018-10-02": [
+        "REXAMMC"
+    ],
+    "2018-10-03": [
+        "REXAMMC"
+    ],
+    "2018-10-04": [
+        "REXAMMC"
+    ],
+    "2018-10-05": [
+        "REXAMMC"
+    ],
+    "2018-10-17": [
+        "BGGLC"
+    ],
+    "2018-10-18": [
+        "BGGLC"
+    ],
+    "2018-10-19": [
+        "BGGLC"
+    ],
+    "2018-10-30": [
+        "CITLD",
+        "CITMC"
+    ],
+    "2018-10-31": [
+        "CITLD",
+        "CITMC"
+    ],
+    "2018-11-01": [
+        "MMMLD"
+    ],
+    "2018-11-02": [
+        "CHLD",
+        "MMMLD"
+    ],
+    "2018-11-05": [
+        "CHLD",
+        "MMMLD"
+    ],
+    "2018-11-07": [
+        "AILGC",
+        "SEIGC"
+    ],
+    "2018-11-14": [
+        "XRXLD"
+    ],
+    "2018-11-15": [
+        "XRXLD"
+    ],
+    "2018-11-29": [
+        "CITLA",
+        "TOTLD"
+    ],
+    "2018-11-30": [
+        "CITLA",
+        "TOTLD"
+    ],
+    "2019-01-18": [
+        "P-MCT"
+    ],
+    "2019-01-22": [
+        "AHSLD",
+        "CNPLD",
+        "P-MCT",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2019-01-23": [
+        "AHSLD",
+        "CNPLD",
+        "P-MCT",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2019-01-24": [
+        "AHSLD",
+        "CNPLD",
+        "P-MCT",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2019-01-25": [
+        "AHSLD",
+        "CNPLD",
+        "P-MCT",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2019-01-28": [
+        "ATILD"
+    ],
+    "2019-01-29": [
+        "ATILD",
+        "GTSMC"
+    ],
+    "2019-01-30": [
+        "ATILD",
+        "GTSMC"
+    ],
+    "2019-01-31": [
+        "ATILD"
+    ],
+    "2019-02-01": [
+        "ATILD"
+    ],
+    "2019-02-04": [
+        "ATILD"
+    ],
+    "2019-02-05": [
+        "ATILD"
+    ],
+    "2019-02-06": [
+        "ATILD"
+    ],
+    "2019-02-07": [
+        "ATILD"
+    ],
+    "2019-02-08": [
+        "ATILD"
+    ],
+    "2019-02-11": [
+        "ATILD"
+    ],
+    "2019-02-12": [
+        "ATILD"
+    ],
+    "2019-02-13": [
+        "AHSLD",
+        "ATILD",
+        "LSCLD",
+        "WRKLD"
+    ],
+    "2019-02-14": [
+        "ATILD"
+    ],
+    "2019-02-15": [
+        "ATILD"
+    ],
+    "2019-02-19": [
+        "AHSMC",
+        "ATILD",
+        "CITMC",
+        "DUKE-RS",
+        "P-MCT"
+    ],
+    "2019-02-20": [
+        "ATILD",
+        "DUKE-RS",
+        "P-MCT"
+    ],
+    "2019-02-21": [
+        "AHSLD",
+        "ATILD",
+        "DUKE-RS",
+        "P-MCT"
+    ],
+    "2019-02-22": [
+        "AHSLD",
+        "ATILD",
+        "P-MCT"
+    ],
+    "2019-02-25": [
+        "AHSLD",
+        "ATILD",
+        "P-MCT"
+    ],
+    "2019-02-26": [
+        "AHSLD",
+        "ATILD",
+        "GTMC",
+        "GTSMC"
+    ],
+    "2019-02-27": [
+        "AHSLD",
+        "ATILD",
+        "GTMC",
+        "GTSMC"
+    ],
+    "2019-02-28": [
+        "AHSLD"
+    ],
+    "2019-03-01": [
+        "SEIAC",
+        "SEIC"
+    ],
+    "2019-03-04": [
+        "SEIAC",
+        "SEIC"
+    ],
+    "2019-03-26": [
+        "HIC",
+        "NATG",
+        "OGCBF",
+        "RDTNLD1"
+    ],
+    "2019-03-27": [
+        "HIC",
+        "NATG",
+        "OGCBF",
+        "RDTNLD1"
+    ],
+    "2019-03-28": [
+        "GTMC",
+        "GTSMC"
+    ],
+    "2019-03-29": [
+        "GTMC",
+        "GTSMC",
+        "SALDT"
+    ],
+    "2019-04-01": [
+        "SALDT"
+    ],
+    "2019-04-02": [
+        "SALDT"
+    ],
+    "2019-04-03": [
+        "SALDT"
+    ],
+    "2019-04-04": [
+        "SALDT"
+    ],
+    "2019-04-05": [
+        "SALDT"
+    ],
+    "2019-04-16": [
+        "LDITRAN9"
+    ],
+    "2019-04-17": [
+        "LDITRAN9"
+    ],
+    "2019-04-18": [
+        "LDITRAN9",
+        "SALDT"
+    ],
+    "2019-04-22": [
+        "LDITRAN9",
+        "SALDT"
+    ],
+    "2019-04-23": [
+        "LDITRAN9",
+        "SALDT"
+    ],
+    "2019-04-24": [
+        "LDITRAN9",
+        "SALDT"
+    ],
+    "2019-04-25": [
+        "LDITRAN9",
+        "SALDT"
+    ],
+    "2019-04-26": [
+        "GTMC",
+        "GTSMC",
+        "LDITRAN9",
+        "SALDT"
+    ],
+    "2019-04-29": [
+        "GTMC",
+        "GTSMC",
+        "LDITRAN9",
+        "MDRLD",
+        "SALDT"
+    ],
+    "2019-04-30": [
+        "LDITRAN9",
+        "MDRLD",
+        "PPG",
+        "SALD2",
+        "SALDT"
+    ],
+    "2019-05-01": [
+        "PPG",
+        "SALD2",
+        "SALDT"
+    ],
+    "2019-05-02": [
+        "SALDT"
+    ],
+    "2019-05-03": [
+        "SALDT"
+    ],
+    "2019-05-06": [
+        "SALDT"
+    ],
+    "2019-05-07": [
+        "SALDT"
+    ],
+    "2019-05-08": [
+        "SALDT"
+    ],
+    "2019-05-09": [
+        "LEGSCC"
+    ],
+    "2019-05-10": [
+        "LEGSCC"
+    ],
+    "2019-05-13": [
+        "NATG",
+        "OGCBF",
+        "RDTNLD1"
+    ],
+    "2019-05-14": [
+        "NATG",
+        "OGCBF",
+        "RDTNLD1"
+    ],
+    "2019-05-16": [
+        "CITLD",
+        "LDITRAN9"
+    ],
+    "2019-05-17": [
+        "LDITRAN9"
+    ],
+    "2019-05-20": [
+        "LDITRAN9"
+    ],
+    "2019-05-21": [
+        "LDITRAN9"
+    ],
+    "2019-05-22": [
+        "LDITRAN9"
+    ],
+    "2019-05-23": [
+        "LDITRAN9"
+    ],
+    "2019-05-24": [
+        "LDITRAN9"
+    ],
+    "2019-05-28": [
+        "LDITRAN9"
+    ],
+    "2019-05-29": [
+        "LDITRAN9"
+    ],
+    "2019-05-30": [
+        "LDITRAN9"
+    ],
+    "2019-05-31": [
+        "LDITRAN9"
+    ],
+    "2019-06-03": [
+        "GTMC",
+        "GTSMC"
+    ],
+    "2019-06-04": [
+        "GTMC",
+        "GTSMC"
+    ],
+    "2019-06-26": [
+        "BAGC"
+    ],
+    "2019-06-27": [
+        "BAGC",
+        "GTMC",
+        "GTSMC"
+    ],
+    "2019-06-28": [
+        "GTMC",
+        "GTSMC"
+    ],
+    "2019-07-08": [
+        "HIC"
+    ],
+    "2019-07-09": [
+        "HIC"
+    ],
+    "2019-07-15": [
+        "SALD"
+    ],
+    "2019-07-16": [
+        "SALD"
+    ],
+    "2019-09-04": [
+        "MDRLD"
+    ],
+    "2019-09-05": [
+        "MDRLD",
+        "RDTNLD1"
+    ],
+    "2019-09-06": [
+        "RDTNLD1"
+    ],
+    "2019-09-13": [
+        "INKALC"
+    ],
+    "2019-09-16": [
+        "INKALC"
+    ],
+    "2019-09-18": [
+        "AURLD"
+    ],
+    "2019-09-19": [
+        "AURLD",
+        "CNPLD",
+        "FHNLD"
+    ],
+    "2019-09-20": [
+        "AURLD",
+        "BCBSLD",
+        "CNPLD",
+        "FHNLD"
+    ],
+    "2019-09-23": [
+        "AURLD",
+        "BCBSLD"
+    ],
+    "2019-10-29": [
+        "BAGC"
+    ],
+    "2019-10-30": [
+        "BAGC"
+    ],
+    "2019-10-31": [
+        "MMMLD",
+        "RIOLD2"
+    ],
+    "2019-11-19": [
+        "CNSLD"
+    ],
+    "2019-11-20": [
+        "CNSLD"
+    ],
+    "2019-11-21": [
+        "CNSLD"
+    ],
+    "2019-11-22": [
+        "CNSLD"
+    ],
+    "2019-11-25": [
+        "CNSLD"
+    ],
+    "2019-11-26": [
+        "CNSLD"
+    ],
+    "2019-11-27": [
+        "CNSLD"
+    ],
+    "2019-11-29": [
+        "CNSLD"
+    ],
+    "2019-12-02": [
+        "CNSLD"
+    ],
+    "2019-12-03": [
+        "CNSLD"
+    ],
+    "2019-12-04": [
+        "CNSLD"
+    ],
+    "2019-12-05": [
+        "CNSLD"
+    ],
+    "2019-12-06": [
+        "CNSLD"
+    ],
+    "2019-12-09": [
+        "CNSLD",
+        "KELLD2"
+    ],
+    "2019-12-20": [
+        "CNSLD"
+    ],
+    "2019-12-23": [
+        "CNSLD"
+    ],
+    "2019-12-24": [
+        "CNSLD"
+    ],
+    "2019-12-26": [
+        "CNSLD"
+    ],
+    "2019-12-27": [
+        "CNSLD"
+    ],
+    "2019-12-30": [
+        "CNSLD"
+    ],
+    "2019-12-31": [
+        "CNSLD"
+    ],
+    "2020-01-02": [
+        "CNSLD"
+    ],
+    "2020-01-03": [
+        "CNSLD",
+        "MAGSONHI"
+    ],
+    "2020-01-06": [
+        "CNSLD",
+        "MAGSONHI"
+    ],
+    "2020-01-07": [
+        "CNSLD",
+        "MAGSONHI"
+    ],
+    "2020-01-08": [
+        "CNSLD",
+        "MAGSONHI"
+    ],
+    "2020-01-09": [
+        "CNSLD",
+        "MAGSONHI"
+    ],
+    "2020-01-10": [
+        "CNSLD",
+        "MAGSONHI"
+    ],
+    "2020-01-13": [
+        "MAGSONHI"
+    ],
+    "2020-01-14": [
+        "MAGSONHI"
+    ],
+    "2020-01-15": [
+        "MAGSONHI"
+    ],
+    "2020-01-16": [
+        "MAGSONHI"
+    ],
+    "2020-01-17": [
+        "MAGSONHI",
+        "P-LD"
+    ],
+    "2020-01-21": [
+        "MAGSONHI"
+    ],
+    "2020-01-22": [
+        "MAGSONHI"
+    ],
+    "2020-02-05": [
+        "MAGSONHI"
+    ],
+    "2020-02-06": [
+        "MAGSONHI"
+    ],
+    "2020-02-07": [
+        "MAGSONHI"
+    ],
+    "2020-02-10": [
+        "MAGSONHI"
+    ],
+    "2020-02-11": [
+        "MAGSONHI"
+    ],
+    "2020-02-12": [
+        "MAGSONHI"
+    ],
+    "2020-02-13": [
+        "MAGSONHI"
+    ],
+    "2020-02-14": [
+        "MAGSONHI"
+    ],
+    "2020-02-18": [
+        "MAGSONHI"
+    ],
+    "2020-02-19": [
+        "MAGSONHI"
+    ],
+    "2020-02-20": [
+        "MAGSONHI"
+    ],
+    "2020-02-21": [
+        "MAGSONHI"
+    ],
+    "2020-02-24": [
+        "MAGSONHI"
+    ],
+    "2020-02-28": [
+        "SEIC"
+    ],
+    "2020-03-02": [
+        "SEIAC",
+        "SEIC"
+    ],
+    "2020-03-03": [
+        "SEIAC"
+    ],
+    "2020-03-24": [
+        "DUKE-RS"
+    ],
+    "2020-03-25": [
+        "DUKE-RS"
+    ],
+    "2020-03-30": [
+        "PPG",
+        "REXAMMC"
+    ],
+    "2020-03-31": [
+        "FEDLD",
+        "PPG",
+        "REXAMMC"
+    ],
+    "2020-04-01": [
+        "FEDLD",
+        "REXAMMC"
+    ],
+    "2020-04-02": [
+        "REXAMMC"
+    ],
+    "2020-04-03": [
+        "REXAMMC"
+    ],
+    "2020-04-06": [
+        "REXAMMC"
+    ],
+    "2020-04-07": [
+        "REXAMMC"
+    ],
+    "2020-04-08": [
+        "REXAMMC"
+    ],
+    "2020-04-09": [
+        "REXAMMC"
+    ],
+    "2020-04-13": [
+        "REXAMMC"
+    ],
+    "2020-04-14": [
+        "REXAMMC"
+    ],
+    "2020-04-15": [
+        "RDTNLD1",
+        "REXAMMC"
+    ],
+    "2020-04-16": [
+        "RDTNLD1",
+        "REXAMMC"
+    ],
+    "2020-04-17": [
+        "REXAMMC"
+    ],
+    "2020-04-20": [
+        "REXAMMC"
+    ],
+    "2020-04-21": [
+        "REXAMMC"
+    ],
+    "2020-04-22": [
+        "HIC",
+        "REXAMMC"
+    ],
+    "2020-04-23": [
+        "HIC"
+    ],
+    "2020-05-07": [
+        "SALD"
+    ],
+    "2020-05-08": [
+        "SALD"
+    ],
+    "2020-05-19": [
+        "NATG"
+    ],
+    "2020-05-28": [
+        "PPG"
+    ],
+    "2020-05-29": [
+        "PPG"
+    ],
+    "2020-06-01": [
+        "CALLC",
+        "GMGC"
+    ],
+    "2020-06-02": [
+        "CALLC",
+        "GMGC"
+    ],
+    "2020-06-19": [
+        "CITLD",
+        "FELD",
+        "HEKLD"
+    ],
+    "2020-06-22": [
+        "FELD"
+    ],
+    "2020-06-23": [
+        "GLWLD"
+    ],
+    "2020-06-24": [
+        "GLWLD",
+        "INKALC"
+    ],
+    "2020-06-25": [
+        "GLWLD",
+        "INKALC"
+    ],
+    "2020-06-26": [
+        "GLWLD",
+        "INKALC"
+    ],
+    "2020-06-29": [
+        "GLWLD",
+        "INKALC"
+    ],
+    "2020-06-30": [
+        "GLWLD",
+        "INKALC"
+    ],
+    "2020-07-01": [
+        "GLWLD",
+        "INKALC"
+    ],
+    "2020-07-02": [
+        "GLWLD"
+    ],
+    "2020-07-06": [
+        "GLWLD"
+    ],
+    "2020-07-07": [
+        "GLWLD"
+    ],
+    "2020-07-08": [
+        "GLWLD"
+    ],
+    "2020-07-09": [
+        "GLWLD"
+    ],
+    "2020-07-10": [
+        "CALLC",
+        "GLWLD"
+    ],
+    "2020-07-13": [
+        "CALLC",
+        "GLWLD"
+    ],
+    "2020-07-14": [
+        "GLWLD"
+    ],
+    "2020-07-15": [
+        "GLWLD",
+        "PMCLD"
+    ],
+    "2020-07-16": [
+        "GLWLD",
+        "SAULD"
+    ],
+    "2020-07-17": [
+        "GLWLD",
+        "SAULD"
+    ],
+    "2020-07-20": [
+        "GLWLD",
+        "SAULD"
+    ],
+    "2020-07-21": [
+        "GLWLD",
+        "SAULD"
+    ],
+    "2020-07-22": [
+        "GLWLD",
+        "SAULD"
+    ],
+    "2020-07-23": [
+        "GLWLD",
+        "SAULD"
+    ],
+    "2020-07-24": [
+        "SAULD"
+    ],
+    "2020-07-27": [
+        "SAULD"
+    ],
+    "2020-07-28": [
+        "SAULD"
+    ],
+    "2020-07-29": [
+        "SAULD"
+    ],
+    "2020-07-30": [
+        "SAULD"
+    ],
+    "2020-07-31": [
+        "INKALC",
+        "SAULD"
+    ],
+    "2020-08-03": [
+        "INKALC",
+        "SAULD"
+    ],
+    "2020-08-04": [
+        "SAULD"
+    ],
+    "2020-08-05": [
+        "SAULD"
+    ],
+    "2020-08-06": [
+        "SAULD"
+    ],
+    "2020-08-07": [
+        "LGAS-CB",
+        "SAULD"
+    ],
+    "2020-08-10": [
+        "CALLC",
+        "LGAS-CB",
+        "SAULD"
+    ],
+    "2020-08-11": [
+        "CALLC",
+        "LGAS-CB",
+        "SAULD",
+        "SEIC"
+    ],
+    "2020-08-12": [
+        "LGAS-CB",
+        "SAULD",
+        "SEIC"
+    ],
+    "2020-08-13": [
+        "LGAS-CB",
+        "SAULD"
+    ],
+    "2020-08-14": [
+        "FEDLD",
+        "LGAS-CB",
+        "SAULD"
+    ],
+    "2020-08-17": [
+        "FEDLD",
+        "LGAS-CB",
+        "SAULD"
+    ],
+    "2020-08-18": [
+        "FEDLD",
+        "LGAS-CB"
+    ],
+    "2020-08-19": [
+        "LGAS-CB"
+    ],
+    "2020-08-20": [
+        "LGAS-CB"
+    ],
+    "2020-08-21": [
+        "LGAS-CB"
+    ],
+    "2020-08-24": [
+        "LGAS-CB"
+    ],
+    "2020-08-25": [
+        "LGAS-CB"
+    ],
+    "2020-08-26": [
+        "LGAS-CB"
+    ],
+    "2020-08-27": [
+        "LGAS-CB"
+    ],
+    "2020-08-28": [
+        "LGAS-CB"
+    ],
+    "2020-08-31": [
+        "LGAS-CB"
+    ],
+    "2020-09-01": [
+        "LGAS-CB"
+    ],
+    "2020-09-02": [
+        "LGAS-CB"
+    ],
+    "2020-09-03": [
+        "LGAS-CB"
+    ],
+    "2020-09-04": [
+        "LGAS-CB"
+    ],
+    "2020-09-08": [
+        "LGAS-CB",
+        "RSURC"
+    ],
+    "2020-09-09": [
+        "RSURC"
+    ],
+    "2020-09-10": [
+        "RSURC"
+    ],
+    "2020-09-11": [
+        "RSURC"
+    ],
+    "2020-09-14": [
+        "RSURC"
+    ],
+    "2020-09-15": [
+        "RSURC"
+    ],
+    "2020-09-16": [
+        "RSURC"
+    ],
+    "2020-09-17": [
+        "RSURC"
+    ],
+    "2020-09-18": [
+        "RSURC"
+    ],
+    "2020-09-21": [
+        "RSURC"
+    ],
+    "2020-09-22": [
+        "RSURC"
+    ],
+    "2020-09-23": [
+        "RSURC"
+    ],
+    "2020-09-24": [
+        "RSURC"
+    ],
+    "2020-09-25": [
+        "CNPIC",
+        "RSURC"
+    ],
+    "2020-09-28": [
+        "AHLD",
+        "CNPIC",
+        "PAHLD",
+        "RSURC"
+    ],
+    "2020-09-29": [
+        "AEELA",
+        "AETLD",
+        "AHLD",
+        "AIGLD",
+        "AILGC",
+        "AOCLD",
+        "ATILD",
+        "AURLD",
+        "BAGC",
+        "BCBSIC",
+        "BCBSLD",
+        "BEULGC",
+        "BINGLD",
+        "BLUELC",
+        "CALLC",
+        "CBSLD",
+        "CBSMC",
+        "CELD",
+        "CHCLD",
+        "CHLD",
+        "CITLA",
+        "CITLD",
+        "CLECLD",
+        "CLECOLD",
+        "CNPIC",
+        "CNPLD",
+        "DTELD",
+        "DUKE-RS",
+        "EHGRLA",
+        "EHLA",
+        "EHOPLA",
+        "ERICLD",
+        "EXCLC",
+        "FEDLD",
+        "FELD",
+        "FHNLD",
+        "FLD",
+        "GABCLD",
+        "GENMLD",
+        "GLWLD",
+        "GMGC",
+        "GTMC",
+        "GTSMC",
+        "HBANLD",
+        "HEKLD",
+        "HIC",
+        "INKALC",
+        "JNJLC",
+        "JOYIC",
+        "JOYLA",
+        "KELLD1",
+        "KELLD2",
+        "KHCLD",
+        "LEGSCC",
+        "LSCLD",
+        "MDRLD",
+        "MICHLD",
+        "MMMLD",
+        "MMMLD2",
+        "NFLLA",
+        "OBWCLD",
+        "ONCRLD",
+        "P-LD",
+        "PAHLD",
+        "PFELD",
+        "PGELD",
+        "PGELDV",
+        "PHLD",
+        "PIELD",
+        "PMCLD",
+        "PNWLD",
+        "PPG",
+        "PREMLD",
+        "RAILD",
+        "RDTNLD1",
+        "REXAMLD",
+        "RSURC",
+        "SALD",
+        "SALD2",
+        "SAULD",
+        "SEIAC",
+        "SEIC",
+        "SEIGC",
+        "SESIBNM",
+        "SEUIBNM",
+        "SRELD",
+        "TOTLD",
+        "TRWLD",
+        "USGLD",
+        "VEBALD",
+        "VZLD",
+        "WMBLD",
+        "WRKLD",
+        "XRXLD"
+    ],
+    "2020-09-30": [
+        "AEELA",
+        "AETLD",
+        "AHLD",
+        "AIGLD",
+        "AILGC",
+        "AOCLD",
+        "ATILD",
+        "AURLD",
+        "BAGC",
+        "BCBSIC",
+        "BCBSLD",
+        "BEULGC",
+        "BINGLD",
+        "BLUELC",
+        "CALLC",
+        "CBSLD",
+        "CBSMC",
+        "CELD",
+        "CHCLD",
+        "CHLD",
+        "CITLA",
+        "CITLD",
+        "CLECLD",
+        "CLECOLD",
+        "CNPIC",
+        "CNPLD",
+        "DTELD",
+        "DUKE-RS",
+        "EHGRLA",
+        "EHLA",
+        "EHOPLA",
+        "ERICLD",
+        "EXCLC",
+        "FEDLD",
+        "FELD",
+        "FHNLD",
+        "FLD",
+        "GABCLD",
+        "GENMLD",
+        "GLWLD",
+        "GMGC",
+        "GTMC",
+        "GTSMC",
+        "HBANLD",
+        "HEKLD",
+        "HIC",
+        "INKALC",
+        "JNJLC",
+        "JOYIC",
+        "JOYLA",
+        "KELLD1",
+        "KELLD2",
+        "KHCLD",
+        "LEGSCC",
+        "LSCLD",
+        "MDRLD",
+        "MICHLD",
+        "MMMLD",
+        "MMMLD2",
+        "NFLLA",
+        "OBWCLD",
+        "ONCRLD",
+        "P-LD",
+        "PAHLD",
+        "PFELD",
+        "PGELD",
+        "PGELDV",
+        "PHLD",
+        "PIELD",
+        "PMCLD",
+        "PNWLD",
+        "PPG",
+        "PREMLD",
+        "RAILD",
+        "RDTNLD1",
+        "REXAMLD",
+        "RSURC",
+        "SALD",
+        "SALD2",
+        "SAULD",
+        "SEIAC",
+        "SEIC",
+        "SEIGC",
+        "SESIBNM",
+        "SEUIBNM",
+        "SRELD",
+        "TOTLD",
+        "TRWLD",
+        "USGLD",
+        "VEBALD",
+        "VZLD",
+        "WMBLD",
+        "WRKLD",
+        "XRXLD"
+    ],
+    "2020-10-01": [
+        "AEELA",
+        "AETLD",
+        "AHLD",
+        "AIGLD",
+        "AILGC",
+        "AOCLD",
+        "ATILD",
+        "AURLD",
+        "BAGC",
+        "BCBSIC",
+        "BCBSLD",
+        "BEULGC",
+        "BINGLD",
+        "BLUELC",
+        "CALLC",
+        "CBSLD",
+        "CBSMC",
+        "CELD",
+        "CHCLD",
+        "CHLD",
+        "CITLA",
+        "CITLD",
+        "CLECLD",
+        "CLECOLD",
+        "CNPIC",
+        "CNPLD",
+        "DTELD",
+        "DUKE-RS",
+        "EHGRLA",
+        "EHLA",
+        "EHOPLA",
+        "ERICLD",
+        "EXCLC",
+        "FEDLD",
+        "FELD",
+        "FHNLD",
+        "FLD",
+        "GABCLD",
+        "GENMLD",
+        "GLWLD",
+        "GMGC",
+        "GTMC",
+        "GTSMC",
+        "HBANLD",
+        "HEKLD",
+        "HIC",
+        "INKALC",
+        "JNJLC",
+        "JOYIC",
+        "JOYLA",
+        "KELLD1",
+        "KELLD2",
+        "KHCLD",
+        "LEGSCC",
+        "LSCLD",
+        "MDRLD",
+        "MICHLD",
+        "MMMLD",
+        "MMMLD2",
+        "NFLLA",
+        "OBWCLD",
+        "ONCRLD",
+        "P-LD",
+        "PAHLD",
+        "PFELD",
+        "PGELD",
+        "PGELDV",
+        "PHLD",
+        "PIELD",
+        "PMCLD",
+        "PNWLD",
+        "PPG",
+        "PREMLD",
+        "RAILD",
+        "RDTNLD1",
+        "REXAMLD",
+        "RSURC",
+        "SALD",
+        "SALD2",
+        "SAULD",
+        "SEIAC",
+        "SEIC",
+        "SEIGC",
+        "SESIBNM",
+        "SEUIBNM",
+        "SRELD",
+        "TOTLD",
+        "TRWLD",
+        "USGLD",
+        "VEBALD",
+        "VZLD",
+        "WMBLD",
+        "WRKLD",
+        "XRXLD"
+    ],
+    "2020-10-02": [
+        "RSURC"
+    ],
+    "2020-10-05": [
+        "RSURC"
+    ],
+    "2020-10-06": [
+        "RSURC"
+    ],
+    "2020-10-07": [
+        "RSURC"
+    ],
+    "2020-10-08": [
+        "RSURC"
+    ],
+    "2020-10-15": [
+        "CALLC"
+    ],
+    "2020-10-16": [
+        "CALLC"
+    ],
+    "2020-12-07": [
+        "FLDTRAN"
+    ],
+    "2020-12-08": [
+        "FLDTRAN"
+    ],
+    "2020-12-09": [
+        "FLDTRAN"
+    ],
+    "2020-12-10": [
+        "FLDTRAN"
+    ],
+    "2020-12-11": [
+        "FLDTRAN"
+    ],
+    "2020-12-14": [
+        "FLDTRAN"
+    ],
+    "2020-12-15": [
+        "FLDTRAN"
+    ],
+    "2020-12-29": [
+        "CITLA"
+    ],
+    "2020-12-30": [
+        "CITLA"
+    ],
+    "2021-01-07": [
+        "FLDTRAN"
+    ],
+    "2021-01-08": [
+        "FLDTRAN"
+    ],
+    "2021-01-11": [
+        "FLDTRAN"
+    ],
+    "2021-01-12": [
+        "FLDTRAN"
+    ],
+    "2021-01-13": [
+        "FLDTRAN"
+    ],
+    "2021-01-14": [
+        "FLDTRAN"
+    ],
+    "2021-01-15": [
+        "FLDTRAN"
+    ],
+    "2021-01-19": [
+        "BAGC"
+    ],
+    "2021-01-20": [
+        "BAGC"
+    ],
+    "2021-01-25": [
+        "CSMC",
+        "KELLD1",
+        "KELLD2",
+        "PAHLD"
+    ],
+    "2021-01-26": [
+        "KELLD1",
+        "KELLD2"
+    ],
+    "2021-01-28": [
+        "PBILD"
+    ],
+    "2021-01-29": [
+        "GABCLD",
+        "GENMLD",
+        "PBILD",
+        "PPG",
+        "WRKLD"
+    ],
+    "2021-02-01": [
+        "GABCLD",
+        "GENMLD",
+        "PBILD",
+        "PPG",
+        "WRKLD"
+    ],
+    "2021-02-02": [
+        "PBILD"
+    ],
+    "2021-02-03": [
+        "CLECOLD",
+        "GENMLD",
+        "PBILD",
+        "REXAMLD"
+    ],
+    "2021-02-04": [
+        "AHMC",
+        "CLECOLD",
+        "GENMLD",
+        "PBILD",
+        "REXAMLD"
+    ],
+    "2021-02-05": [
+        "AHMC",
+        "PBILD"
+    ],
+    "2021-02-08": [
+        "AHMC",
+        "CITMC",
+        "PBILD"
+    ],
+    "2021-02-09": [
+        "AHMC",
+        "CITMC",
+        "PBILD"
+    ],
+    "2021-02-10": [
+        "AHMC",
+        "PBILD"
+    ],
+    "2021-02-11": [
+        "AHMC",
+        "LDITRAN8",
+        "PBILD"
+    ],
+    "2021-02-12": [
+        "AHMC",
+        "LDITRAN8",
+        "MYMC",
+        "PBILD",
+        "PCALD"
+    ],
+    "2021-02-16": [
+        "AHMC",
+        "LDITRAN8",
+        "MYMC",
+        "PBILD",
+        "PCALD",
+        "REDLD"
+    ],
+    "2021-02-17": [
+        "AHMC",
+        "LDITRAN8",
+        "PBILD",
+        "REDLD",
+        "VZLD"
+    ],
+    "2021-02-18": [
+        "AHMC",
+        "LDITRAN8",
+        "PBILD",
+        "REDLD",
+        "VZLD"
+    ],
+    "2021-02-19": [
+        "AHMC",
+        "FELD",
+        "LDITRAN8",
+        "PBILD",
+        "PMCALL",
+        "PMCLD",
+        "REDLD"
+    ],
+    "2021-02-22": [
+        "AHMC",
+        "FELD",
+        "LDITRAN8",
+        "PBILD",
+        "PMCALL",
+        "PMCLD",
+        "REDLD"
+    ],
+    "2021-02-23": [
+        "AHMC",
+        "LDITRAN8",
+        "PBILD",
+        "REDLD"
+    ],
+    "2021-02-24": [
+        "AHMC",
+        "LDITRAN8",
+        "PBILD",
+        "REDLD",
+        "REXAMLD"
+    ],
+    "2021-02-25": [
+        "AHMC",
+        "ATILD",
+        "LDITRAN8",
+        "NFLMC",
+        "PBILD",
+        "REDLD",
+        "REXAMLD"
+    ],
+    "2021-02-26": [
+        "AHMC",
+        "ATILD",
+        "CNPIC",
+        "LDITRAN8",
+        "NFLMC",
+        "PBIIC",
+        "PBILD",
+        "REDLD"
+    ],
+    "2021-03-01": [
+        "AHMC",
+        "CNPIC",
+        "DUKE-RS",
+        "LDITRAN8",
+        "PBIIC",
+        "PBILD",
+        "REDLD"
+    ],
+    "2021-03-02": [
+        "AHMC",
+        "DUKE-RS",
+        "LDITRAN8",
+        "REDLD"
+    ],
+    "2021-03-03": [
+        "AHMC",
+        "LDITRAN8",
+        "REDLD"
+    ],
+    "2021-03-04": [
+        "AHMC",
+        "LDITRAN8",
+        "REDLD"
+    ],
+    "2021-03-05": [
+        "LDITRAN8",
+        "REDLD"
+    ],
+    "2021-03-08": [
+        "LDITRAN8",
+        "REDLD"
+    ],
+    "2021-03-09": [
+        "LDITRAN8",
+        "REDLD"
+    ],
+    "2021-03-10": [
+        "LDITRAN8",
+        "PIELD",
+        "REDLD"
+    ],
+    "2021-03-11": [
+        "LDITRAN8",
+        "ONCRLD",
+        "PIELD",
+        "REDLD",
+        "TRWLD"
+    ],
+    "2021-03-12": [
+        "LDITRAN8",
+        "ONCRLD",
+        "REDLD",
+        "TRWLD"
+    ],
+    "2021-03-15": [
+        "LDITRAN8",
+        "RDTNLD1",
+        "REDLD"
+    ],
+    "2021-03-16": [
+        "LDITRAN8",
+        "RDTNLD1"
+    ],
+    "2021-03-17": [
+        "LDITRAN8",
+        "PPG"
+    ],
+    "2021-03-18": [
+        "LDITRAN8",
+        "PAHLD",
+        "PPG"
+    ],
+    "2021-03-19": [
+        "LDITRAN8",
+        "PAHLD",
+        "PBILD"
+    ],
+    "2021-03-22": [
+        "LDITRAN8",
+        "PBILD"
+    ],
+    "2021-03-23": [
+        "AIGLD",
+        "LDITRAN8"
+    ],
+    "2021-03-24": [
+        "AIGLD",
+        "CITLA",
+        "CITMC",
+        "DUKE-RS",
+        "LDITRAN8",
+        "PBILD",
+        "PPG"
+    ],
+    "2021-03-25": [
+        "CITLA",
+        "CITMC",
+        "DUKE-RS",
+        "LDITRAN8",
+        "PBILD",
+        "PPG"
+    ],
+    "2021-03-26": [
+        "LDITRAN8"
+    ],
+    "2021-03-29": [
+        "LDITRAN8",
+        "LEGSCC",
+        "PPG",
+        "REXAMLD"
+    ],
+    "2021-03-30": [
+        "LDITRAN8",
+        "LEGSCC",
+        "PPG",
+        "REXAMLD"
+    ],
+    "2021-03-31": [
+        "AIGLD",
+        "LDITRAN8",
+        "PCALD"
+    ],
+    "2021-04-01": [
+        "AIGLD",
+        "LDITRAN8",
+        "PCALD",
+        "SRELD"
+    ],
+    "2021-04-02": [
+        "SRELD"
+    ],
+    "2021-04-05": [
+        "TRWLD"
+    ],
+    "2021-04-06": [
+        "PIELD",
+        "TRWLD"
+    ],
+    "2021-04-07": [
+        "PIELD"
+    ],
+    "2021-04-15": [
+        "ONCRLD"
+    ],
+    "2021-04-16": [
+        "ONCRLD"
+    ],
+    "2021-04-21": [
+        "FHNLD"
+    ],
+    "2021-04-22": [
+        "FHNLD"
+    ],
+    "2021-04-23": [
+        "FELD"
+    ],
+    "2021-04-26": [
+        "FELD"
+    ],
+    "2021-04-28": [
+        "MDRLD"
+    ],
+    "2021-04-29": [
+        "MDRLD"
+    ],
+    "2021-04-30": [
+        "REXAMLD"
+    ],
+    "2021-05-03": [
+        "REXAMLD"
+    ],
+    "2021-05-05": [
+        "BGGLC",
+        "P-LD"
+    ],
+    "2021-05-06": [
+        "P-LD",
+        "PAHLD",
+        "UBSLC"
+    ],
+    "2021-05-07": [
+        "PAHLD",
+        "UBSLC",
+        "WTWLD"
+    ],
+    "2021-05-10": [
+        "BGGLC",
+        "UBSLC",
+        "WTWLD"
+    ],
+    "2021-05-11": [
+        "AETLD",
+        "WTWLD"
+    ],
+    "2021-05-12": [
+        "AETLD",
+        "WTWLD"
+    ],
+    "2021-05-13": [
+        "WTWLD"
+    ],
+    "2021-05-14": [
+        "WTWLD"
+    ],
+    "2021-05-17": [
+        "WTWLD"
+    ],
+    "2021-05-18": [
+        "WTWLD"
+    ],
+    "2021-05-19": [
+        "WTWLD"
+    ],
+    "2021-05-20": [
+        "WTWLD"
+    ],
+    "2021-05-21": [
+        "WTWLD"
+    ],
+    "2021-05-24": [
+        "WTWLD"
+    ],
+    "2021-05-25": [
+        "WTWLD"
+    ],
+    "2021-05-26": [
+        "WMBLD",
+        "WTWLD"
+    ],
+    "2021-05-27": [
+        "WMBLD",
+        "WTWLD"
+    ],
+    "2021-05-28": [
+        "AXPMC"
+    ],
+    "2021-06-01": [
+        "AXPMC"
+    ],
+    "2021-06-02": [
+        "AXPMC"
+    ],
+    "2021-06-03": [
+        "AXPMC"
+    ],
+    "2021-06-04": [
+        "AXPMC"
+    ],
+    "2021-06-07": [
+        "AXPMC"
+    ],
+    "2021-06-08": [
+        "AXPMC"
+    ],
+    "2021-06-09": [
+        "AXPMC"
+    ],
+    "2021-06-10": [
+        "AXPMC"
+    ],
+    "2021-06-11": [
+        "AXPMC"
+    ],
+    "2021-06-14": [
+        "AXPMC"
+    ],
+    "2021-06-15": [
+        "AXPMC"
+    ],
+    "2021-06-16": [
+        "AXPMC"
+    ],
+    "2021-06-17": [
+        "AXPLD",
+        "AXPMC",
+        "SEMLD"
+    ],
+    "2021-06-18": [
+        "AXPMC"
+    ],
+    "2021-06-21": [
+        "AXPMC"
+    ],
+    "2021-06-22": [
+        "AXPMC"
+    ],
+    "2021-06-23": [
+        "AXPMC"
+    ],
+    "2021-06-24": [
+        "AXPMC",
+        "SEIC"
+    ],
+    "2021-06-25": [
+        "AXPMC",
+        "SEIC"
+    ],
+    "2021-06-28": [
+        "AXPMC",
+        "SEIC"
+    ],
+    "2021-06-29": [
+        "AXPMC",
+        "CITMC",
+        "SEIC",
+        "SEMLD",
+        "SEMMC"
+    ],
+    "2021-06-30": [
+        "CITMC",
+        "SEMMC"
+    ],
+    "2021-07-01": [
+        "SEMMC"
+    ],
+    "2021-07-02": [
+        "SEMMC"
+    ],
+    "2021-07-06": [
+        "SEMMC"
+    ],
+    "2021-07-07": [
+        "SEMMC"
+    ],
+    "2021-07-08": [
+        "SEMMC"
+    ],
+    "2021-07-09": [
+        "SEMMC"
+    ],
+    "2021-07-12": [
+        "SEIAC",
+        "SEIC",
+        "SEMMC",
+        "WABLD"
+    ],
+    "2021-07-13": [
+        "SEIAC",
+        "SEIC",
+        "SEMMC",
+        "WABLD"
+    ],
+    "2021-07-14": [
+        "SEMMC"
+    ],
+    "2021-07-15": [
+        "SEMMC"
+    ],
+    "2021-07-16": [
+        "SEMMC"
+    ],
+    "2021-07-19": [
+        "SEMMC"
+    ],
+    "2021-07-20": [
+        "SEMMC"
+    ],
+    "2021-07-21": [
+        "SEMMC"
+    ],
+    "2021-07-22": [
+        "SEMMC"
+    ],
+    "2021-07-23": [
+        "SEMMC"
+    ],
+    "2021-07-26": [
+        "SEMMC"
+    ],
+    "2021-07-27": [
+        "SEMMC"
+    ],
+    "2021-07-28": [
+        "CITMC",
+        "SEMMC"
+    ],
+    "2021-07-29": [
+        "CITMC",
+        "SEMMC"
+    ],
+    "2021-08-27": [
+        "LDITRA13"
+    ],
+    "2021-08-30": [
+        "LDITRA13"
+    ],
+    "2021-08-31": [
+        "LDITRA13"
+    ],
+    "2021-09-01": [
+        "LDITRA13"
+    ],
+    "2021-09-02": [
+        "LDITRA13"
+    ],
+    "2021-09-03": [
+        "LDITRA13"
+    ],
+    "2021-09-07": [
+        "LDITRA13"
+    ],
+    "2021-09-08": [
+        "LDITRA13"
+    ],
+    "2021-09-09": [
+        "LDITRA13"
+    ],
+    "2021-09-10": [
+        "LDITRA13"
+    ],
+    "2021-09-13": [
+        "LDITRA13",
+        "NAT2",
+        "NATG",
+        "OGCBF",
+        "RDTNLD1"
+    ],
+    "2021-09-14": [
+        "CALLC",
+        "LDITRA13",
+        "NAT2",
+        "NATG",
+        "OGCBF",
+        "RDTNLD1"
+    ],
+    "2021-09-15": [
+        "CALLC",
+        "LDITRA13"
+    ],
+    "2021-09-16": [
+        "LDITRA13"
+    ],
+    "2021-09-17": [
+        "LDITRA13"
+    ],
+    "2021-09-20": [
+        "LDITRA13",
+        "XCELLC"
+    ],
+    "2021-09-29": [
+        "LDITRA13"
+    ],
+    "2021-09-30": [
+        "LDITRA13"
+    ],
+    "2021-10-01": [
+        "BPGC",
+        "LDITRA13"
+    ],
+    "2021-10-04": [
+        "LDITRA13"
+    ],
+    "2021-10-05": [
+        "LDITRA13"
+    ],
+    "2021-10-06": [
+        "LDITRA13"
+    ],
+    "2021-10-07": [
+        "LDITRA13"
+    ],
+    "2021-10-08": [
+        "LDITRA13"
+    ],
+    "2021-10-12": [
+        "LDITRA13"
+    ],
+    "2021-10-13": [
+        "LDITRA13"
+    ],
+    "2021-10-14": [
+        "LDITRA13"
+    ],
+    "2021-10-15": [
+        "LDITRA13"
+    ],
+    "2021-10-18": [
+        "LDITRA13"
+    ],
+    "2021-10-19": [
+        "LDITRA13"
+    ],
+    "2021-10-20": [
+        "LDITRA13"
+    ],
+    "2021-10-21": [
+        "LDITRA13"
+    ],
+    "2021-10-27": [
+        "HIC"
+    ],
+    "2021-10-28": [
+        "HIC"
+    ],
+    "2021-10-29": [
+        "HIC"
+    ],
+    "2021-11-19": [
+        "LHMC"
+    ],
+    "2021-11-22": [
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-11-23": [
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-11-24": [
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-11-26": [
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-11-29": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-11-30": [
+        "DUKE-RS",
+        "LHMC",
+        "NFLMC",
+        "RRMCTRA"
+    ],
+    "2021-12-01": [
+        "DUKE-RS",
+        "LHMC",
+        "NFLMC",
+        "RRMCTRA"
+    ],
+    "2021-12-02": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-03": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-06": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-07": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-08": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-09": [
+        "CITMC",
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-10": [
+        "CITMC",
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-13": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-14": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-15": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-16": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-17": [
+        "DUKE-RS",
+        "LHMC",
+        "RRMCTRA"
+    ],
+    "2021-12-20": [
+        "DUKE-RS"
+    ],
+    "2021-12-21": [
+        "DUKE-RS"
+    ],
+    "2021-12-22": [
+        "DUKE-RS"
+    ],
+    "2021-12-23": [
+        "DUKE-RS",
+        "RRMCTRA"
+    ],
+    "2021-12-27": [
+        "DUKE-RS",
+        "RRMCTRA"
+    ],
+    "2021-12-28": [
+        "DUKE-RS",
+        "RRMCTRA"
+    ],
+    "2021-12-29": [
+        "DUKE-RS",
+        "RRMCTRA"
+    ],
+    "2021-12-30": [
+        "RRMCTRA"
+    ],
+    "2021-12-31": [
+        "RRMCTRA"
+    ],
+    "2022-01-03": [
+        "RRMCTRA"
+    ],
+    "2022-01-24": [
+        "IMLD"
+    ],
+    "2022-01-25": [
+        "HIC"
+    ],
+    "2022-01-26": [
+        "HIC"
+    ],
+    "2022-02-14": [
+        "DUKE-RS"
+    ],
+    "2022-02-15": [
+        "DUKE-RS"
+    ],
+    "2022-02-16": [
+        "SEIC"
+    ],
+    "2022-02-17": [
+        "SEIC"
+    ],
+    "2022-03-01": [
+        "SEIC"
+    ],
+    "2022-03-02": [
+        "SEIC"
+    ],
+    "2022-03-08": [
+        "IMMC"
+    ],
+    "2022-03-09": [
+        "IMMC"
+    ],
+    "2022-03-10": [
+        "IMMC"
+    ],
+    "2022-03-11": [
+        "MYMCT"
+    ],
+    "2022-03-14": [
+        "BPGC"
+    ],
+    "2022-04-12": [
+        "CEGLC",
+        "KAMLA"
+    ],
+    "2022-04-13": [
+        "NATG",
+        "OGCBF"
+    ],
+    "2022-04-14": [
+        "DUKE-RS",
+        "NATG",
+        "OGCBF"
+    ],
+    "2022-04-18": [
+        "DUKE-RS"
+    ]
+}
