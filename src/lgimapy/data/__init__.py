@@ -46,7 +46,7 @@ from lgimapy.data.account_strategy_maps import (
     update_account_strategy_maps,
     get_account_strategy_map_list,
 )
-from lgimapy.data.portfolio_history import update_portfolio_history
+from lgimapy.data.portfolio_history import PortfolioHistory
 
 
 __all__ = [
@@ -91,5 +91,5 @@ __all__ = [
     "save_bond_wishlist",
     "update_account_strategy_maps",
     "get_account_strategy_map_list",
-    "update_portfolio_history",
+    "PortfolioHistory",
 ]
