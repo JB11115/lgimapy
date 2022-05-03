@@ -33,7 +33,7 @@ class PortfolioHistory:
 
     @property
     def _processed_ignored_accounts_fid(self):
-        return "portfolio_processed_history_ignored_accounts"
+        return "portfolio_history_processed_ignored_accounts"
 
     @property
     def _desired_ignored_accounts_fid(self):
