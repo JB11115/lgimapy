@@ -5,7 +5,7 @@ from lgimapy.data import Database
 
 rsync = [
     "rsync",
-    "-rvu",
+    "-crv",
     "--exclude",
     "trace/",
     f"{Database().local()}/",
