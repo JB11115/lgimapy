@@ -1,17 +1,12 @@
 import multiprocessing as mp
-from bisect import bisect_left
 from collections import defaultdict, OrderedDict
-from datetime import datetime as dt
-from datetime import timedelta
-from functools import partial
 
 import numpy as np
 import pandas as pd
 
-from lgimapy.bloomberg import get_bloomberg_subsector
-from lgimapy.data import Database, Index, IG_sectors, HY_sectors
+from lgimapy.data import Database, IG_sectors, HY_sectors
 from lgimapy.latex import Document, latex_table, merge_pdfs
-from lgimapy.utils import load_json, mkdir, root, Time, restart_program
+from lgimapy.utils import load_json, mkdir, root
 
 # %%
 
@@ -47,37 +42,6 @@ def build_credit_snapshots(date=None, include_portfolio=True):
         read_path="reports/credit_snapshots",
         write_path="reports/current_reports",
     )
-
-
-def update_credit_snapshots():
-    """
-    Create all .csv files for past month if they do
-    not exist.
-    """
-    db = Database()
-    trade_dates = db.trade_dates(start=db.date("1m"))
-    indexes = ["US_IG", "US_IG_10+"]
-    for index in indexes:
-        # Find dates with missing .csv files for index.
-        fid = SnapshotConfig(index).fid
-        saved_fids = root("data/credit_snapshots").glob(f"*_{fid}*.csv")
-        saved_dates = [fid.stem.split("_")[0] for fid in saved_fids]
-        missing_dates = [
-            date
-            for date in trade_dates
-            if date.strftime("%Y-%m-%d") not in saved_dates
-        ]
-        # Build .csv file for each missing date.
-        for date in missing_dates:
-            # restart_program(RAM_threshold=75)
-            db.load_market_data(date=date)
-            build_credit_snapshot(
-                index,
-                db,
-                date=date,
-                include_portfolio_positions=True,
-                pdf=False,
-            )
 
 
 class SnapshotConfig:
@@ -354,9 +318,7 @@ def build_credit_snapshot(
     """
     config = SnapshotConfig(index)
     fid = f"{date.strftime('%Y-%m-%d')}_{config.fid}_Snapshot"
-    csv_path = root("data/credit_snapshots")
     pdf_path = "reports/credit_snapshots"
-    mkdir(csv_path)
 
     # Find dates for daily, week, month, and year to date calculations.
     # Store dates not to be used in table with a `~` before them.
@@ -429,8 +391,6 @@ def build_credit_snapshot(
     #     rows.append(row)
 
     table_df = pd.concat(rows, sort=False)
-    table_df.to_csv(csv_path / f"{fid}.csv")
-    table_df = pd.read_csv(csv_path / f"{fid}.csv", index_col=0)
 
     if not pdf:
         return
@@ -1124,17 +1084,5 @@ def get_cross_asset_table(db, dates_d):
 # %%
 
 if __name__ == "__main__":
-    date = "9/30/2021"
-    date = Database().date("yesterday")
     date = Database().date("today")
-    import warnings
-
-    warnings.simplefilter("error", FutureWarning)
-    with Time():
-        build_credit_snapshots(date)
-
-    # %%
-    index = "US_IG_10+"
-    date = None
-    pdf = True
-    include_portfolio_positions = True
+    build_credit_snapshots(date)
