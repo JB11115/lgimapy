@@ -7,7 +7,7 @@ from datetime import datetime as dt
 from tqdm import tqdm
 
 import lgimapy.vis as vis
-from lgimapy.data import Database, update_portfolio_history
+from lgimapy.data import Database, PortfolioHistory
 from lgimapy.latex import Document, Page, merge_pdfs
 from lgimapy.portfolios import AttributionIndex
 from lgimapy.utils import load_json, root, replace_multiple, Time
@@ -28,24 +28,19 @@ def build_strategy_risk_report():
     # dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q3_2021"
 
     attribution_accounts = ["P-LD"]
+    port_hist = PortfolioHistory()
+    port_hist.build_ignored_accounts_file()
+    ignored_accounts = port_hist.desired_ignored_accounts(date)
+    # ignored_accounts = set(["SESIBNM", "SEUIBNM"])
 
-    ignored_accounts = set(["SESIBNM", "SEUIBNM"])
     pdf_path = root("reports/strategy_risk")
 
     strategy = "US Corporate IG"
     strategy = "US Long Government/Credit"
     strategy = "US Long Corporate"
     strategy = "US Long Credit Plus"
-    # strategy = "US Credit"
-    # strategy = "Bloomberg LDI Custom - DE"
-    # strategy = "US Long Credit"
 
     n_table_rows = 10
-
-    strat_acnt = load_json("strategy_accounts")
-    strat_df = pd.Series(
-        {k: len(v) for k, v in strat_acnt.items()}
-    ).sort_values(ascending=False)
 
     strategies = [
         "US Long Credit",
@@ -147,7 +142,7 @@ def build_strategy_risk_report():
     merge_pdfs(dated_fid, fids_to_merge, path=pdf_path, keep_bookmarks=True)
 
     # Update history for every portfolio.
-    # update_portfolio_history()
+    port_hist.update_history()
     # %%
 
 
@@ -699,6 +694,9 @@ def save_single_latex_risk_page(
 
     # Update stored properties and get stored data for historical tables.
     curr_strat.save_stored_properties()
+    port_hist = PortfolioHistory()
+    port_hist.update_attemped_ignored_accounts(curr_strat)
+
     history_df = curr_strat.stored_properties_history_df
     history_table = curr_strat.stored_properties_history_table
     historic_percentile_df = 100 * curr_strat.stored_properties_percentile_table
@@ -768,7 +766,7 @@ def save_single_latex_risk_page(
     }
 
     # Excluded accounts.
-    excluded_accounts = ignored_accounts & set(curr_strat._all_accounts)
+    excluded_accounts = curr_strat.ignored_accounts
     if excluded_accounts:
         page.add_text(
             f"\\small "
