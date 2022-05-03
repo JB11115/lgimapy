@@ -1406,6 +1406,8 @@
             "RETAIL_REITS",
             "OFFICE_REITS"
         ],
+        "ticker": ["VICI"],
+        "special_rules": "(Sector | Ticker)",
         "in_stats_index": true
     },
     "TECHNOLOGY": {
@@ -1447,7 +1449,8 @@
             "BABA",
             "AMZN",
             "EBAY",
-            "EXPE"
+            "EXPE",
+            "VICI"
         ],
         "in_stats_index": true,
         "special_rules": "~Ticker"
@@ -1469,7 +1472,8 @@
             "BABA",
             "AMZN",
             "EBAY",
-            "EXPE"
+            "EXPE",
+            "VICI"
         ],
         "in_stats_index": true,
         "special_rules": "~Ticker"
@@ -1487,7 +1491,8 @@
             "BABA",
             "AMZN",
             "EBAY",
-            "EXPE"
+            "EXPE",
+            "VICI"
         ],
         "in_stats_index": true,
         "special_rules": "~Ticker"
