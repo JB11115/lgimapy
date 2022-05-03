@@ -980,9 +980,11 @@ class Strategy(BondBasket, Portfolio):
         self._all_accounts = self._unique("Account", df)
         if ignored_accounts is not None:
             ignored_accounts = to_set(ignored_accounts, dtype=str)
-            self.ignored_accounts = ignored_accounts
+            self._attempted_ignored_accounts = ignored_accounts
+            self.ignored_accounts = ignored_accounts & set(self._all_accounts)
             df = df[~df["Account"].isin(ignored_accounts)].copy()
         else:
+            self._attempted_ignored_accounts = set()
             self.ignored_accounts = set()
         BondBasket.__init__(
             self,
@@ -1066,7 +1068,9 @@ class Strategy(BondBasket, Portfolio):
             return self
 
         new_ignored_accounts = to_set(accounts, dtype=str)
-        ignored_accounts = new_ignored_accounts | self.ignored_accounts
+        ignored_accounts = (
+            new_ignored_accounts | self._attempted_ignored_accounts
+        )
         return Strategy(
             self.df,
             name=self.name,
