@@ -5689,6 +5689,7 @@
     ],
     "2022-04-01": [
         "BPMC",
+        "CITLA",
         "MYMCT",
         "PGELD",
         "SESIBNM",
@@ -5697,12 +5698,14 @@
     ],
     "2022-04-04": [
         "BPMC",
+        "CITLA",
         "MYMCT",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-04-05": [
         "BPMC",
+        "CITLA",
         "MYMCT",
         "OGCBF",
         "PIELD",
@@ -5712,6 +5715,7 @@
     ],
     "2022-04-06": [
         "BPMC",
+        "CITLA",
         "MYMC",
         "MYMCT",
         "OGCBF",
@@ -5723,6 +5727,7 @@
     "2022-04-07": [
         "BCBSLD",
         "BPMC",
+        "CITLA",
         "HBANLD",
         "MYMC",
         "MYMCT",
@@ -5732,6 +5737,7 @@
     "2022-04-08": [
         "BCBSLD",
         "BPMC",
+        "CITLA",
         "HBANLD",
         "MYMCT",
         "SESIBNM",
@@ -5739,6 +5745,7 @@
     ],
     "2022-04-11": [
         "BPMC",
+        "CITLA",
         "MYMCT",
         "OBWCLD",
         "SEIGC",
@@ -5746,6 +5753,7 @@
         "SEUIBNM"
     ],
     "2022-04-12": [
+        "CITLA",
         "OBWCLD",
         "SEIGC",
         "SESIBNM",
@@ -5753,6 +5761,7 @@
     ],
     "2022-04-13": [
         "CEGLC",
+        "CITLA",
         "CLECOLD",
         "KAMLA",
         "SESIBNM",
@@ -5760,6 +5769,7 @@
     ],
     "2022-04-14": [
         "CEGLC",
+        "CITLA",
         "CLECOLD",
         "KAMLA",
         "SESIBNM",
@@ -5767,18 +5777,21 @@
     ],
     "2022-04-18": [
         "CEGLC",
+        "CITLA",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-04-19": [
         "CEGLC",
+        "CITLA",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-04-20": [
         "CEGLC",
+        "CITLA",
         "JNJLC",
         "KAMLA",
         "SESIBNM",
@@ -5786,6 +5799,7 @@
     ],
     "2022-04-21": [
         "CEGLC",
+        "CITLA",
         "JNJLC",
         "KAMLA",
         "MMMLD2",
@@ -5794,6 +5808,7 @@
     ],
     "2022-04-22": [
         "CEGLC",
+        "CITLA",
         "KAMLA",
         "MMMLD2",
         "SESIBNM",
@@ -5801,12 +5816,14 @@
     ],
     "2022-04-25": [
         "CEGLC",
+        "CITLA",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-04-26": [
         "CEGLC",
+        "CITLA",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
@@ -5814,6 +5831,7 @@
     "2022-04-27": [
         "ARCLD",
         "CEGLC",
+        "CITLA",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
@@ -5821,6 +5839,7 @@
     "2022-04-28": [
         "ARCLD",
         "CEGLC",
+        "CITLA",
         "KAMLA",
         "LSCLD",
         "SESIBNM",
@@ -5851,6 +5870,15 @@
         "NATG",
         "PBIIC",
         "PBILD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-03": [
+        "CEGLC",
+        "KAMLA",
+        "PBIIC",
+        "PBILD",
+        "PGELD",
         "SESIBNM",
         "SEUIBNM"
     ]
