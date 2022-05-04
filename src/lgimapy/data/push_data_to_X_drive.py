@@ -7,7 +7,7 @@ rsync = [
     "rsync",
     "-crv",
     "--exclude",
-    "trace/",
+    "{trace/, synthetic_difference/}",
     f"{Database().local()}/",
     "/mnt/x/Credit Strategy/lgimapy/data/",
 ]
