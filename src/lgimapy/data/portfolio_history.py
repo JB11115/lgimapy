@@ -2,7 +2,6 @@ import warnings
 from collections import defaultdict
 from functools import cached_property, lru_cache
 
-import joblib
 import pandas as pd
 from oslo_concurrency import lockutils
 
@@ -215,7 +214,7 @@ class PortfolioHistory:
 
         try:
             ignored_accounts.remove(account)
-        except ValueError:
+        except (KeyError, ValueError):
             return  # Account isn't in ignored list
 
         if ignored_accounts:
@@ -358,7 +357,7 @@ class PortfolioHistory:
 
         try:
             ignored_accounts.remove(account)
-        except ValueError:
+        except (KeyError, ValueError):
             return  # Account isn't in ignored list
 
         if ignored_accounts:
@@ -468,12 +467,8 @@ class PortfolioHistory:
         else:
             strategies = self._strategies_to_update(date)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            joblib.Parallel(n_jobs=6)(
-                joblib.delayed(self._update_strategy_for_date)(strategy, date)
-                for strategy in strategies
-            )
+        for strategy in strategies:
+            self._update_strategy_for_date(strategy, date)
 
         # Update completed dates file.
         self._add_completed_date(date)
