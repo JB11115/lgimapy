@@ -2872,10 +2872,14 @@ class Database:
         pd.DataFrame:
             Bloomberg data for specified field.
         """
-        fid_d = {"OAS": "report_spreads", "YTW": "report_yields"}
+        filename = {
+            "OAS": "spreads",
+            "YTW": "yields",
+            "PRICE": "prices",
+        }[field.upper()]
 
         raw_df = pd.read_csv(
-            self.local(f"HY/{fid_d[field]}.csv"),
+            self.local(f"HY/decile_report/{filename}.csv"),
             index_col=0,
             parse_dates=True,
             infer_datetime_format=True,
@@ -3366,7 +3370,7 @@ def main():
     from tqdm import tqdm
 
     from lgimapy import vis
-    from lgimapy.bloomberg import bdp, bdh, get_cashflows
+    from lgimapy.bloomberg import bdp, bdh, bds, get_cashflows
     from lgimapy.data import IG_sectors, HY_sectors
     from lgimapy.portfolios import AttributionIndex
     from lgimapy.utils import (
@@ -3374,6 +3378,7 @@ def main():
         to_sql_list,
         to_clipboard,
         mkdir,
+        get_ordinal,
     )
 
     vis.style()
@@ -3385,14 +3390,23 @@ def main():
     # %%
     db.load_market_data()
     # %%
-    ix = db.build_market_index(ticker="EQT")
-    ix.df
+    # port = db.load_portfolio(account="LIB150")
+    # port.derivatives_df.iloc[0]
+    # port.derivatives_df.iloc[1]
 
     # %%
-    df = db.load_bbg_data(["US_BB", "US_B"], "OAS", start=db.date("3m"))
-    df["diff"] = df["US_B"] - df["US_BB"]
+    db = Database(market="EUR")
+    df = db.load_market_data(
+        ret_df=True, clean=False, preprocess=False, local=False
+    )
+    sorted(df.columns)
 
-    vis.plot_timeseries(df["diff"], ylabel="B - BB spread", median_line=True)
-    vis.show()
+    old_df = db.load_market_data(
+        ret_df=True, clean=False, preprocess=False, local=False, date="1/5/2016"
+    )
+    sorted(old_df.columns)
 
     # %%
+    db = Database()
+    db.load_market_data()
+    ix = db.build_market_index(in_H4UN_index=True)
