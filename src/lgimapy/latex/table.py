@@ -567,7 +567,11 @@ def latex_table(
     else:
         fout += "%\caption{}\n"
     if alternating_colors != (None, None):
-        c1, c2 = alternating_colors
+        # Always make first color the first row.
+        if len(df) % 2 == 0:
+            c1, c2 = alternating_colors
+        else:
+            c2, c1 = alternating_colors
         c1 = "" if c1 is None else c1
         c2 = "" if c2 is None else c2
         fout += f"\\rowcolors{{1}}{{{c1}}}{{{c2}}}\n"
