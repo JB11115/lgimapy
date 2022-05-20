@@ -4,7 +4,7 @@ from lgimapy.utils import root
 
 rsync = [
     "rsync",
-    "-crP",
+    "-crv",
     "--exclude",
     "fig/",
     f"{root('reports')}/",
