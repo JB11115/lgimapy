@@ -11,14 +11,15 @@ from lgimapy.utils import replace_multiple
 db = Database()
 
 # %%
-prev_date = db.nearest_date("3/3/2022")
-# prev_label = f"{prev_date:%-m/%d/%Y}"
-# fid_date = f"{prev_date:%-m-%d-%Y}"
-prev_label = "March Wides"
-fid_date = "March_Wides"
+prev_date = db.nearest_date("3/14/2022")
+prev_label = f"{prev_date:%-m/%d/%Y}"
+fid_date = f"{prev_date:%-m-%d-%Y}"
+# prev_label = "March Wides"
+# fid_date = "March_Wides"
 today = db.date("today")
-prev_start = pd.to_datetime("3/1/2022")
-prev_end = pd.to_datetime("3/30/2022")
+# prev_start = pd.to_datetime("3/1/2022")
+# prev_end = pd.to_datetime("3/30/2022")
+prev_start = prev_end = prev_date
 maturity_range = (25, 32)
 
 # %%
