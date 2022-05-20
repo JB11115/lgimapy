@@ -1,5 +1,5 @@
 import warnings
-from functools import lru_cache
+from functools import lru_cache, cached_property
 
 import numpy as np
 from scipy.optimize import fsolve, minimize, LinearConstraint
@@ -11,35 +11,39 @@ from lgimapy.utils import to_list, Time
 
 # %%
 
+# from lgimapy.data import Database
+
 # db = Database()
 #
-# # date = db.date("today")
+# date = db.date("today")
 # date = "3/9/2021"
 # db.load_market_data(date=date)
 # treasury_curve = TreasuryCurve(date)
 # __ = treasury_curve._curves_df
 
 # %%
-isins = [
-    "US037833EB24",
-    "US037833ED89",
-    "US037833DV96",
-    "US037833EF38",
-    "US037833EC07",
-    "US037833EE62",
-]
-cols = [
-    "IssueDate",
-    "MaturityDate",
-    "MaturityYears",
-    "OriginalMaturity",
-    "DirtyPrice",
-    "YieldToWorst",
-]
-
+# ix = db.build_market_index(ticker="IBM").subset_on_the_runs()
+# isins = ix.isins
+# isins = [
+#     "US037833EB24",
+#     "US037833ED89",
+#     "US037833DV96",
+#     "US037833EF38",
+#     "US037833EC07",
+#     "US037833EE62",
+# ]
+# cols = [
+#     "IssueDate",
+#     "MaturityDate",
+#     "MaturityYears",
+#     "OriginalMaturity",
+#     "DirtyPrice",
+#     "YieldToWorst",
+# ]
 # ix = db.build_market_index(isin=isins)
 # ix.df[cols].sort_values("OriginalMaturity")
 # df = ix.df.copy()
+# df[cols].sort_values("OriginalMaturity")
 # %%
 
 
@@ -116,8 +120,7 @@ class CreditCurve:
             self.knot_points = np.array(knot_points, ndmin=1, dtype="float32")
             self._k = 3 + len(self.knot_points)
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _Z_yields(self):
         """
         Memoized risk free yields matrix for cash flow times
@@ -134,8 +137,7 @@ class CreditCurve:
             Z_yields[i, :] = self._treasury_curve.yields(t)
         return Z_yields
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _Z(self):
         """
         Memoized discount function matrix for cash flow times
@@ -197,8 +199,7 @@ class CreditCurve:
             )
         return spline_tensor
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _dZ(self):
         """
         Memoized difference (Z_t - Z_{t+1}) of discount function
@@ -218,8 +219,7 @@ class CreditCurve:
         indicator_function = (self._cf > 0).astype(int)[:, 1:]
         return -np.diff(self._Z, axis=1) * indicator_function
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _principal_locs(self):
         """
         Memoized vector of princpal locations in :attr:`_cf`.
@@ -231,8 +231,7 @@ class CreditCurve:
         """
         return np.index_exp[np.arange(self._n), np.argmax(self._cf, axis=1)]
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _discounted_coupons_ex_recovery(self):
         """
         Memoized matrix of discounted coupons ex conditional
@@ -253,8 +252,7 @@ class CreditCurve:
         cond_discounted_recovery = self._dZ * self._R
         return discounted_coupons - cond_discounted_recovery
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _discounted_principal_ex_recovery(self):
         """
         Memoized matrix of discounted principal payments ex
@@ -294,8 +292,7 @@ class CreditCurve:
         )
         return U
 
-    @property
-    @lru_cache(maxsize=None)
+    @cached_property
     def _V(self):
         """
         Memoized adjusted present value for bonds based off
@@ -329,7 +326,7 @@ class CreditCurve:
         params=None,
         knot_points=10,
         recovery=30,
-        solver="SLSQP",
+        solver="Nelder-Mead",
     ):
         """
         Fit survival curve model.
@@ -340,7 +337,7 @@ class CreditCurve:
             Knot points for curve fitting.
         recovery: float, default=30
             Recovery of par from 0 to 100.
-        solver: str, default='SLSQP'
+        solver: str, default='Nelder-Mead'
             Solver to use for ``scipy.optimize.minimize`` optimization.
 
         Returns
@@ -363,17 +360,17 @@ class CreditCurve:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            opt = minimize(
+            self.opt = minimize(
                 self._objective_function,
                 x0=init_params,
                 method=solver,
                 tol=1e-4,
                 constraints=(LinearConstraint(beta_1_2_3, lb=1, ub=1)),
             )
-        self.params = opt.x
-        self.resid = opt.fun
+        self.params = self.opt.x
+        self.resid = self.opt.fun
 
-        return CreditCurveResult(opt=opt, mod=self)
+        return CreditCurveResult(opt=self.opt, mod=self)
 
 
 class CreditCurveResult:
@@ -581,7 +578,7 @@ class CreditCurveResult:
 # from lgimapy import vis
 #
 # vis.style()
-# # %%
+# # # %%
 # db.load_market_data(date=db.nearest_date("7/18/2020"))
 # fit_ix = db.build_market_index(
 #     ticker="BA", issue_years=(None, 0.5), maturity=(None, 31)
