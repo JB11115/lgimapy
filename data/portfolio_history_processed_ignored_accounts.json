@@ -5881,5 +5881,71 @@
         "PGELD",
         "SESIBNM",
         "SEUIBNM"
+    ],
+    "2022-05-04": [
+        "KAMLA",
+        "PGELD",
+        "PIELD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-05": [
+        "KAMLA",
+        "PIELD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-06": [
+        "KAMLA",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-09": [
+        "BCBSLD",
+        "KAMLA",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-10": [
+        "BCBSLD",
+        "KAMLA",
+        "SALD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-11": [
+        "KAMLA",
+        "SALD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-12": [
+        "KAMLA",
+        "SALD2",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-13": [
+        "SALD2",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-16": [
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-17": [
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-18": [
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-19": [
+        "BALLD",
+        "BALMC",
+        "SESIBNM",
+        "SEUIBNM"
     ]
 }

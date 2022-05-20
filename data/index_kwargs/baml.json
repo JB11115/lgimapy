@@ -169,6 +169,13 @@
             "FOOD_WHOLESALE"
         ]
     },
+    "FOOD_AND_BEVERAGE": {
+        "name": "Food & Bev",
+        "BAML_sector": [
+            "FOOD_WHOLESALE",
+            "BEVERAGE"
+        ]
+    },
     "PERSONAL_AND_HOUSEHOLD_PRODUCTS": {
         "name": "Household Products",
         "BAML_sector": [
@@ -210,6 +217,16 @@
         "BAML_top_level_sector": [
             "HEALTHCARE"
         ]
+    },
+    "HEALTHCARE_EX_PHARMA": {
+        "name": "Healthcare",
+        "BAML_top_level_sector": [
+            "HEALTHCARE"
+        ],
+        "BAML_sector": [
+            "PHARMACEUTICALS"
+        ],
+        "special_rules": "~BAMLSector"
     },
     "HEALTH_FACILITIES": {
         "name": "Health Facilities",
