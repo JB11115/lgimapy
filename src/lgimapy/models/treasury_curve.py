@@ -6,8 +6,10 @@ from collections import defaultdict, namedtuple
 from dateutil.relativedelta import relativedelta
 from functools import lru_cache
 
+import joblib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+import multiprocessing as mp
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -107,6 +109,64 @@ def clean_treasuries(df):
         & oas_isnt_too_low
         & matures_in_more_than_3_months
     ].copy()
+
+
+def _exit_opt(Xi):
+    """Callback check that raises error if convergence fails."""
+    if np.sum(np.isnan(Xi)) > 1:
+        raise RuntimeError("Minimize convergence failed.")
+
+
+def _error_function(self, B, M, C, p, y, method, bonds):
+    """
+    Calcualte squared error between market value ytm's and ytm's
+    estimated using Svensson method with specified beta B.
+
+    Parameters
+    ----------
+    B: [1 x 6] np.array
+        Beta array [B_0, B_1, B_2, B_3, Tau_1, Tau_2].
+
+    Returns
+    -------
+    squared_error: float
+        Total squared error between specified B and market ytm's.
+    """
+    # Build discount factor matrix respective to cash flow matrix.
+    D = np.exp(-M * svensson(M, B))
+    p_hat = np.sum(C * D, axis=0)  # theoretical prices
+
+    if method == "price":
+        # Minimize sum of squared inverse duration weighted price error.
+        inv_durations = 1 / np.array([b.OAD for b in bonds])
+        inv_dur_weights = inv_durations / sum(inv_durations)
+        squared_error = inv_dur_weights @ ((p - p_hat) ** 2)
+    elif method == "yield":
+        # Minimize sum of squared yield error.
+        y_hat = np.array(  # theoretical yields
+            [b.theoretical_ytm(p) for b, p in zip(bonds, p_hat)]
+        )
+        squared_error = np.sum((y - y_hat) ** 2)
+    else:
+        raise ValueError("method must be 'price' or 'yeild'.")
+    return squared_error
+
+
+def _minimize_func(params, bnds, error_func, solver):
+    try:
+        opt = minimize(
+            error_func,
+            x0=params,
+            method=solver,
+            bounds=bnds,
+            tol=1e-4,
+            options={"disp": False, "maxiter": 1000},
+            callback=_exit_opt,
+        )
+    except RuntimeError:
+        opt = namedtuple("opt_res", ["status"])
+        opt.status = 1
+    return opt
 
 
 class TreasuryCurveBuilder:
@@ -223,7 +283,7 @@ class TreasuryCurveBuilder:
         threshold=12,
         fit_strips=True,
         fit_bills=True,
-        solver="SLSQP",
+        solver="Nelder-Mead",
         verbose=0,
     ):
         """
@@ -277,9 +337,26 @@ class TreasuryCurveBuilder:
 
         # Get Svensson parameters for each maturity range of the curve.
         self._partial_curve_params = {}
-        for mat_range in [(0, 3), (0, 10), (0, 15), (0, 30)]:
-            key = "{}-{}".format(*mat_range)
-            self._fit_range(mat_range)
+        self._curve_fit_ranges = {
+            (0, 0): (0, 0.5),
+            (0, 3): (0, 3),
+            (0, 7): (2, 6),
+            (1, 12): (5, 11),
+            (1, 18): (9, 16),
+            (5, 25): (14, 22),
+            (5, 30): (20, 30),
+            (100, 100): (30, 100),
+        }
+        for fit_range in self._curve_fit_ranges.keys():
+            if fit_range in {(0, 0), (100, 100)}:
+                # Dont need to be fit as they use linear extrapolation.
+                continue
+
+            key = "{}-{}".format(*fit_range)
+            if fit_range[1] == 30:
+                self._30yr_key = key
+
+            self._fit_range(fit_range)
             self._partial_curve_params[key] = self._B
 
         self.curve = self._combine_curves(self._partial_curve_params)
@@ -305,27 +382,26 @@ class TreasuryCurveBuilder:
         if self._verbose >= 1:
             print(f"  Combining Curves")
 
-        maturities = [(0, 0), (0, 3), (0, 10), (0, 15), (0, 30), (100, 100)]
-        curve_ranges = [(0, 0.5), (0, 3), (2, 6), (5, 10), (8, 30), (30, 100)]
         step = 1 / 96
-        yield_30_yr = svensson(30, svensson_params["0-30"])
+
+        yield_30_yr = svensson(30, svensson_params[self._30yr_key])
         yield_100_yr = yield_30_yr - 1e-3
 
         # Build DataFrame with curve values for different maturity
         # ranges in each column.
         df = pd.DataFrame(index=(np.arange(0, 100 + step / 2, step).round(5)))
-        for mats, cr in zip(maturities, curve_ranges):
-            mat_lbl = "{}-{}".format(*mats)
-            t = np.arange(cr[0], cr[1], step).round(5)
-            if mats == (0, 0):
+        for fit_range, curve_range in self._curve_fit_ranges.items():
+            mat_lbl = "{}-{}".format(*fit_range)
+            t = np.arange(*curve_range, step).round(5)
+            if fit_range == (0, 0):
                 df.loc[t, mat_lbl] = np.zeros(len(t)) + self._fed_funds_rate
-            elif mats == (100, 100):
+            elif fit_range == (100, 100):
                 df.loc[t, mat_lbl] = np.zeros(len(t)) + yield_100_yr
             else:
                 df.loc[t, mat_lbl] = svensson(t, svensson_params[mat_lbl])
 
         t_30_100 = np.arange(30, 100, step).round(5)
-        df.loc[t_30_100, "0-30"] = np.zeros(len(t_30_100)) + yield_30_yr
+        df.loc[t_30_100, self._30yr_key] = np.zeros(len(t_30_100)) + yield_30_yr
 
         # Fill non-overlapping positions.
         no_overlap_df = df[df.isnull().sum(axis=1) == len(df.columns) - 1]
@@ -399,7 +475,7 @@ class TreasuryCurveBuilder:
         while n_outlier_bonds > 0:
             self._fit(self._n_drop)
 
-            # Get actuall TBonds, ignoring synthetic TBills.
+            # Get actual TBonds, ignoring synthetic TBills.
             bonds, resids = [], []
             for bond, resid in zip(self._bonds, self._resid):
                 if isinstance(bond, TBond):
@@ -469,16 +545,6 @@ class TreasuryCurveBuilder:
         self._y = np.array([b.ytm for b in self._bonds])
         self._p = np.array([b.DirtyPrice for b in self._bonds])
 
-        def exit_opt(Xi):
-            """Callback check that raises error if convergence fails."""
-            if np.sum(np.isnan(Xi)) > 1:
-                raise RuntimeError("Minimize convergence failed.")
-
-        def printx(Xi):
-            """Prints optimization updates each iteration."""
-            print(Xi)
-            exit_opt(Xi)
-
         # Set up inits for optimizatios.
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", RuntimeWarning)
@@ -498,37 +564,75 @@ class TreasuryCurveBuilder:
             else:
                 raise ValueError("Model must be either NSS or NS.")
 
-            # Randomly sample bounds to create n initial parameter combinations.
-            init_params = np.zeros([n, len(bnds)])
-            for j, bnd in enumerate(bnds):
-                init_params[:, j] = np.random.uniform(*bnds[0], size=n)
+        # Randomly sample bounds to create n initial parameter combinations.
+        init_params = np.zeros([n, len(bnds)])
+        for j, bnd in enumerate(bnds):
+            init_params[:, j] = np.random.uniform(*bnds[j], size=n)
 
-            # Perform n optimizations, storing all results.
-            beta_res = np.zeros([n, len(bnds)])
-            rmse_res = np.zeros([n])
-            for i, params in enumerate(init_params):
-                try:
-                    self._opt = minimize(
-                        self._error_function,
-                        x0=params,
-                        method=self._solver,
-                        bounds=bnds,
-                        tol=1e-4,
-                        options={"disp": False, "maxiter": 1000},
-                        callback=printx if self._verbose >= 3 else exit_opt,
-                    )
-                except RuntimeError:
-                    self._opt = namedtuple("opt_res", ["status"])
-                    self._opt.status = 1
+        # Perform n optimizations, storing all results.
+        beta_res = np.zeros([n, len(bnds)])
+        rmse_res = np.zeros([n])
 
-                if self._opt.status != 0:
-                    rmse_res[i] = 1e9  # arbitrary high error value
-                else:
-                    # Succesful optimization.
-                    beta_res[i, :] = self._opt.x
-                    rmse_res[i] = self._opt.fun
-                if self._verbose >= 2:
-                    print(f"      Iteration {i+1} | RMSE: {rmse_res[i]:.4f}")
+        # pool = mp.Pool(processes=mp.cpu_count() - 2)
+        # mp_res = [
+        #     pool.apply_async(
+        #         _minimize_func,
+        #         args=(params, bnds, self._error_function, self._solver),
+        #     )
+        #     for params in init_params
+        # ]
+        # opts = [p.get() for p in mp_res]
+
+        # opts = joblib.Parallel(n_jobs=6)(
+        #     joblib.delayed(_minimize_func)(
+        #         params,
+        #         bnds,
+        #         lambda x: _error_function(
+        #             x,
+        #             self._M,
+        #             self._C,
+        #             self._p,
+        #             self._y,
+        #             self._method,
+        #             self._bonds,
+        #         ),
+        #         self._solver,
+        #     )
+        #     for params in init_params
+        # )
+
+        # for i, opt in enumerate(opts):
+        #     if opt.status != 0:
+        #         rmse_res[i] = 1e9  # arbitrary high error value
+        #     else:
+        #         # Succesful optimization.
+        #         beta_res[i, :] = opt.x
+        #         rmse_res[i] = opt.fun
+        #     if self._verbose >= 2:
+        #         print(f"      Iteration {i+1} | RMSE: {rmse_res[i]:.4f}")
+        for i, params in enumerate(init_params):
+            try:
+                self._opt = minimize(
+                    self._error_function,
+                    x0=params,
+                    method=self._solver,
+                    bounds=bnds,
+                    tol=1e-4,
+                    options={"disp": False, "maxiter": 1000},
+                    callback=_exit_opt,
+                )
+            except RuntimeError:
+                self._opt = namedtuple("opt_res", ["status"])
+                self._opt.status = 1
+
+            if self._opt.status != 0:
+                rmse_res[i] = 1e9  # arbitrary high error value
+            else:
+                # Succesful optimization.
+                beta_res[i, :] = self._opt.x
+                rmse_res[i] = self._opt.fun
+            if self._verbose >= 2:
+                print(f"      Iteration {i+1} | RMSE: {rmse_res[i]:.4f}")
 
         # Store best results.
         if min(rmse_res) == 1e9:  # no succesful optimizations.
@@ -634,7 +738,7 @@ class TreasuryCurveBuilder:
         # Save figure.
         fig_dir = root("data/treasury_curves")
         mkdir(fig_dir)
-        fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+        fig, ax = vis.subplots(1, 1, figsize=(8, 6))
         self.plot(ax=ax)
         vis.savefig(fig_dir / self.date.strftime("%Y_%m_%d"))
         vis.close(fig)
@@ -774,7 +878,7 @@ class TreasuryCurveBuilder:
             Figure size.
         """
         if ax is None:
-            fig, ax = plt.subplots(1, 1, figsize=figsize)
+            fig, ax = vis.subplots(1, 1, figsize=figsize)
 
         # Plot discount curve.
         d = np.exp(-self.curve.index * self.curve.values)
@@ -811,7 +915,7 @@ class TreasuryCurveBuilder:
             Kwargs for plotting curve in matplotlib.
         """
         if ax is None:
-            fig, ax = plt.subplots(1, 1, figsize=figsize)
+            fig, ax = vis.subplots(1, 1, figsize=figsize)
 
         plot_kwargs = {
             "color": "k",
@@ -851,7 +955,7 @@ class TreasuryCurveBuilder:
                 color="darkgreen",
                 ms=4,
                 alpha=0.5,
-                label="Theoretical YTM",
+                label="Model Implied YTM",
             )
 
         if strips:
@@ -915,10 +1019,10 @@ def update_treasury_curve_dates(dates=None, verbose=True):
         )
         tcb = TreasuryCurveBuilder(treasury_ix)
         tcb.fit(
-            verbose=int(verbose),
+            verbose=0,
             threshold=12,
-            n=20,
-            n_drop=15,
+            n=70,
+            n_drop=30,
             solver="Nelder-Mead",
         )
         tcb.save()
@@ -980,7 +1084,7 @@ def update_specific_date(specified_date, plot=True, **kwargs):
 
         t = np.linspace(0, 30, 400)
         sns.set_palette("viridis_r", len(dates))
-        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+        fig, ax = vis.subplots(1, 1, figsize=(12, 8))
         for date in dates:
             curve = tc.yields(t, date=date)
             ax.plot(t, curve.values, lw=1.5, alpha=0.5)
@@ -1010,7 +1114,7 @@ def update_specific_date(specified_date, plot=True, **kwargs):
         ax.set_xlabel("Time (yrs)")
         ax.set_ylabel("Yield")
         ax.legend()
-        plt.show()
+        vis.show()
 
 
 # %%
@@ -1056,17 +1160,28 @@ def main():
         update_specific_date(date, plot=False)
 
 
+def update_historical_period(start, end=None):
+    from tqdm import tqdm
+
+    db = Database()
+    for date in tqdm(db.trade_dates(start=start, end=end)):
+        db.load_market_data(date=date)
+        treasury_ix = db.build_market_index(
+            drop_treasuries=False, sector="TREASURIES"
+        )
+        tcb = TreasuryCurveBuilder(treasury_ix)
+        tcb.fit(
+            verbose=0,
+            threshold=12,
+            n=70,
+            n_drop=30,
+            solver="Nelder-Mead",
+        )
+        tcb.save()
+
+
 if __name__ == "__main__":
-    main()
+    update_historical_period(start="3/30/2022")
 
 
 # %%
-# db = Database()
-# db.load_market_data()
-# ix = db.build_market_index(drop_treasuries=False, sector="TREASURIES")
-# tsy_ix = db.build_market_index(drop_treasuries=False)
-# tsy_ix.clean_treasuries()
-# df_old = tsy_ix.df.copy()
-#
-# # %%
-# df_new["Date"].iloc[0]
