@@ -723,19 +723,19 @@ def comp_d(ticker):
         "DRXLN": (["US26151AAA79"], ["US314382AA01"]),
         "RWLVCA": (["US76120HAC16"], ["US571903BG74"]),
         "RWNYNY": (["US37255JAA07"], ["US517834AE74"]),
-        "VIVENE": (["US92856HAB06"], ["_BBB_COMP_ISINs_"]),
         "WES": (["US958254AD64"], ["US87612BBU52", "US682680BE21"]),
         "MAT": (["US577081BF84"], ["US418056AZ06"]),
         "SLM": (["US78442PGE07"], ["US02005NBJ81", "US87165BAL71"]),
         "NOKIA": (["US654902AE56"], ["US48203RAM60"]),
         "NMRK": (["US65158NAB82"], ["US12505BAD29", "US138616AE73"]),
+        "F": (["US345370DA55"], ["US37045XDS27"]),
         "_RS_TICKER_": (["_RS_ISINs_"], ["_BBB_COMP_ISINs_"]),
     }[ticker]
 
 
 def comp_check():
     # %%
-    ticker = "NMRK"
+    ticker = "F"
     db = Database()
     db.load_market_data()
     ticker_ix = db.build_market_index(ticker=ticker, in_H0A0_index=True)
@@ -745,9 +745,9 @@ def comp_check():
     )
     bbb_ix = db.build_market_index(
         # in_stats_index=None,
-        ticker=["CBG", "JLL", "CANTOR"],
+        ticker=["GM"],
         # rating=(None, "BBB-"),
-        # issue_years=(None, 2),
+        issue_years=(None, 2),
     )
     cols = ["ISIN", "Ticker", "MaturityYears", "IssueYears", "OAS"]
     ticker_ix.df[cols].sort_values(["Ticker", "MaturityYears"])
