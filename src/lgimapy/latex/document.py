@@ -2,7 +2,6 @@ import os
 import re
 import shutil
 import subprocess
-import sys
 import time
 import warnings
 from inspect import cleandoc
@@ -35,6 +34,10 @@ class KeywordNotFoundError(Exception):
     """Raised when no current edit has been found."""
 
     pass
+
+
+def open_fid_in_TeXstudio(fid):
+    subprocess.check_call(["texstudio", fid], shell=False)
 
 
 class LatexScript:
@@ -169,6 +172,9 @@ class LatexScript:
 
         # Close edit so document can be safely saved.
         self._currently_open_edit = False
+
+    def add_cover_page(self):
+        self._add_to_body("\\thispagestyle{cover}")
 
     def add_bookmark(self, bookmark, level=0):
         """
@@ -586,6 +592,7 @@ class Document(LatexScript):
         font_size=12,
         margin=None,
         margin_unit="cm",
+        cover_page=False,
         header=None,
         footer=None,
         bookmarks=False,
@@ -614,6 +621,8 @@ class Document(LatexScript):
             *``margin={'top': 1, 'bottom': 0.5, 'left': 0.3, 'right': 0.3}``
         margin_unit: str, default='cm'
             Unit for margin size(s).
+        cover_page: bool, default=False
+            If ``True``, add cover page to file.
         header: :attr:`header`, optional
             Header kwargs.
         footer: :attr:`footer`, optional
@@ -693,12 +702,42 @@ class Document(LatexScript):
             all_packages = default_packages
         use_packages = ",\n\t\t".join(all_packages)
 
-        if header is not None or footer is not None:
+        if cover_page:
+            header_footer = f"""
+                \\fancyhf{{}}
+                \\setlength{{\\headheight}}{{0.8cm}}
+                \\setlength\\footskip{{0pt}}
+                \\fancyhead[L]{{{header}}}
+                \\fancyhead[R]{{\\today}}
+                \\fancyfoot[L]{{\\thepage}}
+                \\fancyfoot[R]{{
+                	\\raisebox{{-0.8cm}}[0pt][0pt]{{
+                        \\includegraphics[width=0.065\\textwidth]
+                        {{"{root('fig/logos/LG_umbrella')}"}}
+                    }}
+                }}
+                \\pagestyle{{fancy}}
+
+                \\fancypagestyle{{cover}}{{
+                	\\setlength{{\\headheight}}{{3cm}}
+                	\\fancyhf{{}}
+                	\\fancyhead[L]{{
+                        \\Huge \\textbf{{{header}}}\\\\ \\LARGE \\today
+                    }}
+                	\\fancyhead[R]{{
+                		\\includegraphics[width=0.115\\textwidth]
+                        {{"{root('fig/logos/Legal_General_umbrella')}"}}
+                	}}
+                }}
+                """
+
+        elif header is not None or footer is not None:
             header = "" if header is None else header
             footer = "" if footer is None else footer
             header_footer = "\n".join(
                 ("\\fancyhf{}", header, footer, "\\pagestyle{fancy}")
             )
+
         else:
             header_footer = ""
 
@@ -973,13 +1012,18 @@ class Document(LatexScript):
             try:
                 save_code_block(*args)
             except (PermissionError, subprocess.CalledProcessError):
-                print(f"\nPermissionError:\n{fid} may be open.")
-                msg = "  [Y] Retry\n  [N] Exit\n"
-                retry = str(input(msg)).upper()
-                if retry == "Y":
+                print(f"\LaTeX Compile Error:")
+                msg = "  [R] Retry\n" "  [O] Open in TeXstudio\n" "  [E] Exit\n"
+                user_input = str(input(msg)).upper().strip()
+                if user_input == "R":
                     continue
-                else:
+                elif user_input == "O":
+                    open_fid_in_TeXstudio(f"{fid}.tex")
+                elif user_input == "E":
                     break
+                else:
+                    "Please choose from the listed options."
+                    continue
             else:
                 break
 
@@ -1167,3 +1211,17 @@ def merge_pdfs(
     Document._save(
         merged_pdf_fid, save_code_block, merged_pdf_fid, keep_bookmarks
     )
+
+
+# %%
+def main():
+    # %%
+    self = Document("test", path="latex/test")
+    self.add_preamble(
+        orientation="landscape",
+        margin={"top": 1.3, "bottom": 2, "left": 0.5, "right": 0.5},
+        cover_page=True,
+        header="LGRA Valuation Pack",
+        page_numbers=True,
+    )
+    print(self.preamble)
