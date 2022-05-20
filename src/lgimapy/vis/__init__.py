@@ -21,6 +21,8 @@ from lgimapy.vis.vis import (
     plot_hist,
     plot,
     arrows,
+    cmap,
+    plot_index_history,
 )
 
 __all__ = [
@@ -46,4 +48,6 @@ __all__ = [
     "plot_hist",
     "plot",
     "arrows",
+    "cmap",
+    "plot_index_history",
 ]

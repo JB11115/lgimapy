@@ -98,7 +98,7 @@ def subplots(*args, **kwargs):
     Parameters
     ----------
     *args:
-        Positional arguments for ``matplotlib.pyplot.subplots``
+        Positional arguments for ``mcmap = mpl.cm.viridisatplotlib.pyplot.subplots``
     **kwargs:
         Keyword arguments for ``matplotlib.pyplot.subplots``
 
@@ -141,6 +141,10 @@ def colors(color):
         "army": "4B5320",
         "rose": "C98895",
     }[color.lower()]
+
+
+def cmap(color_map):
+    return getattr(mpl.cm, color_map)
 
 
 # %%
@@ -1658,7 +1662,7 @@ def plot_hist(
         ax.legend()
 
 
-def legend(ax, *args, **kwargs):
+def legend(ax, title=None, *args, **kwargs):
     """
     Parameters
     ----------
@@ -1667,7 +1671,9 @@ def legend(ax, *args, **kwargs):
     **kwargs:
         Keyword arguments for ``matplotlib.pyplot.legend()``
     """
-    kws = {"fancybox": True, "shadow": True}
+    if title is not None:
+        title = " ".join(f"$\\bf{{{t}}}$" for t in title.split())
+    kws = {"fancybox": True, "shadow": True, "title": title}
     kws.update(**kwargs)
     ax.legend(*args, **kws)
 
@@ -1748,3 +1754,26 @@ def arrows(x_or_s, y=None, ax=None, figsize=(8, 6), **kwargs):
     }
     kws.update(**kwargs)
     ax.quiver(x[:-1], y[:-1], np.diff(x), np.diff(y), **kws)
+
+
+def plot_index_history(index, db, start="10y", figsize=(8, 6)):
+    oas = db.load_bbg_data(index, "OAS", start=db.date(start)).squeeze()
+    cp = 100 * oas.rank(pct=True).iloc[-1]
+    range = [oas.min(), oas.max()]
+
+    fig, ax = vis.subplots(figsize=figsize)
+    vis.plot_timeseries(
+        oas,
+        color="navy",
+        lw=1.5,
+        median_line=True,
+        pct_lines=(5, 95),
+        label=(
+            f"Historical Stats Index\n"
+            f"Last: {oas.iloc[-1]:.0f} ({cp:.0f}{get_ordinal(cp)} %tile)\n"
+            f"Range: [{range[0]:.0f}, {range[1]:.0f}]"
+        ),
+        title=db.bbg_names(index),
+        ax=ax,
+    )
+    vis.legend(ax, title=f"{start} Stats", loc="upper left")
