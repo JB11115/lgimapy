@@ -37,10 +37,10 @@ use: `pip install --trusted-host files.pythonhosted.org --trusted-host pypi.org 
 
 #### Data
 To copy over the current data files, run the following. Note that this will
-take an hour or more to complete.
+take an hour or more to complete when first run.
 
 ```bash
-rsync -rv /mnt/x/Credit\ Strategy/lgimapy/data/ data/
+python src/lgimapy/data/pull_data_from_X_drive.py
 ```
 
 
