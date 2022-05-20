@@ -210,7 +210,14 @@ def bdh(securities, yellow_keys, fields, start, end=None, ovrd=None):
         * If both multiple fields and securities are provided,
             a multi-index header column is used.
     """
-    args = BBGInputConverter(securities, yellow_keys, fields, start, end)
+    args = BBGInputConverter(
+        securities=securities,
+        yellow_keys=yellow_keys,
+        fields=fields,
+        start=start,
+        end=end,
+        ovrd=ovrd,
+    )
 
     # Scrape from Bloomberg.
     with warnings.catch_warnings():
@@ -249,8 +256,12 @@ def bdp(securities, yellow_keys, fields, ovrd=None):
     df: pd.DataFrame
         DataFrame with security index and field columns.
     """
-    args = BBGInputConverter(securities, yellow_keys, fields)
-
+    args = BBGInputConverter(
+        securities=securities,
+        yellow_keys=yellow_keys,
+        fields=fields,
+        ovrd=ovrd,
+    )
     # Scrape from Bloomberg.
     with warnings.catch_warnings():
         warnings.simplefilter(action="ignore", category=UserWarning)
@@ -286,7 +297,12 @@ def bds(security, yellow_key, field, ovrd=None):
         by choice of Bloomberg field.
     """
     # Scrape from Bloomberg.
-    args = BBGInputConverter(security, yellow_key, field)
+    args = BBGInputConverter(
+        securities=security,
+        yellow_keys=yellow_key,
+        fields=field,
+        ovrd=ovrd,
+    )
     with warnings.catch_warnings():
         warnings.simplefilter(action="ignore", category=UserWarning)
         bbg = pybbg.Pybbg()

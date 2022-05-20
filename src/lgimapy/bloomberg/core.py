@@ -225,11 +225,18 @@ def bdh(securities, yellow_keys, fields, start, end=None, ovrd=None):
         * If both multiple fields and securities are provided,
             a multi-index header column is used.
     """
-    func_args = locals()
     if sys.platform == "win32":
         return _windows_bdh(securities, yellow_keys, fields, start, end, ovrd)
     elif sys.platform == "linux":
-        df = _linux_to_windows_bbg("bdh", **func_args)
+        df = _linux_to_windows_bbg(
+            "bdh",
+            securities=securities,
+            yellow_keys=yellow_keys,
+            fields=fields,
+            start=start,
+            end=end,
+            ovrd=ovrd,
+        )
         return df.sort_index()
 
 
@@ -323,14 +330,16 @@ def _linux_to_windows_bbg(func, *args, **kwargs):
     data_dir = Path("/tmp/bbgwinpy/data")
     mkdir(data_dir)
 
-    # Run the BBG comman from Windows,saving the data to the above dir.
+    # Run the BBG command from Windows,saving the data to the above dir.
+    bash_func = [
+        "python.exe",
+        bbgwinpy_executable(),
+        epoch,
+    ]
+    # print(" ".join(bash_func))  # for debugging
     try:
         s = subprocess.run(
-            [
-                "python.exe",
-                bbgwinpy_executable(),
-                epoch,
-            ],
+            bash_func,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=60,

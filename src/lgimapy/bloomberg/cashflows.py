@@ -49,7 +49,7 @@ def scrape_cash_flows(cusip, maturity_date=None):
         Cusip to scrape coupon dates for.
     """
     # Override date to before data collection began.
-    ovrd = {"USER_LOCAL_TRADE_DATE": "19501010"}
+    ovrd = {"USER_LOCAL_TRADE_DATE": "19500101"}
     if maturity_date is not None:
         # Ensure maturity date is actual maturity and not a call date.
         ovrd["WORKOUT_DT_BID"] = fmt_bbg_dt(maturity_date)
