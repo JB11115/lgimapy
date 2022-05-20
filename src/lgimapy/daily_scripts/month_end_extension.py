@@ -139,9 +139,15 @@ def build_month_end_extensions_report():
     doc = Document(fid, path="reports/month_end_extensions")
     doc.add_preamble(
         ignore_bottom_margin=True,
-        margin={"left": 0.5, "right": 0.5, "top": 0.5, "bottom": 0.2,},
+        margin={
+            "left": 0.5,
+            "right": 0.5,
+            "top": 0.5,
+            "bottom": 0.2,
+        },
         header=doc.header(
-            left="Month End Extensions", right=today.strftime("%B %Y"),
+            left="Month End Extensions",
+            right=today.strftime("%B %Y"),
         ),
         footer=doc.footer(logo="LG_umbrella"),
         table_caption_justification="c",
@@ -191,7 +197,7 @@ def build_month_end_extensions_report():
             hide_index=True,
             col_fmt="lll|cc|c",
         )
-    doc.save()
+    doc.save(save_tex=True)
     tenders = tendered_cusips()
     if tenders is not None:
         tendered_tickers = "_".join(list(tenders.keys()))
@@ -290,6 +296,7 @@ def port_metrics(df, strategy=None, credit=False):
         "Bloomberg LDI Custom - DE": 3,
         "BNM - US 1-5 Yr Credit": 1,
         "BNM - ICE BofA US Non-Financial Index": 1,
+        "US Net Zero Corporate 1% Issuer Cap": 1,
     }
     tenders = tendered_cusips()
     if tenders is not None:
