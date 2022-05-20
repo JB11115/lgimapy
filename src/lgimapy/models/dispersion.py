@@ -43,6 +43,38 @@ class Dispersion:
                 "MUNIS",
                 "SOVEREIGN",
             ],
+            "HY": [
+                "AUTOMAKERS",
+                "AUTOPARTS",
+                "HOME_BUILDERS",
+                "BUILDING_MATERIALS",
+                "CHEMICALS",
+                "METALS_AND_MINING",
+                "AEROSPACE_DEFENSE",
+                "DIVERSIFIED_CAPITAL_GOODS",
+                "PACKAGING",
+                "FOOD_AND_BEVERAGE",
+                "PERSONAL_AND_HOUSEHOLD_PRODUCTS",
+                "ENERGY_EXPLORATION_AND_PRODUCTION",
+                "GAS_DISTRIBUTION",
+                "OIL_REFINING_AND_MARKETING",
+                "HEALTH_FACILITIES",
+                "MANAGED_CARE",
+                "PHARMA",
+                "GAMING",
+                "HOTELS",
+                "RECREATION_AND_TRAVEL",
+                "REAL_ESTATE",
+                "CABLE_SATELLITE",
+                "MEDIA_CONTENT",
+                "TELECOM_SATELLITE",
+                "TELECOM_WIRELESS",
+                "SOFTWARE",
+                "HARDWARE",
+                "TECHNOLOGY",
+                "TRANSPORTATION",
+                "UTILITY",
+            ],
         }[self.asset_class]
 
     @property
@@ -96,7 +128,7 @@ class Dispersion:
         for date in tqdm(self._dates_to_analyze(), disable=(not pbar)):
             self._date = date
             self._db.load_market_data(date=date)
-            ix = self._db.build_market_index(in_stats_index=True)
+            ix = self._db.build_market_index(**self._benchamrk_kws)
             for rating in self._rating_buckets:
                 for maturity in self._maturity_buckets:
                     self._update_intra_sector_rating_files(rating, maturity, ix)
@@ -118,6 +150,20 @@ class Dispersion:
             30: (25, 32),
         }[maturity]
 
+    @property
+    def _benchamrk_kws(self):
+        return {
+            "IG": {"in_stats_index": True},
+            "HY": {"in_H0A0_index": True},
+        }[self.asset_class]
+
+    @property
+    def _index_kws_source(self):
+        return {
+            "IG": "bloomberg",
+            "HY": "baml",
+        }[self.asset_class]
+
     def _update_intra_sector_rating_files(self, rating, maturity, ix):
         d = {}
         d["OAS"] = ix.OAS().iloc[-1]
@@ -127,6 +173,7 @@ class Dispersion:
                     sector,
                     rating=self._rating_kws(rating),
                     maturity=self._maturity_kws(maturity),
+                    source=self._index_kws_source,
                 )
             )
             issuer_df = sector_ix.issuer_df.dropna(
@@ -161,6 +208,7 @@ class Dispersion:
                     sector,
                     rating=self._rating_kws(rating),
                     maturity=self._maturity_kws(maturity),
+                    source=self._index_kws_source,
                 )
             )
             if len(sector_ix.df):
@@ -168,6 +216,7 @@ class Dispersion:
                 d["MarketValue"].append(sector_ix.total_value().iloc[-1])
 
         df = pd.DataFrame(d)
+
         new_row = (
             pd.Series(
                 {
@@ -243,7 +292,8 @@ class Dispersion:
         ] = np.nan
 
         table.index = [
-            self._db.index_kwargs(sector)["name"] for sector in table.index
+            self._db.index_kwargs(sector, source=self._index_kws_source)["name"]
+            for sector in table.index
         ]
         return table
 
