@@ -627,25 +627,28 @@ class Account(BondBasket, Portfolio):
         s = pd.Series(overweights, index=rating_buckets, name=by)
         return s if len(s) > 1 else s.values[0]
 
-    def bond_overweights(self, by="OAD", sort=True):
-        ix = (
-            self.df["Ticker"].astype(str)
-            + " "
-            + self.df["CouponRate"].apply(lambda x: f"{x:.2f}")
-            + " "
-            + self.df["MaturityDate"]
-            .apply(lambda x: f"`{x.strftime('%y')}")
-            .astype(str)
-            + "#"
-            + self.df["CUSIP"].astype(str)
-        ).values
+    def bond_overweights(self, by="OAD", sort=True, index=None):
+        if index is None:
+            idx = (
+                self.df["Ticker"].astype(str)
+                + " "
+                + self.df["CouponRate"].apply(lambda x: f"{x:.2f}")
+                + " "
+                + self.df["MaturityDate"]
+                .apply(lambda x: f"`{x.strftime('%y')}")
+                .astype(str)
+                + "#"
+                + self.df["CUSIP"].astype(str)
+            ).values
+        else:
+            idx = self.df[index]
         if sort:
             return pd.Series(
-                self.df[self._ow_col(by)].values, index=ix, name=by
+                self.df[self._ow_col(by)].values, index=idx, name=by
             ).sort_values(ascending=False)
         else:
             return pd.Series(
-                self.df[self._ow_col(by)].values, index=ix, name=by
+                self.df[self._ow_col(by)].values, index=idx, name=by
             )
 
     def ticker_overweights(self, by="OAD", sort=True):
@@ -1550,9 +1553,11 @@ class Strategy(BondBasket, Portfolio):
         else:
             return s
 
-    def bond_overweights(self, by="OAD"):
+    def bond_overweights(self, by="OAD", index=None):
         return (
-            self.account_value_weight(self.account_bond_overweights(by=by))
+            self.account_value_weight(
+                self.account_bond_overweights(by=by, index=index)
+            )
             .sort_values(ascending=False)
             .rename(by)
         )
@@ -1588,9 +1593,9 @@ class Strategy(BondBasket, Portfolio):
         )
 
     @lru_cache(maxsize=None)
-    def account_bond_overweights(self, by="OAD"):
+    def account_bond_overweights(self, by="OAD", index=None):
         return self.calculate_account_values(
-            lambda x: x.bond_overweights(sort=False, by=by)
+            lambda x: x.bond_overweights(sort=False, by=by, index=index)
         )
 
     def account_ticker_overweights_comp(self, by="OAD", n=20):
