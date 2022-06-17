@@ -10,9 +10,10 @@ from lgimapy.utils import root
 from cover_page import update_cover_page
 from rating_performance import update_rating_performance
 from decile_report import build_decile_report
-from sector_comp import update_sector_models
 from valuations_issuer_mv_weighted import update_valuations
+from sector_performance import update_sector_performance
 from sector_dispersion import update_sector_dispersion
+from sector_comp import update_sector_models
 from dispersion import update_HY_spread_dispersion
 from default_rates import update_default_rate_pdf
 from fallen_angels_rising_stars import update_fallen_angels_rising_stars
@@ -31,9 +32,10 @@ def main():
     funcs = {
         update_cover_page: ("HY_Cover_Page", db),
         update_rating_performance: "Rating_Performance",
-        build_decile_report: "HY_spreads_yields_returns",
-        update_sector_models: ("Sector_Valuations", db),
+        build_decile_report: "HY_Decile_Report",
         update_valuations: ("HY_Valuations", db),
+        update_sector_performance: "HY_Sector_Performance",
+        update_sector_models: ("Sector_Valuations", db),
         update_sector_dispersion: "HY_Sector_Dispersion",
         update_HY_spread_dispersion: "HY_Spread_Dispersion",
         update_default_rate_pdf: "Default_Rates",
