@@ -7,9 +7,11 @@ from lgimapy.daily_scripts import (
     build_credit_snapshots,
     build_on_the_run_ticker_snapshot,
     build_month_end_extensions_report,
-    build_sector_report,
+    build_IG_sector_report,
+    build_HY_sector_report,
     build_strategy_risk_report,
     update_current_reports_on_X_drive,
+    build_investable_universe_report,
 )
 from lgimapy.data import (
     Database,
@@ -50,7 +52,7 @@ def main():
     update_hy_index_members()
     print("Updated HY Index Flags\n")
     update_treasury_curve_dates()
-    update_market_data_feathers(s3=args.s3)
+    update_market_data_feathers(markets=["US", "GBP", "EUR"], s3=args.s3)
     print()
     update_lgima_sectors()
     print("Updated LGIMA sectors\n")
@@ -83,14 +85,15 @@ def main():
         print()
     if dt.today().weekday() == 0:
         # Monday
+        build_investable_universe_report("P-LD")
+        print("Ivestable Universe Report for P-LD Complete\n")
         print("Building Sector Report:")
-        build_sector_report()
+        build_IG_sector_report()
+        build_HY_sector_report()
         print()
 
     if args.s3:
         update_current_reports_on_X_drive()
-    # update_strategy_overweights()
-    # print("Updated Strategy Overweights\n")
 
 
 def check_datamart_quality(dates):

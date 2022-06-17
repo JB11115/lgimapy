@@ -8,7 +8,14 @@ from lgimapy.daily_scripts.on_the_run_snapshot import (
 from lgimapy.daily_scripts.month_end_extension import (
     build_month_end_extensions_report,
 )
-from lgimapy.daily_scripts.sector_report import build_sector_report
+from lgimapy.daily_scripts.investable_universe import (
+    build_investable_universe_report,
+)
+from lgimapy.daily_scripts.sector_report import (
+    SectorReport,
+    build_IG_sector_report,
+    build_HY_sector_report,
+)
 from lgimapy.daily_scripts.strategy_risk_report import (
     build_strategy_risk_report,
 )
@@ -21,7 +28,10 @@ __all__ = [
     "build_credit_snapshots",
     "build_on_the_run_ticker_snapshot",
     "build_month_end_extensions_report",
-    "build_sector_report",
+    "build_investable_universe_report",
+    "SectorReport",
+    "build_IG_sector_report",
+    "build_HY_sector_report",
     "build_strategy_risk_report",
     "update_current_reports_on_X_drive",
 ]
