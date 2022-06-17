@@ -273,6 +273,8 @@ def last_12m_ratings_actions():
         fallen_angels = fallen_angels[
             fallen_angels["USCreditReturnsFlag"] == True
         ]
+        # fallen_angels = fallen_angels[fallen_angels["Ticker"] != "HCA"]
+
         d["Fallen Angels"].append(fallen_angels["AmountOutstanding"].sum())
         rising_stars = db.rating_changes(
             month_start, month_end, rising_stars=True
@@ -729,13 +731,14 @@ def comp_d(ticker):
         "NOKIA": (["US654902AE56"], ["US48203RAM60"]),
         "NMRK": (["US65158NAB82"], ["US12505BAD29", "US138616AE73"]),
         "F": (["US345370DA55"], ["US37045XDS27"]),
+        "OXY": (["US674599EF81"], ["US136385BA87", "US25179MBF95"]),
         "_RS_TICKER_": (["_RS_ISINs_"], ["_BBB_COMP_ISINs_"]),
     }[ticker]
 
 
 def comp_check():
     # %%
-    ticker = "F"
+    ticker = "OXY"
     db = Database()
     db.load_market_data()
     ticker_ix = db.build_market_index(ticker=ticker, in_H0A0_index=True)
@@ -745,7 +748,7 @@ def comp_check():
     )
     bbb_ix = db.build_market_index(
         # in_stats_index=None,
-        ticker=["GM"],
+        ticker=["DVN", "CNQCN"],
         # rating=(None, "BBB-"),
         issue_years=(None, 2),
     )
