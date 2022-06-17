@@ -9,12 +9,9 @@ from tqdm import tqdm
 from lgimapy.data import (
     concat_index_dfs,
     Database,
-    IG_sectors,
-    IG_market_segments,
     Index,
 )
-from lgimapy.utils import mkdir, replace_multiple, to_datetime, to_set, pprint
-from lgimapy.data import credit_sectors, HY_sectors, IG_sectors
+from lgimapy.utils import mkdir, to_datetime, to_set, pprint
 
 # %%
 
@@ -51,6 +48,7 @@ class AttributionIndex:
 
     def __init__(
         self,
+        portfolio=None,
         account=None,
         strategy=None,
         date=None,
@@ -59,46 +57,55 @@ class AttributionIndex:
         ix=None,
         db=None,
         pbar=False,
+        source=None,
     ):
-        self.account = account
-        self.strategy = strategy
-        if self.strategy is not None:
-            raise NotImplementedError("Strategies are not implemented.")
-
-        self.name = self.account or self.strategy
-        self._pbar = pbar
-        self._db = Database() if db is None else db
-
         # Load data for the portfolio and create an index with PnL.
         if date is not None:
             start = end = date
+
+        self._db = Database() if db is None else db
+        self.portfolio, _, _ = self._db._get_portfolio_account_strategy(
+            portfolio, account, strategy, date=end
+        )
+        self._port = self._db.load_portfolio(portfolio, empty=True, date=end)
+
+        if self._port.__class__.__name__ == "Strategy":
+            raise NotImplementedError("Strategies are not implemented.")
+
+        self._pbar = pbar
+
+        if source is not None:
+            self._source = source
+        elif self._port.is_HY():
+            self._universe = "HY"
+            self._source = "BAML"
+        else:
+            self._universe = "IG"
+            self._source = "bloomberg"
+
         self.ix = self._load_PnL_ix(start=start, end=end, ix=ix)
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}("
-            f"{self._portfolio_type}='{self.account}', "
+            f"{self._port.__class__.__name__.lower()}='{self.portfolio}', "
             f"start='{self.start:%m/%d/%Y}', "
             f"end='{self.end:%m/%d/%Y}')"
         )
 
-    @cached_property
-    def _portfolio_type(self):
-        if self.account is not None:
-            return "Account"
-        elif self.strategy is not None:
-            return "Strategy"
+    def _get_source(self, source):
+        if source is not None:
+            return source
+        else:
+            return self._source
 
     @cached_property
     def _local_PnL_fid(self):
         data_dir = self._db.local(
-            f"portfolio_performance/{self._portfolio_type}"
+            f"portfolio_performance/{self._port.__class__.__name__}"
         )
         mkdir(data_dir)
-        # Clean portfolio name.
-        repl = {" ": "_", "/": "_", "%": "pct"}
-        fid = replace_multiple(self.name, repl)
-        return data_dir / f"{fid}.parquet"
+        return data_dir / f"{self._port.fid}.parquet"
 
     @cached_property
     def _local_PnL_df(self):
@@ -150,6 +157,7 @@ class AttributionIndex:
             PnL[i] = PnL_dict[date].get(isin, 0)
 
         ix.df["PnL"] = PnL
+        ix.add_rating_risk_buckets(universe=self._universe)
         return ix
 
     def _get_PnL_df(self):
@@ -175,16 +183,10 @@ class AttributionIndex:
                 prev_acnt = curr_acnt
             else:
                 prev_acnt = self._db.load_portfolio(
-                    account=self.account,
-                    strategy=self.strategy,
-                    date=prev_date,
+                    self.portfolio, date=prev_date
                 )
             # Scrape the current account data.
-            curr_acnt = self._db.load_portfolio(
-                account=self.account,
-                strategy=self.strategy,
-                date=date,
-            )
+            curr_acnt = self._db.load_portfolio(self.portfolio, date=date)
             last_scraped_date = date
 
             # Subset both accounts to only the bonds that exist in each.
@@ -252,7 +254,7 @@ class AttributionIndex:
         else:
             return ticker_pnl
 
-    def sectors(self, sectors=None, start=None, end=None):
+    def sectors(self, sectors=None, start=None, end=None, source=None):
         """
         Find PnL of sectors, by default a unique (but not
         comprehensive) list of tickers are used, as seen
@@ -260,10 +262,16 @@ class AttributionIndex:
         """
         ix = self.ix.subset(start=start, end=end)
         d = defaultdict(list)
-        sectors = IG_sectors(unique=True) if sectors is None else sectors
+        source = self._get_source(source)
+        if sectors is None:
+            if source == "bloomberg":
+                sectors = self._db.IG_sectors(unique=True)
+            elif source == "BAML":
+                sectors = self._db.HY_sectors(unique=True)
+
         for sector in sectors:
             kwargs = self._db.index_kwargs(
-                sector, unused_constraints="in_stats_index"
+                sector, unused_constraints="in_stats_index", source=source
             )
             sector_ix = ix.subset(**kwargs)
             d["sector"].append(kwargs["name"])
@@ -276,10 +284,17 @@ class AttributionIndex:
             .rename_axis(None)
         )
 
-    def market_segments(self, segments=None, start=None, end=None):
+    def market_segments(self, segments=None, start=None, end=None, source=None):
         """Find PnL of sectors."""
-        segments = IG_market_segments() if segments is None else segments
-        return self.sectors(sectors=segments, start=start, end=end)
+        source = self._get_source(source)
+        if segments is None:
+            if source == "bloomberg":
+                segments = self._db.IG_market_segments()
+            elif source == "BAML":
+                segments = self._db.HY_market_segments()
+        return self.sectors(
+            sectors=segments, start=start, end=end, source=source
+        )
 
     def isins(self, isins=None, start=None, end=None):
         """Find PnL of isins."""
