@@ -5,7 +5,7 @@ from lgimapy.models.tracking_error import (
     tracking_error,
     normalized_tracking_error,
 )
-from lgimapy.models.xsret_performance import XSRETPerformance
+from lgimapy.models.beta_adjusted_performance import BetaAdjustedPerformance
 from lgimapy.models.rating_migrations import (
     add_rating_outlooks,
     simulate_rating_migrations,
@@ -20,7 +20,7 @@ __all__ = [
     "find_drawdowns",
     "plot_drawdown_timeseries",
     "rolling_zscore",
-    "XSRETPerformance",
+    "BetaAdjustedPerformance",
     "add_rating_outlooks",
     "simulate_rating_migrations",
     "CreditCurve",
