@@ -1,514 +1,417 @@
+from collections import defaultdict
+from functools import cached_property, lru_cache
+
 import numpy as np
 import pandas as pd
 
-from lgimapy import vis
-from lgimapy.data import Database, groupby
-from lgimapy.latex import Document
-
-vis.style()
-
-# %%
-account = "P-LD"
-db = Database()
-dates = {"today": db.date("today"), "2020": "12/31/2020", "2019": "12/31/2019"}
-
-full_acnt = db.load_portfolio(account=account, universe="stats")
-full_acnt_2020 = db.load_portfolio(
-    account=account, universe="stats", date="12/31/2020"
-)
-full_acnt_2019 = db.load_portfolio(
-    account=account, universe="stats", date="12/31/2019"
-)
-sectors = [
-    "CHEMICALS",
-    "CAPITAL_GOODS",
-    "METALS_AND_MINING",
-    "COMMUNICATIONS",
-    "AUTOMOTIVE",
-    "RETAILERS",
-    "CONSUMER_CYCLICAL_EX_AUTOS_RETAILERS",
-    "HEALTHCARE_PHARMA",
-    "FOOD_AND_BEVERAGE",
-    "CONSUMER_NON_CYCLICAL_OTHER",
-    "ENERGY",
-    "TECHNOLOGY",
-    "TRANSPORTATION",
-    "BANKS",
-    "OTHER_FIN",
-    "INSURANCE_EX_HEALTHCARE",
-    "REITS",
-    "UTILITY",
-    "SOVEREIGN",
-    "NON_CORP_OTHER",
-    "OTHER_INDUSTRIAL",
-]
-
-df_list = []
-for name, date in dates.items():
-    db.load_market_data(date=date)
-    ix = db.build_market_index(maturity=(10, None))
-    df_list.append(ix.ticker_df["OAS"].rename(name))
-
-oas_df = pd.concat(df_list, axis=1)
-oas_df["oas_2020"] = oas_df["today"] - oas_df["2020"]
-oas_df["oas_2019"] = oas_df["today"] - oas_df["2019"]
-
-
-# %%
-ratings = {"A": ("AAA", "A-"), "BBB": ("BBB+", "BBB-")}
-acnts = {
-    rating: full_acnt.subset(rating=rating_kws)
-    for rating, rating_kws in ratings.items()
-}
-acnts_2020 = {
-    rating: full_acnt_2020.subset(rating=rating_kws)
-    for rating, rating_kws in ratings.items()
-}
-acnts_2019 = {
-    rating: full_acnt_2019.subset(rating=rating_kws)
-    for rating, rating_kws in ratings.items()
-}
-dfs = {}
-dts_totals = {}
-top_30_tickers = {}
-for rating, acnt in acnts.items():
-    df = (
-        acnt.df.groupby("Ticker", observed=True)
-        .sum()
-        .sort_values("BM_DTS", ascending=False)
-    )
-    dts_sorted = (
-        df["BM_DTS"].sort_values(ascending=False).reset_index(drop=True)
-    )
-    dfs[rating] = df
-    dts_totals[rating] = dts_sorted[dts_sorted > 0]
-    top_30_tickers[rating] = list(df.index[:30].values)
+from lgimapy.data import Database
+from lgimapy.latex import Document, drop_consecutive_duplicates
 
 # %%
 
 
-def format_table(df, oas_df, cols):
-    # Dont duplicate sectors names
-    vals = list(df["Sector"])
-    prev = vals[0]
-    unique_vals = [prev]
-    for val in vals[1:]:
-        if val == prev:
-            unique_vals.append(" ")
+def build_investable_universe_report(portfolio):
+    db = Database()
+    dates = {
+        "YE21": db.date("YEAR_END", 2021),
+        "YE20": db.date("YEAR_END", 2020),
+    }
+    report = InvestableUniverse(portfolio, dates, db)
+    report.build_report()
+
+
+class InvestableUniverse:
+    def __init__(self, portfolio, dates, db):
+        self.portfolio = portfolio
+        self.date = db.date("today")
+        self.dates = {"today": self.date, **dates}
+        self._db = db
+        self._small_ow_threshold = 0.001
+        self._small_uw_threshold = -0.001
+
+    @property
+    def _rating_kws(self):
+        return {"A": ("AAA", "A-"), "BBB": ("BBB+", "BBB-")}
+
+    @cached_property
+    def _prev_date_keys(self):
+        return sorted(self.dates, key=self.dates.get, reverse=True)[1:]
+
+    @property
+    def _sectors(self):
+        return [
+            "CHEMICALS",
+            "CAPITAL_GOODS",
+            "METALS_AND_MINING",
+            "COMMUNICATIONS",
+            "AUTOMOTIVE",
+            "RETAILERS",
+            "CONSUMER_CYCLICAL_EX_AUTOS_RETAILERS",
+            "HEALTHCARE_PHARMA",
+            "FOOD_AND_BEVERAGE",
+            "CONSUMER_NON_CYCLICAL_OTHER",
+            "ENERGY",
+            "TECHNOLOGY",
+            "TRANSPORTATION",
+            "BANKS",
+            "OTHER_FIN",
+            "INSURANCE_EX_HEALTHCARE",
+            "REITS",
+            "UTILITY_HOLDCO",
+            "UTILITY_OPCO",
+            "SOVEREIGN",
+            "NON_CORP_OTHER",
+            "OTHER_INDUSTRIAL",
+        ]
+
+    @cached_property
+    def _port(self):
+        port = self._db.load_portfolio(self.portfolio, universe="stats")
+        ix = self._db.build_market_index(isin=port.isins)
+        missing_isins = set(port.isins) - set(ix.isins)
+        port = port.subset(
+            isin=missing_isins,
+            special_rules="~ISIN",
+        )
+        port._constraints = {}
+        port.expand_tickers()
+        return port
+
+    @lru_cache(maxsize=None)
+    def _port_ticker_df(self, rating):
+        df = self._port.subset(rating=self._rating_kws[rating]).ticker_df
+        df["ReportSector"] = df.index.map(self._ticker_sector_map(rating))
+        return df
+
+    def _top_30_tickers(self, rating):
+        return list(
+            self._port.subset(rating=self._rating_kws[rating])
+            .ticker_df["BM_DTS_PCT"]
+            .sort_values(ascending=False)
+            .index[:30]
+        )
+
+    @cached_property
+    def _ix_d(self):
+        d = {}
+        keys = ["today", *self._prev_date_keys]
+        for key in keys:
+            self._db.load_market_data(date=self.dates[key])
+            ix = self._db.build_market_index(isin=self._port.isins)
+            ix.expand_tickers()
+            d[key] = ix
+        return d
+
+    @lru_cache(maxsize=None)
+    def _oas_df(self, rating):
+        oas_level_df = pd.concat(
+            (
+                ix.subset(rating=self._rating_kws[rating])
+                .ticker_df["OAS"]
+                .rename(key)
+                for key, ix in self._ix_d.items()
+            ),
+            axis=1,
+        )
+        df = oas_level_df["today"].rename("OAS").to_frame()
+        for key in self._prev_date_keys:
+            df[f"delta_{key}"] = oas_level_df["today"] - oas_level_df[key]
+
+        return df
+
+    def _ticker_sector_map(self, rating):
+        ticker_sector_mv = []
+        for sector in self._sectors:
+            kws = self._db.index_kwargs(
+                sector,
+                unused_constraints="in_stats_index",
+                rating=self._rating_kws[rating],
+            )
+            ticker_sector_df = self._port.subset(**kws).ticker_df[
+                ["MarketValue"]
+            ]
+            ticker_sector_df["Sector"] = kws["name"]
+            ticker_sector_mv.append(ticker_sector_df)
+
+        return (
+            pd.concat(ticker_sector_mv)
+            .sort_values("MarketValue")
+            .groupby("Ticker")
+            .last()["Sector"]
+            .to_dict()
+        )
+
+    def _large_cap_table(self, rating):
+        df = pd.concat(
+            [
+                self._add_total(self._top_30_df(rating)),
+                self._market_segment_row("HOSPITALS", rating),
+                self._market_segment_row("NON_FIN_EX_TOP_30", rating),
+                self._market_segment_row("FIN_EX_TOP_30", rating),
+                self._market_segment_row("NON_CORP_EX_TOP_30", rating),
+            ]
+        )
+        return self._format_table(df)
+
+    def _small_ow_table(self, rating):
+        port_df = self._port_ticker_df(rating)
+        port_df = port_df[
+            ~port_df.index.isin(self._used_tickers)
+            & (port_df["DTS_PCT_Diff"] > 0)
+            & (port_df["DTS_PCT_Diff"] < self._small_ow_threshold)
+        ]
+        tickers = port_df.index.unique()
+        df = pd.concat(
+            (
+                self._port_ticker_df(rating).loc[tickers, self._port_cols],
+                self._oas_df(rating).loc[tickers],
+            ),
+            axis=1,
+        )
+        table = self._sort_table(df.reset_index())
+        return self._format_table(self._add_total(table))
+
+    def _small_uw_table(self, rating):
+        port_df = self._port_ticker_df(rating)
+        port_df = port_df[
+            ~port_df.index.isin(self._used_tickers)
+            & (port_df["P_Weight"] > 0)
+            & (port_df["DTS_PCT_Diff"] < 0)
+            & (port_df["DTS_PCT_Diff"] > self._small_uw_threshold)
+        ]
+        tickers = port_df.index.unique()
+        df = pd.concat(
+            (
+                self._port_ticker_df(rating).loc[tickers, self._port_cols],
+                self._oas_df(rating).loc[tickers],
+            ),
+            axis=1,
+        )
+        table = self._sort_table(df.reset_index())
+        return self._format_table(self._add_total(table))
+
+    def _top_30_df(self, rating):
+        t30 = self._top_30_tickers(rating)
+        self._used_tickers |= set(t30)
+        df = pd.concat(
+            (
+                self._port_ticker_df(rating).loc[t30, self._port_cols],
+                self._oas_df(rating).loc[t30],
+            ),
+            axis=1,
+        )
+        return self._sort_table(df.reset_index())
+
+    def _market_segment_row(self, segment, rating):
+        d = {}
+        kws = self._db.index_kwargs(
+            segment,
+            rating=self._rating_kws[rating],
+            unused_constraints="in_stats_index",
+        )
+        d["ReportSector"] = kws["name"]
+        d["Ticker"] = np.nan
+        used_tickers = set()
+
+        # Add change in OAS columns.
+        for col, ix in zip(self._oas_cols, self._ix_d.values()):
+            segment_ix = ix.subset(**kws)
+            segment_ix._constraints = {}
+            segment_ix = segment_ix.subset(
+                ticker=self._used_tickers, special_rules="~Ticker"
+            )
+            used_tickers |= set(segment_ix.tickers)
+            if col == "OAS":
+                d[col] = segment_ix.OAS().iloc[0]
+            else:
+                d[col] = d["OAS"] - segment_ix.OAS().iloc[0]
+
+        # Add portoflio metric columns.
+        segment_port = self._port.subset(**kws)
+        segment_port._constraints = {}
+        segment_port = segment_port.subset(
+            ticker=self._used_tickers, special_rules="~Ticker"
+        )
+        for col in self._port_cols[1:]:
+            d[col] = segment_port.df[col].sum()
+
+        return pd.Series(d).to_frame().T
+
+    @property
+    def _oas_cols(self):
+        cols = [f"delta_{key}" for key in self._prev_date_keys]
+        cols.insert(0, "OAS")
+        return cols
+
+    @property
+    def _port_cols(self):
+        return [
+            "ReportSector",
+            "P_Weight",
+            "P_DTS_PCT",
+            "BM_DTS_PCT",
+            "DTS_PCT_Diff",
+            "P_OAD",
+            "BM_OAD",
+            "OAD_Diff",
+            "MarketValue",
+        ]
+
+    @property
+    def _column_name_map(self):
+        col_map = {
+            "ReportSector": "Sector",
+            "OAS": "OAS",
+            "P_Weight": "Port*MV %",
+            "P_DTS_PCT": "Port*DTS",
+            "BM_DTS_PCT": "BM*DTS",
+            "DTS_PCT_Diff": "DTS*OW",
+            "P_OAD": "Port*OAD",
+            "BM_OAD": "BM*OAD",
+            "OAD_Diff": "OAD*OW",
+        }
+        for key in self._prev_date_keys:
+            col_map[f"delta_{key}"] = f"$\\Delta$OAS*{key}"
+        return col_map
+
+    def _add_total(self, df):
+        total_row = df[self._port_cols[1:]].sum().to_frame().T
+        for col in self._oas_cols:
+            total_row[col] = (df[col] * df["MarketValue"]).sum() / df[
+                "MarketValue"
+            ].sum()
+        total_row["ReportSector"] = "Total"
+        total_row["Ticker"] = np.nan
+        return pd.concat((df, total_row))
+
+    def _sort_table(self, df):
+        sector_gdf = (
+            df[["ReportSector", "BM_DTS_PCT"]]
+            .groupby("ReportSector")
+            .sum()
+            .squeeze()
+            .sort_values(ascending=False)
+        )
+        sorter_index = {sector: i for i, sector in enumerate(sector_gdf.index)}
+        df["sort"] = df["ReportSector"].map(sorter_index)
+        df.sort_values(
+            ["sort", "BM_DTS_PCT"], ascending=[True, False], inplace=True
+        )
+        df["ReportSector"] = drop_consecutive_duplicates(df["ReportSector"])
+        return df
+
+    def _format_table(self, df):
+        col_order = [
+            "ReportSector",
+            "Ticker",
+            *self._oas_cols,
+            *self._port_cols[1:-1],
+        ]
+        return (
+            df[col_order]
+            .rename(columns=self._column_name_map)
+            .reset_index(drop=True)
+        )
+
+    @cached_property
+    def _table_prec(self):
+        d = {
+            "OAS": "0f",
+            "Port*MV %": "2%",
+            "Port*DTS": "2%",
+            "BM*DTS": "2%",
+            "DTS*OW": "+2%",
+            "Port*OAD": "2f",
+            "BM*OAD": "2f",
+            "OAD*OW": "+2f",
+        }
+        for col in self._column_name_map.values():
+            if "Delta" in col:
+                d[col] = "+0f"
+
+        return d
+
+    def _add_page(self, table, caption):
+        total_loc = table[table["Sector"] == "Total"].index
+        if total_loc == len(table) - 1:
+            midrule_locs = table[table["Sector"] != " "].index[1:]
         else:
-            unique_vals.append(val)
-            prev = val
-    df["Sector"] = unique_vals
-    for year in [2019, 2020]:
-        col = f"oas_{year}"
-        df[col] = df["Ticker"].map(oas_df[col].to_dict())
+            midrule_locs = table[table["Sector"] != " "].index[1:-4]
 
-    col_order = ["Sector", "Ticker", "OAS", "oas_2020", "oas_2019", *cols[1:-1]]
-    return (
-        df[col_order]
-        .rename(
-            columns={
-                "OAS": "OAS",
-                "oas_2020": "$\\Delta$OAS*YE 2020",
-                "oas_2019": "$\\Delta$OAS*YE 2019",
-                "P_Weight": "Port*MV %",
-                "P_DTS": "Port*DTS",
-                "BM_DTS": "BM*DTS",
-                "DTS_Diff": "DTS*OW",
-                "P_OAD": "Port*OAD",
-                "BM_OAD": "BM*OAD",
-                "OAD_Diff": "OAD*OW",
-            }
+        self._doc.add_table(
+            table,
+            caption=caption,
+            col_fmt="lll|rrr|r|rrr|rrr",
+            font_size="footnotesize",
+            row_font={tuple(total_loc): "\\bfseries"},
+            midrule_locs=midrule_locs,
+            prec=self._table_prec,
+            adjust=True,
+            hide_index=True,
+            multi_row_header=True,
+            gradient_cell_col="DTS*OW",
+            gradient_cell_kws={
+                "cmax": "army",
+                "cmin": "rose",
+                "vmax": 0.02
+                if "Top 30" in caption
+                else 2 * self._small_ow_threshold,
+                "vmin": -0.01
+                if "Top 30" in caption
+                else 2 * self._small_uw_threshold,
+            },
         )
-        .reset_index(drop=True)
-    )
+        self._doc.add_pagebreak()
 
-
-def sort_table(df):
-    sector_gdf = (
-        df[["Sector", "BM_DTS"]]
-        .groupby("Sector")
-        .sum()
-        .squeeze()
-        .sort_values(ascending=False)
-    )
-    sorter_index = {sector: i for i, sector in enumerate(sector_gdf.index)}
-    df["sort"] = df["Sector"].map(sorter_index)
-    df.sort_values(["sort", "BM_DTS"], ascending=[True, False], inplace=True)
-    return df.drop("sort", axis=1)
-
-
-def calculate_total(df, name, cols):
-    total_df = df[cols].sum().to_frame().T
-    total_df["OAS"] = (df["OAS"] * df["MarketValue"]).sum() / df[
-        "MarketValue"
-    ].sum()
-    total_df["Ticker"] = np.nan
-    total_df["Sector"] = name
-    return total_df
-
-
-# %%
-large_cap_tables = {}
-small_ow_tables = {}
-small_uw_tables = {}
-
-cols = [
-    "OAS",
-    "P_Weight",
-    "BM_DTS",
-    "P_DTS",
-    "DTS_Diff",
-    "BM_OAD",
-    "P_OAD",
-    "OAD_Diff",
-    "MarketValue",
-]
-ignored_isins = set()
-
-for rating, acnt in acnts.items():
-    large_cap_df_list = []
-    ignored_tickers = set(top_30_tickers[rating])
-    # Large cap table.
-    for sector in sectors:
-        kwargs = db.index_kwargs(sector, unused_constraints="in_stats_index")
-        sector_acnt = acnt.subset(**kwargs)
-        df = sector_acnt.ticker_df
-        df = df[df.index.isin(top_30_tickers[rating])].sort_values(
-            "BM_DTS", ascending=False
+    def _init_doc(self):
+        doc = Document(
+            f"{self._port.fid}_Investable_Universe_{self.date:%Y-%m-%d}",
+            path=f"reports/investable_universe",
         )
-        if not len(df):
-            continue
-        df = df[cols].reset_index()
-        df["Sector"] = kwargs["name"]
-        large_cap_df_list.append(df)
-
-    large_cap_df = sort_table(pd.concat(large_cap_df_list))
-    hosp_kwargs = db.index_kwargs(
-        "HOSPITALS", unused_constraints="in_stats_index"
-    )
-    hospitals_acnt = acnt.subset(**hosp_kwargs)
-    ignored_tickers |= set(hospitals_acnt.df["Ticker"])
-
-    total = calculate_total(large_cap_df, "Total", cols)
-    total_2020 = calculate_total(
-        acnts_2020[rating].subset(ticker=top_30_tickers[rating]).df,
-        "Total",
-        cols,
-    )
-    total_2019 = calculate_total(
-        acnts_2019[rating].subset(ticker=top_30_tickers[rating]).df,
-        "Total",
-        cols,
-    )
-    large_cap_df = large_cap_df.append(total)
-
-    non_fin_total = calculate_total(
-        acnt.subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=0,
-        ).df,
-        "Non-Fin ex Top 30",
-        cols,
-    )
-    non_fin_2020 = calculate_total(
-        acnts_2020[rating]
-        .subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=0,
+        doc.add_preamble(
+            margin={
+                "paperheight": 32,
+                "left": 1.5,
+                "right": 1.5,
+                "top": 0.5,
+                "bottom": 0.2,
+            },
+            bookmarks=True,
+            table_caption_justification="c",
+            header=doc.header(
+                left=f"{self._port.latex_name} Investable Universe",
+                right=f"EOD {self.date:%B %#d, %Y}",
+            ),
+            footer=doc.footer(logo="LG_umbrella"),
         )
-        .df,
-        "Non-Fin ex Top 30",
-        cols,
-    )
-    non_fin_2019 = calculate_total(
-        acnts_2019[rating]
-        .subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=0,
-        )
-        .df,
-        "Non-Fin ex Top 30",
-        cols,
-    )
-    large_cap_df = large_cap_df.append(non_fin_total)
+        return doc
 
-    fin_total = calculate_total(
-        acnt.subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=1,
-        ).df,
-        "Fin ex Top 30",
-        cols,
-    )
-    fin_2020 = calculate_total(
-        acnts_2020[rating]
-        .subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=1,
-        )
-        .df,
-        "Fin ex Top 30",
-        cols,
-    )
-    fin_2019 = calculate_total(
-        acnts_2019[rating]
-        .subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=1,
-        )
-        .df,
-        "Fin ex Top 30",
-        cols,
-    )
-    large_cap_df = large_cap_df.append(fin_total)
+    def build_report(self):
+        self._doc = self._init_doc()
+        for rating in self._rating_kws.keys():
+            self._doc.add_bookmark(f"{rating}-Rated")
+            self._doc.add_bookmark("Top 30", level=1)
 
-    non_corp_total = calculate_total(
-        acnt.subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=2,
-        ).df,
-        "Non-Corp ex Top 30",
-        cols,
-    )
-    non_corp_2020 = calculate_total(
-        acnts_2020[rating]
-        .subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=2,
-        )
-        .df,
-        "Non-Corp ex Top 30",
-        cols,
-    )
-    non_corp_2019 = calculate_total(
-        acnts_2019[rating]
-        .subset(
-            ticker=ignored_tickers,
-            special_rules="~Ticker",
-            financial_flag=2,
-        )
-        .df,
-        "Non-Corp ex Top 30",
-        cols,
-    )
-    large_cap_df = large_cap_df.append(non_corp_total)
+            self._used_tickers = set()  # Don't use tickers more than once.
+            self._add_page(
+                self._large_cap_table(rating),
+                caption=f"{rating}-Rated Top 30 Tickers by BM DTS \\%",
+            )
+            self._doc.add_bookmark("Small OW", level=1)
+            self._add_page(
+                self._small_ow_table(rating),
+                caption=f"{rating}-Rated Small Overweights",
+            )
+            self._doc.add_bookmark("Small UW", level=1)
+            self._add_page(
+                self._small_uw_table(rating),
+                caption=f"{rating}-Rated Small Underweights",
+            )
 
-    hospitals_total = calculate_total(
-        hospitals_acnt.df,
-        "Hospitals",
-        cols,
-    )
-    hospitals_2020 = calculate_total(
-        acnts_2020[rating].subset(**hosp_kwargs).df,
-        "Hospitals",
-        cols,
-    )
-    hospitals_2019 = calculate_total(
-        acnts_2019[rating].subset(**hosp_kwargs).df,
-        "Hospitals",
-        cols,
-    )
-
-    large_cap_df = large_cap_df.append(hospitals_total)
-    large_cap_table = format_table(large_cap_df, oas_df, cols)
-    col_20 = "$\Delta$OAS*YE 2020"
-    col_19 = "$\Delta$OAS*YE 2019"
-    large_cap_table.loc[large_cap_table["Sector"] == "Total", col_20] = (
-        total["OAS"] - total_2020["OAS"]
-    ).squeeze()
-    large_cap_table.loc[large_cap_table["Sector"] == "Total", col_19] = (
-        total["OAS"] - total_2019["OAS"]
-    ).squeeze()
-    large_cap_table.loc[
-        large_cap_table["Sector"] == "Non-Fin ex Top 30", col_20
-    ] = (non_fin_total["OAS"] - non_fin_2020["OAS"]).squeeze()
-    large_cap_table.loc[
-        large_cap_table["Sector"] == "Non-Fin ex Top 30", col_19
-    ] = (non_fin_total["OAS"] - non_fin_2019["OAS"]).squeeze()
-    large_cap_table.loc[
-        large_cap_table["Sector"] == "Fin ex Top 30", col_20
-    ] = (fin_total["OAS"] - fin_2020["OAS"]).squeeze()
-    large_cap_table.loc[
-        large_cap_table["Sector"] == "Fin ex Top 30", col_19
-    ] = (fin_total["OAS"] - fin_2019["OAS"]).squeeze()
-    large_cap_table.loc[
-        large_cap_table["Sector"] == "Non-Corp ex Top 30", col_20
-    ] = (non_corp_total["OAS"] - non_corp_2020["OAS"]).squeeze()
-    large_cap_table.loc[
-        large_cap_table["Sector"] == "Non-Corp ex Top 30", col_19
-    ] = (non_corp_total["OAS"] - non_corp_2019["OAS"]).squeeze()
-    large_cap_table.loc[large_cap_table["Sector"] == "Hospitals", col_20] = (
-        hospitals_total["OAS"] - hospitals_2020["OAS"]
-    ).squeeze()
-    large_cap_table.loc[large_cap_table["Sector"] == "Hospitals", col_19] = (
-        hospitals_total["OAS"] - hospitals_2019["OAS"]
-    ).squeeze()
-    large_cap_tables[rating] = large_cap_table
-
-    # Small OW table.
-    small_ow_df_list = []
-    for sector in sectors:
-        kwargs = db.index_kwargs(sector, unused_constraints="in_stats_index")
-        sector_acnt = acnt.subset(**kwargs)
-        df = sector_acnt.ticker_df
-        df = df[~df.index.isin(ignored_tickers)].sort_values(
-            "BM_DTS", ascending=False
-        )
-        df = df[cols].reset_index()
-        df = df[(df["DTS_Diff"] >= 0) & (df["DTS_Diff"] <= 6)].copy()
-        if not len(df):
-            continue
-        df["Sector"] = kwargs["name"]
-        small_ow_df_list.append(df)
-    small_ow_df = sort_table(pd.concat(small_ow_df_list))
-    total = calculate_total(small_ow_df, "Total", cols)
-    small_ow_df = small_ow_df.append(total)
-    small_ow_tickers = set(small_ow_df["Ticker"].dropna())
-    total_2020 = calculate_total(
-        acnts_2020[rating].subset(ticker=small_ow_tickers).df, "total", cols
-    )
-    total_2019 = calculate_total(
-        acnts_2019[rating].subset(ticker=small_ow_tickers).df, "total", cols
-    )
-    small_ow_table = format_table(small_ow_df, oas_df, cols)
-    small_ow_table.loc[small_ow_table["Sector"] == "Total", col_20] = (
-        total["OAS"] - total_2020["OAS"]
-    ).squeeze()
-    small_ow_table.loc[small_ow_table["Sector"] == "Total", col_19] = (
-        total["OAS"] - total_2019["OAS"]
-    ).squeeze()
-    small_ow_tables[rating] = small_ow_table
-
-    # Small UW table.
-    small_uw_df_list = []
-    for sector in sectors:
-        kwargs = db.index_kwargs(sector, unused_constraints="in_stats_index")
-        sector_acnt = acnt.subset(**kwargs)
-        df = sector_acnt.ticker_df
-        df = df[~df.index.isin(ignored_tickers)].sort_values(
-            "BM_DTS", ascending=False
-        )
-        df = df[cols].reset_index()
-        df = df[
-            (df["DTS_Diff"] <= 0)
-            & (df["DTS_Diff"] >= -10)
-            & (df["P_Weight"] > 0)
-        ].copy()
-        if not len(df):
-            continue
-        df["Sector"] = kwargs["name"]
-        small_uw_df_list.append(df)
-    small_uw_df = sort_table(pd.concat(small_uw_df_list))
-    total = calculate_total(small_uw_df, "Total", cols)
-    small_uw_df = small_uw_df.append(total)
-    small_uw_tickers = set(small_uw_df["Ticker"].dropna())
-    total_2020 = calculate_total(
-        acnts_2020[rating].subset(ticker=small_uw_tickers).df, "total", cols
-    )
-    total_2019 = calculate_total(
-        acnts_2019[rating].subset(ticker=small_uw_tickers).df, "total", cols
-    )
-    small_uw_table = format_table(small_uw_df, oas_df, cols)
-    small_uw_table.loc[small_uw_table["Sector"] == "Total", col_20] = (
-        total["OAS"] - total_2020["OAS"]
-    ).squeeze()
-    small_uw_table.loc[small_uw_table["Sector"] == "Total", col_19] = (
-        total["OAS"] - total_2019["OAS"]
-    ).squeeze()
-    small_uw_tables[rating] = small_uw_table
+        self._doc.save()
+        self._doc.save_as("Investable_Universe", path="reports/current_reports")
 
 
-# %%
-doc = Document(
-    f"{account}_Investable_Universe",
-    path=f"reports/portfolio_trades/{db.date('today'):%Y-%m-%d}",
-)
-sides = 1.5
-doc.add_preamble(
-    margin={
-        "paperheight": 32,
-        "left": sides,
-        "right": sides,
-        "top": 0.5,
-        "bottom": 0.2,
-    },
-    table_caption_justification="c",
-    header=doc.header(
-        left="P-LD Investable Universe",
-        right=f"EOD {db.date('today').strftime('%B %#d, %Y')}",
-    ),
-    footer=doc.footer(logo="LG_umbrella"),
-)
-for rating, table in large_cap_tables.items():
-    midrule_locs = table[table["Sector"] != " "].index[1:-4]
-    total_loc = table[table["Sector"] == "Total"].index
-    prec = {}
-    for col in table.columns:
-        if "DTS" in col:
-            prec[col] = "1f"
-        elif "OAD" in col:
-            prec[col] = "2f"
-        elif "OAS" in col:
-            prec[col] = "0f"
-        elif "MV" in col:
-            prec[col] = "2%"
-
-    doc.add_table(
-        table,
-        caption=f"{rating}-Rated Top 30 Tickers by BM DTS \\%",
-        col_fmt="lll|rrrr|rrr|rrr",
-        font_size="footnotesize",
-        row_font={tuple(total_loc): "\\bfseries"},
-        midrule_locs=midrule_locs,
-        prec=prec,
-        adjust=True,
-        hide_index=True,
-        multi_row_header=True,
-    )
-    doc.add_pagebreak()
-
-for rating, table in small_ow_tables.items():
-    midrule_locs = table[table["Sector"] != " "].index[1:]
-    total_loc = table[table["Sector"] == "Total"].index
-    doc.add_table(
-        table,
-        caption=f"{rating}-Rated Small Overweights",
-        col_fmt="lll|rrrr|rrr|rrr",
-        font_size="footnotesize",
-        row_font={tuple(total_loc): "\\bfseries"},
-        midrule_locs=midrule_locs,
-        prec=prec,
-        adjust=True,
-        hide_index=True,
-        multi_row_header=True,
-    )
-    doc.add_pagebreak()
-
-for rating, table in small_uw_tables.items():
-    midrule_locs = table[table["Sector"] != " "].index[1:]
-    total_loc = table[table["Sector"] == "Total"].index
-    doc.add_table(
-        table,
-        caption=f"{rating}-Rated Small Underweights",
-        col_fmt="lll|rrrr|rrr|rrr",
-        font_size="footnotesize",
-        row_font={tuple(total_loc): "\\bfseries"},
-        midrule_locs=midrule_locs,
-        prec=prec,
-        hide_index=True,
-        adjust=True,
-        multi_row_header=True,
-    )
-    doc.add_pagebreak()
-
-doc.save()
-doc.save_as("Investable_Universe", path="reports/current_reports")
+if __name__ == "__main__":
+    portfolio = "P-LD"
+    build_investable_universe_report(portfolio)
