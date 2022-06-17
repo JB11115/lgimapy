@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.models import XSRETPerformance
+from lgimapy.models import BetaAdjustedPerformance
 from lgimapy.utils import to_labelled_buckets
 
 # %%
@@ -21,40 +21,45 @@ start = "1/1/2001"
 start_dates = db.date("MONTH_STARTS", start=start)
 end_dates = db.date("MONTH_ENDS", start=start)
 
-real_xsret_d = defaultdict(list)
-fcast_xsret_d = defaultdict(list)
-tret_d = defaultdict(list)
+ret_d = defaultdict(lambda: defaultdict(list))
 for start_date, end_date in tqdm(
     zip(start_dates, end_dates), total=len(start_dates)
 ):
     db.load_market_data(start=start_date, end=end_date)
-    mod = XSRETPerformance(db)
+    mod = BetaAdjustedPerformance(db)
     year_month = f"{start_date.year}-{start_date.month}"
     for label, maturity_kws in maturity_buckets.items():
         mod.train(
-            date=end_date, predict_from_date=start_date, maturity=maturity_kws
+            date=end_date,
+            predict_from_date=start_date,
+            maturity=maturity_kws,
+            universe="IG",
         )
-        df = mod.get_sector_table(trets=True).sort_values(["Rating", "Sector"])
-        df["idx"] = df["Rating"] + "-" + df["Sector"]
-        df = df.set_index("idx").rename_axis(None)
+        for ret_type in ["XSRet", "TRet"]:
+            df = mod.get_sector_table(return_type=ret_type).sort_values(
+                ["Rating", "Sector"]
+            )
+            df["idx"] = df["Rating"] + "-" + df["Sector"]
+            df = df.set_index("idx").rename_axis(None)
 
-        real_xsret_d[label].append(df["Real*XSRet"].rename(year_month) / 1e4)
-        fcast_xsret_d[label].append(df["FCast*XSRet"].rename(year_month) / 1e4)
-        tret_d[label].append(df["TRet"].rename(year_month) / 1e4)
+            ret_d[f"real_{ret_type}"][label].append(
+                df[f"Real*{ret_type}"].rename(year_month) / 1e4
+            )
+            ret_d[f"fcast_{ret_type}"].append(
+                df[f"FCast*{ret_type}"].rename(year_month) / 1e4
+            )
 
 
 # %%
 year = 2001
 maturity_bucket = "24-31"
-
-
 real_xsret_df_d = defaultdict(list)
 out_performance_df_d = defaultdict(list)
 years = list(set([dt.year for dt in start_dates]))
 for maturity_bucket in maturity_buckets.keys():
-    real_xsret_df = pd.concat(real_xsret_d[maturity_bucket], axis=1).T
-    fcast_xsret_df = pd.concat(fcast_xsret_d[maturity_bucket], axis=1).T
-    tret_df = pd.concat(tret_d[maturity_bucket], axis=1).T
+    real_xsret_df = pd.concat(ret_d[f"real_XSRet"][maturity_bucket], axis=1).T
+    fcast_xsret_df = pd.concat(ret_d[f"fcast_XSRet"][maturity_bucket], axis=1).T
+    tret_df = pd.concat(ret_d[f"real_TRet"][maturity_bucket], axis=1).T
     for year in years:
         fcast_xsret_yr_df = fcast_xsret_df[
             fcast_xsret_df.index.str.startswith(str(year))

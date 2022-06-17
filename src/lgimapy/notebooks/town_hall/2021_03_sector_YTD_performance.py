@@ -9,7 +9,6 @@ import statsmodels.api as sm
 
 from lgimapy import vis
 from lgimapy.data import Database
-from lgimapy.models import XSRETPerformance
 
 vis.style()
 
