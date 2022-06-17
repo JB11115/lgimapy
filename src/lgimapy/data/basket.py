@@ -1065,7 +1065,7 @@ class BondBasket:
         ).rename_axis(None)
 
     @property
-    def _rating_risk_buckets(self):
+    def _IG_rating_risk_buckets(self):
         return [
             "Any AAA/AA",
             "Pure A",
@@ -1074,31 +1074,67 @@ class BondBasket:
             "Any BBB-/BB",
         ]
 
-    def add_rating_risk_buckets(self):
+    @property
+    def _HY_rating_risk_buckets(self):
+        return [
+            "Split BBB/BB",
+            "Pure BB",
+            "Split BB/B",
+            "Pure B",
+            "Split B/CCC",
+            "Pure CCC",
+        ]
+
+    def add_rating_risk_buckets(self, universe="IG"):
         rating_cols = self._numeric_ratings_columns()
         min_rating = rating_cols.min(axis=1)
         max_rating = rating_cols.max(axis=1)
 
         # fmt: off
         rating_bucket_locs = {}
-        rating_bucket_locs['Any AAA/AA'] = (
-            min_rating <= self._convert_single_input_rating("AA-")
-        )
-        rating_bucket_locs['Pure A'] = (
-            (min_rating >= self._convert_single_input_rating("A+"))
-            & (max_rating <= self._convert_single_input_rating("A-"))
-        )
-        rating_bucket_locs['Split A/BBB'] = (
-            (min_rating <= self._convert_single_input_rating("A-"))
-            & (max_rating >= self._convert_single_input_rating("BBB+"))
-        )
-        rating_bucket_locs['Pure BBB+/BBB'] = (
-            (min_rating >= self._convert_single_input_rating("BBB+"))
-            & (max_rating <= self._convert_single_input_rating('BBB'))
-        )
-        rating_bucket_locs['Any BBB-/BB'] = (
-            max_rating >= self._convert_single_input_rating('BBB-')
-        )
+        if universe == 'IG':
+            rating_bucket_locs['Any AAA/AA'] = (
+                min_rating <= self._convert_single_input_rating("AA-")
+            )
+            rating_bucket_locs['Pure A'] = (
+                (min_rating >= self._convert_single_input_rating("A+"))
+                & (max_rating <= self._convert_single_input_rating("A-"))
+            )
+            rating_bucket_locs['Split A/BBB'] = (
+                (min_rating <= self._convert_single_input_rating("A-"))
+                & (max_rating >= self._convert_single_input_rating("BBB+"))
+            )
+            rating_bucket_locs['Pure BBB+/BBB'] = (
+                (min_rating >= self._convert_single_input_rating("BBB+"))
+                & (max_rating <= self._convert_single_input_rating('BBB'))
+            )
+            rating_bucket_locs['Any BBB-/BB'] = (
+                max_rating >= self._convert_single_input_rating('BBB-')
+            )
+        elif universe == 'HY':
+            rating_bucket_locs['Split BBB/BB'] = (
+                (min_rating <= self._convert_single_input_rating("BBB-"))
+                & (max_rating >= self._convert_single_input_rating("BB+"))
+            )
+            rating_bucket_locs['Pure BB'] = (
+                (min_rating >= self._convert_single_input_rating("BB+"))
+                & (max_rating <= self._convert_single_input_rating("BB-"))
+            )
+            rating_bucket_locs['Split BB/B'] = (
+                (min_rating <= self._convert_single_input_rating("BB-"))
+                & (max_rating >= self._convert_single_input_rating("B+"))
+            )
+            rating_bucket_locs['Pure B'] = (
+                (min_rating >= self._convert_single_input_rating("B+"))
+                & (max_rating <= self._convert_single_input_rating('B-'))
+            )
+            rating_bucket_locs['Split B/CCC'] = (
+                (min_rating <= self._convert_single_input_rating("B-"))
+                & (max_rating >= self._convert_single_input_rating("CCC+"))
+            )
+            rating_bucket_locs['Pure CCC'] = (
+                min_rating >= self._convert_single_input_rating("CCC+")
+            )
         # fmt: on
 
         self.df["RatingRiskBucket"] = np.nan
