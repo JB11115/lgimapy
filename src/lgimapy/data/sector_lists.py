@@ -90,14 +90,13 @@ def IG_sectors(
     return sectors
 
 
-def HY_sectors(with_tildes=False, sectors_only=True):
+def HY_sectors(with_tildes=False, sectors_only=True, unique=False):
     """
     List[str]:
         HY Sectors used for daily snapshot. Not fully inclusive
         and overlap exists with subsectors and sectors.
 
         Missing sectors include: [
-            'AUTO_LOANS',
             'DEPARTMENT_STORES',
             'FOOD_AND_DRUG_RETAILERS',
             'RESTAURANTS',
@@ -114,6 +113,7 @@ def HY_sectors(with_tildes=False, sectors_only=True):
         "LDB1_BBB",
         "AUTOMOTIVE",
         "~AUTOMAKERS",
+        "~AUTO_LOANS",
         "~AUTOPARTS",
         "BASICS",
         "~HOME_BUILDERS",
@@ -154,10 +154,27 @@ def HY_sectors(with_tildes=False, sectors_only=True):
         "~AIRLINES",
         "UTILITY",
     ]
-    if not with_tildes:
-        sectors = [s.strip("~") for s in sectors]
     if sectors_only:
         sectors = sectors[5:]
+
+    if unique:
+        # Drop top level sectors
+        sectors = [s for s in sectors if not s.startswith(">")]
+
+        # Go through the sector list backwards, keeping
+        # the L3 sectors only if they don't have an L4.
+        unique_sectors = []
+        prev_sector_is_L4 = False
+        for sector in reversed(sectors):
+            is_L4 = sector.startswith("~")
+            if is_L4 or not prev_sector_is_L4:
+                unique_sectors.append(sector)
+            prev_sector_is_L4 = is_L4
+        sectors = reversed(unique_sectors)
+
+    if not with_tildes:
+        sectors = [s.strip("~") for s in sectors]
+
     return sectors
 
 
@@ -224,4 +241,30 @@ def IG_market_segments():
         "BBB_NON_FIN_EX_TOP_30_10+_LowPX_LT25Y",
         "BBB_NON_FIN_EX_TOP_30_10+_LowPX_GT25Y",
         "BBB_NON_CORP",
+    ]
+
+
+def HY_market_segments():
+    """
+    List[str]:
+        Market segments by rating, top level sector,
+        maturity, and dollar price.
+    """
+    return [
+        "BBB",
+        "BB",
+        "B",
+        "CCC",
+        "SPLIT_BBB_BB_HiPX",
+        "SPLIT_BBB_BB_LoPX",
+        "PURE_BB_HiPX",
+        "PURE_BB_LoPX",
+        "SPLIT_BB_B_HiPX",
+        "SPLIT_BB_B_LoPX",
+        "PURE_B_HiPX",
+        "PURE_B_LoPX",
+        "SPLIT_B_CCC_HiPX",
+        "SPLIT_B_CCC_LoPX",
+        "PURE_CCC_HiPX",
+        "PURE_CCC_LoPX",
     ]
