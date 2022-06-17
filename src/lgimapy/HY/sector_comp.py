@@ -13,7 +13,7 @@ from tqdm import tqdm
 from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.models import rolling_zscore, XSRETPerformance
+from lgimapy.models import rolling_zscore
 from lgimapy.utils import root, get_ordinal
 
 
@@ -229,7 +229,7 @@ def vol_model_zscores(history_dict, ratings):
             deviation_a[i, :] = (
                 np.sign(y_resid)
                 * np.abs(x_resid * y_resid)
-                / (x_resid ** 2 + y_resid ** 2) ** 0.5
+                / (x_resid**2 + y_resid**2) ** 0.5
             )
 
     alpha = pd.Series(alpha_a, index=dates, name="$\\alpha$")
