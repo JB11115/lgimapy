@@ -67,7 +67,6 @@ def build_strategy_risk_report():
         "US Long A+ Credit",
         "80% US A or Better LC/20% US BBB LC",
         "Bloomberg LDI Custom - DE",
-        "INKA",
         "US Long Corporate A or better",
     ]
 
@@ -220,6 +219,7 @@ def build_summary_page(df, date, fid, pdf_path):
 def build_attribution_page(account, fid, pdf_path):
     db = Database()
     attr = AttributionIndex(account, start=db.date("YTD"))
+    attr.market_segments()
     attribution_page = Document(fid, path=pdf_path)
     attribution_page.add_preamble(
         bookmarks=True,
@@ -305,6 +305,13 @@ def build_attribution_page(account, fid, pdf_path):
                 prec=col_prec,
             )
     attribution_page.save()
+
+
+#
+# account = "SICHY"
+# pdf_path = root("reports/strategy_risk")
+# attribution_page_fid = f"attribution_{account}"
+# build_attribution_page(account, attribution_page_fid, pdf_path)
 
 
 def build_methodology_page(fid, pdf_path):
@@ -644,7 +651,7 @@ def save_single_latex_risk_page(
             hy_ticker_ow_df["curr"] - hy_ticker_ow_df["prev"]
         )
 
-        n_hy = int(n / 2)
+        n_hy = min(int(n / 2), len(hy_ticker_ow_df))
         hy_ticker_ow_table = pd.DataFrame(index=range(n_hy))
         hy_ticker_ow_df.sort_values("curr", inplace=True, ascending=False)
         hy_ticker_ow_table["Largest*OW"] = hy_ticker_ow_df.index[:n_hy]
