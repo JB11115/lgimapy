@@ -112,7 +112,6 @@ class PortfolioHistory:
             "US Long A+ Credit",
             "80% US A or Better LC/20% US BBB LC",
             "Bloomberg LDI Custom - DE",
-            "INKA",
             "US Long Corporate A or better",
         }
 
@@ -482,12 +481,16 @@ class PortfolioHistory:
                 self.update_date(date, strategy)
 
     def _remove_date(self, date, strategy=None, account=None):
-        port = self._db.load_portfolio(
-            strategy=strategy, account=account, date=date, empty=True
-        )
+        try:
+            port = self._db.load_portfolio(
+                strategy=strategy, account=account, date=date, empty=True
+            )
+        except ValueError:
+            return  # No data to remove for date
+
         df = port.stored_properties_history_df
         if df is None:
-            return
+            return  # No data to remove for date
         df = df[df.index != port.date]
         df.to_parquet(port._stored_properties_history_fid)
 
@@ -579,8 +582,6 @@ class PortfolioHistory:
 
 # %%
 if __name__ == "__main__":
-    # def main():
-    # %%
     self = PortfolioHistory()
     self.build_ignored_accounts_file()
     self.update_history()
