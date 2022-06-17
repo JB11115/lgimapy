@@ -1,0 +1,8 @@
+* make function to keep any portfolio isins in feather files
+* Add total return funds and HY to risk report with new class
+* new stored proc for loading portfolio data with fewer columns
+* add watch to fallen angels/rising stars model
+* create process to move all files to S3 bucket
+* update holdco/opco code to be more automated, not require copy/paste
+* investigate and backfill OASD pre 2001
+* portfolio trade class
