@@ -31,6 +31,7 @@ from lgimapy.data import (
     credit_sectors,
     groupby,
     HY_sectors,
+    HY_market_segments,
     IG_sectors,
     IG_market_segments,
     Index,
@@ -54,6 +55,7 @@ from lgimapy.utils import (
     to_set,
     X_drive,
 )
+
 
 # %%
 
@@ -147,6 +149,14 @@ class Database:
     @staticmethod
     def S_drive(fid=""):
         return S_drive(fid)
+
+    def load_json(self, filename=None, empty_on_error=False, full_fid=None):
+        return load_json(
+            filename=filename, empty_on_error=empty_on_error, full_fid=full_fid
+        )
+
+    def dump_json(self, d, filename=None, full_fid=None, **kwargs):
+        dump_json(d=d, filename=filename, full_fid=full_fid, **kwargs)
 
     def query_datamart(self, sql, **kwargs):
         """
@@ -310,14 +320,24 @@ class Database:
         return load_json("utility_business_structure")
 
     @cached_property
-    def _BAMLSector_ticker_map(self):
-        """Dict[str: str]: Memoized map of hisorical ticker changes."""
-        return load_json("HY/ticker_BAMLSector_map")
+    def _BAMLSector_Ticker_map(self):
+        """Dict[str: str]: Memoized map of tickers to BAML sectors."""
+        return load_json("HY/sector_maps/BAML_Ticker_L4_map")
 
     @cached_property
-    def _BAMLTopLevelSector_ticker_map(self):
-        """Dict[str: str]: Memoized map of hisorical ticker changes."""
-        return load_json("HY/ticker_BAMLTopLevelSector_map")
+    def _BAMLTopLevelSector_Ticker_map(self):
+        """Dict[str: str]: Memoized map of tickers to BAML top level sectors."""
+        return load_json("HY/sector_maps/BAML_Ticker_L3_map")
+
+    @cached_property
+    def _BAMLSector_Issuer_map(self):
+        """Dict[str: str]: Memoized map of tickers to BAML sectors."""
+        return load_json("HY/sector_maps/BAML_Issuer_L4_map")
+
+    @cached_property
+    def _BAMLTopLevelSector_Issuer_map(self):
+        """Dict[str: str]: Memoized map of tickers to BAML top level sectors."""
+        return load_json("HY/sector_maps/BAML_Issuer_L3_map")
 
     @cached_property
     def state_codes(self):
@@ -343,6 +363,10 @@ class Database:
     @staticmethod
     def HY_sectors(*args, **kwargs):
         return HY_sectors(*args, **kwargs)
+
+    @staticmethod
+    def HY_market_segments(*args, **kwargs):
+        return HY_market_segments(*args, **kwargs)
 
     @staticmethod
     def IG_sectors(*args, **kwargs):
@@ -996,9 +1020,7 @@ class Database:
         # Map sectors to standard values.
         # For BAML columns, populate sectors based on ticker maps.
         df["Sector"] = self._clean_sectors(df["Sector"])
-        for col in ["BAMLSector", "BAMLTopLevelSector"]:
-            df[col] = self._populate_BAML_sectors(df["Ticker"], df[col])
-
+        self._populate_BAML_sectors(df)
         sector_map = {"OTHER_FINANCIAL": "FINANCIAL_OTHER"}
         for old_val, sector in sector_map.items():
             df.loc[df["Sector"] == old_val, "Sector"] = sector
@@ -1135,28 +1157,25 @@ class Database:
         clean_tickers.loc[loc] = clean_tickers[loc].map(self._ticker_changes)
         return clean_tickers
 
-    def _populate_BAML_sectors(self, tickers, sectors):
+    def _populate_BAML_sectors(self, df):
         """
-        Use stored ticker: sector maps to populate missing
+        Use stored BAML maps to populate missing
         BAML sectors and overwrite erronious ones.
+
+        When applying this fix, First use the ticker map to fill in the
+        most frequent sector for each ticker, then use the issuer map to
+        add a more granular mapping for tickers with multiple sectors.
 
         Parameters
         ----------
-        tickers: pd.Series
-            Series of tickers.
-        sectors: pd.Series
-            Series of BAML sectors.
-
-        Returns
-        -------
-        populated_sectors: pd.Series:
-            Populated series of BAML sectors.
+        df: pd.DataFrame
+            DataFrame with necessary columns.
         """
-        map = getattr(self, f"_{sectors.name}_ticker_map")
-        populated_sectors = sectors.copy()
-        loc = tickers.isin(map)
-        populated_sectors.loc[loc] = tickers[loc].map(map)
-        return populated_sectors
+        for col in ["BAMLSector", "BAMLTopLevelSector"]:
+            for id in ["Ticker", "Issuer"]:
+                map = getattr(self, f"_{col}_{id}_map")
+                loc = df[id].isin(map)
+                df.loc[loc, col] = df.loc[loc, id].map(map)
 
     def _drop_duplicate_columns(self, df, keep_col, drop_col):
         if keep_col in df.columns and drop_col in df.columns:
@@ -1699,6 +1718,12 @@ class Database:
                 df_list.append(df_raw)
 
         return pd.concat(df_list).sort_values(["Date", "Ticker"])
+
+    def has_dates_loaded(self, dates):
+        loaded_dates_set = (
+            set() if self.loaded_dates is None else set(self.loaded_dates)
+        )
+        return loaded_dates_set >= to_set(dates, dtype=pd.Timestamp)
 
     def load_market_data(
         self,
@@ -2357,7 +2382,6 @@ class Database:
             "OADVar": "OAD_Diff",
             "AssetValue": "P_MarketValue",
             "Quantity": "P_Notional",
-            "BMAssetValue": "BM_MarketValue",
             "L4": "Sector",
             "Price_Dirty": "DirtyPrice",
             "Price": "CleanPrice",
@@ -2418,6 +2442,11 @@ class Database:
 
         # Clean analyst ratings.
         df["AnalystRating"] = df["AnalystRating"].replace("NR", np.nan)
+
+        # Add DTS PCT columns.
+        for col in ["P_DTS", "BM_DTS", "DTS_Diff"]:
+            df[col.replace("DTS", "DTS_PCT")] = df[col] / df["BM_DTS"].sum()
+
         return clean_dtypes(df).drop_duplicates(
             subset=["Date", "CUSIP", "Account"]
         )
@@ -2587,8 +2616,38 @@ class Database:
             df = self._add_BM_treasuries(df)
         return df
 
+    def _get_portfolio_account_strategy(
+        self,
+        portfolio=None,
+        account=None,
+        strategy=None,
+        date=None,
+    ):
+        if portfolio is not None:
+            if portfolio in self._strategy_account_map(date):
+                strategy = portfolio
+            elif portfolio in self._account_strategy_map(date):
+                account = portfolio
+            else:
+                raise ValueError(f"Unrecognized `portfolio` {portfolio}")
+
+        else:
+            if strategy is not None:
+                if strategy in self._strategy_account_map(date):
+                    portfolio = strategy
+                else:
+                    raise ValueError(f"Unrecognized `Strategy` {strategy}")
+            elif account is not None:
+                if account in self._account_strategy_map(date):
+                    portfolio = account
+                else:
+                    raise ValueError(f"Unrecognized `Account` {account}")
+
+        return portfolio, account, strategy
+
     def load_portfolio(
         self,
+        portfolio=None,
         date=None,
         start=None,
         end=None,
@@ -2651,7 +2710,10 @@ class Database:
         date = self.date("today") if date is None else to_datetime(date)
         start = end = date.strftime(fmt)
 
-        # Convert inputs for SQL call.
+        portfolio, account, strategy = self._get_portfolio_account_strategy(
+            portfolio, account, strategy
+        )
+
         if account is None:
             sql_account = "NULL"
         else:
@@ -2775,7 +2837,7 @@ class Database:
                 ] *= hy_duration_adjustment
 
             df = self._add_calculated_portfolio_columns(df)
-
+            # df = clean_dtypes(df)
         if ret_df:
             return df
 
@@ -3374,11 +3436,12 @@ def main():
     from lgimapy.data import IG_sectors, HY_sectors
     from lgimapy.portfolios import AttributionIndex
     from lgimapy.utils import (
-        Time,
-        to_sql_list,
-        to_clipboard,
-        mkdir,
         get_ordinal,
+        mkdir,
+        mock_df,
+        Time,
+        to_clipboard,
+        to_sql_list,
     )
 
     vis.style()
@@ -3389,24 +3452,32 @@ def main():
     db = Database()
     # %%
     db.load_market_data()
+
     # %%
     # port = db.load_portfolio(account="LIB150")
     # port.derivatives_df.iloc[0]
     # port.derivatives_df.iloc[1]
 
     # %%
-    db = Database(market="EUR")
-    df = db.load_market_data(
-        ret_df=True, clean=False, preprocess=False, local=False
-    )
-    sorted(df.columns)
+    db = Database()
+    port = db.load_portfolio(account="PMCHY")
+    port.performance()
 
-    old_df = db.load_market_data(
-        ret_df=True, clean=False, preprocess=False, local=False, date="1/5/2016"
-    )
-    sorted(old_df.columns)
+    sorted(port.df.columns)
+    # %%
+    port.df.dtypes.value_counts()
+    cols = []
+    for col, dtype in port.df.dtypes.items():
+        if dtype == "float64":
+            cols.append(col)
+
+    sorted(cols)
 
     # %%
-    db = Database()
+    curr_strat = db.load_portfolio("US Credit Plus")
+    prev_strat = db.load_portfolio("US Credit Plus", date=db.date("1w"))
+
+    # %%
     db.load_market_data()
-    ix = db.build_market_index(in_H4UN_index=True)
+    ix = db.build_market_index()
+    ix.subset(ticker="F").df["BAMLSector"]
