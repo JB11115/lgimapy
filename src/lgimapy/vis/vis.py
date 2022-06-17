@@ -1777,3 +1777,99 @@ def plot_index_history(index, db, start="10y", figsize=(8, 6)):
         ax=ax,
     )
     vis.legend(ax, title=f"{start} Stats", loc="upper left")
+
+
+def boxplot(
+    df,
+    notch=True,
+    showfliers=True,
+    color="skyblue",
+    linecolor="k",
+    median_line_color="navy",
+    alpha=0.15,
+    flierprops=None,
+    medianprops=None,
+    figsize=(8, 6),
+    title=None,
+    xlabel=None,
+    ylabel=None,
+    ax=None,
+    **kwargs,
+):
+    """
+    Create boxplot of input data.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Input data. Each column will have one box with row
+        values as samples.
+
+    notch: bool, default=True.
+        If ``True`` boxes will be notched to the median.
+    showfliers: bool, default=True
+        If ``True`` outliers are shown.
+    color: str, default='skyblue'
+        Face color for boxes.
+    linecolor: str, default='k'
+        Color of whisker lines.
+    median_line_color: str, default='navy'
+        Color of median line in box.
+    alpha: float, optional, default=0.15
+        Transparency of face color.
+    flierprops: dict[str: str or float], optional
+        They style of the fliers.
+    medianprops: dict[str: str or float], optional
+        The style of the median line.
+    figsize: (float, float), default=(8, 6).
+        Figure size if no `ax` is provided.
+    title: str, optional
+        Plot title.
+    xlabel: str, optional
+        X-axis label.
+    ylable: str, optional
+        Y-axis label.
+    ax: matplotlib Axes, optional
+        Axes in which to draw plot, otherwise activate Axes.
+
+    **kwargs:
+        Keyword arguments for ``matplotlib.pyplot.boxplot()``.
+    """
+    if ax is None:
+        fig, ax = subplots(figsize=figsize)
+
+    medianprops_kws = {"color": median_line_color, "lw": 2}
+    if medianprops is not None:
+        medianprops_kws.update(**medianprops)
+
+    flierprops_kws = {"markerfacecolor": "k", "markersize": 3}
+    if flierprops is not None:
+        flierprops_kws.update(**flierprops)
+
+    box = df.boxplot(
+        ax=ax,
+        color=linecolor,
+        notch=notch,
+        showfliers=showfliers,
+        patch_artist=True,
+        medianprops=medianprops_kws,
+        flierprops=flierprops_kws,
+        return_type="dict",
+        **kwargs,
+    )
+    ax.grid(False, axis="x")
+    for patch in box["boxes"]:
+        patch.set_facecolor(color)
+        if alpha is not None:
+            patch.set(alpha=0.15)
+
+    if xlabel is not None:
+        ax.set_xlabel(xlabel)
+
+    if ylabel is not None:
+        ax.set_ylabel(ylabel)
+
+    if title is not None:
+        ax.set_title(title, fontweight="bold", fontsize=14)
+
+    return ax

@@ -23,6 +23,7 @@ from lgimapy.vis.vis import (
     arrows,
     cmap,
     plot_index_history,
+    boxplot,
 )
 
 __all__ = [
@@ -50,4 +51,5 @@ __all__ = [
     "arrows",
     "cmap",
     "plot_index_history",
+    "boxplot",
 ]
