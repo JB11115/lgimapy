@@ -435,7 +435,7 @@ def to_list(obj, dtype=None, sort=False):
     if dtype is not None:
         # Compare to specific dtype.
         if isinstance(obj, dtype):
-            if dtype in {float, int, Number, str}:
+            if dtype in {float, int, Number, str, pd.Timestamp}:
                 list_obj = [obj]
             else:
                 list_obj = list(obj)
