@@ -1019,7 +1019,7 @@ def update_treasury_curve_dates(dates=None, verbose=True):
         )
         tcb = TreasuryCurveBuilder(treasury_ix)
         tcb.fit(
-            verbose=0,
+            verbose=1,
             threshold=12,
             n=70,
             n_drop=30,
