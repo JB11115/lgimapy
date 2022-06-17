@@ -3,6 +3,7 @@ from lgimapy.data.sector_lists import (
     HY_sectors,
     credit_sectors,
     IG_market_segments,
+    HY_market_segments,
 )
 from lgimapy.data.security_functions import (
     clean_dtypes,
@@ -54,6 +55,7 @@ __all__ = [
     "HY_sectors",
     "credit_sectors",
     "IG_market_segments",
+    "HY_market_segments",
     "concat_index_dfs",
     "new_issue_mask",
     "spread_diff",
