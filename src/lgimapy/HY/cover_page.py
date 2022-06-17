@@ -118,7 +118,7 @@ def plot_index_oas(index, doc):
     ax.axhline(pct[95], label="_nolegend_", **pct_line_kwargs)
 
     title = "$\\bf{5yr}$ $\\bf{Stats}$"
-    ax.legend(loc="upper right", fancybox=True, title=title, shadow=True)
+    ax.legend(loc="upper left", fancybox=True, title=title, shadow=True)
     vis.savefig(doc.fig_dir / f"cover_{index}")
     vis.close()
 
