@@ -15,15 +15,21 @@ from lgimapy.utils import root, mkdir, cp
 def build_issuer_change_report():
     # ---------------------------------- #
     sort_column = "month"
-    tights_date = pd.to_datetime("12/31/2020")
-    tights_date_label = "$\\Delta$YE'20"
-    # tights_date_label = None
+
+    db = Database(market="US")
+    today = db.date("today")
+    if today.month >= 3:
+        last_col_date = db.date("LAST_YEAR_END")
+    else:
+        last_col_date = db.date("LAST_YEAR_END", db.date("LAST_YEAR_END"))
+    last_col_label = f"$\\Delta$YE'{last_col_date:%y}"
+
     # ---------------------------------- #
 
     n_cols = 4
     col_length_thresh = 100
 
-    markets = ["US", "EUR", "GBP"]
+    # markets = ["US", "EUR", "GBP"]
     markets = ["US"]
     maturities = ["10y", "30y"]
     units = ["abs", "pct"]
@@ -35,15 +41,14 @@ def build_issuer_change_report():
     page = "nonfin"
 
     # Build date formatting func for column labels.
-    if tights_date_label is None:
+    if last_col_label is None:
         date_fmt_d = {}
     else:
-        date_fmt_d = {tights_date: tights_date_label}
+        date_fmt_d = {last_col_date: last_col_label}
     date_formatter = lambda x: date_fmt_d.get(
         x, f"$\\Delta${x.strftime('%#m/%d')}"
     )
 
-    today = Database(market="US").date("today")
     fid = f"{today.strftime('%Y_%m_%d')}_Issuer_Change_Report"
     doc = Document(fid, path="reports/issuer_change")
     doc.add_preamble(
@@ -73,7 +78,7 @@ def build_issuer_change_report():
     # %%
     for market in markets:
         doc.add_section(market)
-        data_d, dates_d = get_raw_data(market, tights_date)
+        data_d, dates_d = get_raw_data(market, last_col_date)
         for maturity in maturities:
             for unit in units:
                 doc.add_subsection(f"{maturity} {unit} change")
@@ -123,7 +128,7 @@ def build_issuer_change_report():
     excel.save()
 
 
-def get_raw_data(market, tights_date):
+def get_raw_data(market, last_col_date):
     db = Database(market=market)
 
     # Make dict of dates to analyze and then choose nearest traded dates.
@@ -135,7 +140,7 @@ def get_raw_data(market, tights_date):
         "today": db.date("today"),
         "week": db.date("6d"),
         "month": mtd_date,
-        "tights": db.nearest_date(tights_date),
+        "year_end": db.nearest_date(last_col_date),
     }
     currency = {"US": "USD"}[market]
     maturity_d = {"10y": ((8.25, 11), 2), "30y": ((25, 32), 5)}
@@ -180,7 +185,7 @@ def clean_sector_table(df, name):
         "XSRet",
         "week",
         "month",
-        "tights",
+        "year_end",
         "Ticker",
     ]
     return df.drop(columns=dropped_cols).dropna(subset=["OAS", "DTS"])
@@ -333,7 +338,7 @@ def optimize_table_layout(sector_length_d, n_cols, col_length_thresh):
 
 
 def format_table(df, sector, unit, sort_col, dates, midrule, date_formatter):
-    periods = ["week", "month", "tights"]
+    periods = ["week", "month", "year_end"]
     cols = ["OAS", "DTS", *[f"{period}_{unit}_change" for period in periods]]
     new_cols = [
         "OAS",
