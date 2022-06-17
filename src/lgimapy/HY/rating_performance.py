@@ -42,6 +42,7 @@ def get_rating_performance(field):
     db = Database()
     ytd = db.date("YTD")
     last_month_end = db.date("LAST_MONTH_END")
+    # last_month_end = pd.to_datetime("5/31/2022")
     last_month_start = db.date("MONTH_START", last_month_end)
     last_month = last_month_end.strftime("%B")
     d = defaultdict(list)
