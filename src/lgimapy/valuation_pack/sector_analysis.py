@@ -13,7 +13,7 @@ from tqdm import tqdm
 from lgimapy import vis
 from lgimapy.data import Database, convert_sectors_to_fin_flags
 from lgimapy.latex import Document
-from lgimapy.models import rolling_zscore, XSRETPerformance
+from lgimapy.models import rolling_zscore, BetaAdjustedPerformance
 from lgimapy.utils import root, get_ordinal
 
 from volatility import update_voltility_model
@@ -59,7 +59,7 @@ def diagonal_deviation(x, y, threshold):
     deviation = (
         np.sign(y_resid)
         * np.abs(x_resid * y_resid)
-        / (x_resid ** 2 + y_resid ** 2) ** 0.5
+        / (x_resid**2 + y_resid**2) ** 0.5
     )
     return (deviation - np.mean(deviation)) / np.std(deviation)
 
@@ -329,7 +329,7 @@ def vol_model_zscores(history_dict, maturity, path):
             deviation_a[i, :] = (
                 np.sign(y_resid)
                 * np.abs(x_resid * y_resid)
-                / (x_resid ** 2 + y_resid ** 2) ** 0.5
+                / (x_resid**2 + y_resid**2) ** 0.5
             )
 
     alpha = pd.Series(alpha_a, index=dates, name="$\\alpha$")
@@ -616,11 +616,11 @@ def make_forward_looking_sector_table(sector_df, name, doc):
 
 
 def make_performance_tables(maturity, name, doc, db):
-    mod = XSRETPerformance(db)
+    mod = BetaAdjustedPerformance(Database())
+    # mod.update()
     mod.train(forecast="1m", maturity=maturity)
     index_name = f"{name} Stats Index"
-    raw_df = mod.get_sector_table()
-    df = mod.add_index_row(raw_df, name=index_name)
+    df = mod.get_sector_table(add_index_row=True, index_name=index_name)
     table_captions = {
         f"{name} Non-Fin Sector 1M Performance": "Industrials",
         f"{name} Fin Sector 1M Performance": "Financials",
@@ -687,12 +687,12 @@ def make_performance_tables(maturity, name, doc, db):
         table.drop(["raw_sector", "TopLevelSector"], axis=1, inplace=True)
         if top_level_sector == "Industrials":
             date = mod.predict_from_date.strftime("%m/%d/%Y")
-            mae = int(mod.MAE())
-            mae_pctile = mod.MAE(pctile=name)
-            ordinal = get_ordinal(mae_pctile)
+            rsquared = mod.rsquared()
+            rsquared_pctile = mod.rsquared(pctile=True)
+            ordinal = get_ordinal(rsquared_pctile)
             fnote = (
-                f"Performance since {date}. Model MAE was {mae} bp, "
-                f"the {mae_pctile}{ordinal} \%tile of model error history."
+                f"Performance since {date}. Model $R^2$ was {rsquared:.2f}, "
+                f"the {rsquared_pctile}{ordinal} \%tile of model history."
             )
         elif top_level_sector == "Non-Corp":
             fnote = "."
