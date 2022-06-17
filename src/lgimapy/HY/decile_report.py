@@ -137,7 +137,7 @@ def build_decile_report(fid):
     }
     # Print indexes to scrape then exit.
     if args.print:
-        print("\nYields")
+        print("\nPrices, Yields, and Spreads")
         for i, index in enumerate(sections["Yields Overview"]["cols"]):
             print(f"  {i+1}) {index.split('*')[0]}")
         print("\nRemaining Spreads")
