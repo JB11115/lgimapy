@@ -24,7 +24,7 @@ def bbgwinpy_executable():
 
 
 def fmt_bbg_dt(date):
-    return to_datetime(date).strftime("%Y%m%d")
+    return f"{to_datetime(date):%Y%m%d}"
 
 
 class BBGInputConverter:
@@ -349,7 +349,13 @@ def _linux_to_windows_bbg(func, *args, **kwargs):
 
     # Load the data back into python.
     data_fid = data_dir / f"{epoch}.json"
-    df = pd.read_json(data_fid)
+    try:
+        df = pd.read_json(data_fid)
+    except ValueError:
+        raise FileNotFoundError(
+            "BBG data file not found, error occurred "
+            "scraping data from BBG API."
+        )
 
     # Delete temporary files.
     args_fid.unlink()
