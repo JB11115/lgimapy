@@ -27,7 +27,7 @@ def build_strategy_risk_report():
     dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report"
     # dated_fid = f"{date.strftime('%Y-%m-%d')}_Risk_Report_Q3_2021"
 
-    attribution_accounts = ["P-LD"]
+    attribution_accounts = ["P-LD", "PMCHY"]
     port_hist = PortfolioHistory()
     port_hist.build_ignored_accounts_file()
     ignored_accounts = port_hist.desired_ignored_accounts(date)
@@ -305,13 +305,6 @@ def build_attribution_page(account, fid, pdf_path):
                 prec=col_prec,
             )
     attribution_page.save()
-
-
-#
-# account = "SICHY"
-# pdf_path = root("reports/strategy_risk")
-# attribution_page_fid = f"attribution_{account}"
-# build_attribution_page(account, attribution_page_fid, pdf_path)
 
 
 def build_methodology_page(fid, pdf_path):
