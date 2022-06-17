@@ -68,6 +68,9 @@ class Portfolio:
         repl = {"%": "\%", "_": " "}
         return replace_multiple(self.name, repl)
 
+    def is_HY(self):
+        return "High Yield" in self.name or self.name.endswith("HY")
+
     @property
     def _tsy_bins(self):
         return [2, 3, 5, 7, 10, 20, 30]
@@ -500,7 +503,7 @@ class Account(BondBasket, Portfolio):
 
     def cash(self, pct=False):
         """float: Cash in account ($M)."""
-        return np.sum(self.cash_df["P_AssetValue"]) / 1e6
+        return np.sum(self.cash_df["P_MarketValue"]) / 1e6
 
     def cash_pct(self):
         return np.sum(self.cash_df["P_Weight"])
@@ -526,6 +529,9 @@ class Account(BondBasket, Portfolio):
     def bm_tsy_pct(self):
         return np.sum(self.tsy_df["BM_Weight"])
 
+    def weight(self):
+        return np.sum(self.df["Weight_Diff"])
+
     def oad(self):
         return np.sum(self.df["OAD_Diff"])
 
@@ -545,7 +551,7 @@ class Account(BondBasket, Portfolio):
         return self.bm_weight("OAS")
 
     def port_oad(self):
-        return self.bm_weight("OAD")
+        return self.port_weight("OAD")
 
     def bm_oad(self):
         return self.bm_weight("OAD")
@@ -882,8 +888,12 @@ class Account(BondBasket, Portfolio):
         port_dts = self.dts("port")
         port_dts_pct = self.dts()
         d = defaultdict(list)
-        for rating_bucket in self._rating_risk_buckets:
+        if self.is_HY():
+            rating_risk_buckets = self._HY_rating_risk_buckets
+        else:
+            rating_risk_buckets = self._IG_rating_risk_buckets
 
+        for rating_bucket in rating_risk_buckets:
             bucket_port = self.subset(
                 rating_risk_bucket=rating_bucket,
             )
@@ -900,7 +910,7 @@ class Account(BondBasket, Portfolio):
             d["Port DTS (%)"].append(100 * bucket_port_dts)
             d["BM DTS (%)"].append(100 * bucket_bm_dts)
 
-        table = pd.DataFrame(d, index=self._rating_risk_buckets).T
+        table = pd.DataFrame(d, index=rating_risk_buckets).T
         table["Total"] = table.sum(axis=1)
         table.loc["BM OAS", "Total"] = self.bm_weight("OAS")
         return table
@@ -1343,6 +1353,15 @@ class Strategy(BondBasket, Portfolio):
     def account_oasd(self):
         name = "OASD"
         return self.calculate_account_values(lambda x: x.oasd(), name)
+
+    @lru_cache(maxsize=None)
+    def account_weight(self):
+        name = "Weight"
+        return self.calculate_account_values(lambda x: x.weight(), name)
+
+    @lru_cache(maxsize=None)
+    def weight(self):
+        return self.account_value_weight(self.account_weight())
 
     @lru_cache(maxsize=None)
     def oasd(self):
