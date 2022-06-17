@@ -15,7 +15,7 @@ from lgimapy.utils import root, restart_program
 # %%
 
 
-def update_rating_changes(max_dates=100):
+def update_rating_changes(max_dates=1000):
     fid = root("data/rating_changes.csv")
     x_drive_fid = Database.X_drive(
         "Credit Strategy/lgimapy/data/rating_changes.csv"
@@ -86,7 +86,7 @@ def read_saved_data(fid):
                 df[date_col], format="%Y-%m-%d", errors="coerce"
             )
     # Start from specified data if required.
-    # start_from_date = pd.to_datetime("12/09/2020")
+    # start_from_date = pd.to_datetime("5/27/2022")
     start_from_date = None
     if start_from_date is not None:
         df = df[df["Date_NEW"] <= start_from_date].copy()
@@ -239,10 +239,15 @@ if __name__ == "__main__":
     import psutil
     from time import sleep
 
-    while True:
+    i = 0
+    last_iter_date = None
+    while i < 100:
         last_date = update_rating_changes(max_dates=20)
-        sleep(5)
         print(last_date)
-        if psutil.virtual_memory().percent > 90:
-            quit()
-    max_dates = 100
+        if psutil.virtual_memory().percent > 50:
+            break
+        i += 1
+        if last_date == last_iter_date:
+            break
+        else:
+            last_iter_date = last_date
