@@ -4006,5 +4006,29 @@
             "TMUS",
             "T"
         ]
+    },
+    "NON_FIN_EX_TOP_30": {
+        "name": "Non-Fin ex Top 30",
+        "financial_flag": 0,
+        "OAS": [
+            -10,
+            3000
+        ]
+    },
+    "FIN_EX_TOP_30": {
+        "name": "Fin ex Top 30",
+        "financial_flag": 1,
+        "OAS": [
+            -10,
+            3000
+        ]
+    },
+    "NON_CORP_EX_TOP_30": {
+        "name": "Non-Corp ex Top 30",
+        "financial_flag": 2,
+        "OAS": [
+            -10,
+            3000
+        ]
     }
 }

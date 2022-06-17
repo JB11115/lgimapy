@@ -5809,6 +5809,8 @@
     "2022-04-22": [
         "CEGLC",
         "CITLA",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "MMMLD2",
         "SESIBNM",
@@ -5817,6 +5819,8 @@
     "2022-04-25": [
         "CEGLC",
         "CITLA",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
@@ -5824,6 +5828,8 @@
     "2022-04-26": [
         "CEGLC",
         "CITLA",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
@@ -5832,6 +5838,8 @@
         "ARCLD",
         "CEGLC",
         "CITLA",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
@@ -5840,6 +5848,8 @@
         "ARCLD",
         "CEGLC",
         "CITLA",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "LSCLD",
         "SESIBNM",
@@ -5851,6 +5861,8 @@
         "CEGLC",
         "CITLA",
         "CNPIC",
+        "ERICLD",
+        "ERICMC",
         "EXCLC",
         "KAMLA",
         "LSCLD",
@@ -5864,6 +5876,8 @@
         "CEGLC",
         "CITLA",
         "CNPIC",
+        "ERICLD",
+        "ERICMC",
         "EXCLC",
         "KAMLA",
         "MMMLD",
@@ -5875,6 +5889,8 @@
     ],
     "2022-05-03": [
         "CEGLC",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "PBIIC",
         "PBILD",
@@ -5883,6 +5899,8 @@
         "SEUIBNM"
     ],
     "2022-05-04": [
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "PGELD",
         "PIELD",
@@ -5890,60 +5908,254 @@
         "SEUIBNM"
     ],
     "2022-05-05": [
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "PIELD",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-06": [
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-09": [
         "BCBSLD",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-10": [
         "BCBSLD",
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SALD",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-11": [
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SALD",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-12": [
+        "ERICLD",
+        "ERICMC",
         "KAMLA",
         "SALD2",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-13": [
+        "ERICLD",
+        "ERICMC",
+        "GLWLD",
         "SALD2",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-16": [
+        "ERICLD",
+        "ERICMC",
+        "GLWLD",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-17": [
+        "ERICLD",
+        "ERICMC",
+        "GLWLD",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-18": [
+        "ERICLD",
+        "ERICMC",
+        "GLWLD",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-05-19": [
         "BALLD",
+        "BALMC",
+        "ERICLD",
+        "ERICMC",
+        "GLWLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-20": [
+        "BALLD",
+        "BALMC",
+        "ERICLD",
+        "ERICMC",
+        "GLWLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-23": [
+        "BALLD",
+        "BALMC",
+        "ERICLD",
+        "ERICMC",
+        "GLWLD",
+        "KAMLA",
+        "SESIBNM",
+        "SEUIBNM",
+        "TOTLD"
+    ],
+    "2022-05-24": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "KAMLA",
+        "KHCLD",
+        "SESIBNM",
+        "SEUIBNM",
+        "TOTLD"
+    ],
+    "2022-05-25": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "KHCLD",
+        "MMMLD2",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-26": [
+        "BALLD",
+        "BALMC",
+        "CARGIC",
+        "CNPIC",
+        "CNPLD",
+        "GLWLD",
+        "MMMLD2",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-27": [
+        "BALLD",
+        "BALMC",
+        "CARGIC",
+        "CNPIC",
+        "CNPLD",
+        "GLWLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-05-31": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "LSCLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-01": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "LSCLD",
+        "RAILD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-02": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "RAILD",
+        "REXAMLD",
+        "SESIBNM",
+        "SEUIBNM",
+        "TRWLD"
+    ],
+    "2022-06-03": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "INKALC",
+        "REXAMLD",
+        "SESIBNM",
+        "SEUIBNM",
+        "TRWLD"
+    ],
+    "2022-06-06": [
+        "BALLD",
+        "BALMC",
+        "CLECOLD",
+        "GLWLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-07": [
+        "BALLD",
+        "BALMC",
+        "CLECOLD",
+        "GLWLD",
+        "RSURC",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-08": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-09": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-10": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "INKALC",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-13": [
+        "BALLD",
+        "BALMC",
+        "GLWLD",
+        "INKALC",
+        "PMCALL",
+        "PMCLD",
+        "SESIBNM",
+        "SEUIBNM",
+        "XRXLD"
+    ],
+    "2022-06-14": [
+        "BALLD",
+        "BALMC",
+        "PMCALL",
+        "PMCLD",
+        "SESIBNM",
+        "SEUIBNM",
+        "XRXLD"
+    ],
+    "2022-06-15": [
+        "BALLD",
+        "BALMC",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-16": [
         "BALMC",
         "SESIBNM",
         "SEUIBNM"

@@ -80,15 +80,20 @@
     },
     "AUTOMOTIVE": {
         "name": "Autos",
-        "BAML_sector": [
-            "AUTOMAKERS",
-            "AUTO_PARTS_AND_EQUIPMENT"
+        "BAML_top_level_sector": [
+            "AUTOMOTIVE"
         ]
     },
     "AUTOMAKERS": {
         "name": "Auto Makers",
         "BAML_sector": [
             "AUTOMAKERS"
+        ]
+    },
+    "AUTO_LOANS": {
+        "name": "Auto Loans",
+        "BAML_sector": [
+            "AUTO_LOANS"
         ]
     },
     "AUTOPARTS": {
@@ -267,9 +272,15 @@
     "TMT": {
         "name": "TMT",
         "BAML_top_level_sector": [
-            "MEDIA",
-            "TELECOMMUNICATIONS"
-        ]
+            "MEDIA"
+        ],
+        "BAML_sector": [
+            "CABLE_AND_SATELLITE_TV",
+            "TELECOM_SATELLITE",
+            "TELECOM_WIRELESS"
+        ],
+        "special_rules": "BAMLSector | BAMLTopLevelSector"
+
     },
     "CABLE_SATELLITE": {
         "name": "Cable/Satellite TV",
@@ -321,8 +332,9 @@
     },
     "TECHNOLOGY": {
         "name": "Technology",
-        "BAML_top_level_sector": [
-            "TECHNOLOGY_AND_ELECTRONICS"
+        "BAML_sector": [
+            "SOFTWARE_SERVICES",
+            "TECH_HARDWARE_AND_EQUIPMENT"
         ]
     },
     "SOFTWARE": {
@@ -354,5 +366,65 @@
         "BAML_top_level_sector": [
             "UTILITY"
         ]
+    },
+    "SPLIT_BBB_BB_HiPX": {
+        "name": "Split BBB/BB High Px",
+        "rating_risk_bucket": "Split BBB/BB",
+        "dirty_price": [95.001, null]
+    },
+    "SPLIT_BBB_BB_LoPX": {
+        "name": "Split BBB/BB Low Px",
+        "rating_risk_bucket": "Split BBB/BB",
+        "dirty_price": [null, 95]
+    },
+    "PURE_BB_HiPX": {
+        "name": "Pure BB High Px",
+        "rating_risk_bucket": "Pure BB",
+        "dirty_price": [95.001, null]
+    },
+    "PURE_BB_LoPX": {
+        "name": "Pure BB Low Px",
+        "rating_risk_bucket": "Pure BB",
+        "dirty_price": [null, 95]
+    },
+    "SPLIT_BB_B_HiPX": {
+        "name": "Split BB/B High Px",
+        "rating_risk_bucket": "Split BB/B",
+        "dirty_price": [95.001, null]
+    },
+    "SPLIT_BB_B_LoPX": {
+        "name": "Split BB/B Low Px",
+        "rating_risk_bucket": "Split BB/B",
+        "dirty_price": [null, 95]
+    },
+    "PURE_B_HiPX": {
+        "name": "Pure B High Px",
+        "rating_risk_bucket": "Pure B",
+        "dirty_price": [95.001, null]
+    },
+    "PURE_B_LoPX": {
+        "name": "Pure B Low Px",
+        "rating_risk_bucket": "Pure B",
+        "dirty_price": [null, 95]
+    },
+    "SPLIT_B_CCC_HiPX": {
+        "name": "Split B/CCC High Px",
+        "rating_risk_bucket": "Split B/CCC",
+        "dirty_price": [85.001, null]
+    },
+    "SPLIT_B_CCC_LoPX": {
+        "name": "Split B/CCC Low Px",
+        "rating_risk_bucket": "Split B/CCC",
+        "dirty_price": [null, 85]
+    },
+    "PURE_CCC_HiPX": {
+        "name": "Pure CCC High Px",
+        "rating_risk_bucket": "Pure CCC",
+        "dirty_price": [85.001, null]
+    },
+    "PURE_CCC_LoPX": {
+        "name": "Pure CCC Low Px",
+        "rating_risk_bucket": "Pure CCC",
+        "dirty_price": [null, 85]
     }
 }
