@@ -7,7 +7,7 @@ import pandas as pd
 from tqdm import tqdm
 
 from lgimapy.data import Database, groupby
-from lgimapy.utils import mkdir, root, Time
+from lgimapy.utils import mkdir, root, Time, to_list
 
 
 # %%
@@ -26,6 +26,9 @@ def create_feather(fid, db, force, s3, s3_limit=5):
     ----------
     fid: str
         Filename for new feather.
+    force: bool
+        Force loading from original source.
+        This loads BASys files from the S-drive which is slow.
     all_trade_dates:
         List of all dates available in DataMart.
     """
@@ -84,11 +87,12 @@ def create_feather(fid, db, force, s3, s3_limit=5):
             "s3://lgima-prod-3pdh-data-bucket/qws-inbound/qws-rds",
         ],
         "dev": [
-            "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds",
-            "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
-            "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
+            # "s3://lgima-dev-3pdh-data-bucket/qws-inbound/qws-rds",
+            # "s3://lgima-qa-3pdh-data-bucket/qws-inbound/qws-rds",
+            "s3://lgima-uat-3pdh-data-bucket/qws-inbound/qws-rds",
         ],
     }
+
     if s3:
         mkt = db.market.lower()
         keys = db._passwords["AWS"]
@@ -123,7 +127,7 @@ def fill_missing_HY_index_flags(ix):
     return ix
 
 
-def find_missing_feathers(db, update_current=False):
+def find_missing_feathers(db, update_current=False, all=False):
     """
     Find missing feathers from data dir.
 
@@ -166,22 +170,28 @@ def find_missing_feathers(db, update_current=False):
     expected_dates = db.trade_dates(start=saved_dates[0])
     missing_dates = set(expected_dates) - set(saved_dates)
     missing_date_fids = set([d.strftime("%Y_%m") for d in missing_dates])
+    missing_feathers = sorted(missing_fids | missing_date_fids, reverse=True)
 
-    return sorted(missing_fids | missing_date_fids, reverse=True)
+    if all:
+        return sorted(saved_fids | set(missing_feathers), reverse=True)
+    return missing_feathers
 
 
-def update_market_data_feathers(update_current=False, force=False, s3=False):
+def update_market_data_feathers(
+    markets, update_current=False, force=False, s3=False, all=False
+):
     """
     Update market data feather files for each market.
     Finds and creates any missing feather files.
     Creates verbose progress bar if more
     than 2 files are to be created.
     """
-    markets = ["US", "GBP", "EUR"]
-    # markets = ["GBP", "EUR"]
+    markets = to_list(markets, dtype=str)
     for market in markets:
         db = Database(market=market)
-        missing_fids = find_missing_feathers(db, update_current=update_current)
+        missing_fids = find_missing_feathers(
+            db, update_current=update_current, all=all
+        )
         pbar = len(missing_fids) > 3
         if pbar:
             print(f"Updating {market} Feather Files")
@@ -204,4 +214,8 @@ if __name__ == "__main__":
     # db = Database(market=market)
     # missing_fids = find_missing_feathers(db, update_current=update_current)
     # fid = missing_fids[-1]
-    update_market_data_feathers(update_current=True, force=True)
+    markets = ["US", "GBP", "EUR"]
+    markets = "US"
+    update_market_data_feathers(
+        markets, update_current=True, force=True, s3=False, all=True
+    )
