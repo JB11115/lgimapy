@@ -5999,6 +5999,8 @@
         "ERICLD",
         "ERICMC",
         "GLWLD",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6009,6 +6011,8 @@
         "ERICMC",
         "GLWLD",
         "KAMLA",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM",
         "TOTLD"
@@ -6019,6 +6023,8 @@
         "GLWLD",
         "KAMLA",
         "KHCLD",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM",
         "TOTLD"
@@ -6029,6 +6035,8 @@
         "GLWLD",
         "KHCLD",
         "MMMLD2",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6040,6 +6048,8 @@
         "CNPLD",
         "GLWLD",
         "MMMLD2",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6050,6 +6060,8 @@
         "CNPIC",
         "CNPLD",
         "GLWLD",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6058,6 +6070,8 @@
         "BALMC",
         "GLWLD",
         "LSCLD",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6066,6 +6080,8 @@
         "BALMC",
         "GLWLD",
         "LSCLD",
+        "PMCALL",
+        "PMCLD",
         "RAILD",
         "SESIBNM",
         "SEUIBNM"
@@ -6074,6 +6090,8 @@
         "BALLD",
         "BALMC",
         "GLWLD",
+        "PMCALL",
+        "PMCLD",
         "RAILD",
         "REXAMLD",
         "SESIBNM",
@@ -6085,6 +6103,8 @@
         "BALMC",
         "GLWLD",
         "INKALC",
+        "PMCALL",
+        "PMCLD",
         "REXAMLD",
         "SESIBNM",
         "SEUIBNM",
@@ -6095,6 +6115,8 @@
         "BALMC",
         "CLECOLD",
         "GLWLD",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6103,6 +6125,8 @@
         "BALMC",
         "CLECOLD",
         "GLWLD",
+        "PMCALL",
+        "PMCLD",
         "RSURC",
         "SESIBNM",
         "SEUIBNM"
@@ -6111,6 +6135,8 @@
         "BALLD",
         "BALMC",
         "GLWLD",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6118,6 +6144,8 @@
         "BALLD",
         "BALMC",
         "GLWLD",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6126,6 +6154,8 @@
         "BALMC",
         "GLWLD",
         "INKALC",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
@@ -6152,11 +6182,108 @@
     "2022-06-15": [
         "BALLD",
         "BALMC",
+        "PMCALL",
+        "PMCLD",
         "SESIBNM",
         "SEUIBNM"
     ],
     "2022-06-16": [
         "BALMC",
+        "PMCALL",
+        "PMCLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-17": [
+        "PMCALL",
+        "PMCLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-21": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-22": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-23": [
+        "ADBLD",
+        "OGCBF",
+        "SESIBNM",
+        "SEUIBNM",
+        "WRKLD"
+    ],
+    "2022-06-24": [
+        "ADBLD",
+        "OGCBF",
+        "SESIBNM",
+        "SEUIBNM",
+        "WRKLD"
+    ],
+    "2022-06-27": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-28": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-06-29": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM",
+        "XCELLC"
+    ],
+    "2022-06-30": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM",
+        "XCELLC"
+    ],
+    "2022-07-01": [
+        "ADBLD",
+        "INKALC",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-07-05": [
+        "ADBLD",
+        "INKALC",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-07-06": [
+        "ADBLD",
+        "INKALC",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-07-07": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-07-08": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-07-11": [
+        "ADBLD",
+        "SESIBNM",
+        "SEUIBNM"
+    ],
+    "2022-07-12": [
+        "ADBLD",
+        "BALLD",
+        "BALMC",
+        "KAMLA",
         "SESIBNM",
         "SEUIBNM"
     ]
