@@ -54,8 +54,13 @@ class SectorReport:
 
         if self.universe == "IG":
             sectors = self._db.IG_sectors(with_tildes=True, drop_chevrons=True)
-            life_idx = sectors.index("LIFE")
-            sectors.insert(life_idx + 1, "~LIFE_FABN")  # Add FABNs to Life
+            sectors_to_add = {
+                "LIFE": "~LIFE_FABN",
+                "REITS": "FINANCE_COMPANIES",
+            }
+            for prior_sector, new_sector in sectors_to_add.items():
+                prior_idx = sectors.index(prior_sector)
+                sectors.insert(prior_idx + 1, new_sector)
             return sectors
 
         elif self.universe == "HY":
@@ -475,5 +480,5 @@ def build_HY_sector_report():
 
 
 if __name__ == "__main__":
-    # build_IG_sector_report()
+    build_IG_sector_report()
     build_HY_sector_report()
