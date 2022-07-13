@@ -2,11 +2,12 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 from lgimapy import vis
 from lgimapy.data import Database
 from lgimapy.latex import Document
-from lgimapy.models import simulate_rating_migrations
+from lgimapy.models import simulate_rating_migrations, add_rating_outlooks
 from lgimapy.stats import mode
 from lgimapy.utils import root, to_list
 
@@ -642,3 +643,121 @@ def comp_check():
     cols = ["ISIN", "Ticker", "MaturityYears", "IssueYears", "OAS"]
     print(ticker_ix.df[cols])
     print(bbb_ix.df[cols])
+
+
+# %%
+def plot_rating_outlook_by_sector(ix, rating, db):
+    df = ix.df.copy()
+    total_name = f"All {rating}"
+    total_row = get_outlook_stats(df, total_name)
+    df_list = [total_row]
+    for sector_key in sectors():
+        sector_kws = db.index_kwargs(
+            sector_key, unused_constraints=["in_stats_index", "H0A0Flag", "OAS"]
+        )
+        sector_ix = ix.subset(**sector_kws)
+        df_list.append(get_outlook_stats(sector_ix.df, sector_ix.name))
+
+    sector_df = pd.concat(df_list, axis=1).T
+    sector_df["NetOutlook"] = (
+        2 * sector_df["2+ Pos"]
+        + sector_df["1 Pos"]
+        - sector_df["1 Neg"]
+        - 2 * sector_df["2+ Neg"]
+    )
+    sorted_df = sector_df.sort_values("NetOutlook").drop(columns=["Pos", "Neg"])
+    idx = list(sorted_df.index)
+    idx.remove(total_name)
+    idx.append(total_name)
+    sorted_df = sorted_df.reindex(idx)
+    plot_df = sorted_df.drop(columns=["NetOutlook"])
+
+    red, blue, __ = vis.colors("ryb")
+    colors = sns.color_palette("RdBu_r", 5).as_hex()
+    fig, ax = vis.subplots(figsize=[10, 7.5])
+    ax.set_title(
+        f"Current Outlooks for {rating} bonds (by MV)\n\n", fontweight="bold"
+    )
+    plot_df.plot.barh(stacked=True, color=colors, alpha=0.7, ax=ax)
+    vis.format_xaxis(ax, xtickfmt="{x:.0%}")
+    ax.grid(False, axis="y")
+    ax.tick_params(axis="y", labelsize=12)
+    ax.legend(
+        loc="upper center",
+        fontsize=12,
+        ncol=5,
+        fancybox=True,
+        shadow=True,
+        bbox_to_anchor=(0.47, 1.065),
+    )
+    path = root("reports/valuation_pack/fig")
+    vis.savefig(f"{rating}_sector_outlook", path=path, dpi=200)
+    vis.close()
+
+    net_outlooks = sorted_df["NetOutlook"]
+    return net_outlooks.rename(index={total_name: "$\\bf{Total}$"}).rename(
+        rating
+    )
+
+
+def plot_net_sector_outlook_table(df):
+    df["Sum"] = df.sum(axis=1)
+    sorted_df = df.sort_values("Sum", ascending=False)
+    idx = list(sorted_df.index)
+    idx.remove("$\\bf{Total}$")
+    idx.insert(0, "$\\bf{Total}$")
+    plot_df = sorted_df.reindex(idx).drop(columns=["Sum"])
+
+    fig, ax = vis.subplots(figsize=[7, 6])
+    sns.heatmap(
+        plot_df,
+        cmap="RdBu",
+        fmt=".1f",
+        annot=True,
+        linewidths=0.7,
+        vmin=-1,
+        vmax=1,
+        center=0,
+        cbar=False,
+        ax=ax,
+    )
+    ax.xaxis.tick_top()
+    ax.set_yticklabels(ax.get_yticklabels(), rotation=0, fontsize=10)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, fontweight="bold")
+    vis.show()
+    path = root("reports/valuation_pack/fig")
+    vis.savefig("Summary_net_sector_outlooks", path=path, dpi=200)
+    vis.close()
+
+
+# %%
+
+
+def plot_sector_outlooks_by_rating(rating):
+    # %%
+    db = Database()
+    db.load_market_data()
+    rating_kws = {
+        "A-Rated": ("AAA", "A-"),
+        "BBB-Rated": ("BBB+", "BBB-"),
+        "BB-Rated": ("BB+", "BB-"),
+    }
+    ix = db.build_market_index(
+        in_stats_index=True,
+        in_H0A0_index=True,
+        special_rules="USCreditStatisticsFlag | H0A0Flag",
+    )
+    ix = add_rating_outlooks(db, ix)
+    outlook_cols = [col for col in ix.df.columns if "Outlook" in col]
+    ix.df["NetOutlook"] = ix.df[outlook_cols].sum(axis=1)
+
+    # %%
+    vis.style()
+    df_list = []
+    for rating, rating_bounds in rating_kws.items():
+        rating_ix = ix.subset(rating=rating_bounds)
+        rating_s = plot_rating_outlook_by_sector(rating_ix, rating, db)
+        df_list.append(rating_s)
+    df = pd.concat(df_list, axis=1)
+    plot_net_sector_outlook_table(df)
+    # %%
