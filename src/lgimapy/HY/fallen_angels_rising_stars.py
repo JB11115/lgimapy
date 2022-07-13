@@ -732,13 +732,14 @@ def comp_d(ticker):
         "NMRK": (["US65158NAB82"], ["US12505BAD29", "US138616AE73"]),
         "F": (["US345370DA55"], ["US37045XDS27"]),
         "OXY": (["US674599EF81"], ["US136385BA87", "US25179MBF95"]),
+        "APA": (["US037411BF15"], ["US212015AV31", "US25278XAR08"]),
         "_RS_TICKER_": (["_RS_ISINs_"], ["_BBB_COMP_ISINs_"]),
     }[ticker]
 
 
 def comp_check():
     # %%
-    ticker = "OXY"
+    ticker = "APA"
     db = Database()
     db.load_market_data()
     ticker_ix = db.build_market_index(ticker=ticker, in_H0A0_index=True)
@@ -748,7 +749,7 @@ def comp_check():
     )
     bbb_ix = db.build_market_index(
         # in_stats_index=None,
-        ticker=["DVN", "CNQCN"],
+        ticker=["CLR", "FANG"],
         # rating=(None, "BBB-"),
         issue_years=(None, 2),
     )
