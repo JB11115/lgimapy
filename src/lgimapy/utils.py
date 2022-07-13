@@ -7,6 +7,7 @@ import pprint as pp
 import re
 import shutil
 import string
+import subprocess
 import sys
 import warnings
 from bisect import bisect_left, bisect_right
@@ -1173,6 +1174,14 @@ def mock_df(n_rows, n_cols, columns=None):
         columns = to_list(columns, dtype=str)
         df = pd.DataFrame(data, columns=columns)
     return df
+
+
+def beep():
+    bash_func = [
+        "powershell.exe",
+        "[console]::beep(2000,300)",
+    ]
+    subprocess.run(bash_func)
 
 
 # %%
