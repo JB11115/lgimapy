@@ -1185,3 +1185,17 @@ if __name__ == "__main__":
 
 
 # %%
+# db = Database()
+# date = db.date("yesterday")
+# db.load_market_data(date=date)
+# treasury_ix = db.build_market_index(drop_treasuries=False, sector="TREASURIES")
+# tsy_df = clean_treasuries(treasury_ix.df)
+# len(tsy_df)
+#
+# # %%
+# db = Database()
+# date = db.date("today")
+# db.load_market_data(date=date, local=False)
+# treasury_ix = db.build_market_index(drop_treasuries=False, sector="TREASURIES")
+# tsy_df = clean_treasuries(treasury_ix.df)
+# len(tsy_df)
