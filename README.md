@@ -20,7 +20,7 @@ plotting figures, and publishing reports.
 Install this project locally by running:
 
 ```bash
-git clone https://gogs.btprod.openshift.inv.adroot.lgim.com/JB11115/lgimapy.git
+git clone https://github.com/JB11115/lgimapy
 ```
 
 To set up a local environment using Anaconda:
