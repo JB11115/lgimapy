@@ -3429,6 +3429,8 @@ def main():
     # %%
     import time
     from collections import defaultdict
+
+    import seaborn as sns
     from tqdm import tqdm
 
     from lgimapy import vis
@@ -3474,10 +3476,18 @@ def main():
     sorted(cols)
 
     # %%
-    curr_strat = db.load_portfolio("US Credit Plus")
-    prev_strat = db.load_portfolio("US Credit Plus", date=db.date("1w"))
+    port = db.load_portfolio("SALD")
+    # %%
+    db = Database()
+    df = db.load_market_data(
+        date="6/30/2022",
+        clean=False,
+        preprocess=False,
+        local=False,
+        ret_df=True,
+    )
+    tsy_df = df[df["IndustryClassification4"] == "TREASURIES"]
+    len(tsy_df)
 
     # %%
-    db.load_market_data()
-    ix = db.build_market_index()
-    ix.subset(ticker="F").df["BAMLSector"]
+    db._account_strategy_map()["LEGSCC"]
