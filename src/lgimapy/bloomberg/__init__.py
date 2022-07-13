@@ -9,6 +9,7 @@ from lgimapy.bloomberg.business_structure import (
     update_issuer_business_strucure_json,
 )
 from lgimapy.bloomberg.cashflows import get_cashflows
+from lgimapy.bloomberg.call_schedule import get_call_schedule
 from lgimapy.bloomberg.issue_price import get_issue_price
 from lgimapy.bloomberg.cusip_ticker import get_bloomberg_ticker
 from lgimapy.bloomberg.settlements import get_settlement_date
@@ -26,6 +27,7 @@ __all__ = [
     "update_issuer_business_strucure_json",
     "scrape_bloomberg_subsectors",
     "get_cashflows",
+    "get_call_schedule",
     "scrape_coupon_dates",
     "id_to_cusip",
     "id_to_isin",
