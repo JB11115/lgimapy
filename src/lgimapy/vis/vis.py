@@ -1761,7 +1761,7 @@ def plot_index_history(index, db, start="10y", figsize=(8, 6)):
     cp = 100 * oas.rank(pct=True).iloc[-1]
     range = [oas.min(), oas.max()]
 
-    fig, ax = vis.subplots(figsize=figsize)
+    fig, ax = subplots(figsize=figsize)
     vis.plot_timeseries(
         oas,
         color="navy",
