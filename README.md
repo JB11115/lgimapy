@@ -23,7 +23,7 @@ Install this project locally by running:
 git clone https://github.com/JB11115/lgimapy
 ```
 
-To set up a local environment using Anaconda:
+To set up a local environment using conda:
 
 ```bash
 cd lgimapy/
