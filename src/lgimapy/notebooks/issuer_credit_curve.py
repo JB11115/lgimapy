@@ -33,7 +33,7 @@ issuer_df[cols]
 # %%
 
 mod = CreditCurve(issuer_df, treasury_curve)
-res = mod.fit(s)
+res = mod.fit()
 # %%
 
 oas_error = 99
@@ -41,7 +41,7 @@ n = 100
 i = 0
 params = {}
 resids = {}
-while oas_error > 1 and i < n:
+while oas_error > 9 and i < n:
     res = mod.fit()
     oas_error = (res.fit_OAS(issuer_df) - issuer_df["OAS"]).abs().max()
     print(i, int(oas_error))

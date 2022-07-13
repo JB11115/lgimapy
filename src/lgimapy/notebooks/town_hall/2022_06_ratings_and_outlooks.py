@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from lgimapy import vis
 from lgimapy.data import Database
@@ -48,7 +49,7 @@ class RatingChange:
         return df.groupby("Date_PREV").count().rename_axis(None).squeeze()
 
 
-fig, axes = vis.subplots(2, 1, sharex=True, figsize=(12, 8))
+fig, axes = vis.subplots(2, 1, sharex=True, figsize=(10, 5))
 
 db = Database()
 self = RatingChange(db)
@@ -64,7 +65,7 @@ vis.plot_timeseries(
     color="grey",
     lw=1.5,
     end_point=False,
-    title="2 Month Rolling Net Upgrades in US IG",
+    title="2-month rolling net upgrades in US IG",
     ylabel="# Issuers",
     ax=axes[0],
 )
@@ -85,7 +86,10 @@ for i in np.linspace(0, 1, n):
 axes[0].fill_between(s_pos.index, 0, s_pos, color="steelblue", alpha=0.15)
 axes[0].fill_between(s_neg.index, 0, s_neg, color="firebrick", alpha=0.15)
 axes[0].axhline(0, color="grey", lw=1)
-
+yticks = [-200, -100, 0, 100]
+axes[0].set_yticks(yticks)
+axes[0].set_yticklabels(yticks)
+axes[0].set_ylim(-220, 120)
 
 full_d = db.load_json("citi_rating_outlook")
 data_d_list = full_d["datasets"]["data-7c61d340b6d9bc16d05f5c6ace340703"]
@@ -103,7 +107,7 @@ vis.plot_timeseries(
     color="grey",
     lw=1.5,
     end_point=False,
-    title="Net Upgrade Bias in Rating Agency Outlooks",
+    title="Net upgrade bias in rating agency US IG outlooks",
     ylabel="# Issuers",
     ax=axes[1],
 )
@@ -127,8 +131,9 @@ axes[1].axhline(0, color="grey", lw=1)
 yticks = [-400, -300, -200, -100, 0, 100]
 axes[1].set_yticks(yticks)
 axes[1].set_yticklabels(yticks)
-axes[1].set_ylim(-420, 105)
-vis.savefig("IG_rating_changes")
+axes[1].set_ylim(-420, 120)
+plt.tight_layout()
+plt.savefig("IG_rating_changes.tiff", dpi=300, bbox_inches="tight")
 
 
 excel_df.dropna().to_csv("IG_rating_changes.csv")

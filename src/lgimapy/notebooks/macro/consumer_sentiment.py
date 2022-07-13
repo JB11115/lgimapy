@@ -10,20 +10,20 @@ vis.style()
 # %%
 start = "1/1/2001"
 db = Database()
-df = bdh(["CONSSENT", "COMFCOMF"], "Index", "PX_LAST", start=start).sort_index()
-df.columns = db.columns = ["U Mich Consumer Confidence", "BBG Consumer Comfort"]
+df = bdh(["CONSSENT", "CONCCONF"], "Index", "PX_LAST", start=start).sort_index()
+df.columns = db.columns = ["U Mich Consumer Confidence", "Conference Board"]
 
-u_mich = 61.7
+u_mich = np.nan
 bbg = np.nan
 today = pd.to_datetime("today").date()
 s = pd.Series([u_mich, bbg], index=df.columns, name=today)
-df = df.append(s)
+df = pd.concat((df, s.to_frame().T))
 df.index = pd.to_datetime(df.index)
 df.tail()
 # %%
 vis.plot_double_y_axis_timeseries(
     df["U Mich Consumer Confidence"].dropna(),
-    df["BBG Consumer Comfort"].dropna(),
+    df["Conference Board"].dropna(),
     # start="1/1/2020",
     ytickfmt_left="{x:.0f}",
     ytickfmt_right="{x:.0f}",
