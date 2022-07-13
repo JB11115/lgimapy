@@ -580,7 +580,7 @@ class BetaAdjustedPerformance:
 
         return pd.DataFrame(d, index=midpoints)
 
-    def table_prec(self, table):
+    def table_prec(self, table, added_precs=None):
         all_precs = {
             f"Impact*Factor": "2f",
             f"OAS*{self.predict_from_fmt_date}": "0f",
@@ -594,6 +594,9 @@ class BetaAdjustedPerformance:
             all_precs["Out*Perform"] = "+0f"
         elif self._return_type == "TRET":
             all_precs["Out*Perform"] = "+2%"
+
+        if added_precs is not None:
+            all_precs = {**all_precs, **added_precs}
 
         prec = {}
         for col in table.columns:
