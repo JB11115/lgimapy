@@ -370,7 +370,7 @@ class InvestableUniverse:
         )
         doc.add_preamble(
             margin={
-                "paperheight": 32,
+                "paperheight": 26,
                 "left": 1.5,
                 "right": 1.5,
                 "top": 0.5,
