@@ -1,3 +1,7 @@
+"""
+Beep when tea is done steeping.
+"""
+
 import argparse
 from time import sleep
 
