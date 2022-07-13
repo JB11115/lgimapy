@@ -15,7 +15,7 @@ from lgimapy.utils import root
 def get_maturity_wall_df(ix):
     db = Database()
     date = ix.df["Date"].iloc[0]
-    total_mv = ix.total_value().iloc[0]
+    total_mv = ix.total_value("AmountOutstanding").iloc[0]
     period_labels = ["1-2y", "2-3y", "3-4y", "4-5y", "5-10y", "10y+"]
     period_mv = []
     for period in period_labels:
@@ -37,7 +37,7 @@ def get_maturity_wall_df(ix):
             ]
         period_mv.append(df["AmountOutstanding"].sum())
     df = pd.Series(period_mv, index=period_labels, name="MV").to_frame()
-    df["MV_%"] = df["MV"] / total_mv
+    df["MV_%"] = df["MV"] / df["MV"].sum()
     df["MV"] /= 1e3
     return df
 
@@ -55,6 +55,7 @@ def get_maturity_walls():
         ]
     }
     ratings = {"BB": ("BB+", "BB-"), "B": ("B+", "B-"), "CCC": ("CCC+", "CCC-")}
+    # ratings = {"HY": ("BB+", "CCC-")}
     d = defaultdict(dict)
     for fmt_date, date in dates.items():
         # Load current index and bonds that were formerly in the index
