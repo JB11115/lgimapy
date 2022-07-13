@@ -1138,6 +1138,20 @@ def concat_lists(*lists):
     return list(it.chain(*clean_lists))
 
 
+def rename_excel_columns(df):
+    letters = list(string.ascii_uppercase)
+    n = len(df.columns)
+    n_doubles = int(np.ceil(n / len(letters)) - 1)
+    excel_letter_col_list = [letters]
+    for i in range(n_doubles):
+        first_letter = letters[i]
+        double_letter_cols = [f"{first_letter}{letter}" for letter in letters]
+        excel_letter_col_list.append(double_letter_cols)
+    full_excel_cols = list(it.chain(*excel_letter_col_list))
+    df.columns = full_excel_cols[:n]
+    return df
+
+
 def mock_df(n_rows, n_cols, columns=None):
     """
     Make a mock DataFrame with given parameters.
@@ -1152,10 +1166,13 @@ def mock_df(n_rows, n_cols, columns=None):
         Column names for mock DataFrame. By defualt uses
         alphabetical order capital letters.
     """
+    data = np.random.randn(n_rows, n_cols)
     if columns is None:
-        columns = list(string.ascii_uppercase)[:n_cols]
+        df = rename_excel_columns(pd.DataFrame(data))
     else:
         columns = to_list(columns, dtype=str)
+        df = pd.DataFrame(data, columns=columns)
+    return df
 
-    data = np.random.randn(n_rows, n_cols)
-    return pd.DataFrame(data, columns=columns)
+
+# %%
